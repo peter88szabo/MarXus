@@ -1,2 +1,2 @@
 # MarXus
-RRKM kinetics code to calculate energy dependent unimolecular rates
+RRKM kinetics code written in Rust-lang to calculate energy dependent unimolecular rates
