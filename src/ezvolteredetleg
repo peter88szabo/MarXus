@@ -1,0 +1,429 @@
+//=====================================================================================
+// Lanczos recursive approximation of Gamma function
+// Tested agains Fortran intrinsic DGAMMA function
+//=====================================================================================
+fn gamma_func(a: f64) -> f64 {
+    const PI: f64 = 3.14159265358979324;
+    const CG: usize = 7;
+
+    // These numbers are taken from the sample code in Wikipedia
+    // and the sample itself takes them from the GNU Scientific Library
+    const P: [f64; 9] = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7,
+    ];
+
+    let mut gamm = 0.0;
+    let mut x = a;
+
+    if x < 0.5 {
+        gamm = PI / (f64::sin(x*PI) * gamma_func(1.0 - x));
+    } else {
+        x = x - 1.0;
+        let mut t = P[0];
+        for i in 1..CG + 2 {
+            t = t + P[i] / (x + i as f64);
+        }
+        let w = x + (CG as f64) + 0.5;
+        gamm = f64::sqrt(2.0 * PI) * f64::powf(w,x + 0.5) * (f64::exp(-w)) * t;
+    }
+
+    gamm
+}
+//=============================================================================================
+
+
+//=============================================================================================
+// Beyer-Swinehart direct counting of rho(E) or W(E)
+//=============================================================================================
+// nvib      -->  number of vibrational modes
+// nebin     -->  number of energy bins
+// freq_bin  -->  which energy bin of the i'th oscillator  
+// res       -->  both input and output, the results of counting
+// --------------------------------------------------------------------------------------------
+// res can be either density or number of states depending on its starting (input) value
+//
+// when initial (input) value is 
+// res = [1, 0, 0, 0,...., 0] --> res = pure vibrational density of states
+// res = [1, 1, 1, 1,...., 1] --> res = pure vibrational number of states
+//
+// or alternatively it can be initialized as pure rotational density or number of states
+// to obtain the ro-vibrational energy-dependent rho(E) and W(E)
+//=============================================================================================
+fn beyer_swinehart_counting(nvib: usize, nebin: usize, freq_bin: &[usize], res: &mut [f64]) {
+    for i in 0..nvib {  
+        let iosc = freq_bin[i];
+        for j in iosc..=nebin { 
+            res[j] += res[j - iosc];
+        }
+    }
+}
+//=============================================================================================
+
+
+
+//=============================================================================================
+// Calculating the ro-vibrational W(E) or rho(E)
+//=============================================================================================
+fn get_rovib_WE_or_rhoE(what: String, nvib: usize, nebin: usize,
+                        dE: f64, nrot: usize, freq_bin: &[usize], Brot: &[f64]) -> Vec<f64> {
+
+  // Initialize sum or density of states  
+
+    let mut res = vec![0.0; nebin + 1];
+
+    if nrot == 0 { // only vibrations, no rotations
+
+       match what.as_str() {
+         "sum" => res = vec![1.0; nebin + 1],
+         "den" => res[0] = 1.0,
+          _=> println!("No Match Found in get_rovib_WE_or_rhoE()"),
+       };
+
+    } else { // rotations initialize the W(E) or rho(E) to be convoluted with vibrations later on 
+               
+      res = get_pure_rotational_WE_or_rhoE(what, nebin, dE, nrot, &Brot);
+    } 
+
+
+  // Convoluting the vibrations with rotations
+  // Here res variable is an input and output as well
+    beyer_swinehart_counting(nvib, nebin, &freq_bin, &mut res);
+
+   return res;
+}
+//==========================================================================================
+
+
+
+//==========================================================================================
+fn get_pure_rotational_WE_or_rhoE(what: String, nebin: usize, dE: f64,
+                                  nrot: usize, Brot: &[f64]) -> Vec<f64>{
+
+  // Product of rotational constants
+    let mut prod_Brot=1.0;
+    for i in 0..nrot{
+       prod_Brot *= Brot[i];
+    }
+    prod_Brot = prod_Brot.sqrt(); 
+
+
+
+    let rdim = (nrot as f64) /2.0;
+
+    let sqrt_pi = f64::sqrt(std::f64::consts::PI);
+    let crt = (f64::powf(sqrt_pi, nrot as f64))/prod_Brot;
+
+    let const_W = crt/gamma_func(1.0+rdim);
+    let const_rho = crt/gamma_func(rdim);
+
+    let mut res = vec![0.0; nebin + 1];
+    res[0] = 1.0;
+
+  // Create W(E) or Rho(E) for nrot-dimensional classical rotor
+    for i in 1..=nebin{
+       let Ei = (i as f64) *dE;
+       let Eicenter =  ((i as f64)-0.5)*dE;
+
+       match what.as_str() {
+         "sum" => res[i] = const_W*(f64::powf(Ei, rdim)),
+         "den" => res[i] = const_rho*(f64::powf(Eicenter, rdim-1.0)),
+          _    => println!("Wrong mode used in get_pure_rotational_WE_or_rhoE()") 
+       }
+
+    }
+    return res;
+}
+//=============================================================================================
+
+
+//=============================================================================================
+fn get_kE(nebin: usize, dE: f64,
+          nvib_ts: usize, nvib_cpx: usize,
+          omega_ts: &[f64], omega_cpx: &[f64],
+          nrot_ts: usize, nrot_cpx: usize,
+          Brot_ts: &[f64], Brot_cpx: &[f64],
+          sigma_ts: f64, sigma_cpx: f64, 
+          dH0: f64) -> Vec<f64>{
+
+
+   let mut freq_bin_cpx = vec![0; nvib_cpx];
+   for i in 0..nvib_cpx {
+       freq_bin_cpx[i] = (omega_cpx[i] / dE + 0.5) as usize;
+   }
+
+   let mut freq_bin_ts = vec![0; nvib_ts];
+   for i in 0..nvib_ts {
+       freq_bin_ts[i] = (omega_ts[i] / dE + 0.5) as usize;
+   }
+
+   let mut WE_ts = get_rovib_WE_or_rhoE("sum".to_string(), nvib_ts, nebin, dE, nrot_ts, &freq_bin_ts, &Brot_ts);
+   let mut rhoE_cpx = get_rovib_WE_or_rhoE("den".to_string(), nvib_cpx, nebin, dE, nrot_cpx, &freq_bin_cpx, &Brot_cpx);
+
+   const H_PLANCK: f64 = 3.3356E-11; 
+   let sigma = sigma_ts / sigma_cpx;
+
+ //Minimum energy (including ZPE) of the reaction as integer energy bin
+   let nbin_dH0 = (dH0/dE + 0.5) as usize;
+
+ // Here comes finally the RRKM formula k(E) = sigma * W_ts(E)/rho(E) / hplanck
+   let mut kE = vec![0.0;nebin+1];
+   //for i in 1..=nebin {
+   for i in nbin_dH0..=nebin {
+       kE[i] = sigma * WE_ts[i-nbin_dH0] / rhoE_cpx[i] / H_PLANCK;  
+   }
+
+   return kE;
+}
+//=============================================================================================
+
+//=============================================================================================
+fn parfunc_nd_harmosc(RT: f64, nvib: usize, omega: &[f64]) -> f64{
+
+   const H_PLANCK: f64 = 3.3356E-11;
+
+   let mut pf_vib = 0.0; 
+   for i in 0..nvib {
+       pf_vib *= 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK*omega[i]/RT);
+   }
+
+   return pf_vib;
+}
+//=============================================================================================
+
+//=============================================================================================
+fn parfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
+
+   const H_PLANCK: f64 = 3.3356E-11;
+   const PI_VAL : f64 = (std::f64::consts::PI); 
+
+// Product of rotational constants
+   let mut prod_Brot=1.0;
+   for i in 0..nrot{
+      prod_Brot *= Brot[i];
+   }
+   prod_Brot = prod_Brot.sqrt();
+
+   let rdim = (nrot as f64) /2.0;
+
+   let crt = f64::powf(8.0 * PI_VAL*PI_VAL * RT / (H_PLANCK*H_PLANCK),  nrot as f64) 
+
+   let const_rho = crt/gamma_func(rdim);
+
+
+   res[i] = const_W*(f64::powf(Ei, rdim)),
+
+
+   let mut pf_rot = 0.0;
+   for i in 0..nvib {
+       pf_rot *= 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK*omega[i]/RT);
+   }
+
+   return pf_rot;
+
+}
+//=============================================================================================
+
+//=============================================================================================
+fn parfunc_3d_translation(RT: f64, masstot: f64, pressure: f64) -> f64{
+
+   const H_PLANCK: f64 = 3.3356E-11;
+   const TWOPI : f64 = 2.0 * (std::f64::consts::PI); 
+ 
+   let mut lam = f64::powf(2.0 * TWOPI*TWOPI * masstot*RT/(H_PLANCK*H_PLANCK),  nrot as f64);
+   lam = lam*lam*lam
+
+   let mut Vol = RT/pressure
+
+   return pf_trans;
+
+}
+//=============================================================================================
+
+
+
+
+
+
+
+//=====================================================================================================================
+use std::time::{Duration, Instant};
+fn format_duration(duration: Duration) -> String {
+    let seconds = duration.as_secs();
+    let hours = seconds / 3600;
+    let minutes = (seconds % 3600) / 60;
+    let seconds = seconds % 60;
+
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+}
+//=====================================================================================================================
+
+
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+fn main() {
+   let start_time = Instant::now();
+
+ // Page 92 Holbrook Pilling book:
+   let omega_t = [260.0, 260.0, 364.0, 667.0, 760.0, 760.0, 1205.0, 1205.0, 3033.0];
+   let nvib_t = omega_t.len();
+   let ZPE_t = 0.5 * omega_t.iter().sum::<f64>();
+
+   let Brot_t = [];
+   let nrot_t = 0 as usize; 
+
+   let dE =  300.0; //cm-1
+   let Emax = 40000.0; // cm-1
+   let nebin = (Emax / dE + 0.5) as usize;
+
+
+   let mut freq_bin_t = vec![0; nvib_t];
+   for i in 0..nvib_t {
+       freq_bin_t[i] = (omega_t[i] / dE + 0.5) as usize;
+   }
+
+   let mut WE_t = get_rovib_WE_or_rhoE("sum".to_string(), nvib_t, nebin, dE, nrot_t, &freq_bin_t, &Brot_t);
+
+   let mut Ev = 83.5934*50.92; //59.2 kJmol -- > cm-1
+   println!("{:>12.3} {:>12.3}", Ev, ZPE_t);
+
+    use std::fs;
+    use std::io::Write;
+    let mut file = fs::File::create("test_WEv.dat").unwrap();
+    for i in 1..=nebin {
+        let ene = (i as f64 -0.5) * dE;
+        writeln!(&mut file, "{:>10.2} {:>15.3e}", ene/ZPE_t,  WE_t[i]).unwrap();
+    }
+
+
+ // Page 111 Holbrook Pilling book:
+   let omega_t = [733.0, 1018.0, 1018.0, 1355.0, 1488.0, 1488.0, 2968.0, 3044.0, 3044.0];
+   let nvib_t = omega_t.len();
+   let ZPE_t = 0.5 * omega_t.iter().sum::<f64>();
+
+   let Brot_t = [5.10, 0.433, 0.433];
+   let nrot_t = Brot_t.len() as usize;
+
+   let dE =  10.0; //cm-1
+   let Emax = 10000.0; // cm-1
+   let nebin = (Emax / dE + 0.5) as usize;
+
+
+   let mut freq_bin_t = vec![0; nvib_t];
+   for i in 0..nvib_t {
+       freq_bin_t[i] = (omega_t[i] / dE + 0.5) as usize;
+   }
+
+   let mut WE_t = get_rovib_WE_or_rhoE("den".to_string(), nvib_t, nebin, dE, nrot_t, &freq_bin_t, &Brot_t);
+
+    let mut file = fs::File::create("test_rhoEVR.dat").unwrap();
+    for i in 1..=nebin {
+        let ene = (i as f64 -0.5) * dE;
+        writeln!(&mut file, "{:>10.2} {:>15.3}", ene,  WE_t[i].log10()).unwrap();
+    }
+
+
+
+
+
+
+  //==================================================
+  // Input for complex and TS structures to run RRKM
+  //==================================================
+  // Energy grain
+  //--------------------------------------------------
+    let dE =  20.0; //cm-1
+    let Emax = 20000.0; // cm-1
+    let nebin = (Emax / dE + 0.5) as usize; 
+
+    println!();          
+    println!("ΔE (energy grain):             {:>10.1} cm-1", dE);
+    println!("Emax:                          {:>10.1} cm-1 \n", Emax);
+  //--------------------------------------------------
+  // Vibrations
+  //--------------------------------------------------
+    let omega_cpx = [600.0, 1000.0, 1500.0];
+    let omega_ts = [600.0, 1200.0, 1500.0];
+    let nvib_cpx = omega_cpx.len();
+    let nvib_ts = omega_ts.len();
+
+    //use std::iter::Sum;
+    let ZPE_cpx = 0.5 * omega_cpx.iter().sum::<f64>(); //0.5*(omega_cpx.iter().sum());
+    let ZPE_ts = 0.5 * omega_ts.iter().sum::<f64>(); //0.5*(omega_cpx.iter().sum());
+
+    println!("ZPE of complex:                {:>10.1} cm-1", ZPE_cpx);
+    println!("ZPE of TS:                     {:>10.1} cm-1 \n", ZPE_ts );
+  //--------------------------------------------------
+  // Rotations
+  //--------------------------------------------------
+    let Brot_cpx = [600.0, 1200.0, 1500.0];
+    let Brot_ts = [600.0, 1200.0, 1500.0];
+    let nrot_cpx = Brot_cpx.len();
+    let nrot_ts = Brot_ts.len();
+ //--------------------------------------------------
+  // E0 = reaction energy (only electronic no ZPE)
+  // ΔH0 = 0K heat of formation (including ZPEs)
+  //
+  // ΔH0 = E0 + ZPE_ts - ZPE_cpx
+  //--------------------------------------------------
+    let Ezero = 4100.0; // in cm-1
+    let dH0 = Ezero + ZPE_ts - ZPE_cpx;
+    println!("E0  (reaction energy at 0K):   {:>10.1} cm-1  (no ZPE only pure electronic)", Ezero);
+    println!("ΔH0 (reaction enthalpy at 0K): {:>10.1} cm-1  (ΔH0 = E0 + ZPE_ts - ZPE_cpx)\n", dH0);
+
+    if Ezero >= Emax {
+        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        println!{"Code stoped beacuse Emax is too small comapred to reaction energy (E0)"};
+        println!("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        panic!{"!!!! Increase Emax !!!!"};
+    }
+ //--------------------------------------------------
+ // Symmetry numbers
+ //--------------------------------------------------
+    let sigma_cpx = 1.0;
+    let sigma_ts = 1.0;
+    println!("symm_num_cpx:                   {:>10.0}", sigma_cpx);
+    println!("symm_num_ts:                    {:>10.0} \n", sigma_ts);
+  //==================================================
+  // End of Input
+  //==================================================
+
+  //Minimum energy (including ZPE) of the reaction as integer energy bin
+   let nbin_dH0 = (dH0/dE + 0.5) as usize;
+
+  // Compute RRKM rate constant
+    let kRRKM = get_kE(nebin, dE, nvib_ts, nvib_cpx, &omega_ts, &omega_cpx, nrot_ts, nrot_cpx, &Brot_ts, &Brot_cpx, sigma_ts, sigma_cpx, dH0);
+
+  //Print rate constant k(E)
+    //use std::fs;
+    //use std::io::Write;
+    let mut file = fs::File::create("microcanonical_rate.dat").unwrap();
+    //for i in 1..=nebin {
+    for i in nbin_dH0..=nebin {
+        let ene = i as f64 * dE;
+        writeln!(&mut file, "{:>10.1} {:>15.6e}", ene, kRRKM[i]).unwrap();
+    }
+
+
+   let end_time = Instant::now();
+
+   let duration = end_time - start_time;
+   let duration_seconds = duration.as_secs_f64();
+
+
+
+   println!("--------------------------------------------------------");
+   println!("RRKM calculation finished \n");
+   println!("Data written into file: microcanonical_rate.dat \n");
+
+   println!("Computational time: {:>15.4} sec", duration_seconds);
+   println!("Computational time:          {} hh:mm:ss\n", format_duration(duration));
+}
+
