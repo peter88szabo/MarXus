@@ -20,8 +20,8 @@ pub fn gamma_func(a: f64) -> f64 {
         1.5056327351493116e-7,
     ];
 
-    let mut gamm = 0.0;
     let mut x = a;
+    let gamm: f64;
 
     if x < 0.5 {
         gamm = PI / (f64::sin(x*PI) * gamma_func(1.0 - x));
