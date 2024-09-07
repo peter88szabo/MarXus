@@ -1,19 +1,11 @@
 #![allow(non_snake_case)]
-//=====================================================================================================================
-use std::time::{Duration, Instant};
-fn format_duration(duration: Duration) -> String {
-    let seconds = duration.as_secs();
-    let hours = seconds / 3600;
-    let minutes = (seconds % 3600) / 60;
-    let seconds = seconds % 60;
 
-    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
-}
-//=====================================================================================================================
-
+mod utils;
 mod numeric;
 mod rrkm;
 use crate::rrkm::rrkm_rate::get_kE;
+use crate::utils::time::format_duration;
+use std::time::{Instant};
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
