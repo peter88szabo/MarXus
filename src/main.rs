@@ -137,7 +137,10 @@ fn main() {
         &Brot_cpx, sigma_ts, sigma_cpx, dH0,
     );
 
-    print_rrkm_rates(nbin_dH0, nebin, dE, dH0, &kRRKM);
+    let fname = "microcanonical_rates_new.dat";
+
+
+    print_rrkm_rates(fname, nbin_dH0, nebin, dE, dH0, &kRRKM);
 
     let end_time = Instant::now();
 
