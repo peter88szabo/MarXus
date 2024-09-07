@@ -1,20 +1,17 @@
 #![allow(non_snake_case)]
-
 mod utils;
 mod numeric;
 mod rrkm;
+
 use crate::rrkm::rrkm_rate::get_kE;
 use crate::utils::time::format_duration;
+use crate::utils::print_rates::print_rrkm_rates;
 use std::time::{Instant};
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 fn main() {
     let start_time = Instant::now();
-
-    use std::fs;
-    use std::io::Write;
-
 
     //==================================================
     // Input for complex and TS structures to run RRKM
@@ -140,15 +137,7 @@ fn main() {
         &Brot_cpx, sigma_ts, sigma_cpx, dH0,
     );
 
-    //Print rate constant k(E)
-    //use std::fs;
-    //use std::io::Write;
-    let mut file = fs::File::create("microcanonical_rate.dat").unwrap();
-    //for i in 1..=nebin {
-    for i in nbin_dH0..=nebin {
-        let ene = i as f64 * dE;
-        writeln!(&mut file, "{:>10.1} {:>10.1} {:>15.6e} {:>15.6e}", ene, ene-dH0, kRRKM[i], 1.0/kRRKM[i]).unwrap();
-    }
+    print_rrkm_rates(nbin_dH0, nebin, dE, dH0, &kRRKM);
 
     let end_time = Instant::now();
 

@@ -1,5 +1,5 @@
 //=====================================================================================================================
-use std::time::{Duration, Instant};
+use std::time::{Duration};
 pub fn format_duration(duration: Duration) -> String {
     let seconds = duration.as_secs();
     let hours = seconds / 3600;
