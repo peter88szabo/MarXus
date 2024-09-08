@@ -252,6 +252,13 @@ impl MoleculeBuilder {
             None => ene + zpe, // Calculate dh0 if ene is provided
         };
 
+
+        // Calculate brot whether brot or qxzy is provided
+        //let brot = match self.brot {
+        //    Some(brot) => brot,
+        //    None => intertia::get_rotconst(self.qxyz), // Calculate ene if dh0 is provided
+        //};
+
         MoleculeStruct {
             name: self.name,
             nvib: self.freq.len() as u32,
@@ -273,11 +280,11 @@ impl MoleculeBuilder {
 fn main() {
 
     let water = MoleculeBuilder::new(String::from("Water"), MolType::mol)
-    .freq(vec![440.0, 1600.0, 3600.0])
-    .ene(199.9)  // Provide ene
-    .multi(3.0)
-    .symnum(6.0)
-    .build();
+        .freq(vec![440.0, 1600.0, 3600.0])
+        .ene(199.9)  // Provide ene
+        .multi(3.0)
+        .symnum(6.0)
+        .build();
 
     println!("ene is provided");
     println!("zpe: {:?}", water.zpe);
@@ -285,16 +292,22 @@ fn main() {
     println!("dh0: {:?}", water.dh0);  // Output: ene + zpe
     
     let water = MoleculeBuilder::new(String::from("Water"), MolType::mol)
-    .freq(vec![440.0, 1600.0, 3600.0])
-    .dh0(250.0)  // Provide dh0
-    .multi(3.0)
-    .symnum(6.0)
-    .build();
+        .freq(vec![440.0, 1600.0, 3600.0])
+        .dh0(250.0)  // Provide dh0
+        .multi(3.0)
+        .symnum(6.0)
+        .build();
 
     println!("\ndh0 is provided");
     println!("zpe: {:?}", water.zpe);
     println!("ene: {:?}", water.ene);  // Output: dh0 - zpe
     println!("dh0: {:?}", water.dh0);  // Output: 250.0
+                                       //
+    println!("\nThermo");
+    println!("gtot: {:?}", water.thermo.gtot);
+    println!("srot: {:?}", water.thermo.srot);
+    println!("hvib: {:?}", water.thermo.hvib);
+    println!("pfvib: {:?}", water.thermo.pfvib);
                                        
 
 
