@@ -64,15 +64,33 @@ fn partfunc_3d_translation(RT: f64, masstot: f64, pressure: f64) -> f64{
    const H_PLANCK: f64 = 3.3356E-11;
    const TWOPI : f64 = 2.0 * (std::f64::consts::PI); 
  
-   let mut lam = f64::powf(2.0 * TWOPI*TWOPI * masstot*RT/(H_PLANCK*H_PLANCK),  nrot as f64);
-   lam = lam*lam*lam
+   let mut lam = f64::sqrt(TWOPI * masstot * RT /(H_PLANCK * H_PLANCK));
 
-   let mut Vol = RT/pressure
+   lam = lam * lam * lam;
+
+   let mut Vol = RT/pressure;
+
+   let pf_trans = Vol * lam;
 
    return pf_trans;
 
 }
 //=============================================================================================
+
+fn partfunc_electronic(RT: f64, nstate: u32; ene_exc: &[f64, nstate], degeneracy: &[f64, nstate]) -> f64{
+
+   if ene_exc[0] != 0.0 { panic!};
+
+   let mut pf_elec = degeneracy[0];
+   for i in 1..nstate {
+       pf_elec +=  degeneracy[i] * f64::exp(ene_exc[i]/RT);
+   }
+
+   return pf_elec;
+}
+//=============================================================================================
+
+
 
 
 
