@@ -11,6 +11,8 @@ enum MolType {
     reactant,
 }
 #[derive(Debug)]
+#[allow(unused_variables)]
+#[allow(dead_code)]
 struct ThermoStruct {
     //partition functions
     pftot: f64,
@@ -55,6 +57,8 @@ struct ThermoStruct {
     gvib: f64,
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 impl Default for ThermoStruct {
     fn default() -> Self {
         ThermoStruct {
@@ -93,6 +97,8 @@ impl Default for ThermoStruct {
 }
 
 #[derive(Debug)]
+#[allow(unused_variables)]
+#[allow(dead_code)]
 struct Tunneling {
     freq_imag: f64,   // imag freq of TS mode
     vfor: f64,        // forward barrier for Eckart
@@ -101,6 +107,8 @@ struct Tunneling {
     kappa: f64,       // tunneling correction
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 impl Default for Tunneling {
     fn default() -> Self {
         Tunneling {
@@ -114,9 +122,10 @@ impl Default for Tunneling {
 }
 
 #[derive(Debug)]
+#[allow(unused_variables)]
+#[allow(dead_code)]
 struct MoleculeStruct {
     name: String,          // name of the species
-    natom: u32,            // number of atoms
     nvib: u32,             // number of vibrational modes
     nrot: u32,             // number of rotational modes
     nlin: bool,            // linear (nlin=1) or not (nlin=0)
@@ -129,7 +138,6 @@ struct MoleculeStruct {
     totmass: f64,          // total mass
     freq: Vec<f64>,        // harmonic frequencies
     brot: Vec<f64>,        // rotational constants
-    atom: Vec<String>,     // atomic symbols
     we: Vec<f64>,          // sum of states
     rhoe: Vec<f64>,        // density of states
     moltype: MolType,  // molecule type
@@ -137,11 +145,12 @@ struct MoleculeStruct {
     thermo: ThermoStruct,  // thermodynamic properties
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 impl Default for MoleculeStruct {
     fn default() -> Self {
         MoleculeStruct {
             name: String::new(),
-            natom: 0,
             nvib: 0,
             nrot: 0,
             nlin: false,
@@ -154,7 +163,6 @@ impl Default for MoleculeStruct {
             totmass: 0.0,
             freq: Vec::new(),
             brot: Vec::new(),
-            atom: Vec::new(),
             we: Vec::new(),
             rhoe: Vec::new(),
             moltype: MolType::mol,
@@ -164,6 +172,8 @@ impl Default for MoleculeStruct {
     }
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 struct MoleculeBuilder {
     name: String,
     moltype: MolType,
@@ -178,6 +188,8 @@ struct MoleculeBuilder {
     symnum: f64,
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 impl MoleculeBuilder {
     fn new(name: String, moltype: MolType) -> Self {
         MoleculeBuilder {
@@ -292,10 +304,13 @@ impl MoleculeBuilder {
 
 fn main() {
 
-    let water = MoleculeBuilder::new(String::from("Water"), MolType::mol)
+    let name = "Water".to_string();
+    let moltype = MolType::mol;
+
+    let water = MoleculeBuilder::new(name, moltype)
         .freq(vec![440.0, 1600.0, 3600.0])
         .brot(vec![10.0, 10.0, 20.0])
-        .dh0(199.9)  // Provide ene
+        .dh0(199.9)
         .multi(3.0)
         .chiral(22.0)
         .symnum(6.0)
