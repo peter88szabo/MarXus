@@ -9,8 +9,28 @@ use crate::utils::print_rates::print_rrkm_rates;
 use std::time::{Instant};
 
 
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 fn main() {
+    let logo = r#"
+ ============================================================
+
+ M     M      AAAAA     RRRRR       X   X     U   U     SSSSS
+ MM   MM     A     A    R    R       X X      U   U    S
+ M M M M     AAAAAAA    RRRRR         X       U   U     SSS
+ M  M  M     A     A    R   R        X X      U   U        S
+ M     M     A     A    R    R      X   X     UUUUU    SSSSS
+
+         In service of kinetics and thermochemistry
+
+                Version: 0.1   08.Sept.2024
+
+ ============================================================
+"#;
+    println!("{}", logo);
+
+
+
     let start_time = Instant::now();
 
     //==================================================

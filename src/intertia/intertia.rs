@@ -12,9 +12,14 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
         let y = xyz[k][1];
         let z = xyz[k][2];
 
-        ixx += mass * (y.pomassi(2) + z.pomassi(2));
-        iyy += mass * (x.pomassi(2) + z.pomassi(2));
-        izz += mass * (x.pomassi(2) + y.pomassi(2));
+        let x2 = x * x;
+        let y2 = y * y;
+        let z2 = z * z;
+
+
+        ixx += mass * (y2 + z2);
+        iyy += mass * (x2 + z2);
+        izz += mass * (x2 + y2);
         ixy += mass * x * y;
         ixz += mass * x * z;
         iyz += mass * y * z;
@@ -26,7 +31,7 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
         [ixz, iyz, izz],
     ];
 
-    let eigvals = jacobi_diagonalizer(&inertia_tensor);
+    let eigvals = [0.0, 0.0, 0.0];
 
     //TODO: it must be converted to cm-1 before return
 

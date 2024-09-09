@@ -1,4 +1,7 @@
 #[allow(non_snake_case)]
+#[allow(non_camel_case_types)]
+#[allow(unused_variables)]
+#[allow(dead_code)]
 
 #[derive(Debug)]
 enum MolType {
@@ -7,7 +10,6 @@ enum MolType {
     bimol,
     reactant,
 }
-
 #[derive(Debug)]
 struct ThermoStruct {
     //partition functions
@@ -127,8 +129,6 @@ struct MoleculeStruct {
     totmass: f64,          // total mass
     freq: Vec<f64>,        // harmonic frequencies
     brot: Vec<f64>,        // rotational constants
-    mass: Vec<f64>,        // masses of atoms
-    qxyz: Vec<f64>,        // Cartesian coordinates
     atom: Vec<String>,     // atomic symbols
     we: Vec<f64>,          // sum of states
     rhoe: Vec<f64>,        // density of states
@@ -154,8 +154,6 @@ impl Default for MoleculeStruct {
             totmass: 0.0,
             freq: Vec::new(),
             brot: Vec::new(),
-            mass: Vec::new(),
-            qxyz: Vec::new(),
             atom: Vec::new(),
             we: Vec::new(),
             rhoe: Vec::new(),
@@ -171,11 +169,12 @@ struct MoleculeBuilder {
     moltype: MolType,
     nlin: bool,
     freq: Vec<f64>,
-    brot: Option<Vec<f64>>,
-    qxyz: Option<Vec<f64>>,
-    ene: Option<f64>,
-    dh0: Option<f64>,
+    brot: Vec<f64>,
+    qxyz: Vec<f64>,
+    ene:  Option<f64>,
+    dh0:  Option<f64>,
     multi: f64,
+    chiral: f64,
     symnum: f64,
 }
 
@@ -186,11 +185,12 @@ impl MoleculeBuilder {
             moltype,
             nlin: false,  // Default value for nlin
             freq: Vec::new(),
-            brot: None,
-            qxyz: None,
+            brot: Vec::new(),
+            qxyz: Vec::new(),
             ene: None,    // None means the energy is not provided yet
             dh0: None,    // None means the enthalpy is not provided yet
             multi: 1.0,   // Default multiplicity
+            chiral: 1.0,   // Default multiplicity
             symnum: 1.0,  // Default symmetry number
         }
     }
@@ -206,22 +206,20 @@ impl MoleculeBuilder {
     }
 
     fn brot(mut self, brot: Vec<f64>) -> Self {
-        self.brot = Some(brot);
+        self.brot = brot;
         self
     }
 
     fn qxyz(mut self, qxyz: Vec<f64>) -> Self {
-        self.qxyz = Some(qxyz);
+        self.qxyz = qxyz;
         self
     }
 
-    // Set energy and calculate dh0
     fn ene(mut self, ene: f64) -> Self {
         self.ene = Some(ene);
         self
     }
 
-    // Set dh0 and calculate ene
     fn dh0(mut self, dh0: f64) -> Self {
         self.dh0 = Some(dh0);
         self
@@ -232,48 +230,63 @@ impl MoleculeBuilder {
         self
     }
 
+    fn chiral(mut self, chiral: f64) -> Self {
+        self.chiral = chiral;
+        self
+    }
+
     fn symnum(mut self, symnum: f64) -> Self {
         self.symnum = symnum;
         self
     }
 
     fn build(self) -> MoleculeStruct {
-        // Compute the ZPE in a single line: sum of frequencies divided by 2
+        // Check if `freq`, `brot` or `qxyz`, `ene` or `dh0` are `None`
+        if self.freq.is_empty() {
+            panic!("\n Error: Frequency vector (freq) must be provided.\n");
+        }
+        if self.brot.is_empty() && self.qxyz.is_empty(){
+            panic!("\n Error: Rotational constants (brot) or geometry (qxyz) must be provided.\n");
+        }
+        if self.ene.is_none() && self.dh0.is_none() {
+            panic!("\n Error: Either energy (ene) or enthalpy (dh0) must be provided.\n");
+        }
+
+        // zero-point energy:
         let zpe: f64 = self.freq.iter().sum::<f64>() / 2.0;
 
         // Calculate ene or dh0 based on which is provided
         let ene = match self.ene {
             Some(ene_val) => ene_val,
-            None => self.dh0.unwrap_or(0.0) - zpe, // Calculate ene if dh0 is provided
+            None => self.dh0.unwrap() - zpe, // Calculate ene if dh0 is provided 
         };
 
         let dh0 = match self.dh0 {
             Some(dh0_val) => dh0_val,
-            None => ene + zpe, // Calculate dh0 if ene is provided
+            None => self.ene.unwrap() + zpe, // Calculate dh0 if ene is provided
         };
 
+        let brot = if !self.brot.is_empty() {
+            self.brot.clone() // Use the provided brot if it's not empty
+        } else {
+            vec![4.0, 4.0, 4.0] // inertia::get_rotconst(self.qxyz)
+        };
 
-        // Calculate brot whether brot or qxzy is provided
-        //let brot = match self.brot {
-        //    Some(brot) => brot,
-        //    None => intertia::get_rotconst(self.qxyz), // Calculate ene if dh0 is provided
-        //};
-
-        MoleculeStruct {
+         return MoleculeStruct {
             name: self.name,
             nvib: self.freq.len() as u32,
-            nrot: self.brot.as_ref().map_or(0, |b| b.len() as u32),
+            nrot: self.brot.len() as u32,
             nlin: self.nlin,
             zpe,
             ene,
             dh0,
             symnum: self.symnum,
             multi: self.multi,
+            chiral: self.chiral,
             freq: self.freq,
-            brot: self.brot.unwrap_or_else(|| vec![20.0, 30.0, 40.0]),  // Placeholder brot logic
-            qxyz: self.qxyz.unwrap_or_else(|| vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]),  // Placeholder qxyz logic
+            brot: self.brot, 
             ..Default::default() // Use defaults for other fields
-        }
+        };
     }
 }
 
@@ -281,28 +294,24 @@ fn main() {
 
     let water = MoleculeBuilder::new(String::from("Water"), MolType::mol)
         .freq(vec![440.0, 1600.0, 3600.0])
-        .ene(199.9)  // Provide ene
+        .brot(vec![10.0, 10.0, 20.0])
+        .dh0(199.9)  // Provide ene
         .multi(3.0)
+        .chiral(22.0)
         .symnum(6.0)
         .build();
 
+
     println!("ene is provided");
+    println!("symnum: {:?}", water.symnum);
+    println!("multi: {:?}", water.multi);
+    println!("chiral: {:?}", water.chiral);
     println!("zpe: {:?}", water.zpe);
     println!("ene: {:?}", water.ene);  // Output: 199.9
     println!("dh0: {:?}", water.dh0);  // Output: ene + zpe
+    println!("freq: {:?}", water.freq);
+    println!("brot: {:?}", water.brot);
     
-    let water = MoleculeBuilder::new(String::from("Water"), MolType::mol)
-        .freq(vec![440.0, 1600.0, 3600.0])
-        .dh0(250.0)  // Provide dh0
-        .multi(3.0)
-        .symnum(6.0)
-        .build();
-
-    println!("\ndh0 is provided");
-    println!("zpe: {:?}", water.zpe);
-    println!("ene: {:?}", water.ene);  // Output: dh0 - zpe
-    println!("dh0: {:?}", water.dh0);  // Output: 250.0
-                                       //
     println!("\nThermo");
     println!("gtot: {:?}", water.thermo.gtot);
     println!("srot: {:?}", water.thermo.srot);
