@@ -2,7 +2,9 @@
 mod utils;
 mod numeric;
 mod rrkm;
+mod inertia;
 
+use crate::inertia::inertia::get_brot;
 use crate::rrkm::rrkm_rate::get_kE;
 use crate::utils::time::format_duration;
 use crate::utils::print_rates::print_rrkm_rates;
@@ -176,4 +178,35 @@ fn main() {
         "Computational time:          {} hh:mm:ss\n",
         format_duration(duration)
     );
+
+    const BOHR_RADIUS: f64 = 0.52917721092; // Bohr radius in angstroms
+    const OXYGEN_MASS: f64 = 15.999; // Atomic mass of Oxygen in atomic units
+    const HYDROGEN_MASS: f64 = 1.00784; // Atomic mass of Hydrogen in atomic units
+
+    // Water molecule geometry in angstroms
+    let water_xyz_angstrom = vec![
+        [0.0, 0.0, 0.0],       // Oxygen at the origin
+        [0.9572, 0.0, 0.0],    // Hydrogen 1
+        [-0.2399872, 0.927297, 0.0], // Hydrogen 2
+    ];
+
+    // Convert coordinates from angstroms to atomic units (Bohr)
+    let water_xyz: Vec<[f64; 3]> = water_xyz_angstrom
+        .iter()
+        .map(|&atom| [atom[0] / BOHR_RADIUS, atom[1] / BOHR_RADIUS, atom[2] / BOHR_RADIUS])
+        .collect();
+
+    // Masses of the atoms in atomic mass units (Oxygen, Hydrogen 1, Hydrogen 2)
+    let water_mass = vec![
+        OXYGEN_MASS,      // Oxygen
+        HYDROGEN_MASS,    // Hydrogen 1
+        HYDROGEN_MASS,    // Hydrogen 2
+    ];
+
+
+    let brot = get_brot(&water_xyz, &water_mass);
+
+    println!("Rotational Constant of Water in cm-1");
+    println!("{:?}",&brot)
+
 }

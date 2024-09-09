@@ -1,5 +1,4 @@
-//================================================================================================
-fn jacobi(a: &mut Vec<Vec<f64>>, itmax: usize, th: f64, iord: i32) -> (Vec<Vec<f64>>, Vec<f64>) {
+pub fn jacobi(a: &mut Vec<Vec<f64>>, itmax: usize, th: f64, iord: i32) -> (Vec<Vec<f64>>, Vec<f64>) {
     //================================================================================================
     // a(:,:)--> input matrix to be diagonalized. (It's restored at the end of the procedure)
     // th    --> treshold for the iteration
@@ -176,7 +175,7 @@ fn jacobi(a: &mut Vec<Vec<f64>>, itmax: usize, th: f64, iord: i32) -> (Vec<Vec<f
 }
 //==================================================================================
 
-fn print_eigval_and_eigvec(eigval: &[f64], eigvec: &[Vec<f64>]) {
+pub fn print_eigval_and_eigvec(eigval: &[f64], eigvec: &[Vec<f64>]) {
     println!("Eigenvalues and Eigenvectors");
     println!();
     let (minval_1d, maxval_1d) = min_max_abs_value_1d_array(&eigval);
@@ -208,7 +207,7 @@ fn print_eigval_and_eigvec(eigval: &[f64], eigvec: &[Vec<f64>]) {
     }
 }
 
-fn print_matrix(matrix: &[Vec<f64>]) {
+pub fn print_matrix(matrix: &[Vec<f64>]) {
     for row in matrix {
         for &element in row {
             // Adjust the formatting as needed, e.g., {:.2} for two decimal places
@@ -250,81 +249,3 @@ fn min_max_abs_value_1d_array(vector: &[f64]) -> (f64, f64) {
     return (min_abs, max_abs);
 }
 
-use std::time::Instant;
-
-fn main() {
-    let mut a: Vec<Vec<f64>> = vec![
-        vec![1.0, 2.0, 3.0],
-        vec![2.0, 4.0, 5.0],
-        vec![3.0, 5.0, 6.0],
-    ];
-
-    print_matrix(&a);
-    let size = a.len();
-
-    println!();
-
-    let th = 1e-9;
-    let iord: i32 = 1;
-    let itmax: usize = 100;
-
-    let start_time = Instant::now();
-
-    let (eigvec, eigval) = jacobi(&mut a, itmax, th, iord);
-    let end_time = Instant::now();
-
-    let elapsed_time = (end_time.duration_since(start_time)).as_secs_f64();
-    println!();
-    println!(
-        "Time spent on diagonalization for {}x{} size matrix: {} s",
-        size, size, elapsed_time
-    );
-    println!();
-
-    print_eigval_and_eigvec(&eigval, &eigvec);
-
-    println!();
-
-    // Define the size of the matrix
-    let size = 1000;
-
-    // Initialize a 2D vector with non-zero values
-    let mut matrix = vec![vec![0.0; size]; size];
-
-    // Fill the upper triangular part of the matrix with non-zero values
-    for i in 0..size {
-        for j in 0..size {
-            let value1 = (i + 1) as f64 * (j + 1) as f64;
-            let value2 = ((i + j) as f64).sqrt() as f64;
-            matrix[i][j] = value1;
-            matrix[j][i] = value1; // Ensure symmetry by setting the corresponding element
-
-            if i < size - 1 {
-                matrix[i + 1][j] = value2;
-            }
-
-            if j < size - 1 {
-                matrix[i][j + 1] = value2;
-            }
-        }
-    }
-
-    let th = 1e-7;
-    let iord: i32 = 1;
-    let itmax: usize = 100;
-
-    let start_time = Instant::now();
-
-    let (eigvec, eigval) = jacobi(&mut matrix, itmax, th, iord);
-    let end_time = Instant::now();
-
-    let elapsed_time = (end_time.duration_since(start_time)).as_secs_f64();
-    println!();
-    println!(
-        "Time spent on diagonalization for {}x{} size matrix: {} s",
-        size, size, elapsed_time
-    );
-    println!();
-
-    //    print_eigval_and_eigvec(&eigval, &eigvec);
-}
