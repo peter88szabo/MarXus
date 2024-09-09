@@ -178,6 +178,7 @@ struct MoleculeBuilder {
     name: String,
     moltype: MolType,
     nlin: bool,
+    mass: Vec<f64>,
     freq: Vec<f64>,
     brot: Vec<f64>,
     qxyz: Vec<f64>,
@@ -188,6 +189,7 @@ struct MoleculeBuilder {
     symnum: f64,
 }
 
+//use crate::inertia::inertia::get_brot;
 #[allow(unused_variables)]
 #[allow(dead_code)]
 impl MoleculeBuilder {
@@ -196,6 +198,7 @@ impl MoleculeBuilder {
             name,
             moltype,
             nlin: false,  // Default value for nlin
+            mass: Vec::new(),
             freq: Vec::new(),
             brot: Vec::new(),
             qxyz: Vec::new(),
@@ -224,6 +227,11 @@ impl MoleculeBuilder {
 
     fn qxyz(mut self, qxyz: Vec<f64>) -> Self {
         self.qxyz = qxyz;
+        self
+    }
+
+    fn mass(mut self, mass: Vec<f64>) -> Self {
+        self.mass = mass;
         self
     }
 
@@ -281,7 +289,7 @@ impl MoleculeBuilder {
         let brot = if !self.brot.is_empty() {
             self.brot.clone() // Use the provided brot if it's not empty
         } else {
-            vec![4.0, 4.0, 4.0] // inertia::get_rotconst(self.qxyz)
+            vec![0.0, 0.0, 0.0] //get_brot(&self.qxyz, &self.mass)
         };
 
          return MoleculeStruct {
