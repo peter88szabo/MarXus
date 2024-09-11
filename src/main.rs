@@ -17,19 +17,40 @@ use std::time::Instant;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 fn main() {
     let logo = r#"
- ============================================================
+================================================================
 
- M     M      AAAAA     RRRRR       X   X     U   U     SSSSS
- MM   MM     A     A    R    R       X X      U   U    S
- M M M M     AAAAAAA    RRRRR         X       U   U     SSS
- M  M  M     A     A    R   R        X X      U   U        S
- M     M     A     A    R    R      X   X     UUUUU    SSSSS
+    M     M     AAAAA     RRRRR     X   X     U   U     SSSSS
+    MM   MM    A     A    R    R     X X      U   U    S
+    M M M M    AAAAAAA    RRRRR       X       U   U     SSSS
+    M  M  M    A     A    R   R      X X      U   U         S
+    M     M    A     A    R    R    X   X     UUUUU    SSSSS
 
-         In service of kinetics and thermochemistry
+ Molecular Statistical Physics for Kinetics and Thermochemistry
 
-                Version: 0.1   08.Sept.2024
+                       Version: 0.1
+                      11. Sept. 2024
 
- ============================================================
+ Author: Peter Szabo
+ Email: peter88szabo@gmail.com
+
+ Features:
+    - Partition functions
+    - Thermodynamical energy functions (U, H, F, G, S, Cv, Cp)
+    - Equilbrium constants
+    - Canonical-TST high-pressure reaction rate cofficients
+    - RRKM: Microcanonical TST
+    - Sum and Density of states with exact counting or Whitten
+      Rabinovich formula
+    - Barrierless reactions:
+        * Phase Space Theory (PST) with 1D arbitrary potential
+        * Statistical Adiabatic Channel Method (SACM)
+        * Inverse Laplace Transform
+        * Microcanonical Variational TST
+        * Canonical Variational TST
+    - Sumberged barrier with a pre-reaction vdW complex:
+      microcanonical J-resolved 2-TST treatment
+
+================================================================
 "#;
     println!("{}", logo);
 

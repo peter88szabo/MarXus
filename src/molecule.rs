@@ -24,6 +24,7 @@ pub struct ThermoStruct {
 
     //entropy functions
     pub stot: f64,
+    pub stherm: f64,
     pub selec: f64,
     pub strans: f64,
     pub srot: f64,
@@ -32,6 +33,7 @@ pub struct ThermoStruct {
 
     //internal energy functions
     pub utot: f64,
+    pub utherm: f64,
     pub uelec: f64,
     pub utrans: f64,
     pub urot: f64,
@@ -40,6 +42,7 @@ pub struct ThermoStruct {
 
     //enthalpy functions
     pub htot: f64,
+    pub htherm: f64,
     pub helec: f64,
     pub htrans: f64,
     pub hrot: f64,
@@ -48,6 +51,7 @@ pub struct ThermoStruct {
 
     //Helmholtz free energy functions
     pub ftot: f64,
+    pub ftherm: f64,
     pub felec: f64,
     pub ftrans: f64,
     pub frot: f64,
@@ -56,6 +60,7 @@ pub struct ThermoStruct {
 
     //Gibbs free energy functions
     pub gtot: f64,
+    pub gtherm: f64,
     pub gelec: f64,
     pub gtrans: f64,
     pub grot: f64,
@@ -91,26 +96,31 @@ impl Default for ThermoStruct {
             pfrot: 0.0,
             pfvib: 0.0,
             stot: 0.0,
+            stherm: 0.0,
             selec: 0.0,
             strans: 0.0,
             srot: 0.0,
             svib: 0.0,
             utot: 0.0,
+            utherm: 0.0,
             uelec: 0.0,
             utrans: 0.0,
             urot: 0.0,
             uvib: 0.0,
             htot: 0.0,
+            htherm: 0.0,
             helec: 0.0,
             htrans: 0.0,
             hrot: 0.0,
             hvib: 0.0,
             ftot: 0.0,
+            ftherm: 0.0,
             felec: 0.0,
             ftrans: 0.0,
             frot: 0.0,
             fvib: 0.0,
             gtot: 0.0,
+            gtherm: 0.0,
             gelec: 0.0,
             gtrans: 0.0,
             grot: 0.0,

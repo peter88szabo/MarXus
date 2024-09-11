@@ -10,11 +10,11 @@ const RGAS : f64 = 8.314;
 impl MoleculeStruct {
 
     pub fn eval_all_thermo_func(&mut self, temp: f64, pressure: f64, freq_cutoff: f64){
-
+        let RT = RGAS * temp;
         self.all_electronic(temp);
         self.all_translation(pressure, temp);
-        self.all_rotations(temp);
-        self.all_vibrations(temp, freq_cutoff);
+        //self.all_rotations(temp);
+        //self.all_vibrations(temp, freq_cutoff);
         //all_hinderedrotors(temp);
 
         self.thermo.utherm = self.thermo.uelec + self.thermo.utrans + self.thermo.urot + self.thermo.uvib;// + self.termo.uhindrot;
@@ -75,39 +75,7 @@ impl MoleculeStruct {
 
     }
 
-    fn all_rotations(&mut self, temp: f64){
-
-        let mut Urot = 0.0e0;;
-        let mut Frot = 0.0e0;;
-        let mut Grot = 0.0e0;;
-        let mut Srot = 0.0e0;;
-        let mut Crot = 0.0e0;;
-        let mut Crot = 0.0e0;;
-        let mut PFrot = 1.0e0;;
-
-        for &brot in &self.brot {
-            let theta = sqrt(8.d0*pi*pi*Inert*Rgas*Temp/hplanck/hplanck);
-
-            let Urot_mode = 0.5 * RGAS * temp;
-            let Hrot_mode = Urot_mode;
-            let Srot_mode = RGAS * f64::ln(theta) + 0.5 * RGAS;
-            let Frot_mode = Urot - temp * Srot; // -Rgas*Temp*log(Theta/sigma)
-            let Grot_mode = Frot; 
-
-            Urot += Urot_mode;
-            Hrot += Hrot_mode;
-            Srot += Srot_mode;
-            Frot += Frot_mode;
-            Grot += Grot_mode;
-            Crot += Crot_mode; //Cv = Cp, hence we have only a single expression here
-            PFrot *= PFrot_mode;
-        }
-
-    }
-
-    fn all_vibrations(&mut self, temp: f64, freq_cutoff: f64){
-
-        let RT = RGAS * temp;
+    fn all_vibrations(&mut self, Temp: f64, freq_cutoff: f64){
 
         let mut Uvib = 0.0e0;;
         let mut Fvib = 0.0e0;;
@@ -115,7 +83,7 @@ impl MoleculeStruct {
         let mut Svib = 0.0e0;;
         let mut Cvvib = 0.0e0;;
         let mut Cpvib = 0.0e0;;
-        let mut PFvib = 1.0e0;;
+        let mut pfvib = 1.0e0;;
 
         for &omega in &self.freq {
             let theta = omega / RGAS;
@@ -128,56 +96,22 @@ impl MoleculeStruct {
             if omega < freq_cutoff {
                 Svib_mode = entropy_vib(omega, temp);
             }else{
-                Svib_mode = Grimme_entropy(omega, freq_cutoff, temp);
+                Svib_mode = Grimme_entropy(omega, temp);
             }
 
+            let PFvib_mode = 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK * omega / (RGAS * temp))
             let Fvib_mode = Uvib_mode - Temp * Svib_mode;
             let Gvib_mode = Hvib_mode - Temp * Svib_mode;
-            let PFvib_mode = f64::exp(-Fvib_mode / RT);
-
-            let Cvib_mode = RGAS * theta * theta * f64::exp(theta/Temp) / ((temp  * (f64::exp(theta/Temp) - 1.0e0)).powi(2));
-
-            Uvib += Uvib_mode;
-            Hvib += Hvib_mode;
-            Svib += Svib_mode;
-            Fvib += Fvib_mode;
-            Gvib += Gvib_mode;
-            Cvib += Cvib_mode; //Cv = Cp, hence we have only a single expression here
-            PFvib *= PFvib_mode;
         }
 
-        self.thermo.uvib = Uvib;
-        self.thermo.hvib = Hvib;
-        self.thermo.svib = Svib;
-        self.thermo.fvib = Fvib;
-        self.thermo.gvib = Gvib;
-        self.thermo.cvvib = Cvib;
-        self.thermo.cpvib = Cvib;
-        self.thermo.pfvib = PFvib;
+
 
     }
-
-    fn Grimme_entropy(omega: f64, freq_cutoff: f64, temp: f64) -> f64 {
-        let Bav =1.0 ;
-      //Effective inertia of rotation with same period as the low-frew vibration mode
-        let mu = HPLANCK / (8.0 * pi * pi * omega);
-
-        let mu_prime = mu * Bav / (mu + Bav);
-
-      //Weight function to smoothly switch between vib --> rot
-        let dum = (freq_cutoff / omega).powi(4);
-        let wgt = 1.0 / (1.0 + dum);
-
-        let svib = wgt * Entropy_vib(omega) + (1.0 - wgt) * Entropy_rot(mu_prime);
-
-        return svib;
-    }
-
 
 
     fn entropy_rot(mu: f64, temp: f64) -> f64 {
 
-        let dum = f64::ln(f64::sqrt(8.0 * PI * PI * PI * mu * RGAS * temp)) / (HPLANCK * HPLANCK);
+        let dum = f64::ln(f64::sqrt(8.0 * PI * PI * PI * mu * RGAS * temp) / (HPLANCK * HPLANCK);
     
         let srot = RGAS * (0.5 + dum);
 
@@ -199,6 +133,18 @@ impl MoleculeStruct {
 }
 
 
+//=============================================================================================
+fn partfunc_nd_harmosc(RT: f64, nvib: usize, omega: &[f64]) -> f64 {
+    const H_PLANCK: f64 = 3.3356E-11;
+
+    let mut pf_vib = 0.0;
+    for i in 0..nvib {
+        pf_vib *= 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK * omega[i] / RT));
+    }
+
+    return pf_vib;
+}
+//=============================================================================================
 
 /*
 
@@ -237,6 +183,23 @@ fn partfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
 }
 //=============================================================================================
 
+//=============================================================================================
+fn partfunc_3d_translation(RT: f64, masstot: f64, pressure: f64) -> f64{
+
+   const H_PLANCK: f64 = 3.3356E-11;
+   const TWOPI : f64 = 2.0 * (std::f64::consts::PI);
+
+   let mut lam = f64::sqrt(TWOPI * masstot * RT /(H_PLANCK * H_PLANCK));
+
+   lam = lam * lam * lam;
+
+   let mut Vol = RT/pressure;
+
+   let pf_trans = Vol * lam;
+
+   return pf_trans;
+
+}
 //=============================================================================================
 
 fn partfunc_electronic(RT: f64, nstate: u32, ene_exc: &[f64, nstate], degeneracy: &[f64, nstate]) -> f64{
