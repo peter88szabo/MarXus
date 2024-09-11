@@ -40,7 +40,7 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
         vec![ixz, iyz, izz],
     ];
 
-    let (eigvec, eigval) = jacobi(&mut inertia_tensor, 100, 1.0e-10, 1);
+    let (_eigvec, eigval) = jacobi(&mut inertia_tensor, 100, 1.0e-10, 1);
 
     let mut inertia_amuang2 = [0.0; 3]; // Initialize with a size of 3
     let mut brot_cm1 = [0.0; 3]; // Initialize with a size of 3

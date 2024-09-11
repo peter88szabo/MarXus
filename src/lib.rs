@@ -4,3 +4,4 @@ pub mod tunneling;
 pub mod utils;
 pub mod inertia;
 pub mod thermal;
+pub mod molecule;

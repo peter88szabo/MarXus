@@ -1,16 +1,18 @@
 #![allow(non_snake_case)]
-mod utils;
+mod inertia;
+mod molecule;
 mod numeric;
 mod rrkm;
-mod inertia;
+mod thermal;
+mod utils;
 
 use crate::inertia::inertia::get_brot;
+use crate::molecule::MolType;
+use crate::molecule::MoleculeBuilder;
 use crate::rrkm::rrkm_rate::get_kE;
-use crate::utils::time::format_duration;
 use crate::utils::print_rates::print_rrkm_rates;
-use std::time::{Instant};
-
-
+use crate::utils::time::format_duration;
+use std::time::Instant;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 fn main() {
@@ -30,8 +32,6 @@ fn main() {
  ============================================================
 "#;
     println!("{}", logo);
-
-
 
     let start_time = Instant::now();
 
@@ -78,22 +78,20 @@ fn main() {
     //                  3158.61, 3175.43, 3187.75, 3195.44, 3274.53, 3289.20];
 
     // R2 trans reaction:
-    let omega_cpx = [  109.05,  154.18,  175.97,  339.01,  355.77,
-                       400.01,  612.88,  687.80,  746.10,  857.79,
-                       903.69,  965.21,  968.72,  970.14, 1005.69,
-                      1038.83, 1051.69, 1106.72, 1216.26, 1286.91,
-                      1310.84, 1357.69, 1393.49, 1443.74, 1491.42,
-                      1662.13, 1716.88, 1738.19, 3171.49, 3173.58,
-                      3174.80, 3192.26, 3197.05, 3212.98, 3266.05, 3266.53]; 
+    let omega_cpx = [
+        109.05, 154.18, 175.97, 339.01, 355.77, 400.01, 612.88, 687.80, 746.10, 857.79, 903.69,
+        965.21, 968.72, 970.14, 1005.69, 1038.83, 1051.69, 1106.72, 1216.26, 1286.91, 1310.84,
+        1357.69, 1393.49, 1443.74, 1491.42, 1662.13, 1716.88, 1738.19, 3171.49, 3173.58, 3174.80,
+        3192.26, 3197.05, 3212.98, 3266.05, 3266.53,
+    ];
 
-    // R2 reacion:     
-    let omega_ts = [   63.06,  357.13,  364.21,  521.00,  578.21,
-                      688.13,  697.88,  840.98,  850.93,  898.00,
-                      949.24,  973.29, 1008.88, 1024.17, 1034.57,
-                     1043.84, 1091.47, 1131.18, 1215.54, 1274.62,
-                     1288.67, 1420.26, 1465.22, 1513.71, 1530.23,
-                     1581.74, 1640.52, 3156.38, 3158.14, 3173.90,
-                     3178.81, 3185.86, 3202.64, 3278.43, 3330.59];
+    // R2 reacion:
+    let omega_ts = [
+        63.06, 357.13, 364.21, 521.00, 578.21, 688.13, 697.88, 840.98, 850.93, 898.00, 949.24,
+        973.29, 1008.88, 1024.17, 1034.57, 1043.84, 1091.47, 1131.18, 1215.54, 1274.62, 1288.67,
+        1420.26, 1465.22, 1513.71, 1530.23, 1581.74, 1640.52, 3156.38, 3158.14, 3173.90, 3178.81,
+        3185.86, 3202.64, 3278.43, 3330.59,
+    ];
 
     let nvib_cpx = omega_cpx.len();
     let nvib_ts = omega_ts.len();
@@ -102,16 +100,24 @@ fn main() {
     let ZPE_cpx = 0.5 * omega_cpx.iter().sum::<f64>(); //0.5*(omega_cpx.iter().sum());
     let ZPE_ts = 0.5 * omega_ts.iter().sum::<f64>(); //0.5*(omega_cpx.iter().sum());
 
-    println!("ZPE of complex:                 {:>12.1} cm-1 {:>12.2} kcal/mol", ZPE_cpx, ZPE_cpx * 2.85914e-3);
-    println!("ZPE of TS:                      {:>12.1} cm-1 {:>12.2} kcal/mol\n", ZPE_ts, ZPE_ts * 2.85914e-3);
+    println!(
+        "ZPE of complex:                 {:>12.1} cm-1 {:>12.2} kcal/mol",
+        ZPE_cpx,
+        ZPE_cpx * 2.85914e-3
+    );
+    println!(
+        "ZPE of TS:                      {:>12.1} cm-1 {:>12.2} kcal/mol\n",
+        ZPE_ts,
+        ZPE_ts * 2.85914e-3
+    );
     //--------------------------------------------------
     // Rotations
     //--------------------------------------------------
-   //R2 Complex Rotational constants in cm-1:     0.183752     0.096944     0.067233
+    //R2 Complex Rotational constants in cm-1:     0.183752     0.096944     0.067233
     let Brot_cpx = [0.183752, 0.096944, 0.067233];
 
-   //R2 TS Rotational constants in cm-1:     0.169426     0.140868     0.081368 
-    let Brot_ts = [0.169426,     0.140868,     0.081368];
+    //R2 TS Rotational constants in cm-1:     0.169426     0.140868     0.081368
+    let Brot_ts = [0.169426, 0.140868, 0.081368];
     let nrot_cpx = Brot_cpx.len();
     let nrot_ts = Brot_ts.len();
     //--------------------------------------------------
@@ -161,8 +167,7 @@ fn main() {
 
     let fname = "microcanonical_rates_new.dat";
 
-
-    print_rrkm_rates(fname, nbin_dH0, nebin, dE, dH0, &kRRKM);
+    //print_rrkm_rates(fname, nbin_dH0, nebin, dE, dH0, &kRRKM);
 
     let end_time = Instant::now();
 
@@ -171,7 +176,7 @@ fn main() {
 
     println!("--------------------------------------------------------");
     println!("RRKM calculation finished \n");
-    println!("Data written into file: microcanonical_rate.dat \n");
+    //println!("Data written into file: microcanonical_rate.dat \n");
 
     println!("Computational time: {:>15.4} sec", duration_seconds);
     println!(
@@ -179,34 +184,37 @@ fn main() {
         format_duration(duration)
     );
 
-    const BOHR_RADIUS: f64 = 0.52917721092; // Bohr radius in angstroms
-    const OXYGEN_MASS: f64 = 15.999; // Atomic mass of Oxygen in atomic units
-    const HYDROGEN_MASS: f64 = 1.00784; // Atomic mass of Hydrogen in atomic units
+    //============================================================================
 
-    // Water molecule geometry in angstroms
-    let water_xyz_angstrom = vec![
-        [0.0, 0.0, 0.0],       // Oxygen at the origin
-        [0.9572, 0.0, 0.0],    // Hydrogen 1
-        [-0.2399872, 0.927297, 0.0], // Hydrogen 2
-    ];
+    println!("");
+    let name = "Water".to_string();
+    let moltype = MolType::mol;
 
-    // Convert coordinates from angstroms to atomic units (Bohr)
-    let water_xyz: Vec<[f64; 3]> = water_xyz_angstrom
-        .iter()
-        .map(|&atom| [atom[0] / BOHR_RADIUS, atom[1] / BOHR_RADIUS, atom[2] / BOHR_RADIUS])
-        .collect();
+    let mut water = MoleculeBuilder::new(name, moltype)
+        .freq(vec![440.0, 1600.0, 3600.0])
+        .brot(vec![10.0, 10.0, 20.0])
+        .dh0(199.9)
+        .multi(3.0)
+        .chiral(22.0)
+        .symnum(6.0)
+        .build();
 
-    // Masses of the atoms in atomic mass units (Oxygen, Hydrogen 1, Hydrogen 2)
-    let water_mass = vec![
-        OXYGEN_MASS,      // Oxygen
-        HYDROGEN_MASS,    // Hydrogen 1
-        HYDROGEN_MASS,    // Hydrogen 2
-    ];
+    println!("ene is provided");
+    println!("symnum: {:?}", water.symnum);
+    println!("multi: {:?}", water.multi);
+    println!("chiral: {:?}", water.chiral);
+    println!("zpe: {:?}", water.zpe);
+    println!("ene: {:?}", water.ene); // Output: 199.9
+    println!("dh0: {:?}", water.dh0); // Output: ene + zpe
+    println!("freq: {:?}", water.freq);
+    println!("brot: {:?}", water.brot);
 
+    println!("\nThermo");
+    println!("gtot: {:?}", water.thermo.gtot);
+    println!("srot: {:?}", water.thermo.srot);
+    println!("hvib: {:?}", water.thermo.hvib);
+    println!("pfvib: {:?}", water.thermo.pfvib);
 
-    let brot = get_brot(&water_xyz, &water_mass);
-
-    println!("Rotational Constant of Water in cm-1");
-    println!("{:?}",&brot)
-
+    //water.calculate_entropy();
+    //water.calculate_internal_energy();
 }

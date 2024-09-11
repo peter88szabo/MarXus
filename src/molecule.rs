@@ -4,7 +4,7 @@
 #[allow(dead_code)]
 
 #[derive(Debug)]
-enum MolType {
+pub enum MolType {
     mol,
     ts,
     bimol,
@@ -13,48 +13,71 @@ enum MolType {
 #[derive(Debug)]
 #[allow(unused_variables)]
 #[allow(dead_code)]
-struct ThermoStruct {
+pub struct ThermoStruct {
     //partition functions
-    pftot: f64,
-    pfelec: f64,
-    pftrans: f64,
-    pfrot: f64,
-    pfvib: f64,
+    pub pftot: f64,
+    pub pfelec: f64,
+    pub pftrans: f64,
+    pub pfrot: f64,
+    pub pfvib: f64,
+    //pub pfhindrot: f64,
 
     //entropy functions
-    stot: f64,
-    selec: f64,
-    strans: f64,
-    srot: f64,
-    svib: f64,
+    pub stot: f64,
+    pub selec: f64,
+    pub strans: f64,
+    pub srot: f64,
+    pub svib: f64,
+    //pub shindrot: f64,
 
     //internal energy functions
-    utot: f64,
-    uelec: f64,
-    utrans: f64,
-    urot: f64,
-    uvib: f64,
+    pub utot: f64,
+    pub uelec: f64,
+    pub utrans: f64,
+    pub urot: f64,
+    pub uvib: f64,
+    //pub uhindrot: f64,
 
     //enthalpy functions
-    htot: f64,
-    helec: f64,
-    htrans: f64,
-    hrot: f64,
-    hvib: f64,
+    pub htot: f64,
+    pub helec: f64,
+    pub htrans: f64,
+    pub hrot: f64,
+    pub hvib: f64,
+    //pub hhindrot: f64,
 
     //Helmholtz free energy functions
-    ftot: f64,
-    felec: f64,
-    ftrans: f64,
-    frot: f64,
-    fvib: f64,
+    pub ftot: f64,
+    pub felec: f64,
+    pub ftrans: f64,
+    pub frot: f64,
+    pub fvib: f64,
+    //pub fhindrot: f64,
 
     //Gibbs free energy functions
-    gtot: f64,
-    gelec: f64,
-    gtrans: f64,
-    grot: f64,
-    gvib: f64,
+    pub gtot: f64,
+    pub gelec: f64,
+    pub gtrans: f64,
+    pub grot: f64,
+    pub gvib: f64,
+    //pub ghindrot: f64,
+
+    //Cv heat capacity
+    pub cvtot: f64,
+    pub cvelec: f64,
+    pub cvtrans: f64,
+    pub cvrot: f64,
+    pub cvvib: f64,
+    //pub cvhindrot: f64,
+
+    //Cp heat capacity
+    pub cptot: f64,
+    pub cpelec: f64,
+    pub cptrans: f64,
+    pub cprot: f64,
+    pub cpvib: f64,
+    //pub cphindrot: f64,
+
 }
 
 #[allow(unused_variables)]
@@ -92,6 +115,17 @@ impl Default for ThermoStruct {
             gtrans: 0.0,
             grot: 0.0,
             gvib: 0.0,
+            cvtot: 0.0,
+            cvelec: 0.0,
+            cvtrans: 0.0,
+            cvrot: 0.0,
+            cvvib: 0.0,
+            cptot: 0.0,
+            cpelec: 0.0,
+            cptrans: 0.0,
+            cprot: 0.0,
+            cpvib: 0.0,
+
         }
     }
 }
@@ -99,12 +133,12 @@ impl Default for ThermoStruct {
 #[derive(Debug)]
 #[allow(unused_variables)]
 #[allow(dead_code)]
-struct Tunneling {
-    freq_imag: f64,   // imag freq of TS mode
-    vfor: f64,        // forward barrier for Eckart
-    vback: f64,       // backward barrier for Eckart
-    tunprop: Vec<f64>, // energy-dependent tunneling probability
-    kappa: f64,       // tunneling correction
+pub struct Tunneling {
+    pub freq_imag: f64,   // imag freq of TS mode
+    pub vfor: f64,        // forward barrier for Eckart
+    pub vback: f64,       // backward barrier for Eckart
+    pub tunprop: Vec<f64>, // energy-dependent tunneling probability
+    pub kappa: f64,       // tunneling correction
 }
 
 #[allow(unused_variables)]
@@ -124,25 +158,25 @@ impl Default for Tunneling {
 #[derive(Debug)]
 #[allow(unused_variables)]
 #[allow(dead_code)]
-struct MoleculeStruct {
-    name: String,          // name of the species
-    nvib: u32,             // number of vibrational modes
-    nrot: u32,             // number of rotational modes
-    nlin: bool,            // linear (nlin=1) or not (nlin=0)
-    zpe: f64,              // zero-point energy
-    ene: f64,              // electronic energy (without ZPE)
-    dh0: f64,              // ene + zpe
-    symnum: f64,           // rotational symm num
-    chiral: f64,           // number of enantiomers
-    multi: f64,            // degeneracy factor, usually spin multiplicity
-    totmass: f64,          // total mass
-    freq: Vec<f64>,        // harmonic frequencies
-    brot: Vec<f64>,        // rotational constants
-    we: Vec<f64>,          // sum of states
-    rhoe: Vec<f64>,        // density of states
-    moltype: MolType,  // molecule type
-    tunnel: Tunneling, // tunneling information
-    thermo: ThermoStruct,  // thermodynamic properties
+pub struct MoleculeStruct {
+    pub name: String,          // name of the species
+    pub nvib: u32,             // number of vibrational modes
+    pub nrot: u32,             // number of rotational modes
+    pub nlin: bool,            // linear (nlin=1) or not (nlin=0)
+    pub zpe: f64,              // zero-point energy
+    pub ene: f64,              // electronic energy (without ZPE)
+    pub dh0: f64,              // ene + zpe
+    pub symnum: f64,           // rotational symm num
+    pub chiral: f64,           // number of enantiomers
+    pub multi: f64,            // degeneracy factor, usually spin multiplicity
+    pub totmass: f64,          // total mass
+    pub freq: Vec<f64>,        // harmonic frequencies
+    pub brot: Vec<f64>,        // rotational constants
+    pub we: Vec<f64>,          // sum of states
+    pub rhoe: Vec<f64>,        // density of states
+    pub moltype: MolType,  // molecule type
+    pub tunnel: Tunneling, // tunneling information
+    pub thermo: ThermoStruct,  // thermodynamic properties
 }
 
 #[allow(unused_variables)]
@@ -174,26 +208,26 @@ impl Default for MoleculeStruct {
 
 #[allow(unused_variables)]
 #[allow(dead_code)]
-struct MoleculeBuilder {
-    name: String,
-    moltype: MolType,
-    nlin: bool,
-    mass: Vec<f64>,
-    freq: Vec<f64>,
-    brot: Vec<f64>,
-    qxyz: Vec<f64>,
-    ene:  Option<f64>,
-    dh0:  Option<f64>,
-    multi: f64,
-    chiral: f64,
-    symnum: f64,
+pub struct MoleculeBuilder {
+    pub name: String,
+    pub moltype: MolType,
+    pub nlin: bool,
+    pub mass: Vec<f64>,
+    pub freq: Vec<f64>,
+    pub brot: Vec<f64>,
+    pub qxyz: Vec<f64>,
+    pub ene:  Option<f64>,
+    pub dh0:  Option<f64>,
+    pub multi: f64,
+    pub chiral: f64,
+    pub symnum: f64,
 }
 
 //use crate::inertia::inertia::get_brot;
 #[allow(unused_variables)]
 #[allow(dead_code)]
 impl MoleculeBuilder {
-    fn new(name: String, moltype: MolType) -> Self {
+    pub fn new(name: String, moltype: MolType) -> Self {
         MoleculeBuilder {
             name,
             moltype,
@@ -210,57 +244,57 @@ impl MoleculeBuilder {
         }
     }
 
-    fn nlin(mut self, nlin: bool) -> Self {
+    pub fn nlin(mut self, nlin: bool) -> Self {
         self.nlin = nlin;
         self
     }
 
-    fn freq(mut self, freq: Vec<f64>) -> Self {
+    pub fn freq(mut self, freq: Vec<f64>) -> Self {
         self.freq = freq;
         self
     }
 
-    fn brot(mut self, brot: Vec<f64>) -> Self {
+    pub fn brot(mut self, brot: Vec<f64>) -> Self {
         self.brot = brot;
         self
     }
 
-    fn qxyz(mut self, qxyz: Vec<f64>) -> Self {
+    pub fn qxyz(mut self, qxyz: Vec<f64>) -> Self {
         self.qxyz = qxyz;
         self
     }
 
-    fn mass(mut self, mass: Vec<f64>) -> Self {
+    pub fn mass(mut self, mass: Vec<f64>) -> Self {
         self.mass = mass;
         self
     }
 
-    fn ene(mut self, ene: f64) -> Self {
+    pub fn ene(mut self, ene: f64) -> Self {
         self.ene = Some(ene);
         self
     }
 
-    fn dh0(mut self, dh0: f64) -> Self {
+    pub fn dh0(mut self, dh0: f64) -> Self {
         self.dh0 = Some(dh0);
         self
     }
 
-    fn multi(mut self, multi: f64) -> Self {
+    pub fn multi(mut self, multi: f64) -> Self {
         self.multi = multi;
         self
     }
 
-    fn chiral(mut self, chiral: f64) -> Self {
+    pub fn chiral(mut self, chiral: f64) -> Self {
         self.chiral = chiral;
         self
     }
 
-    fn symnum(mut self, symnum: f64) -> Self {
+    pub fn symnum(mut self, symnum: f64) -> Self {
         self.symnum = symnum;
         self
     }
 
-    fn build(self) -> MoleculeStruct {
+    pub fn build(self) -> MoleculeStruct {
         // Check if `freq`, `brot` or `qxyz`, `ene` or `dh0` are `None`
         if self.freq.is_empty() {
             panic!("\n Error: Frequency vector (freq) must be provided.\n");
@@ -310,6 +344,7 @@ impl MoleculeBuilder {
     }
 }
 
+/*
 fn main() {
 
     let name = "Water".to_string();
@@ -341,9 +376,6 @@ fn main() {
     println!("hvib: {:?}", water.thermo.hvib);
     println!("pfvib: {:?}", water.thermo.pfvib);
                                        
-
-
-                                       
-
 }
+*/
 
