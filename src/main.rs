@@ -34,21 +34,23 @@ fn main() {
  Email: peter88szabo@gmail.com
 
  Features:
-    - Partition functions
-    - Thermodynamical energy functions (U, H, F, G, S, Cv, Cp)
-    - Equilbrium constants
-    - Canonical-TST high-pressure reaction rate cofficients
-    - RRKM: Microcanonical TST
-    - Sum and Density of states with exact counting or Whitten
-      Rabinovich formula
-    - Barrierless reactions:
-        * Phase Space Theory (PST) with 1D arbitrary potential
-        * Statistical Adiabatic Channel Method (SACM)
-        * Inverse Laplace Transform
-        * Microcanonical Variational TST
-        * Canonical Variational TST
-    - Sumberged barrier with a pre-reaction vdW complex:
-      microcanonical J-resolved 2-TST treatment
+    - Thermochemistry:
+        + Partition functions
+        + Thermodynamical energy functions (U, H, F, G, S, Cv, Cp)
+        + Equilbrium constants
+
+    - Kinetics:
+        + Canonical-TST high-pressure reaction rate cofficients
+        + RRKM: E-dependent rate constants (μ-canonical TST)
+        + Sum and Density of states (E- or E,J-resolved)
+        + Barrierless reactions:
+            * Phase Space Theory (PST) with 1D arbitrary potential
+            * Statistical Adiabatic Channel Method (SACM)
+            * Inverse Laplace Transform
+            * Microcanonical Variational TST
+            * Canonical Variational TST
+        + Sumberged barrier with a pre-reaction vdW complex:
+          μ-canonical J-resolved 2-TST treatment
 
 ================================================================
 "#;

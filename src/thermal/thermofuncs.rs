@@ -12,7 +12,7 @@ const RGAS: f64 = 8.314;
 #[allow(unused_variables)]
 #[allow(dead_code)]
 impl MoleculeStruct {
-    pub fn eval_all_thermo_func(&mut self, temp: f64, pressure: f64, freq_cutoff: f64) {
+    pub fn eval_all_therm_func(&mut self, temp: f64, pressure: f64, freq_cutoff: f64) {
         self.all_electronic(temp);
         self.all_translation(pressure, temp);
         self.all_rotations(temp);
@@ -21,29 +21,33 @@ impl MoleculeStruct {
 
         self.thermo.utherm =
             self.thermo.uelec + self.thermo.utrans + self.thermo.urot + self.thermo.uvib; // + self.termo.uhindrot;
-                                                                                          //
+                                                                                            
         self.thermo.htherm =
             self.thermo.helec + self.thermo.htrans + self.thermo.hrot + self.thermo.hvib; // + self.termo.hhindrot;
-                                                                                          //
+                                                                                            
         self.thermo.stherm =
             self.thermo.selec + self.thermo.strans + self.thermo.srot + self.thermo.svib; // + self.termo.shindrot;
-                                                                                          //
+                                                                                            
         self.thermo.ftherm =
             self.thermo.felec + self.thermo.ftrans + self.thermo.frot + self.thermo.fvib; // + self.termo.fhindrot;
-                                                                                          //
+                                                                                            
         self.thermo.gtherm =
             self.thermo.gelec + self.thermo.gtrans + self.thermo.grot + self.thermo.gvib; // + self.termo.ghindrot;
-                                                                                          //
+                                                                                           
+        self.thermo.cvtherm =
+            self.thermo.cvelec + self.thermo.cvtrans + self.thermo.cvrot + self.thermo.cvvib; // + self.termo.cvhindrot;
+
+        self.thermo.cptherm =
+            self.thermo.cpelec + self.thermo.cptrans + self.thermo.cprot + self.thermo.cpvib; // + self.termo.cphindrot;
+
+                                                                                            
         self.thermo.utot = self.thermo.utherm + self.dh0;
         self.thermo.htot = self.thermo.htherm + self.dh0;
         self.thermo.ftot = self.thermo.ftherm + self.dh0;
         self.thermo.gtot = self.thermo.gtherm + self.dh0;
         self.thermo.stot = self.thermo.stherm;
-
-        self.thermo.cvtot =
-            self.thermo.cvelec + self.thermo.cvtrans + self.thermo.cvrot + self.thermo.cvvib; // + self.termo.cvhindrot;
-        self.thermo.cptot =
-            self.thermo.cpelec + self.thermo.cptrans + self.thermo.cprot + self.thermo.cpvib; // + self.termo.cphindrot;
+        self.thermo.cvtot = self.thermo.cvtherm;
+        self.thermo.cptot = self.thermo.cptherm;
 
         self.thermo.pftot =
             self.thermo.pfelec * self.thermo.pftrans * self.thermo.pfrot * self.thermo.pfvib;
@@ -51,7 +55,7 @@ impl MoleculeStruct {
     }
 
     fn all_electronic(&mut self, temp: f64) {
-        //When only one electronic state is available
+        //When only single electronic state is available
         //at a given temp, then the partition function
         //approx Qele = multiplicity
 
@@ -67,7 +71,7 @@ impl MoleculeStruct {
 
     fn all_translation(&mut self, pressure: f64, temp: f64) {
         let RT = RGAS * temp;
-        let mut lam = f64::sqrt(TWOPI * self.totmass * RT / (HPLANCK * HPLANCK));
+        let mut lam = f64::sqrt(TWOPI * self.mass * RT / (HPLANCK * HPLANCK));
 
         lam = lam * lam * lam;
 
@@ -138,10 +142,10 @@ impl MoleculeStruct {
 
             let Svib_mode: f64;
 
-            if omega < freq_cutoff {
+            if omega > freq_cutoff {
                 Svib_mode = Self::entropy_vib(omega, temp);
             } else {
-                Svib_mode = Self::Grimme_entropy(omega, freq_cutoff, temp);
+                Svib_mode = Self::grimme_entropy(omega, freq_cutoff, temp);
             }
 
             let Fvib_mode = Uvib_mode - temp * Svib_mode;
@@ -170,7 +174,7 @@ impl MoleculeStruct {
         self.thermo.pfvib = PFvib;
     }
 
-    fn Grimme_entropy(omega: f64, freq_cutoff: f64, temp: f64) -> f64 {
+    fn grimme_entropy(omega: f64, freq_cutoff: f64, temp: f64) -> f64 {
         let Bav = 1.0;
         //Effective inertia of rotation with same period as the low-frew vibration mode
         let mu: f64 = HPLANCK / (8.0 * PI * PI * omega);
@@ -211,11 +215,6 @@ impl MoleculeStruct {
 //=============================================================================================
 fn partfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
 
-   const H_PLANCK: f64 = 3.3356E-11;
-   const H_PLANCK_SQ: f64 = 3.3356E-11 * 3.3356E-11;
-   const PI_VAL : f64 = (std::f64::consts::PI);
-   const PI_SQ : f64 = (std::f64::consts::PI) * (std::f64::consts::PI);
-
 // Product of rotational constants
    let mut prod_Brot=1.0;
    for i in 0..nrot{
@@ -234,7 +233,7 @@ fn partfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
 
 
    let mut pf_rot = 0.0;
-   for i in 0..nvib {
+   for i in 0..nrot {
        pf_rot *= 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK/RT));
    }
 
@@ -243,30 +242,87 @@ fn partfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
 }
 //=============================================================================================
 
-//=============================================================================================
-
-fn partfunc_electronic(RT: f64, nstate: u32, ene_exc: &[f64, nstate], degeneracy: &[f64, nstate]) -> f64{
-
-   //if ene_exc[0] != 0.0 { panic!};
-
-   //let mut pf_elec = degeneracy[0];
-   //for i in 1..nstate {
-   //    pf_elec +=  degeneracy[i] * f64::exp(ene_exc[i]/RT);
-   //}
-   let pf_elec = 0.0;
-
-   return pf_elec;
-}
-//=============================================================================================
-
+*/
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::*; // Import the functions from the current module (thermalfuncs.rs)
+    use crate::molecule::{MolType, MoleculeBuilder, MoleculeStruct}; // Import MoleculeStruct from molecule.rs
 
     #[test]
-    fn test_add() {
-        assert_eq!(add(2, 3), 5);
+    fn test_eval_all_therm_func() {
+        // Set up a test MoleculeStruct with arbitrary values
+        let name = "Water".to_string();
+        let moltype = MolType::mol;
+
+        let mut water = MoleculeBuilder::new(name, moltype)
+            .freq(vec![440.0, 1600.0, 3600.0])
+            .brot(vec![10.0, 10.0, 20.0])
+            .mass(18.0)
+            .dh0(10000.0)
+            .multi(3.0)
+            .chiral(1.0)
+            .symnum(3.0)
+            .build();
+
+        water.eval_all_therm_func(300.0, 101325.0, 0.0);
+
+        println!("dh0 is provided");
+        println!("symnum: {:?}", water.symnum);
+        println!("multi: {:?}", water.multi);
+        println!("chiral: {:?}", water.chiral);
+        println!("mass: {:?}", water.mass);
+        println!("zpe: {:?}", water.zpe);
+        println!("ene: {:?}", water.ene); // Output: 199.9
+        println!("dh0: {:?}", water.dh0); // Output: ene + zpe
+        println!("freq: {:?}", water.freq);
+        println!("brot: {:?}", water.brot);
+
+        println!("\nElectronic:                    Translation:");
+        println!("uelec:  {:15.4?}        utrans:  {:15.4?}", water.thermo.uelec, water.thermo.utrans );
+        println!("helec:  {:15.4?}        htrans:  {:15.4?}", water.thermo.helec, water.thermo.htrans);
+        println!("selec:  {:15.4?}        strans:  {:15.4?}", water.thermo.selec, water.thermo.strans);
+        println!("felec:  {:15.4?}        ftrans:  {:15.4?}", water.thermo.felec, water.thermo.ftrans);
+        println!("gelec:  {:15.4?}        gtrans:  {:15.4?}", water.thermo.gelec, water.thermo.gtrans);
+        println!("cvelec: {:15.4?}        cvtrans: {:15.4?}", water.thermo.cvelec, water.thermo.cvtrans);
+        println!("cpelec: {:15.4?}        cptrans: {:15.4?}", water.thermo.cpelec, water.thermo.cptrans);
+        println!("pfelec: {:15.4e}        pftrans: {:15.4e}", water.thermo.pfelec, water.thermo.pftrans);
+
+        println!("\nVibration:                     Rotation:");
+        println!("uvib:  {:15.4?}         urot:  {:15.4?}", water.thermo.uvib, water.thermo.urot);
+        println!("hvib:  {:15.4?}         hrot:  {:15.4?}", water.thermo.hvib, water.thermo.hrot);
+        println!("svib:  {:15.4?}         srot:  {:15.4?}", water.thermo.svib, water.thermo.srot);
+        println!("fvib:  {:15.4?}         frot:  {:15.4?}", water.thermo.fvib, water.thermo.frot);
+        println!("gvib:  {:15.4?}         grot:  {:15.4?}", water.thermo.gvib, water.thermo.grot);
+        println!("cvvib: {:15.4?}         cvrot: {:15.4?}", water.thermo.cvvib, water.thermo.cvrot);
+        println!("cpvib: {:15.4?}         cprot: {:15.4?}", water.thermo.cpvib, water.thermo.cprot);
+        println!("pfvib: {:15.4e}         pfrot: {:15.4e}", water.thermo.pfvib, water.thermo.pfrot);
+
+
+
+        println!("\nThermal:");
+        println!("utherm: {:15.4?}", water.thermo.utherm);
+        println!("htherm: {:15.4?}", water.thermo.htherm);
+        println!("stherm: {:15.4?}", water.thermo.stherm);
+        println!("ftherm: {:15.4?}", water.thermo.ftherm);
+        println!("gtherm: {:15.4?}", water.thermo.gtherm);
+
+
+        println!("\nTotal:");
+        println!("utot:   {:15.4?}", water.thermo.utot);
+        println!("htot:   {:15.4?}", water.thermo.htot);
+        println!("stot:   {:15.4?}", water.thermo.stot);
+        println!("ftot:   {:15.4?}", water.thermo.ftot);
+        println!("gtot:   {:15.4?}", water.thermo.gtot);
+        println!("cvtot:  {:15.4?}", water.thermo.cvtot);
+        println!("cptot:  {:15.4?}", water.thermo.cptot);
+        println!("pftot:  {:15.4?}", water.thermo.pftot);
+
+        // Assert that therm properties were updated correctly
+        //assert!(water.thermo.utherm > 0.0);
+        //assert!(water.thermo.htherm > 0.0);
+        //assert!(water.thermo.stherm > 0.0);
+        //assert!(water.thermo.ftherm < 0.0);
+        //assert!(water.thermo.gtherm < 0.0);
     }
 }
-*/

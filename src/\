@@ -68,7 +68,6 @@ pub struct ThermoStruct {
 
     //Cv heat capacity
     pub cvtot: f64,
-    pub cvtherm: f64,
     pub cvelec: f64,
     pub cvtrans: f64,
     pub cvrot: f64,
@@ -77,7 +76,6 @@ pub struct ThermoStruct {
 
     //Cp heat capacity
     pub cptot: f64,
-    pub cptherm: f64,
     pub cpelec: f64,
     pub cptrans: f64,
     pub cprot: f64,
@@ -95,51 +93,42 @@ impl Default for ThermoStruct {
             pftrans: 0.0,
             pfrot: 0.0,
             pfvib: 0.0,
-
             stot: 0.0,
             stherm: 0.0,
             selec: 0.0,
             strans: 0.0,
             srot: 0.0,
             svib: 0.0,
-
             utot: 0.0,
             utherm: 0.0,
             uelec: 0.0,
             utrans: 0.0,
             urot: 0.0,
             uvib: 0.0,
-
             htot: 0.0,
             htherm: 0.0,
             helec: 0.0,
             htrans: 0.0,
             hrot: 0.0,
             hvib: 0.0,
-
             ftot: 0.0,
             ftherm: 0.0,
             felec: 0.0,
             ftrans: 0.0,
             frot: 0.0,
             fvib: 0.0,
-
             gtot: 0.0,
             gtherm: 0.0,
             gelec: 0.0,
             gtrans: 0.0,
             grot: 0.0,
             gvib: 0.0,
-
             cvtot: 0.0,
-            cvtherm: 0.0,
             cvelec: 0.0,
             cvtrans: 0.0,
             cvrot: 0.0,
             cvvib: 0.0,
-
             cptot: 0.0,
-            cptherm: 0.0,
             cpelec: 0.0,
             cptrans: 0.0,
             cprot: 0.0,
@@ -187,7 +176,7 @@ pub struct MoleculeStruct {
     pub symnum: f64,          // rotational symm num
     pub chiral: f64,          // number of enantiomers
     pub multi: f64,           // degeneracy factor, usually spin multiplicity
-    pub mass: f64,         // total mass
+    pub totmass: f64,         // total mass
     pub freq: Vec<f64>,       // harmonic frequencies
     pub brot: Vec<f64>,       // rotational constants
     pub we: Vec<f64>,         // sum of states
@@ -212,7 +201,7 @@ impl Default for MoleculeStruct {
             symnum: 0.0,
             chiral: 0.0,
             multi: 0.0,
-            mass: 0.0,
+            totmass: 0.0,
             freq: Vec::new(),
             brot: Vec::new(),
             we: Vec::new(),
@@ -230,11 +219,11 @@ pub struct MoleculeBuilder {
     pub name: String,
     pub moltype: MolType,
     pub nlin: bool,
-    pub massvec: Vec<f64>,
+    pub mass: Vec<f64>,
     pub freq: Vec<f64>,
     pub brot: Vec<f64>,
     pub qxyz: Vec<f64>,
-    pub mass: Option<f64>,
+    pub totmass: Option<f64>,
     pub ene: Option<f64>,
     pub dh0: Option<f64>,
     pub multi: f64,
@@ -251,7 +240,7 @@ impl MoleculeBuilder {
             name,
             moltype,
             nlin: false, // Default value for nlin
-            massvec: Vec::new(),
+            mass: Vec::new(),
             freq: Vec::new(),
             brot: Vec::new(),
             qxyz: Vec::new(),
@@ -260,7 +249,7 @@ impl MoleculeBuilder {
             multi: 1.0,  // Default multiplicity
             chiral: 1.0, // Default multiplicity
             symnum: 1.0, // Default symmetry number
-            mass: None,
+            totmass: None,
         }
     }
 
@@ -284,13 +273,13 @@ impl MoleculeBuilder {
         self
     }
 
-    pub fn massvec(mut self, massvec: Vec<f64>) -> Self {
-        self.massvec = massvec;
+    pub fn mass(mut self, mass: Vec<f64>) -> Self {
+        self.mass = mass;
         self
     }
 
-    pub fn mass(mut self, mass: f64) -> Self {
-        self.mass = Some(mass);
+    pub fn totmass(mut self, totmass: f64) -> Self {
+        self.totmass = Some(totmass);
         self
     }
 
@@ -331,8 +320,8 @@ impl MoleculeBuilder {
             panic!("\n Error: Either energy (ene) or enthalpy (dh0) must be provided.\n");
         }
 
-        if self.mass.is_none(){
-            panic!("\n Error: Total mass (mass) of the molecule must be provided.\n");
+        if self.totmass.is_none(){
+            panic!("\n Error: Total mass (totmass) of the molecule must be provided.\n");
         }
 
         // zero-point energy:
@@ -352,7 +341,7 @@ impl MoleculeBuilder {
         let brot = if !self.brot.is_empty() {
             self.brot.clone() // Use the provided brot if it's not empty
         } else {
-            vec![0.0, 0.0, 0.0] //get_brot(&self.qxyz, &self.massvec)
+            vec![0.0, 0.0, 0.0] //get_brot(&self.qxyz, &self.mass)
         };
 
         //here we return the main structure
@@ -369,7 +358,7 @@ impl MoleculeBuilder {
             chiral: self.chiral,
             freq: self.freq,
             brot: self.brot,
-            mass: self.mass.unwrap(),
+            totmass: self.totmass
             ..Default::default() // Use defaults for other fields
         }
     }
