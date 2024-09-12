@@ -2,7 +2,6 @@
 #[allow(non_camel_case_types)]
 #[allow(unused_variables)]
 #[allow(dead_code)]
-
 #[derive(Debug)]
 pub enum MolType {
     mol,
@@ -82,7 +81,6 @@ pub struct ThermoStruct {
     pub cprot: f64,
     pub cpvib: f64,
     //pub cphindrot: f64,
-
 }
 
 #[allow(unused_variables)]
@@ -135,7 +133,6 @@ impl Default for ThermoStruct {
             cptrans: 0.0,
             cprot: 0.0,
             cpvib: 0.0,
-
         }
     }
 }
@@ -144,11 +141,11 @@ impl Default for ThermoStruct {
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub struct Tunneling {
-    pub freq_imag: f64,   // imag freq of TS mode
-    pub vfor: f64,        // forward barrier for Eckart
-    pub vback: f64,       // backward barrier for Eckart
+    pub freq_imag: f64,    // imag freq of TS mode
+    pub vfor: f64,         // forward barrier for Eckart
+    pub vback: f64,        // backward barrier for Eckart
     pub tunprop: Vec<f64>, // energy-dependent tunneling probability
-    pub kappa: f64,       // tunneling correction
+    pub kappa: f64,        // tunneling correction
 }
 
 #[allow(unused_variables)]
@@ -169,24 +166,24 @@ impl Default for Tunneling {
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub struct MoleculeStruct {
-    pub name: String,          // name of the species
-    pub nvib: u32,             // number of vibrational modes
-    pub nrot: u32,             // number of rotational modes
-    pub nlin: bool,            // linear (nlin=1) or not (nlin=0)
-    pub zpe: f64,              // zero-point energy
-    pub ene: f64,              // electronic energy (without ZPE)
-    pub dh0: f64,              // ene + zpe
-    pub symnum: f64,           // rotational symm num
-    pub chiral: f64,           // number of enantiomers
-    pub multi: f64,            // degeneracy factor, usually spin multiplicity
-    pub totmass: f64,          // total mass
-    pub freq: Vec<f64>,        // harmonic frequencies
-    pub brot: Vec<f64>,        // rotational constants
-    pub we: Vec<f64>,          // sum of states
-    pub rhoe: Vec<f64>,        // density of states
-    pub moltype: MolType,  // molecule type
-    pub tunnel: Tunneling, // tunneling information
-    pub thermo: ThermoStruct,  // thermodynamic properties
+    pub name: String,         // name of the species
+    pub nvib: u32,            // number of vibrational modes
+    pub nrot: u32,            // number of rotational modes
+    pub nlin: bool,           // linear (nlin=1) or not (nlin=0)
+    pub zpe: f64,             // zero-point energy
+    pub ene: f64,             // electronic energy (without ZPE)
+    pub dh0: f64,             // ene + zpe
+    pub symnum: f64,          // rotational symm num
+    pub chiral: f64,          // number of enantiomers
+    pub multi: f64,           // degeneracy factor, usually spin multiplicity
+    pub totmass: f64,         // total mass
+    pub freq: Vec<f64>,       // harmonic frequencies
+    pub brot: Vec<f64>,       // rotational constants
+    pub we: Vec<f64>,         // sum of states
+    pub rhoe: Vec<f64>,       // density of states
+    pub moltype: MolType,     // molecule type
+    pub tunnel: Tunneling,    // tunneling information
+    pub thermo: ThermoStruct, // thermodynamic properties
 }
 
 #[allow(unused_variables)]
@@ -226,8 +223,8 @@ pub struct MoleculeBuilder {
     pub freq: Vec<f64>,
     pub brot: Vec<f64>,
     pub qxyz: Vec<f64>,
-    pub ene:  Option<f64>,
-    pub dh0:  Option<f64>,
+    pub ene: Option<f64>,
+    pub dh0: Option<f64>,
     pub multi: f64,
     pub chiral: f64,
     pub symnum: f64,
@@ -241,16 +238,16 @@ impl MoleculeBuilder {
         MoleculeBuilder {
             name,
             moltype,
-            nlin: false,  // Default value for nlin
+            nlin: false, // Default value for nlin
             mass: Vec::new(),
             freq: Vec::new(),
             brot: Vec::new(),
             qxyz: Vec::new(),
-            ene: None,    // None means the energy is not provided yet
-            dh0: None,    // None means the enthalpy is not provided yet
-            multi: 1.0,   // Default multiplicity
-            chiral: 1.0,   // Default multiplicity
-            symnum: 1.0,  // Default symmetry number
+            ene: None,   // None means the energy is not provided yet
+            dh0: None,   // None means the enthalpy is not provided yet
+            multi: 1.0,  // Default multiplicity
+            chiral: 1.0, // Default multiplicity
+            symnum: 1.0, // Default symmetry number
         }
     }
 
@@ -309,7 +306,7 @@ impl MoleculeBuilder {
         if self.freq.is_empty() {
             panic!("\n Error: Frequency vector (freq) must be provided.\n");
         }
-        if self.brot.is_empty() && self.qxyz.is_empty(){
+        if self.brot.is_empty() && self.qxyz.is_empty() {
             panic!("\n Error: Rotational constants (brot) or geometry (qxyz) must be provided.\n");
         }
         if self.ene.is_none() && self.dh0.is_none() {
@@ -322,7 +319,7 @@ impl MoleculeBuilder {
         // Calculate ene or dh0 based on which is provided
         let ene = match self.ene {
             Some(ene_val) => ene_val,
-            None => self.dh0.unwrap() - zpe, // Calculate ene if dh0 is provided 
+            None => self.dh0.unwrap() - zpe, // Calculate ene if dh0 is provided
         };
 
         let dh0 = match self.dh0 {
@@ -336,7 +333,8 @@ impl MoleculeBuilder {
             vec![0.0, 0.0, 0.0] //get_brot(&self.qxyz, &self.mass)
         };
 
-         return MoleculeStruct {
+        //here we return the main structure
+        MoleculeStruct {
             name: self.name,
             nvib: self.freq.len() as u32,
             nrot: self.brot.len() as u32,
@@ -348,9 +346,9 @@ impl MoleculeBuilder {
             multi: self.multi,
             chiral: self.chiral,
             freq: self.freq,
-            brot: self.brot, 
+            brot: self.brot,
             ..Default::default() // Use defaults for other fields
-        };
+        }
     }
 }
 
@@ -379,13 +377,12 @@ fn main() {
     println!("dh0: {:?}", water.dh0);  // Output: ene + zpe
     println!("freq: {:?}", water.freq);
     println!("brot: {:?}", water.brot);
-    
+
     println!("\nThermo");
     println!("gtot: {:?}", water.thermo.gtot);
     println!("srot: {:?}", water.thermo.srot);
     println!("hvib: {:?}", water.thermo.hvib);
     println!("pfvib: {:?}", water.thermo.pfvib);
-                                       
+
 }
 */
-
