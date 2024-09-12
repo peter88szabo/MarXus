@@ -90,11 +90,11 @@ pub struct ThermoStruct {
 impl Default for ThermoStruct {
     fn default() -> Self {
         ThermoStruct {
-            pftot: 0.0,
-            pfelec: 0.0,
-            pftrans: 0.0,
-            pfrot: 0.0,
-            pfvib: 0.0,
+            pftot: 1.0,
+            pfelec: 1.0,
+            pftrans: 1.0,
+            pfrot: 1.0,
+            pfvib: 1.0,
 
             stot: 0.0,
             stherm: 0.0,

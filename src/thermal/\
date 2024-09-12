@@ -359,17 +359,19 @@ mod tests {
         println!("H_tot:   {:15.8} Eh", water.thermo.htot);
         println!("----------------------------------------------------------------------");
 
-        println!("\n=========================================================================================");
-        println!("Entropy in energy unit (S*T):                               and in natural unit:");
-        println!("S_elec*T:  {:15.8} Eh   {:12.3} kcal/mol       S_elec:  {:12.3} J/mol/K", water.thermo.selec * temp, water.thermo.selec * temp * AU_TO_KCAL, water.thermo.selec * 1000.0* AU_TO_KJ);
-        println!("S_trans*T: {:15.8} Eh   {:12.3} kcal/mol       S_trans: {:12.3} J/mol/K", water.thermo.strans * temp, water.thermo.strans * temp * AU_TO_KCAL, water.thermo.strans * 1000.0 * AU_TO_KJ);
-        println!("S_vib*T:   {:15.8} Eh   {:12.3} kcal/mol       S_vib:   {:12.3} J/mol/K", water.thermo.svib * temp, water.thermo.svib * temp * AU_TO_KCAL, water.thermo.svib * 1000.0 * AU_TO_KJ);
-        println!("S_rot*T:   {:15.8} Eh   {:12.3} kcal/mol       S_rot:   {:12.3} J/mol/K", water.thermo.srot * temp, water.thermo.srot * temp * AU_TO_KCAL, water.thermo.srot * 1000.0 * AU_TO_KJ);
-        println!("-----------------------------------------------------------------------------------------");
-        println!("S_tot: {:15.8} ah     {:12.3} kcal/mol       S_tot: {:12.3} J/mol/K", water.thermo.stot * temp, water.thermo.stot * temp * AU_TO_KCAL, water.thermo.stot * 1000.0 * AU_TO_KJ);
-        println!("-----------------------------------------------------------------------------------------");
-        println!("S_tot = S_ele + S_vib + S_rot + S_tra");
-        println!("-----------------------------------------------------------------------------------------");
+        println!("\n======================================================================");
+        println!("Entropy in energy unit (S*T):      and     in natural unit:");
+        println!("S_elec*T:  {:15.8} Eh     {:12.3} kcal/mol     S_elec: {:12.3} J/mol/K", water.thermo.selec * temp, water.thermo.selec * temp * AU_TO_KCAL, water.thermo.selec * 1000.0* AU_TO_KJ);
+        println!("S_trans*T: {:15.8} Eh     {:12.3} kcal/mol     S_trans: {12.3} J/mol/K", water.thermo.strans * temp, water.thermo.strans * temp * AU_TO_KCAL, water.thermo.strans * 1000.0 * AU_TO_KJ);
+        println!("S_vib*T:   {:15.8} Eh     {:12.3} kcal/mol     S_vib: {12.3] J/mol/K", water.thermo.svib * temp, water.thermo.svib * temp * AU_TO_KCAL, water.thermo.svib * 1000.0 * AU_TO_KJ);
+        println!("S_rot*T:   {:15.8} Eh     {:12.3} kcal/mol     S_rot: {12.3} J/mol/K", water.thermo.srot * temp, water.thermo.srot * temp * AU_TO_KCAL, water.thermo.srot * 1000.0 * AU_TO_KJ);
+        println!("----------------------------------------------------------------------");
+        println!("S_tot: {:15.8} ah     {:12.3} kcal/mol S_tot: {12.3} J/mol/K", water.thermo.stot * temp, water.thermo.stot * temp * AU_TO_KCAL, water.thermo.stot * 1000.0 * AU_TO_KJ);
+        println!("----------------------------------------------------------------------");
+        println!("S_therm = S_ele + S_vib + S_rot + S_tra");
+        println!("----------------------------------------------------------------------");
+        println!("S_tot:   {:15.8} Eh", water.thermo.stot);
+        println!("----------------------------------------------------------------------");
 
 
         // Assert that therm properties were updated correctly
