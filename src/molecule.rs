@@ -240,6 +240,7 @@ pub struct MoleculeBuilder {
     pub multi: f64,
     pub chiral: f64,
     pub symnum: f64,
+    pub freqscale: f64,
 }
 
 //use crate::inertia::inertia::get_brot;
@@ -261,11 +262,17 @@ impl MoleculeBuilder {
             chiral: 1.0, // Default multiplicity
             symnum: 1.0, // Default symmetry number
             mass: None,
+            freqscale: 1.0,
         }
     }
 
     pub fn nlin(mut self, nlin: bool) -> Self {
         self.nlin = nlin;
+        self
+    }
+
+    pub fn freqscale(mut self, freqscale: f64) -> Self {
+        self.freqscale = freqscale;
         self
     }
 

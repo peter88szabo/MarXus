@@ -366,10 +366,70 @@ mod tests {
         println!("S_vib*T:   {:15.8} Eh   {:12.3} kcal/mol       S_vib:   {:12.3} J/mol/K", water.thermo.svib * temp, water.thermo.svib * temp * AU_TO_KCAL, water.thermo.svib * 1000.0 * AU_TO_KJ);
         println!("S_rot*T:   {:15.8} Eh   {:12.3} kcal/mol       S_rot:   {:12.3} J/mol/K", water.thermo.srot * temp, water.thermo.srot * temp * AU_TO_KCAL, water.thermo.srot * 1000.0 * AU_TO_KJ);
         println!("-----------------------------------------------------------------------------------------");
-        println!("S_tot: {:15.8} ah     {:12.3} kcal/mol       S_tot: {:12.3} J/mol/K", water.thermo.stot * temp, water.thermo.stot * temp * AU_TO_KCAL, water.thermo.stot * 1000.0 * AU_TO_KJ);
+        println!("S_tot: {:15.8} Eh     {:12.3} kcal/mol       S_tot: {:12.3} J/mol/K", water.thermo.stot * temp, water.thermo.stot * temp * AU_TO_KCAL, water.thermo.stot * 1000.0 * AU_TO_KJ);
         println!("-----------------------------------------------------------------------------------------");
         println!("S_tot = S_ele + S_vib + S_rot + S_tra");
         println!("-----------------------------------------------------------------------------------------");
+
+        println!("\n======================================================================");
+        println!("Helmholtz Free energy (F = U - TS):");
+        println!("F_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.felec, water.thermo.felec * AU_TO_KCAL);
+        println!("F_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.ftrans, water.thermo.ftrans * AU_TO_KCAL);
+        println!("F_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.fvib, water.thermo.fvib * AU_TO_KCAL);
+        println!("F_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.frot, water.thermo.frot * AU_TO_KCAL);
+        println!("----------------------------------------------------------------------");
+        println!("F_therm: {:15.8} ah     {:12.3} kcal/mol", water.thermo.ftherm, water.thermo.ftherm * AU_TO_KCAL);
+        println!("----------------------------------------------------------------------");
+        println!("F_therm = H_ele + H_vib + H_rot + H_tra");
+        println!("----------------------------------------------------------------------");
+        println!("F_tot:   {:15.8} Eh", water.thermo.ftot);
+        println!("----------------------------------------------------------------------");
+
+        println!("\n======================================================================");
+        println!("Gibbs Free energy (G = H - TS):");
+        println!("G_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gelec, water.thermo.gelec * AU_TO_KCAL);
+        println!("G_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gtrans, water.thermo.gtrans * AU_TO_KCAL);
+        println!("G_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gvib, water.thermo.gvib * AU_TO_KCAL);
+        println!("G_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.grot, water.thermo.grot * AU_TO_KCAL);
+        println!("----------------------------------------------------------------------");
+        println!("G_therm: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gtherm, water.thermo.gtherm * AU_TO_KCAL);
+        println!("----------------------------------------------------------------------");
+        println!("G_therm = H_ele + H_vib + H_rot + H_tra");
+        println!("----------------------------------------------------------------------");
+        println!("G_tot:   {:15.8} Eh", water.thermo.gtot);
+        println!("----------------------------------------------------------------------");
+  
+        let RT = RGAS_AU * temp;
+        println!("\n======================================================================");
+        println!("Partition function (Q) ");
+        println!("Q_elec:  {:15.5e}      ", water.thermo.pfelec);
+        println!("Q_trans: {:15.5e}      ", water.thermo.pftrans);
+        println!("Q_vib:   {:15.5e}      ", water.thermo.pfvib);
+        println!("Q_rot:   {:15.5e}      ", water.thermo.pfrot);
+        println!("----------------------------------------------------------------------");
+        println!("Q_tot:   {:15.6e}      ", water.thermo.pftot);
+        println!("----------------------------------------------------------------------");
+        println!("Q_tot = Q_ele * Q_vib * Q_rot * Q_tra");
+        println!("----------------------------------------------------------------------");
+
+
+
+        println!("\n============================================================================================");
+        println!("Electronic & ZPE energies (H0 = E0 + ZPE):");
+        println!("E0:      {:15.8} Eh", water.ene * CM1_TO_HARTREE);
+        println!("H0:      {:15.8} Eh", water.dh0 * CM1_TO_HARTREE);
+        println!("ZPE:     {:15.8} Eh     {:12.3} kcal/mol", water.zpe * CM1_TO_HARTREE, water.zpe * CM1_TO_KCAL);
+        println!("--------------------------------------------------------------------------------------------");
+        println!("Contributions to energies and entropy (S*temp) in kcal/mol, Total+H0 in Hartree");
+        println!("E0 and ZPE not included here");
+        println!("           Total       Elect       Trans       Vibr        Rot       Total+H0 (Hartree)");
+        println!(" U    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.utherm * AU_TO_KCAL, water.thermo.uelec * AU_TO_KCAL, water.thermo.utrans * AU_TO_KCAL, water.thermo.uvib * AU_TO_KCAL, water.thermo.urot * AU_TO_KCAL, water.thermo.utot);
+        println!(" H    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.htherm * AU_TO_KCAL, water.thermo.helec * AU_TO_KCAL, water.thermo.htrans * AU_TO_KCAL, water.thermo.hvib * AU_TO_KCAL, water.thermo.hrot * AU_TO_KCAL, water.thermo.htot);
+        println!(" F    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.ftherm * AU_TO_KCAL, water.thermo.felec * AU_TO_KCAL, water.thermo.ftrans * AU_TO_KCAL, water.thermo.fvib * AU_TO_KCAL, water.thermo.frot * AU_TO_KCAL, water.thermo.ftot);
+        println!(" G    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.gtherm * AU_TO_KCAL, water.thermo.gelec * AU_TO_KCAL, water.thermo.gtrans * AU_TO_KCAL, water.thermo.gvib * AU_TO_KCAL, water.thermo.grot * AU_TO_KCAL, water.thermo.gtot);
+        println!(" S*T  {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    ", water.thermo.stherm*temp * AU_TO_KCAL, water.thermo.selec*temp * AU_TO_KCAL, water.thermo.strans*temp * AU_TO_KCAL, water.thermo.svib*temp * AU_TO_KCAL, water.thermo.srot*temp * AU_TO_KCAL);
+        println!("\n kB*T {:10.3}  at T = {} K", RT * AU_TO_KCAL, temp);
+        println!("--------------------------------------------------------------------------------------------");
 
 
         // Assert that therm properties were updated correctly
