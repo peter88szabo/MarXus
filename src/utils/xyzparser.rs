@@ -26,7 +26,6 @@ pub fn parse_xyz(xyz: &str) -> (usize, Vec<String>, Vec<Vec<f64>>) {
     (natoms, atoms, qxyz)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
