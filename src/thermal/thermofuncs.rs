@@ -1,23 +1,45 @@
+// thermofuncs.rs
 use crate::molecule::MoleculeStruct;
 
 const PI: f64 = std::f64::consts::PI;
 const PI_SQ: f64 = PI * PI;
 const TWOPI: f64 = 2.0 * PI;
+
+// -----------------------------
+// Your existing AU / chemistry constants
+// -----------------------------
 const CLIGHT: f64 = 137.035999074;
 const AMU_TO_ELECMASS: f64 = 1836.15267343;
+
 const HPLANCK_AU: f64 = TWOPI;
 const HPLANCK_AU_SQ: f64 = TWOPI * TWOPI;
-const HPLANCK_CM1: f64 = 3.3356E-11;
-const HPLANCK_CM1_SQ: f64 = HPLANCK_CM1 * HPLANCK_CM1;
-const RGAS: f64 = 0.69503; //kB in cm-1/K units
+
 const AU_TO_KJ: f64 = 2625.5;
 const AU_TO_KCAL: f64 = 627.51;
-const RGAS_AU: f64 = 8.31446261815324 / 1000.0 / AU_TO_KJ;
-const CM1_TO_KJ: f64 = 1.19627e-2;
-const CM1_TO_KCAL: f64 = 2.85914e-3;
+
+const RGAS_AU: f64 = 8.31446261815324 / 1000.0 / AU_TO_KJ; // Hartree/mol/K
 const CM1_TO_K: f64 = 1.43877;
 const CM1_TO_HARTREE: f64 = 4.55635e-6;
+const CM1_TO_KCAL: f64 = 2.85914e-3;
 const PASCAL_TO_AU: f64 = 1.0e-13 / 2.9421912;
+
+// -----------------------------
+// SI constants needed ONLY for Grimme free-rotor entropy (dimensionless inside ln)
+// -----------------------------
+const PLANCK_SI: f64 = 6.62607015e-34;      // J*s
+const BOLTZMANN_SI: f64 = 1.380649e-23;     // J/K
+const RGAS_SI: f64 = 8.31446261815324;      // J/mol/K
+const CLIGHT_SI: f64 = 2.99792458e8;        // m/s
+
+// 1 Hartree/mol = AU_TO_KJ kJ/mol = AU_TO_KJ*1000 J/mol
+const J_PER_HARTREE_PER_MOL: f64 = AU_TO_KJ * 1000.0;
+
+// Grimme default average moment of inertia (kg*m^2)
+const GRIMME_BAV_SI: f64 = 1.0e-44;
+
+// Damping exponent in Grimme qRRHO
+const GRIMME_ALPHA: f64 = 4.0;
+
 
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
@@ -25,418 +47,428 @@ const PASCAL_TO_AU: f64 = 1.0e-13 / 2.9421912;
 #[allow(dead_code)]
 impl MoleculeStruct {
     pub fn eval_all_therm_func(&mut self, temp: f64, pressure: f64, freq_cutoff: f64) {
-        //First calculate different contributions:
         self.all_electronic(temp);
         self.all_translation(pressure, temp);
         self.all_rotations(temp);
         self.all_vibrations(temp, freq_cutoff);
-        //all_hinderedrotors(temp);
 
-        //Then add up them:
         self.thermo.utherm =
-            self.thermo.uelec + self.thermo.utrans + self.thermo.urot + self.thermo.uvib; // + self.termo.uhindrot;
+            self.thermo.uelec + self.thermo.utrans + self.thermo.urot + self.thermo.uvib;
 
         self.thermo.htherm =
-            self.thermo.helec + self.thermo.htrans + self.thermo.hrot + self.thermo.hvib; // + self.termo.hhindrot;
+            self.thermo.helec + self.thermo.htrans + self.thermo.hrot + self.thermo.hvib;
 
         self.thermo.stherm =
-            self.thermo.selec + self.thermo.strans + self.thermo.srot + self.thermo.svib; // + self.termo.shindrot;
+            self.thermo.selec + self.thermo.strans + self.thermo.srot + self.thermo.svib;
 
         self.thermo.ftherm =
-            self.thermo.felec + self.thermo.ftrans + self.thermo.frot + self.thermo.fvib; // + self.termo.fhindrot;
+            self.thermo.felec + self.thermo.ftrans + self.thermo.frot + self.thermo.fvib;
 
         self.thermo.gtherm =
-            self.thermo.gelec + self.thermo.gtrans + self.thermo.grot + self.thermo.gvib; // + self.termo.ghindrot;
+            self.thermo.gelec + self.thermo.gtrans + self.thermo.grot + self.thermo.gvib;
 
         self.thermo.cvtherm =
-            self.thermo.cvelec + self.thermo.cvtrans + self.thermo.cvrot + self.thermo.cvvib; // + self.termo.cvhindrot;
+            self.thermo.cvelec + self.thermo.cvtrans + self.thermo.cvrot + self.thermo.cvvib;
 
         self.thermo.cptherm =
-            self.thermo.cpelec + self.thermo.cptrans + self.thermo.cprot + self.thermo.cpvib; // + self.termo.cphindrot;
+            self.thermo.cpelec + self.thermo.cptrans + self.thermo.cprot + self.thermo.cpvib;
 
         self.thermo.utot = self.thermo.utherm + self.dh0 * CM1_TO_HARTREE;
         self.thermo.htot = self.thermo.htherm + self.dh0 * CM1_TO_HARTREE;
         self.thermo.ftot = self.thermo.ftherm + self.dh0 * CM1_TO_HARTREE;
         self.thermo.gtot = self.thermo.gtherm + self.dh0 * CM1_TO_HARTREE;
+
         self.thermo.stot = self.thermo.stherm;
         self.thermo.cvtot = self.thermo.cvtherm;
         self.thermo.cptot = self.thermo.cptherm;
 
         self.thermo.pftot =
             self.thermo.pfelec * self.thermo.pftrans * self.thermo.pfrot * self.thermo.pfvib;
-        // * self.termo.pfhindrot;
     }
 
+    // -----------------------------------------------------------------------------------------
+    // Electronic: PF = multiplicity, F = -RT ln PF, U=H=0, S=(U-F)/T
     fn all_electronic(&mut self, temp: f64) {
-        //If only single electronic state is available
-        //at a given temp, then the partition function
-        //approx Qele = multiplicity
+        let RT = RGAS_AU * temp;
 
-        self.thermo.uelec = 0.0e0;
-        self.thermo.helec = 0.0e0;
-        self.thermo.selec = RGAS_AU * f64::ln(self.multi);
-        self.thermo.felec = -RGAS_AU * temp * f64::ln(self.multi);
-        self.thermo.gelec = self.thermo.felec;
-        self.thermo.pfelec = self.multi;
-        self.thermo.cvelec = 0.0e0;
-        self.thermo.cpelec = 0.0e0;
+        let pf = if self.multi > 0.0 { self.multi } else { 1.0 };
+        let F = -RT * pf.ln();
+        let U = 0.0;
+        let H = 0.0;
+        let S = (U - F) / temp;
+
+        self.thermo.pfelec = pf;
+        self.thermo.felec = F;
+        self.thermo.uelec = U;
+        self.thermo.helec = H;
+        self.thermo.selec = S;
+        self.thermo.gelec = F;
+
+        self.thermo.cvelec = 0.0;
+        self.thermo.cpelec = 0.0;
     }
 
+    // -----------------------------------------------------------------------------------------
+    // Translation (your convention):
+    // q0 = lambda^3 * (RT/p), S = R(ln q0 + 5/2), U = (3/2)RT
+    // => F = U - TS = -RT ln(q0) - RT
+    // Define PFtrans = exp(-F/RT) = e * q0   so that PF is consistent with F.
     fn all_translation(&mut self, pressure: f64, temp: f64) {
         let RT = RGAS_AU * temp;
 
         let mass = self.mass * AMU_TO_ELECMASS;
 
+        // lambda_factor = sqrt(2π m RT / h^2), then cube it
         let mut lam = f64::sqrt(TWOPI * mass * RT / HPLANCK_AU_SQ);
-
         lam = lam * lam * lam;
 
         let Vol = RT / (pressure * PASCAL_TO_AU);
 
-        //Each of these are defined for a 3D object
-        self.thermo.utrans = 1.5e0 * RT;
-        self.thermo.htrans = 2.5e0 * RT;
-        //entropy here is not simply single molecule entropy. N! term for N atoms are incoportated
-        //into translation, that is why the F not equal with 1 particle -RT*ln(Z)
-        self.thermo.strans = RGAS_AU * f64::ln(lam * Vol) + 2.5e0 * RGAS_AU;
-        self.thermo.ftrans = -RT * f64::ln(lam * Vol) - RT; //F = U - TS
-        self.thermo.gtrans = -RT * f64::ln(lam * Vol);
-        self.thermo.pftrans = lam * Vol;
-        self.thermo.cvtrans = 1.5e0 * RGAS_AU;
-        self.thermo.cptrans = 2.5e0 * RGAS_AU;
+        let q0 = lam * Vol;
+
+        // Your extra "-RT" in F is equivalent to PF = e*q0
+        let pf = std::f64::consts::E * q0;
+
+        let F = -RT * pf.ln();
+        let U = 1.5 * RT;
+        let H = 2.5 * RT;
+        let S = (U - F) / temp;
+        let G = H - temp * S;
+
+        self.thermo.pftrans = pf;
+        self.thermo.ftrans = F;
+        self.thermo.utrans = U;
+        self.thermo.htrans = H;
+        self.thermo.strans = S;
+        self.thermo.gtrans = G;
+
+        self.thermo.cvtrans = 1.5 * RGAS_AU;
+        self.thermo.cptrans = 2.5 * RGAS_AU;
     }
 
+    // -----------------------------------------------------------------------------------------
+    // Rotation (rigid rotor, high-T classical):
+    // PFrot = q_rot (dimensionless), F = -RT ln PF, U = (dof/2)RT, S = (U-F)/T
+    // dof=2 for linear, 3 for nonlinear.
     fn all_rotations(&mut self, temp: f64) {
         let RT = RGAS_AU * temp;
 
-        let mut Urot = 0.0e0;
-        let mut Hrot = 0.0e0;
-        let mut Frot = 0.0e0;
-        let mut Grot = 0.0e0;
-        let mut Srot = 0.0e0;
-        let mut Crot = 0.0e0;
-        let mut PFrot = 1.0e0;
-
-        let mut Urot_mode: f64;
-        let mut Hrot_mode: f64;
-        let mut Frot_mode: f64;
-        let mut Grot_mode: f64;
-        let mut Srot_mode: f64;
-        let mut Crot_mode: f64;
-        let mut PFrot_mode: f64;
-        let mut theta: f64;
-
-        for &brot in &self.brot {
-            let intert = 1.0 / brot;
-            theta = (8.0 * PI_SQ * brot * RT / HPLANCK_AU_SQ).sqrt();
-
-            Urot_mode = 0.5 * RGAS_AU * temp;
-            Hrot_mode = Urot_mode;
-            Srot_mode = RGAS_AU * theta.ln() + 0.5 * RGAS_AU;
-            Frot_mode = Urot - temp * Srot; // -Rgas*Temp*log(Theta/sigma)
-            Grot_mode = Frot;
-            PFrot_mode = Frot;
-            Crot_mode = Frot;
-
-            Urot += Urot_mode;
-            Hrot += Hrot_mode;
-            Srot += Srot_mode;
-            Frot += Frot_mode;
-            Grot += Grot_mode;
-            Crot += Crot_mode; //Cv = Cp, hence we have only a single expression here
-            PFrot *= PFrot_mode;
-            println!("PFrot: {:12.5e}", PFrot)
+        // If no rotational constants, treat as non-rotating
+        if self.brot.is_empty() {
+            self.thermo.pfrot = 1.0;
+            self.thermo.frot = 0.0;
+            self.thermo.urot = 0.0;
+            self.thermo.hrot = 0.0;
+            self.thermo.srot = 0.0;
+            self.thermo.grot = 0.0;
+            self.thermo.cvrot = 0.0;
+            self.thermo.cprot = 0.0;
+            return;
         }
 
-        self.thermo.urot = Urot;
-        self.thermo.hrot = Hrot;
-        self.thermo.srot = Srot;
-        self.thermo.frot = Frot;
-        self.thermo.grot = Grot;
-        self.thermo.cvrot = Crot;
-        self.thermo.cprot = Crot;
-        self.thermo.pfrot = PFrot;
+        let sigma = if self.symnum > 0.0 { self.symnum } else { 1.0 };
+        let chiral = if self.chiral > 0.0 { self.chiral } else { 1.0 };
+
+        // Heuristic: if any B ~ 0, treat as linear (common QC output: [B,B,0])
+        let eps = 1.0e-12;
+        let has_zero = self.brot.iter().any(|b| *b <= eps);
+        let nonzero: Vec<f64> = self.brot.iter().copied().filter(|b| *b > eps).collect();
+
+        let (pf, dof) = if has_zero || nonzero.len() <= 1 {
+            // linear: q = T / (sigma * theta_r) * chiral
+            let brot_cm1 = if !nonzero.is_empty() {
+                nonzero.iter().sum::<f64>() / (nonzero.len() as f64)
+            } else {
+                // fallback to avoid div by zero
+                self.brot[0].max(1.0e-6)
+            };
+            let theta_r = brot_cm1 * CM1_TO_K; // K
+            let q = (temp / theta_r) * (chiral / sigma);
+            (q, 2.0)
+        } else {
+            // nonlinear: q = sqrt(pi) * T^(3/2) / sqrt(thetaA thetaB thetaC) * chiral/sigma
+            // use first three nonzero constants (order irrelevant in product)
+            let a = nonzero[0] * CM1_TO_K;
+            let b = nonzero[1] * CM1_TO_K;
+            let c = nonzero[2] * CM1_TO_K;
+            let denom = f64::sqrt(a * b * c);
+            let q = f64::sqrt(PI) * temp.powf(1.5) / denom * (chiral / sigma);
+            (q, 3.0)
+        };
+
+        let F = -RT * pf.ln();
+        let U = 0.5 * dof * RT;
+        let H = U;
+        let S = (U - F) / temp;
+        let G = F;
+
+        self.thermo.pfrot = pf;
+        self.thermo.frot = F;
+        self.thermo.urot = U;
+        self.thermo.hrot = H;
+        self.thermo.srot = S;
+        self.thermo.grot = G;
+
+        self.thermo.cvrot = 0.5 * dof * RGAS_AU;
+        self.thermo.cprot = self.thermo.cvrot;
     }
 
+    // -----------------------------------------------------------------------------------------
+    // Vibrations: start from an effective PF per mode.
+    // - For omega > cutoff: pure RRHO -> PF_mode = 1/(1-exp(-x))
+    // - For omega <= cutoff: Grimme qRRHO mixing affects entropy -> define F = U - TS, PF=exp(-F/RT)
+    // Uses your "no ZPE in thermal vib energy" convention.
     fn all_vibrations(&mut self, temp: f64, freq_cutoff: f64) {
         let RT = RGAS_AU * temp;
 
-        let mut Uvib = 0.0e0;
-        let mut Hvib = 0.0e0;
-        let mut Fvib = 0.0e0;
-        let mut Gvib = 0.0e0;
-        let mut Svib = 0.0e0;
-        let mut Cvib = 0.0e0;
-        let mut PFvib = 1.0e0;
+        let mut Uvib = 0.0;
+        let mut Hvib = 0.0;
+        let mut Fvib = 0.0;
+        let mut Svib = 0.0;
+        let mut Cvib = 0.0;
+        let mut PFvib = 1.0;
 
-        let mut Uvib_mode: f64;
-        let mut Hvib_mode: f64;
-        let mut Fvib_mode: f64;
-        let mut Gvib_mode: f64;
-        let mut Svib_mode: f64;
-        let mut Cvib_mode: f64;
-        let mut PFvib_mode: f64;
-        let mut theta: f64;
-
-        for &omega in &self.freq {
-            theta = omega * CM1_TO_HARTREE / RGAS_AU; //freq here in atomic energy units
-
-            Uvib_mode = RGAS_AU * theta / (f64::exp(theta / temp) - 1.0e0);
-            Hvib_mode = Uvib_mode;
-
-            if omega > freq_cutoff {
-                Svib_mode = Self::entropy_vib(omega, temp);
-            } else {
-                Svib_mode = Self::grimme_entropy(omega, freq_cutoff, temp);
+        for &omega_cm1 in &self.freq {
+            if omega_cm1 <= 0.0 {
+                continue;
             }
 
-            Fvib_mode = Uvib_mode - temp * Svib_mode;
-            Gvib_mode = Hvib_mode - temp * Svib_mode;
-            PFvib_mode = f64::exp(-Fvib_mode / RT);
+            // x = (hc/kB)*nu / T = (CM1_TO_K * nu_cm^-1)/T  (dimensionless)
+            let x = (CM1_TO_K * omega_cm1) / temp;
+            let ex = f64::exp(x);
 
-            Cvib_mode = RGAS_AU * theta * theta * f64::exp(theta / temp)
-                / ((temp * (f64::exp(theta / temp) - 1.0e0)).powi(2));
+            // Thermal vib energy (no ZPE):
+            // U = (hc*nu) / (exp(x)-1)
+            let U_mode = omega_cm1 * CM1_TO_HARTREE / (ex - 1.0);
+            let H_mode = U_mode;
 
-            Uvib += Uvib_mode;
-            Hvib += Hvib_mode;
-            Svib += Svib_mode;
-            Fvib += Fvib_mode;
-            Gvib += Gvib_mode;
-            Cvib += Cvib_mode; //Cv = Cp, hence we have only a single expression here
-            PFvib *= PFvib_mode;
+            // RRHO heat capacity (harmonic), in Hartree/mol/K
+            let Cv_mode = RGAS_AU * x * x * ex / ((ex - 1.0) * (ex - 1.0));
+
+            // Entropy: RRHO or Grimme-mixed
+            let S_mode = if omega_cm1 > freq_cutoff {
+                Self::entropy_vib_rrho(omega_cm1, temp)
+            } else {
+                Self::grimme_entropy_qrrho(omega_cm1, freq_cutoff, temp)
+            };
+
+            // Define free energy from U and S (this is the qRRHO practice)
+            let F_mode = U_mode - temp * S_mode;
+
+            // Effective PF from F
+            let PF_mode = f64::exp(-F_mode / RT);
+
+            Uvib += U_mode;
+            Hvib += H_mode;
+            Svib += S_mode;
+            Fvib += F_mode;
+            Cvib += Cv_mode;
+            PFvib *= PF_mode;
         }
 
         self.thermo.uvib = Uvib;
         self.thermo.hvib = Hvib;
         self.thermo.svib = Svib;
         self.thermo.fvib = Fvib;
-        self.thermo.gvib = Gvib;
+        self.thermo.gvib = Fvib;
+
         self.thermo.cvvib = Cvib;
         self.thermo.cpvib = Cvib;
         self.thermo.pfvib = PFvib;
     }
 
-    fn grimme_entropy(omega: f64, freq_cutoff: f64, temp: f64) -> f64 {
-        let Bav = 1.0;
-        //Effective inertia of rotation with same period as the low-frew vibration mode
-        let mu: f64 = HPLANCK_AU / (8.0 * PI * PI * omega);
+    // =========================================================================================
+    // Correct Grimme qRRHO entropy mixing (per your reference)
 
-        let mu_prime: f64 = mu * Bav / (mu + Bav);
-
-        //Weight function to smoothly switch between vib --> rot
-        let dum = (freq_cutoff / omega).powi(4);
-        let wgt = 1.0 / (1.0 + dum);
-
-        let svib =
-            wgt * Self::entropy_vib(omega, temp) + (1.0 - wgt) * Self::entropy_rot(mu_prime, temp);
-
-        return svib;
+    // RRHO vibrational entropy (Hartree/mol/K), matches:
+    // S = R * [ x/(e^x - 1) - ln(1 - e^{-x}) ], x = (hc nu)/(kT)
+    fn entropy_vib_rrho(omega_cm1: f64, temp: f64) -> f64 {
+        if omega_cm1 <= 0.0 {
+            return 0.0;
+        }
+        let x = (CM1_TO_K * omega_cm1) / temp;
+        if x < 1.0e-12 {
+            return 0.0;
+        }
+        let ex = f64::exp(x);
+        let term = x / (ex - 1.0) - f64::ln(1.0 - f64::exp(-x));
+        RGAS_AU * term
     }
 
-    fn entropy_rot(mu: f64, temp: f64) -> f64 {
-        let dum = (((8.0 * PI * PI * PI * mu * RGAS_AU * temp).sqrt()).ln()) / HPLANCK_AU_SQ;
+    // Free rotor entropy (Hartree/mol/K), matches reference:
+    // mu = h/(8*pi^2*c*nu_tilde)
+    // mu' = mu*Bav/(mu+Bav)
+    // S = R*(1/2 + 1/2 ln( 8*pi^3*mu'*kT/h^2 ))
+    fn entropy_free_rotor(omega_cm1: f64, temp: f64, bav_si: f64) -> f64 {
+        if omega_cm1 <= 0.0 {
+            return 0.0;
+        }
 
-        let srot = RGAS_AU * (0.5 + dum);
+        // omega (cm^-1) -> (m^-1)
+        let omega_m1 = omega_cm1 * 100.0;
 
-        return srot;
+        // nu (s^-1) = c * omega_m^-1
+        let nu_s1 = CLIGHT_SI * omega_m1;
+
+        // mu (kg m^2) = h / (8*pi^2*nu)
+        let mu = PLANCK_SI / (8.0 * PI_SQ * nu_s1);
+
+        // mu'
+        let mu_prime = mu * bav_si / (mu + bav_si);
+
+        // dimensionless factor inside ln
+        let factor = 8.0 * PI.powi(3) * mu_prime * BOLTZMANN_SI * temp / (PLANCK_SI * PLANCK_SI);
+
+        // S in J/mol/K then convert to Hartree/mol/K
+        let s_si = RGAS_SI * (0.5 + 0.5 * factor.ln());
+        s_si / J_PER_HARTREE_PER_MOL
     }
 
-    fn entropy_vib(omega: f64, temp: f64) -> f64 {
-        //let theta = HPLANCK * omega / (RGAS_AU * temp);
-        let theta = omega / (RGAS_AU * temp);
+    // Damping w = 1/(1+(nu_cut/nu)^alpha), alpha=4
+    fn grimme_damp(omega_cm1: f64, freq_cutoff_cm1: f64) -> f64 {
+        let ratio = freq_cutoff_cm1 / omega_cm1;
+        1.0 / (1.0 + ratio.powf(GRIMME_ALPHA))
+    }
 
-        let dum = theta / (f64::exp(theta) - 1.0e0) - f64::ln(1.0e0 - f64::exp(-theta));
-
-        let svib = RGAS_AU * dum;
-
-        return svib;
+    // Grimme qRRHO mixed entropy: S = w*S_RRHO + (1-w)*S_free_rotor
+    fn grimme_entropy_qrrho(omega_cm1: f64, freq_cutoff_cm1: f64, temp: f64) -> f64 {
+        if omega_cm1 <= 0.0 {
+            return 0.0;
+        }
+        let w = Self::grimme_damp(omega_cm1, freq_cutoff_cm1);
+        let s_rrho = Self::entropy_vib_rrho(omega_cm1, temp);
+        let s_fr = Self::entropy_free_rotor(omega_cm1, temp, GRIMME_BAV_SI);
+        w * s_rrho + (1.0 - w) * s_fr
     }
 }
 
-/*
-
-//=============================================================================================
-fn partfunc_nd_rot_classic(RT: f64, nrot: usize, Brot: &[f64]) -> f64{
-
-// Product of rotational constants
-   let mut prod_Brot=1.0;
-   for i in 0..nrot{
-      prod_Brot *= Brot[i];
-   }
-   prod_Brot = prod_Brot.sqrt();
-
-   let rdim = (nrot as f64) /2.0;
-
-   let crt = f64::powf(8.0 * PI_SQ * RT / (H_PLANCK_SQ),  nrot as f64);
-
-   let const_rho = 0.0;//crt/gamma_func(rdim);
-
-
-   res[i] = const_W*(f64::powf(Ei, rdim));
-
-
-   let mut pf_rot = 0.0;
-   for i in 0..nrot {
-       pf_rot *= 1.0 / (1.0 - f64::exp(1.0 - H_PLANCK/RT));
-   }
-
-   return pf_rot;
-
-}
-//=============================================================================================
-
-*/
 
 #[cfg(test)]
 mod tests {
-    use super::*; // Import the functions from the current module (thermalfuncs.rs)
-    use crate::molecule::{MolType, MoleculeBuilder, MoleculeStruct}; // Import MoleculeStruct from molecule.rs
+    use super::*;
+    use crate::molecule::{MolType, MoleculeBuilder};
 
     #[test]
-    fn test_eval_all_therm_func() {
-        // Set up a test MoleculeStruct with arbitrary values
+    fn test_eval_all_therm_func_grimme() {
+        // Same spirit as your original test, but:
+        // - uses a NONZERO Grimme cutoff
+        // - also prints per-mode RRHO vs free-rotor vs mixed entropies for inspection
+
         let name = "Water".to_string();
         let moltype = MolType::mol;
+
         let temp = 298.15;
+        let pressure = 101_325.0;
+
+        // Typical Grimme cutoff ~ 100 cm^-1 (common default in qRRHO practice)
+        let freq_cutoff = 100.0;
 
         let mut water = MoleculeBuilder::new(name, moltype)
-            .freq(vec![1626.92, 3761.93, 3876.98])
-            .brot(vec![26.513921, 14.346808, 9.309431])
-            .mass(18.02)
-            .ene(-76.37226823 / CM1_TO_HARTREE)
+            .freq(vec![1626.92, 3761.93, 3876.98]) // cm^-1
+            .brot(vec![26.513921, 14.346808, 9.309431]) // cm^-1
+            .mass(18.02) // amu
+            .ene(-76.37226823 / CM1_TO_HARTREE) // stored in cm^-1 in your struct (per your original test)
             .multi(1.0)
             .chiral(1.0)
             .symnum(1.0)
             .build();
 
-        water.eval_all_therm_func(temp, 101325.0, 0.0);
+        water.eval_all_therm_func(temp, pressure, freq_cutoff);
 
-        println!("dh0 is provided");
-        println!("symnum: {:?}", water.symnum);
-        println!("multi: {:?}", water.multi);
-        println!("chiral: {:?}", water.chiral);
-        println!("mass: {:?}", water.mass);
-        println!("zpe: {:?}", water.zpe);
-        println!("ene: {:?}", water.ene); // Output: 199.9
-        println!("dh0: {:?}", water.dh0); // Output: ene + zpe
-        println!("freq: {:?}", water.freq);
-        println!("brot: {:?}", water.brot);
+        println!("\n============================== INPUT ==============================");
+        println!("T = {:.2} K   p = {:.1} Pa   Grimme cutoff = {:.1} cm^-1", temp, pressure, freq_cutoff);
+        println!("symnum:  {:?}", water.symnum);
+        println!("multi:   {:?}", water.multi);
+        println!("chiral:  {:?}", water.chiral);
+        println!("mass:    {:?}", water.mass);
+        println!("freq:    {:?}", water.freq);
+        println!("brot:    {:?}", water.brot);
 
-        println!("\n======================================================================");
-        println!("Electronic & ZPE energies:");
-        println!("E0:      {:15.8} Eh", water.ene * CM1_TO_HARTREE);
-        println!("H0:      {:15.8} Eh", water.dh0 * CM1_TO_HARTREE);
-        println!("ZPE:     {:15.8} Eh     {:12.3} kcal/mol", water.zpe * CM1_TO_HARTREE, water.zpe * CM1_TO_KCAL);
-        println!("----------------------------------------------------------------------");
+        println!("\n==================== ELECTRONIC / ZPE (as stored) ===================");
+        println!("E0:  {:15.8} Eh", water.ene * CM1_TO_HARTREE);
+        println!("H0:  {:15.8} Eh", water.dh0 * CM1_TO_HARTREE);
+        println!("ZPE: {:15.8} Eh   {:12.3} kcal/mol",
+            water.zpe * CM1_TO_HARTREE,
+            water.zpe * CM1_TO_KCAL
+        );
 
+        println!("\n========================= PARTITION FUNCTIONS =======================");
+        println!("Q_elec : {:15.6e}", water.thermo.pfelec);
+        println!("Q_trans: {:15.6e}", water.thermo.pftrans);
+        println!("Q_rot  : {:15.6e}", water.thermo.pfrot);
+        println!("Q_vib  : {:15.6e}", water.thermo.pfvib);
+        println!("Q_tot  : {:15.6e}", water.thermo.pftot);
 
-        println!("\n======================================================================");
-        println!("Internal Energy (U):");
-        println!("U_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.uelec, water.thermo.uelec * AU_TO_KCAL);
-        println!("U_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.utrans, water.thermo.utrans * AU_TO_KCAL);
-        println!("U_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.uvib, water.thermo.uvib * AU_TO_KCAL);
-        println!("U_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.urot, water.thermo.urot * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("U_therm: {:15.8} ah     {:12.3} kcal/mol", water.thermo.utherm, water.thermo.utherm * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("U_therm = U_ele + U_vib + U_rot + U_tra");
-        println!("----------------------------------------------------------------------");
-        println!("U_tot:   {:15.8} Eh", water.thermo.utot);
-        println!("----------------------------------------------------------------------");
+        println!("\n====================== CONTRIBUTIONS (Hartree) ======================");
+        println!("U_elec : {:15.8}   H_elec : {:15.8}   F_elec : {:15.8}   G_elec : {:15.8}",
+            water.thermo.uelec, water.thermo.helec, water.thermo.felec, water.thermo.gelec
+        );
+        println!("U_trans: {:15.8}   H_trans: {:15.8}   F_trans: {:15.8}   G_trans: {:15.8}",
+            water.thermo.utrans, water.thermo.htrans, water.thermo.ftrans, water.thermo.gtrans
+        );
+        println!("U_rot  : {:15.8}   H_rot  : {:15.8}   F_rot  : {:15.8}   G_rot  : {:15.8}",
+            water.thermo.urot, water.thermo.hrot, water.thermo.frot, water.thermo.grot
+        );
+        println!("U_vib  : {:15.8}   H_vib  : {:15.8}   F_vib  : {:15.8}   G_vib  : {:15.8}",
+            water.thermo.uvib, water.thermo.hvib, water.thermo.fvib, water.thermo.gvib
+        );
 
-        println!("\n======================================================================");
-        println!("Enthalpy (H = U + kB*T):");
-        println!("H_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.helec, water.thermo.helec * AU_TO_KCAL);
-        println!("H_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.htrans, water.thermo.htrans * AU_TO_KCAL);
-        println!("H_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.hvib, water.thermo.hvib * AU_TO_KCAL);
-        println!("H_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.hrot, water.thermo.hrot * AU_TO_KCAL);
-        println!("kB*T:    {:15.8} Eh     {:12.3} kcal/mol", RGAS_AU * temp, RGAS_AU * temp * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("H_therm: {:15.8} ah     {:12.3} kcal/mol", water.thermo.htherm, water.thermo.htherm * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("H_therm = H_ele + H_vib + H_rot + H_tra");
-        println!("----------------------------------------------------------------------");
-        println!("H_tot:   {:15.8} Eh", water.thermo.htot);
-        println!("----------------------------------------------------------------------");
+        println!("\n====================== TOTAL THERMAL (Hartree) ======================");
+        println!("U_therm: {:15.8}   H_therm: {:15.8}   F_therm: {:15.8}   G_therm: {:15.8}",
+            water.thermo.utherm, water.thermo.htherm, water.thermo.ftherm, water.thermo.gtherm
+        );
+        println!("U_tot  : {:15.8}   H_tot  : {:15.8}   F_tot  : {:15.8}   G_tot  : {:15.8}",
+            water.thermo.utot, water.thermo.htot, water.thermo.ftot, water.thermo.gtot
+        );
 
-        println!("\n=========================================================================================");
-        println!("Entropy in energy unit (S*T):                               and in natural unit:");
-        println!("S_elec*T:  {:15.8} Eh   {:12.3} kcal/mol       S_elec:  {:12.3} J/mol/K", water.thermo.selec * temp, water.thermo.selec * temp * AU_TO_KCAL, water.thermo.selec * 1000.0* AU_TO_KJ);
-        println!("S_trans*T: {:15.8} Eh   {:12.3} kcal/mol       S_trans: {:12.3} J/mol/K", water.thermo.strans * temp, water.thermo.strans * temp * AU_TO_KCAL, water.thermo.strans * 1000.0 * AU_TO_KJ);
-        println!("S_vib*T:   {:15.8} Eh   {:12.3} kcal/mol       S_vib:   {:12.3} J/mol/K", water.thermo.svib * temp, water.thermo.svib * temp * AU_TO_KCAL, water.thermo.svib * 1000.0 * AU_TO_KJ);
-        println!("S_rot*T:   {:15.8} Eh   {:12.3} kcal/mol       S_rot:   {:12.3} J/mol/K", water.thermo.srot * temp, water.thermo.srot * temp * AU_TO_KCAL, water.thermo.srot * 1000.0 * AU_TO_KJ);
-        println!("-----------------------------------------------------------------------------------------");
-        println!("S_tot: {:15.8} Eh     {:12.3} kcal/mol       S_tot: {:12.3} J/mol/K", water.thermo.stot * temp, water.thermo.stot * temp * AU_TO_KCAL, water.thermo.stot * 1000.0 * AU_TO_KJ);
-        println!("-----------------------------------------------------------------------------------------");
-        println!("S_tot = S_ele + S_vib + S_rot + S_tra");
-        println!("-----------------------------------------------------------------------------------------");
+        println!("\n=================== ENTROPY (J/mol/K and S*T) =======================");
+        println!("S_elec : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+            water.thermo.selec * 1000.0 * AU_TO_KJ,
+            water.thermo.selec * temp * AU_TO_KCAL
+        );
+        println!("S_trans: {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+            water.thermo.strans * 1000.0 * AU_TO_KJ,
+            water.thermo.strans * temp * AU_TO_KCAL
+        );
+        println!("S_rot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+            water.thermo.srot * 1000.0 * AU_TO_KJ,
+            water.thermo.srot * temp * AU_TO_KCAL
+        );
+        println!("S_vib  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+            water.thermo.svib * 1000.0 * AU_TO_KJ,
+            water.thermo.svib * temp * AU_TO_KCAL
+        );
+        println!("S_tot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+            water.thermo.stot * 1000.0 * AU_TO_KJ,
+            water.thermo.stot * temp * AU_TO_KCAL
+        );
 
-        println!("\n======================================================================");
-        println!("Helmholtz Free energy (F = U - TS):");
-        println!("F_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.felec, water.thermo.felec * AU_TO_KCAL);
-        println!("F_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.ftrans, water.thermo.ftrans * AU_TO_KCAL);
-        println!("F_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.fvib, water.thermo.fvib * AU_TO_KCAL);
-        println!("F_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.frot, water.thermo.frot * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("F_therm: {:15.8} ah     {:12.3} kcal/mol", water.thermo.ftherm, water.thermo.ftherm * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("F_therm = H_ele + H_vib + H_rot + H_tra");
-        println!("----------------------------------------------------------------------");
-        println!("F_tot:   {:15.8} Eh", water.thermo.ftot);
-        println!("----------------------------------------------------------------------");
+        println!("\n=================== GRIMME CHECK (per-mode) =========================");
+        println!("Mode    nu/cm^-1   w(damp)     S_RRHO(J/mol/K)   S_FR(J/mol/K)   S_mix(J/mol/K)");
+        for (i, &nu) in water.freq.iter().enumerate() {
+            let w = MoleculeStruct::grimme_damp(nu, freq_cutoff);
 
-        println!("\n======================================================================");
-        println!("Gibbs Free energy (G = H - TS):");
-        println!("G_elec:  {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gelec, water.thermo.gelec * AU_TO_KCAL);
-        println!("G_trans: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gtrans, water.thermo.gtrans * AU_TO_KCAL);
-        println!("G_vib:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gvib, water.thermo.gvib * AU_TO_KCAL);
-        println!("G_rot:   {:15.8} Eh     {:12.3} kcal/mol", water.thermo.grot, water.thermo.grot * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("G_therm: {:15.8} Eh     {:12.3} kcal/mol", water.thermo.gtherm, water.thermo.gtherm * AU_TO_KCAL);
-        println!("----------------------------------------------------------------------");
-        println!("G_therm = H_ele + H_vib + H_rot + H_tra");
-        println!("----------------------------------------------------------------------");
-        println!("G_tot:   {:15.8} Eh", water.thermo.gtot);
-        println!("----------------------------------------------------------------------");
-  
-        let RT = RGAS_AU * temp;
-        println!("\n======================================================================");
-        println!("Partition function (Q) ");
-        println!("Q_elec:  {:15.5e}      ", water.thermo.pfelec);
-        println!("Q_trans: {:15.5e}      ", water.thermo.pftrans);
-        println!("Q_vib:   {:15.5e}      ", water.thermo.pfvib);
-        println!("Q_rot:   {:15.5e}      ", water.thermo.pfrot);
-        println!("----------------------------------------------------------------------");
-        println!("Q_tot:   {:15.6e}      ", water.thermo.pftot);
-        println!("----------------------------------------------------------------------");
-        println!("Q_tot = Q_ele * Q_vib * Q_rot * Q_tra");
-        println!("----------------------------------------------------------------------");
+            let s_rrho_au = MoleculeStruct::entropy_vib_rrho(nu, temp);
+            let s_fr_au = MoleculeStruct::entropy_free_rotor(nu, temp, GRIMME_BAV_SI);
+            let s_mix_au = MoleculeStruct::grimme_entropy_qrrho(nu, freq_cutoff, temp);
 
+            let s_rrho = s_rrho_au * 1000.0 * AU_TO_KJ;
+            let s_fr = s_fr_au * 1000.0 * AU_TO_KJ;
+            let s_mix = s_mix_au * 1000.0 * AU_TO_KJ;
 
+            println!("{:>3}  {:10.2}  {:8.5}      {:12.3}        {:12.3}      {:12.3}",
+                i + 1, nu, w, s_rrho, s_fr, s_mix
+            );
+        }
 
-        println!("\n============================================================================================");
-        println!("Electronic & ZPE energies (H0 = E0 + ZPE):");
-        println!("E0:      {:15.8} Eh", water.ene * CM1_TO_HARTREE);
-        println!("H0:      {:15.8} Eh", water.dh0 * CM1_TO_HARTREE);
-        println!("ZPE:     {:15.8} Eh     {:12.3} kcal/mol", water.zpe * CM1_TO_HARTREE, water.zpe * CM1_TO_KCAL);
-        println!("--------------------------------------------------------------------------------------------");
-        println!("Contributions to energies and entropy (S*temp) in kcal/mol, Total+H0 in Hartree");
-        println!("E0 and ZPE not included here");
-        println!("           Total       Elect       Trans       Vibr        Rot       Total+H0 (Hartree)");
-        println!(" U    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.utherm * AU_TO_KCAL, water.thermo.uelec * AU_TO_KCAL, water.thermo.utrans * AU_TO_KCAL, water.thermo.uvib * AU_TO_KCAL, water.thermo.urot * AU_TO_KCAL, water.thermo.utot);
-        println!(" H    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.htherm * AU_TO_KCAL, water.thermo.helec * AU_TO_KCAL, water.thermo.htrans * AU_TO_KCAL, water.thermo.hvib * AU_TO_KCAL, water.thermo.hrot * AU_TO_KCAL, water.thermo.htot);
-        println!(" F    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.ftherm * AU_TO_KCAL, water.thermo.felec * AU_TO_KCAL, water.thermo.ftrans * AU_TO_KCAL, water.thermo.fvib * AU_TO_KCAL, water.thermo.frot * AU_TO_KCAL, water.thermo.ftot);
-        println!(" G    {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    {:15.8}", water.thermo.gtherm * AU_TO_KCAL, water.thermo.gelec * AU_TO_KCAL, water.thermo.gtrans * AU_TO_KCAL, water.thermo.gvib * AU_TO_KCAL, water.thermo.grot * AU_TO_KCAL, water.thermo.gtot);
-        println!(" S*T  {:10.3}  {:10.3}  {:10.3}  {:10.3}  {:10.3}    ", water.thermo.stherm*temp * AU_TO_KCAL, water.thermo.selec*temp * AU_TO_KCAL, water.thermo.strans*temp * AU_TO_KCAL, water.thermo.svib*temp * AU_TO_KCAL, water.thermo.srot*temp * AU_TO_KCAL);
-        println!("\n kB*T {:10.3}  at T = {} K", RT * AU_TO_KCAL, temp);
-        println!("--------------------------------------------------------------------------------------------");
+        println!("\n============================== SANITY ===============================");
+        let kbt = RGAS_AU * temp;
+        println!("kB*T = {:12.6} Eh  ({:8.3} kcal/mol)", kbt, kbt * AU_TO_KCAL);
 
-
-        // Assert that therm properties were updated correctly
-        //assert!(water.thermo.utherm > 0.0);
-        //assert!(water.thermo.htherm > 0.0);
-        //assert!(water.thermo.stherm > 0.0);
-        //assert!(water.thermo.ftherm < 0.0);
-        //assert!(water.thermo.gtherm < 0.0);
+        // Lightweight sanity assertions (won’t overconstrain your conventions)
+        assert!(water.thermo.pftot.is_finite() && water.thermo.pftot > 0.0);
+        assert!(water.thermo.stot.is_finite());
+        assert!(water.thermo.gtot.is_finite());
     }
 }
+
