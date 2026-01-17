@@ -5,9 +5,6 @@ const PI: f64 = std::f64::consts::PI;
 const PI_SQ: f64 = PI * PI;
 const TWOPI: f64 = 2.0 * PI;
 
-// -----------------------------
-// Your existing AU / chemistry constants
-// -----------------------------
 const CLIGHT: f64 = 137.035999074;
 const AMU_TO_ELECMASS: f64 = 1836.15267343;
 
@@ -179,7 +176,6 @@ impl MoleculeStruct {
             let brot_cm1 = if !nonzero.is_empty() {
                 nonzero.iter().sum::<f64>() / (nonzero.len() as f64)
             } else {
-                // fallback to avoid div by zero
                 self.brot[0].max(1.0e-6)
             };
             let theta_r = brot_cm1 * CM1_TO_K; // K
@@ -350,7 +346,6 @@ mod tests {
 
     #[test]
     fn test_eval_all_therm_func_grimme() {
-        // Same spirit as your original test, but:
         // - uses a NONZERO Grimme cutoff
         // - also prints per-mode RRHO vs free-rotor vs mixed entropies for inspection
 

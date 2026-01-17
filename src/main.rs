@@ -263,3 +263,89 @@ fn main() {
     //water.calculate_entropy();
     //water.calculate_internal_energy();
 }
+
+// Example SACM usage (kept separate from the main workflow).
+// Uncomment and adapt molecule inputs to run.
+/*
+fn example_sacm_run() {
+    use marxus::barrierless::sacm::{
+        run_sacm, SacmAngularCouplingInput, SacmAnharmonicInput, SacmCaptureModel, SacmCorrections,
+        SacmDensitySource, SacmEnergyGrid, SacmHinderedInput, SacmInput, SacmJRange,
+        SacmRateConfig, SacmReactant, SacmReactantPair, SacmSymmetry, SacmThreshold,
+    };
+    use marxus::rrkm::sum_and_density::RotorSymmetry;
+
+    let reactant_a = SacmReactant {
+        molecule: MoleculeStruct::default(), // replace with real data
+        rotor: RotorSymmetry::ProlateSymmetricTop,
+        centrifugal: Some(SacmCentrifugal {
+            eq_rot_const: 0.1,
+            diss_energy: 1.0e4,
+            corr_a1: 0.0,
+            corr_a2: 0.0,
+        }),
+    };
+
+    let reactant_b = SacmReactant {
+        molecule: MoleculeStruct::default(), // replace with real data
+        rotor: RotorSymmetry::SphericalTop,
+        centrifugal: None,
+    };
+
+    let input = SacmInput {
+        reactants: SacmReactantPair { reactant_a, reactant_b },
+        grid: SacmEnergyGrid { dE: 10.0, emax: 2.0e6 },
+        j_range: SacmJRange { j_start: 0, j_end: 200, j_step: 1 },
+        spcoord: None,
+    };
+
+    let config = SacmRateConfig {
+        threshold: SacmThreshold {
+            dissociation_energy: 1.0e4,
+            product_zpe: 0.0,
+            zpe_shift: 0.0,
+            alpha_over_beta: 4.0,
+            base_rot_const: 0.1,
+            centrifugal_a1: None,
+            centrifugal_a2: None,
+        },
+        symmetry: SacmSymmetry {
+            reactant_symmetry: 1.0,
+            transition_symmetry: 1.0,
+        },
+        density_source: SacmDensitySource::ReactantA,
+        capture_geometry: None,
+        capture_model: Some(SacmCaptureModel {
+            beta: 1.0,
+            use_triatomic: false,
+        }),
+        thermal_temperatures: Some(vec![300.0, 500.0, 1000.0]),
+    };
+
+    let corrections = SacmCorrections {
+        alpha_over_beta: 4.0,
+        angular_coupling: Some(SacmAngularCouplingInput {
+            rotor_case: 4,
+            spin_factor: 1.0,
+            rot_const_a: 0.1,
+            rot_const_b: 0.05,
+            anisotropy_scale: 1.0,
+            wr_beta: 0.5,
+            reactant_freq_sum: 1000.0,
+        }),
+        anharmonic: Some(SacmAnharmonicInput {
+            anharmonic_mode: 0,
+            frag1_freq: vec![],
+            frag2_freq: vec![],
+            frag1_anharm: vec![],
+            frag2_anharm: vec![],
+        }),
+        hindered: Some(SacmHinderedInput {
+            vibrational_count: 0,
+            barrier_height: 0.0,
+        }),
+    };
+
+    let (_prepared, _j_curves, _e_curve, _thermal) = run_sacm(&input, config, corrections);
+}
+*/

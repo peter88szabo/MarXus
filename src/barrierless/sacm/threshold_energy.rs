@@ -16,7 +16,7 @@ use std::f64;
 /// Returns the calculated E0(J) or -1 if the molecule is in a repulsive state.
 /// 
 /// [Ref.: J. Troe, J.Chem.Phys. 75, 226 (1981)]
-pub fn eterat(
+pub fn morse_threshold_energy(
     dmorse: f64,
     ezp: f64,
     dez: f64,
@@ -103,4 +103,3 @@ fn calculate_enullj(znew: f64, be: f64, j: i32, dmorse: f64, a1: f64, a2: f64, b
 
     exp_part + rotational_part + additional_part
 }
-

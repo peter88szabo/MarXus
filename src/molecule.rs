@@ -187,7 +187,7 @@ pub struct MoleculeStruct {
     pub symnum: f64,          // rotational symm num
     pub chiral: f64,          // number of enantiomers
     pub multi: f64,           // degeneracy factor, usually spin multiplicity
-    pub mass: f64,         // total mass
+    pub mass: f64,            // total mass
     pub freq: Vec<f64>,       // harmonic frequencies
     pub brot: Vec<f64>,       // rotational constants
     pub we: Vec<f64>,         // sum of states
@@ -338,7 +338,7 @@ impl MoleculeBuilder {
             panic!("\n Error: Either energy (ene) or enthalpy (dh0) must be provided.\n");
         }
 
-        if self.mass.is_none(){
+        if self.mass.is_none() {
             panic!("\n Error: Total mass (mass) of the molecule must be provided.\n");
         }
 
@@ -356,17 +356,18 @@ impl MoleculeBuilder {
             None => self.ene.unwrap() + zpe, // Calculate dh0 if ene is provided
         };
 
-        let brot = if !self.brot.is_empty() {
-            self.brot.clone() // Use the provided brot if it's not empty
+        // --- FIX #1: actually use the computed brot in the returned struct
+        let brot_final = if !self.brot.is_empty() {
+            self.brot.clone()
         } else {
-            vec![0.0, 0.0, 0.0] //get_brot(&self.qxyz, &self.massvec)
+            vec![0.0, 0.0, 0.0] // get_brot(&self.qxyz, &self.massvec)
         };
 
-        //here we return the main structure
         MoleculeStruct {
             name: self.name,
+            moltype: self.moltype, // --- FIX #2: don’t let Default overwrite requested moltype
             nvib: self.freq.len() as u32,
-            nrot: self.brot.len() as u32,
+            nrot: brot_final.len() as u32,
             nlin: self.nlin,
             zpe,
             ene,
@@ -375,7 +376,7 @@ impl MoleculeBuilder {
             multi: self.multi,
             chiral: self.chiral,
             freq: self.freq,
-            brot: self.brot,
+            brot: brot_final,
             mass: self.mass.unwrap(),
             ..Default::default() // Use defaults for other fields
         }

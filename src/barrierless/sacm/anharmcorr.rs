@@ -13,8 +13,8 @@ pub fn anharmonic_reactant_rhoE(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], d
         3 => {
             let nenner = 2 * nvib - 3;
             let mut anh_rho = 1.0;
-            for i in 0..nvibr {
-                anh_rho *= 1.0 + (e + nyr[i] / 2.0) / (dr[i] * nenner as f64);
+            for i in 0..nvib {
+                anh_rho *= 1.0 + (ene + nyr[i] / 2.0) / (dr[i] * nenner as f64);
             }
             anh_rho
         }
@@ -60,4 +60,3 @@ pub fn anharmonic_product_wE(
         2 | _ => 1.0,  // Handle default or KANH+1 = 2 case
     }
 }
-
