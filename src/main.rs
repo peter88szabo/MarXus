@@ -6,7 +6,6 @@ mod rrkm;
 mod thermal;
 mod utils;
 
-use crate::inertia::inertia::get_brot;
 use crate::molecule::MolType;
 use crate::molecule::MoleculeBuilder;
 use crate::rrkm::rrkm_rate::get_kE;
@@ -254,11 +253,17 @@ fn main() {
     println!("freq: {:?}", water.freq);
     println!("brot: {:?}", water.brot);
 
-    println!("\nThermo");
-    println!("gtot: {:?}", water.thermo.gtot);
-    println!("srot: {:?}", water.thermo.srot);
-    println!("hvib: {:?}", water.thermo.hvib);
-    println!("pfvib: {:?}", water.thermo.pfvib);
+    let temp = 298.15;
+    let pressure = 101_325.0;
+    let freq_cutoff = 100.0;
+    water.eval_all_therm_func(temp, pressure, freq_cutoff);
+
+    println!("\nThermo (T = {:.2} K, p = {:.1} Pa)", temp, pressure);
+    println!("Q_tot : {:15.6e}", water.thermo.pftot);
+    println!("U_tot : {:15.8}", water.thermo.utot);
+    println!("H_tot : {:15.8}", water.thermo.htot);
+    println!("G_tot : {:15.8}", water.thermo.gtot);
+    println!("S_tot : {:15.8}", water.thermo.stot);
 
     //water.calculate_entropy();
     //water.calculate_internal_energy();
@@ -299,6 +304,49 @@ fn example_sacm_run() {
         spcoord: None,
     };
 
+    let thermal_input = SacmThermalInput {
+        temperatures: vec![300.0, 500.0, 1000.0],
+        max_temperature: 1000.0,
+        rotor_case_reactant: 4,
+        rotor_case_products: 5,
+        alpha_over_beta: 4.0,
+        anisotropy_scale: 1.0,
+        transition_symmetry: 1.0,
+        reactant_symmetry: 1.0,
+        frag1_symmetry: 1.0,
+        frag2_symmetry: 1.0,
+        dissociation_energy: 1.0e4,
+        product_zpe: 0.0,
+        zpe_shift: 0.0,
+        enthalpy_0k: 0.0,
+        base_rot_const: 0.1,
+        centrifugal_a1: 0.0,
+        centrifugal_a2: 0.0,
+        external_rot_a: 0.1,
+        external_rot_b: 0.05,
+        external_rot_c: 0.03,
+        frag_rot_b1: 0.1,
+        frag_rot_b2: 0.1,
+        red_mass: 1.0,
+        vib_reactant: vec![],
+        vib_frag1: vec![],
+        vib_frag2: vec![],
+        internal_rot_reactant: vec![],
+        internal_rot_frag1: vec![],
+        internal_rot_frag2: vec![],
+        hindered_barrier_reactant: 0.0,
+        hindered_barrier_frag1: 0.0,
+        hindered_barrier_frag2: 0.0,
+        hindered_count_reactant: 0.0,
+        hindered_count_frag1: 0.0,
+        hindered_count_frag2: 0.0,
+        electronic_q_reactant: 1.0,
+        electronic_q_frag1: 1.0,
+        electronic_q_frag2: 1.0,
+        qstar_eps: vec![],
+        qstar_x: vec![],
+    };
+
     let config = SacmRateConfig {
         threshold: SacmThreshold {
             dissociation_energy: 1.0e4,
@@ -319,7 +367,7 @@ fn example_sacm_run() {
             beta: 1.0,
             use_triatomic: false,
         }),
-        thermal_temperatures: Some(vec![300.0, 500.0, 1000.0]),
+        thermal_input: Some(thermal_input),
     };
 
     let corrections = SacmCorrections {

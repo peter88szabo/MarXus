@@ -16,12 +16,11 @@ impl SacmCentrifugal {
         let jval = j as f64;
         let ecent = self.eq_rot_const * jval * (jval + 1.0) / self.diss_energy;
         let mut z = 1.0e-10;
-        let mut last = z;
         let mut iter = 0;
 
         loop {
             iter += 1;
-            last = z;
+            let last = z;
             let f = lowest_channel_derivative(z, ecent, self.corr_a1, self.corr_a2);
             let df = lowest_channel_second_derivative(z, ecent, self.corr_a1, self.corr_a2);
             z = last - f / df;

@@ -8,7 +8,7 @@
 // dr: array of anharmonic constants
 // 
 // Returns the anharmonicity factor for the reactant molecule.
-pub fn anharmonic_reactant_rhoE(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], dr: &[f64]) -> f64 {
+pub fn anharmonic_reactant_rho_e(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], dr: &[f64]) -> f64 {
     match kanh + 1 {
         3 => {
             let nenner = 2 * nvib - 3;
@@ -35,7 +35,7 @@ pub fn anharmonic_reactant_rhoE(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], d
 // D1, D2: arrays of anharmonic constants for the two products
 //
 // Returns the anharmonicity factor for the product molecules.
-pub fn anharmonic_product_wE(
+pub fn anharmonic_product_w_e(
     kanh: i32,
     ei: f64,
     nvib1: usize,

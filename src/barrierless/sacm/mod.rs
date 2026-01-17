@@ -5,6 +5,7 @@ pub mod hindered_rotor;
 pub mod threshold_energy;
 pub mod phase_space;
 pub mod sacm;
+pub mod thermal_rates;
 pub mod spcoord;
 pub mod species;
 pub mod system;
@@ -15,9 +16,10 @@ pub use phase_space::phase_space_states;
 pub use sacm::{
     run_sacm, SacmAnharmonicInput, SacmAngularCouplingInput, SacmCorrections, SacmDensitySource,
     SacmCaptureModel, SacmEnergyRate, SacmHinderedInput, SacmRateConfig, SacmRateCurve,
-    SacmSymmetry, SacmThreshold, SacmThermalRate,
+    SacmSymmetry, SacmThreshold,
 };
-pub use species::SacmReactantStates;
+pub use thermal_rates::{SacmThermalInput, SacmThermalRate};
+pub use types::SacmReactantStates;
 pub use system::{SacmInput, SacmPrepared, prepare_sacm};
 pub use spcoord::{AtomCoord, FragmentSpec, SpCoordInput, SpCoordResult, compute_spcoord};
 pub use types::{

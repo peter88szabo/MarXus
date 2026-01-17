@@ -1,8 +1,9 @@
-use super::anharmcorr::anharmonic_product_wE;
+use super::anharmcorr::anharmonic_product_w_e;
 use super::hindered_rotor::hindered_rotor_sum_factor;
 use super::threshold_energy::morse_threshold_energy;
 use super::types::{SacmEnergyGrid, SacmJResolved};
 use super::system::{prepare_sacm, SacmInput, SacmPrepared};
+use super::thermal_rates::{compute_thermal_rates, SacmThermalInput, SacmThermalRate};
 use super::fame_angmomcoupling::factor_angmom;
 
 #[derive(Debug, Clone, Copy)]
@@ -60,16 +61,17 @@ pub struct SacmCorrections {
     pub angular_coupling: Option<SacmAngularCouplingInput>,
     pub anharmonic: Option<SacmAnharmonicInput>,
     pub hindered: Option<SacmHinderedInput>,
+    pub faminf_baseline: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct SacmRateConfig {
     pub threshold: SacmThreshold,
     pub symmetry: SacmSymmetry,
     pub density_source: SacmDensitySource,
     pub capture_geometry: Option<super::types::SacmCaptureGeometry>,
     pub capture_model: Option<SacmCaptureModel>,
-    pub thermal_temperatures: Option<Vec<f64>>,
+    pub thermal_input: Option<SacmThermalInput>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -92,11 +94,6 @@ pub struct SacmEnergyRate {
     pub rho_e: Vec<f64>,
 }
 
-#[derive(Debug)]
-pub struct SacmThermalRate {
-    pub temperature: f64,
-    pub rate: f64,
-}
 
 /// Run SACM: PST baseline plus correction factors, returning k(E) per J.
 pub fn run_sacm(
@@ -119,13 +116,12 @@ pub fn run_sacm(
         SacmDensitySource::ReactantA => input.reactants.reactant_a.molecule.zpe,
         SacmDensitySource::ReactantB => input.reactants.reactant_b.molecule.zpe,
     };
+    let thermal_rates = match config.thermal_input.as_ref() {
+        Some(thermal_input) => compute_thermal_rates(thermal_input),
+        None => Vec::new(),
+    };
     let (curves, energy_rate) =
         sacm_rates(&prepared, input.grid, reactant_zpe, config, &corrections);
-    let thermal_rates = compute_thermal_rates(
-        &energy_rate,
-        config.thermal_temperatures.as_deref().unwrap_or(&[]),
-        input.grid,
-    );
     (prepared, curves, energy_rate, thermal_rates)
 }
 
@@ -224,6 +220,10 @@ fn apply_corrections(
 ) -> Vec<f64> {
     let mut out = vec![0.0; base_we.len()];
     let use_corrections = corrections.alpha_over_beta > 0.0;
+    let faminf = corrections
+        .faminf_baseline
+        .as_deref()
+        .unwrap_or(&[]);
 
     for (i, &we) in base_we.iter().enumerate() {
         let ei = i as f64 * dE;
@@ -231,6 +231,7 @@ fn apply_corrections(
 
         if use_corrections {
             if let Some(fam) = corrections.angular_coupling {
+                let faminf_val = faminf.get(i).copied().unwrap_or(1.0);
                 let eif = if fam.reactant_freq_sum > 0.0 {
                     let wr = whitten_rabinovitch_factor(2.0 * ei / fam.reactant_freq_sum, fam.wr_beta);
                     ei + wr * fam.reactant_freq_sum / 2.0
@@ -245,13 +246,15 @@ fn apply_corrections(
                     fam.rot_const_a,
                     fam.rot_const_b,
                 );
-                factor *= 1.0 + (fame_val - 1.0) * (-(fam.anisotropy_scale * corrections.alpha_over_beta)).exp();
+                let blend = (-(fam.anisotropy_scale * corrections.alpha_over_beta)).exp();
+                let wpst = faminf_val + (fame_val - faminf_val) * blend;
+                factor *= wpst;
             }
 
             if let Some(anh) = &corrections.anharmonic {
                 let nvib1 = anh.frag1_freq.len();
                 let nvib2 = anh.frag2_freq.len();
-                factor *= anharmonic_product_wE(
+                factor *= anharmonic_product_w_e(
                     anh.anharmonic_mode,
                     ei,
                     nvib1,
@@ -322,43 +325,4 @@ fn derive_centrifugal_params(
     let a1 = base_a1 * (mz * (mx + my) * qe * qe - mx * mz * q2e * qe * cos_theta) / anen;
     let a2 = base_a2 * mz * (mx + my) * qe * qe / anen;
     (a1, a2)
-}
-
-/// Thermal rate from J-integrated k(E) using a Boltzmann average.
-fn compute_thermal_rates(
-    energy_rate: &SacmEnergyRate,
-    temperatures: &[f64],
-    grid: SacmEnergyGrid,
-) -> Vec<SacmThermalRate> {
-    let mut rates = Vec::new();
-    if temperatures.is_empty() {
-        return rates;
-    }
-
-    let k_b_cm = 0.69503;
-    for &temp in temperatures {
-        if temp <= 0.0 {
-            continue;
-        }
-        let kt = k_b_cm * temp;
-        let mut numerator = 0.0;
-        let mut denom = 0.0;
-        for (i, (&k_e, &rho_e)) in energy_rate
-            .k_e
-            .iter()
-            .zip(energy_rate.rho_e.iter())
-            .enumerate()
-        {
-            let e = i as f64 * grid.dE;
-            let weight = (-e / kt).exp();
-            numerator += k_e * rho_e * weight;
-            denom += rho_e * weight;
-        }
-        let rate = if denom > 0.0 { numerator / denom } else { 0.0 };
-        rates.push(SacmThermalRate {
-            temperature: temp,
-            rate,
-        });
-    }
-    rates
 }
