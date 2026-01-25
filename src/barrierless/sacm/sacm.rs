@@ -1,7 +1,7 @@
 use super::anharmcorr::anharmonic_product_w_e;
 use super::hindered_rotor::hindered_rotor_sum_factor;
 use super::threshold_energy::morse_threshold_energy;
-use super::types::{SacmEnergyGrid, SacmJResolved};
+use super::types::{ReactantRotorCase, SacmEnergyGrid, SacmJResolved};
 use super::system::{prepare_sacm, SacmInput, SacmPrepared};
 use super::thermal_rates::{compute_thermal_rates, SacmThermalInput, SacmThermalRate};
 use super::fame_angmomcoupling::factor_angmom;
@@ -31,7 +31,7 @@ pub struct SacmSymmetry {
 
 #[derive(Debug, Clone, Copy)]
 pub struct SacmAngularCouplingInput {
-    pub rotor_case: i32,
+    pub rotor_case: ReactantRotorCase,
     pub spin_factor: f64,
     pub rot_const_a: f64,
     pub rot_const_b: f64,

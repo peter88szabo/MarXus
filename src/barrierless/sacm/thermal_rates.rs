@@ -2,13 +2,14 @@ use crate::numeric::lanczos_gamma::gamma_func;
 
 use super::hindered_rotor::fqhind;
 use super::threshold_energy::morse_threshold_energy;
+use super::types::{ProductRotorCase, ReactantRotorCase};
 
 #[derive(Debug, Clone)]
 pub struct SacmThermalInput {
     pub temperatures: Vec<f64>,
     pub max_temperature: f64,
-    pub rotor_case_reactant: i32,
-    pub rotor_case_products: i32,
+    pub rotor_case_reactant: ReactantRotorCase,
+    pub rotor_case_products: ProductRotorCase,
     pub alpha_over_beta: f64,
     pub anisotropy_scale: f64,
     pub transition_symmetry: f64,
@@ -55,8 +56,51 @@ pub struct SacmThermalRate {
     pub equilibrium_constant: f64,
 }
 
+#[derive(Debug, Clone)]
+pub struct SacmThermalDebugRate {
+    pub temperature: f64,
+    pub kt: f64,
+    pub qcent: f64,
+    pub enull_0: f64,
+    pub enull: Vec<f64>,
+    pub qera: f64,
+    pub qerb: f64,
+    pub qerc: f64,
+    pub qira: f64,
+    pub qirb: f64,
+    pub qirc: f64,
+    pub qviba: f64,
+    pub qvibb: f64,
+    pub qvibc: f64,
+    pub qela: f64,
+    pub qelb: f64,
+    pub qelc: f64,
+    pub qvra: f64,
+    pub qvrb: f64,
+    pub qvrc: f64,
+    pub qstarp: f64,
+    pub qprod: f64,
+    pub dissociation_rate: f64,
+    pub recombination_rate: f64,
+    pub equilibrium_constant: f64,
+}
+
 /// Compute high-pressure thermal rates using the QCENT/QSTAR pathway.
 pub fn compute_thermal_rates(input: &SacmThermalInput) -> Vec<SacmThermalRate> {
+    let debug_rates = compute_thermal_rates_debug(input);
+    debug_rates
+        .into_iter()
+        .map(|rate| SacmThermalRate {
+            temperature: rate.temperature,
+            dissociation_rate: rate.dissociation_rate,
+            recombination_rate: rate.recombination_rate,
+            equilibrium_constant: rate.equilibrium_constant,
+        })
+        .collect()
+}
+
+/// Compute high-pressure thermal rates and return intermediate terms for debugging.
+pub fn compute_thermal_rates_debug(input: &SacmThermalInput) -> Vec<SacmThermalDebugRate> {
     let mut rates = Vec::new();
     let enull = compute_enull_j(
         input.dissociation_energy,
@@ -143,8 +187,29 @@ pub fn compute_thermal_rates(input: &SacmThermalInput) -> Vec<SacmThermalRate> {
             / (qvrb * qvrc);
         let k_eq = if k_recomb > 0.0 { k_diss / k_recomb } else { 0.0 };
 
-        rates.push(SacmThermalRate {
+        rates.push(SacmThermalDebugRate {
             temperature: temp,
+            kt,
+            qcent,
+            enull_0,
+            enull: enull.clone(),
+            qera,
+            qerb,
+            qerc,
+            qira,
+            qirb,
+            qirc,
+            qviba,
+            qvibb,
+            qvibc,
+            qela: input.electronic_q_reactant,
+            qelb: input.electronic_q_frag1,
+            qelc: input.electronic_q_frag2,
+            qvra,
+            qvrb,
+            qvrc,
+            qstarp,
+            qprod,
             dissociation_rate: k_diss,
             recombination_rate: k_recomb,
             equilibrium_constant: k_eq,
@@ -202,11 +267,22 @@ fn compute_enull_j(
 }
 
 /// Angular-momentum coupling factor for the thermal partition (FAMC).
-fn compute_famc(kzr1: i32, kzp: i32, c3: f64, alpha_over_beta: f64) -> f64 {
+fn compute_famc(
+    reactant_rotor_case: ReactantRotorCase,
+    product_rotor_case: ProductRotorCase,
+    c3: f64,
+    alpha_over_beta: f64,
+) -> f64 {
     let famec = [1.0, 2.0, 2.0, 2.0];
     let famuc = [1.2732, 2.5465, 1.6211, 3.2423, 6.4846];
-    let a = famec.get((kzr1 - 1) as usize).copied().unwrap_or(1.0);
-    let b = famuc.get((kzp - 1) as usize).copied().unwrap_or(1.0);
+    let a = famec
+        .get(reactant_rotor_case.famc_index())
+        .copied()
+        .unwrap_or(1.0);
+    let b = famuc
+        .get(product_rotor_case.famc_index())
+        .copied()
+        .unwrap_or(1.0);
     b + (a - b) * (-(c3 * alpha_over_beta)).exp()
 }
 
@@ -246,34 +322,39 @@ fn internal_rotor_partition(temp: f64, brot: &[f64], v0: f64, n: f64) -> f64 {
 
 /// External-rotor partition for the reactant (linear/spherical/symmetric top).
 fn external_rotor_partition_reactant(
-    rotor_case: i32,
+    rotor_case: ReactantRotorCase,
     temp: f64,
-    ar: f64,
-    br: f64,
-    cr: f64,
+    rot_a: f64,
+    rot_b: f64,
+    rot_c: f64,
 ) -> f64 {
     match rotor_case {
-        1 => 0.695 * temp / br,
-        2 => 1.027 * temp / br * (temp / br).sqrt(),
-        _ => 1.027 * (temp * temp * temp / (ar * br * cr)).sqrt(),
+        ReactantRotorCase::Linear => 0.695 * temp / rot_b,
+        ReactantRotorCase::SphericalTop => 1.027 * temp / rot_b * (temp / rot_b).sqrt(),
+        _ => 1.027 * (temp * temp * temp / (rot_a * rot_b * rot_c)).sqrt(),
     }
 }
 
 /// External-rotor partition for the fragments (linear/spherical/symmetric top cases).
 fn external_rotor_partition_products(
-    rotor_case: i32,
+    rotor_case: ProductRotorCase,
     temp: f64,
-    b1: f64,
-    b2: f64,
+    rot_b1: f64,
+    rot_b2: f64,
 ) -> (f64, f64) {
     match rotor_case {
-        1 => (0.695 * temp / b1, 1.0),
-        2 => (1.027 * temp / b1 * (temp / b1).sqrt(), 1.0),
-        3 => (0.695 * temp / b1, 0.695 * temp / b2),
-        4 => (1.027 * temp / b1 * (temp / b1).sqrt(), 0.695 * temp / b2),
-        _ => (
-            1.027 * temp / b1 * (temp / b1).sqrt(),
-            1.027 * temp / b2 * (temp / b2).sqrt(),
+        ProductRotorCase::LinearAtom => (0.695 * temp / rot_b1, 1.0),
+        ProductRotorCase::SphericalAtom => {
+            (1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(), 1.0)
+        }
+        ProductRotorCase::LinearLinear => (0.695 * temp / rot_b1, 0.695 * temp / rot_b2),
+        ProductRotorCase::LinearSpherical => (
+            1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(),
+            0.695 * temp / rot_b2,
+        ),
+        ProductRotorCase::SphericalSpherical => (
+            1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(),
+            1.027 * temp / rot_b2 * (temp / rot_b2).sqrt(),
         ),
     }
 }

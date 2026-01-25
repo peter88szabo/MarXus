@@ -65,3 +65,43 @@ pub struct SacmCaptureGeometry {
     pub mass_y: f64,
     pub mass_z: Option<f64>,
 }
+
+#[derive(Debug, Clone, Copy)]
+pub enum ReactantRotorCase {
+    Linear,
+    SphericalTop,
+    OblateSymmetricTop,
+    ProlateSymmetricTop,
+}
+
+impl ReactantRotorCase {
+    pub fn famc_index(self) -> usize {
+        match self {
+            ReactantRotorCase::Linear => 0,
+            ReactantRotorCase::SphericalTop => 1,
+            ReactantRotorCase::OblateSymmetricTop => 2,
+            ReactantRotorCase::ProlateSymmetricTop => 3,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ProductRotorCase {
+    LinearAtom,
+    SphericalAtom,
+    LinearLinear,
+    LinearSpherical,
+    SphericalSpherical,
+}
+
+impl ProductRotorCase {
+    pub fn famc_index(self) -> usize {
+        match self {
+            ProductRotorCase::LinearAtom => 0,
+            ProductRotorCase::SphericalAtom => 1,
+            ProductRotorCase::LinearLinear => 2,
+            ProductRotorCase::LinearSpherical => 3,
+            ProductRotorCase::SphericalSpherical => 4,
+        }
+    }
+}

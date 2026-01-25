@@ -1,15 +1,21 @@
 // This function calculates anharmonicity factors for the densities of
 // states of the reactant molecule.
 // 
-// kanh: parameter controlling the behavior of the function
+// mode: parameter controlling the behavior of the function
 // ene: energy
 // nvib: number of vibrational states
 // nyr: array of vibrational constants
 // dr: array of anharmonic constants
 // 
 // Returns the anharmonicity factor for the reactant molecule.
-pub fn anharmonic_reactant_rho_e(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], dr: &[f64]) -> f64 {
-    match kanh + 1 {
+pub fn anharmonic_reactant_rho_e(
+    mode: i32,
+    ene: f64,
+    nvib: usize,
+    nyr: &[f64],
+    dr: &[f64],
+) -> f64 {
+    match mode + 1 {
         3 => {
             let nenner = 2 * nvib - 3;
             let mut anh_rho = 1.0;
@@ -27,7 +33,7 @@ pub fn anharmonic_reactant_rho_e(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], 
 // This function calculates anharmonicity factors for the sums of
 // states of the product molecules.
 //
-// KANH: parameter controlling the behavior of the function
+// mode: parameter controlling the behavior of the function
 // EI: energy of the interaction
 // NVIB1: number of vibrational states of the first product
 // NVIB2: number of vibrational states of the second product
@@ -36,7 +42,7 @@ pub fn anharmonic_reactant_rho_e(kanh: i32, ene: f64, nvib: usize, nyr: &[f64], 
 //
 // Returns the anharmonicity factor for the product molecules.
 pub fn anharmonic_product_w_e(
-    kanh: i32,
+    mode: i32,
     ei: f64,
     nvib1: usize,
     nvib2: usize,
@@ -45,7 +51,7 @@ pub fn anharmonic_product_w_e(
     d1: &[f64],
     d2: &[f64]
 ) -> f64 {
-    match kanh + 1 {
+    match mode + 1 {
         3 => {
             let nenner = 2 * (nvib1 + nvib2) - 1;
             let mut anh_we = 1.0;

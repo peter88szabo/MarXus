@@ -40,16 +40,24 @@ pub fn morse_threshold_energy(
 
 // Helper function for the case when J == 0
 fn handle_j_zero(b: f64, alpha_beta: f64, dmorse: f64, ezp: f64, znew: &mut f64) -> f64 {
+    let mut iter = 0;
     loop {
         let zold = *znew;
         *znew = (2.0 * (1.0 - (-zold).exp()) / (b * alpha_beta * (-alpha_beta * zold).exp())).ln();
+        if !znew.is_finite() {
+            return dmorse + ezp;
+        }
         if *znew > zold {
             return dmorse + ezp;
         }
-        
+
         let tol = (*znew - zold).abs();
         if tol <= 0.001 {
             break;
+        }
+        iter += 1;
+        if iter > 1000 {
+            return dmorse + ezp;
         }
     }
 
@@ -71,17 +79,22 @@ fn handle_j_nonzero(
 
     let a = be * (j as f64) * (j as f64 + 1.0) / dmorse;
 
+    let mut iter = 0;
     loop {
         let zold = *znew;
         *znew = calculate_znew(a, b, alpha_beta, zold, a1, a2);
 
-        if *znew < 0.0 {
+        if !znew.is_finite() || *znew < 0.0 {
             return -1.0; // Return -1 for the repulsive state
         }
 
         let tol = (*znew - zold).abs();
         if tol <= 0.001 {
             break;
+        }
+        iter += 1;
+        if iter > 1000 {
+            return -1.0;
         }
     }
 
