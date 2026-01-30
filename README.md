@@ -1,6 +1,6 @@
 # MarXus
 
-**Molecular Statistical Physics for Kinetics and Thermochemistry
+**Molecular Statistical Physics for Kinetics and Thermochemistry**
 
 **Author:** Peter Szabo  
 **Email:** peter88szabo@gmail.com  
