@@ -27,7 +27,7 @@ fn main() {
  Molecular Statistical Physics for Kinetics and Thermochemistry
 
                        Version: 0.1
-                      11. Sept. 2024
+                      28. Jan. 2026
 
  Author: Peter Szabo
  Email: peter88szabo@gmail.com
