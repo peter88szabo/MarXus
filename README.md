@@ -21,8 +21,9 @@ MARXUS is a molecular statistical-physics toolkit for **thermochemistry** and **
 - RRKM / microcanonical TST: **E-dependent rate constants** *(μ-canonical TST)*
 - Sum and density of states: *(E- or E,J-resolved)*
 - Barrierless reactions:
-  - Phase Space Theory (PST) with **1D arbitrary potential**
-  - Statistical Adiabatic Channel Method (SACM)
+  - Phase Space Theory (PST) with **1D arbitrary potential** !!! In progress !!!
+  - Statistical Adiabatic Channel Method (SACM) !!! In progress !!!
+- Energy-resolved Master Equation (E-dependent) !!! In progress !!!
 
 ---
 
@@ -31,7 +32,6 @@ MARXUS is a molecular statistical-physics toolkit for **thermochemistry** and **
 - Microcanonical Variational TST (μVTST)
 - Canonical Variational TST (CVTST)
 - Submerged barrier with a pre-reaction vdW complex: **μ-canonical, J-resolved 2-TST treatment**
-- Energy-resolved Master Equation (E-dependent kinetics)
 
 ---
 
