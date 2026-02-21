@@ -152,7 +152,6 @@ pub fn get_Jres_rovib_WEJ_or_rhoEJ(
     // ======================================================================================
     // Computation of the E,J-dependent sum and density of states.
     // In the case of symmetric tops, the K-rotors are averaged.
-    // This follows the SACM Fortran logic but uses clearer Rust names.
     // ======================================================================================
     assert!(rho_e.len() > n_ebin, "rho_e length must be n_ebin+1");
     assert!(we.len() > n_ebin, "we length must be n_ebin+1");
