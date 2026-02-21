@@ -12,9 +12,9 @@ use std::f64;
 /// be: mean of the two smallest rotational constants of the reactant
 /// a1, a2: centrifugal parameters (see ref.)
 /// j: rotational quantum number
-/// 
+///
 /// Returns the calculated E0(J) or -1 if the molecule is in a repulsive state.
-/// 
+///
 /// [Ref.: J. Troe, J.Chem.Phys. 75, 226 (1981)]
 pub fn morse_threshold_energy(
     dmorse: f64,
@@ -24,7 +24,7 @@ pub fn morse_threshold_energy(
     be: f64,
     a1: f64,
     a2: f64,
-    j: i32
+    j: i32,
 ) -> f64 {
     let mut znew: f64 = 85.0;
     let b = dez / dmorse;
@@ -75,8 +75,8 @@ fn handle_j_nonzero(
     be: f64,
     a1: f64,
     a2: f64,
-    znew: &mut f64 ) -> f64 {
-
+    znew: &mut f64,
+) -> f64 {
     let a = be * (j as f64) * (j as f64 + 1.0) / dmorse;
 
     let mut iter = 0;
@@ -104,13 +104,28 @@ fn handle_j_nonzero(
 
 // Calculates the new ZNEW value during the iteration
 fn calculate_znew(a: f64, b: f64, alpha_beta: f64, zold: f64, a1: f64, a2: f64) -> f64 {
-    -(a * (a1 + 2.0 * a2 * zold) / (2.0 * (1.0 - (-zold).exp()) * (1.0 + a1 * zold + a2 * zold.powi(2)) * (1.0 + a1 * zold + a2 * zold.powi(2))) +
-      b * alpha_beta * (-alpha_beta * zold).exp() / (2.0 * (1.0 - (-zold).exp()))).ln()
+    -(a * (a1 + 2.0 * a2 * zold)
+        / (2.0
+            * (1.0 - (-zold).exp())
+            * (1.0 + a1 * zold + a2 * zold.powi(2))
+            * (1.0 + a1 * zold + a2 * zold.powi(2)))
+        + b * alpha_beta * (-alpha_beta * zold).exp() / (2.0 * (1.0 - (-zold).exp())))
+    .ln()
 }
 
 // Calculates the final value of ENULLJ
-fn calculate_enullj(znew: f64, be: f64, j: i32, dmorse: f64, a1: f64, a2: f64, b: f64, alpha_beta: f64) -> f64 {
-    let rotational_part = be * (j as f64) * (j as f64 + 1.0) / (dmorse * (1.0 + a1 * znew + a2 * znew.powi(2)));
+fn calculate_enullj(
+    znew: f64,
+    be: f64,
+    j: i32,
+    dmorse: f64,
+    a1: f64,
+    a2: f64,
+    b: f64,
+    alpha_beta: f64,
+) -> f64 {
+    let rotational_part =
+        be * (j as f64) * (j as f64 + 1.0) / (dmorse * (1.0 + a1 * znew + a2 * znew.powi(2)));
     let exp_part = (1.0 - (-znew).exp()).powi(2);
     let additional_part = b * (-alpha_beta * znew).exp();
 

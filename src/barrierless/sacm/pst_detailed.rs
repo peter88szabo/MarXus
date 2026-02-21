@@ -69,7 +69,8 @@ pub fn rovib_sum_from_freqs(freq: &[f64], brot: &[f64], grid: SacmEnergyGrid) ->
 pub fn build_pst_detailed_with_interpolation(
     input: PstDetailedInput<'_>,
 ) -> (PstChannels, Option<ChannelEigenvalues>) {
-    let conserved_sum = rovib_sum_from_freqs(input.conserved_freq, input.conserved_brot, input.grid);
+    let conserved_sum =
+        rovib_sum_from_freqs(input.conserved_freq, input.conserved_brot, input.grid);
     let channel = if input.use_interpolation {
         input.interpolation.map(channel_eigval_interpol_from_input)
     } else {
@@ -81,6 +82,12 @@ pub fn build_pst_detailed_with_interpolation(
     };
     let transitional_sum = rovib_sum_from_freqs(transitional_freq, &[], input.grid);
     let out_len = conserved_sum.len();
-    let pst = build_pst_detailed(&conserved_sum, &transitional_sum, out_len, input.faminf, input.energy_offset);
+    let pst = build_pst_detailed(
+        &conserved_sum,
+        &transitional_sum,
+        out_len,
+        input.faminf,
+        input.energy_offset,
+    );
     (pst, channel)
 }

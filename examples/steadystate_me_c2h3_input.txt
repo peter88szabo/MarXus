@@ -1,0 +1,103 @@
+# C2H3 dissociation setup inspired by the provided MESS model.
+# Requested simplification: single temperature (1000 K) and single pressure (1.0 atm).
+
+[conditions]
+temperature_kelvin = 1000.0
+pressure_atm = 1.0
+
+[mess_reference]
+energy_step_over_temperature = 0.1
+excess_energy_over_temperature = 30.0
+model_energy_limit_kcal_mol = 400.0
+well_cutoff = 10
+chemical_eigenvalue_max = 0.2
+
+[species]
+well_name = W1
+well_label = C2H3
+product_name = P1
+product_label = C2H2 + H
+barrier_name = B1
+barrier_label = C2H3 = C2H2 + H
+
+# Energies from MESS ZeroEnergy cards.
+# In this example we treat ZeroEnergy as dH0:
+# dH0 = Eelec + ZPE
+well_dh0_kcal_mol = -34.44
+product_dh0_kcal_mol = 0.00
+barrier_dh0_kcal_mol = 4.42
+
+[parameters]
+# Energy grid (chosen to cover broad internal-energy range while keeping runtime modest)
+# Match the MESS ModelEnergyLimit[kcal/mol]=400 as the top of the grid:
+#   E_max ≈ 400 kcal/mol ≈ 139902 cm^-1; with ΔE below this gives ~2014 bins.
+number_of_bins = 2014
+# Match the MESS setting EnergyStepOverTemperature=0.1:
+#   ΔE = 0.1 * k_B * T  (in cm^-1), using k_B = 0.69503476 cm^-1/K and T=1000 K.
+bin_width_wavenumber = 69.503476
+energy_origin_wavenumber = 0.0
+
+# Steady-state solver settings
+# Temperature pinned to requested single value
+temperature_kelvin = 1000.0
+boltzmann_constant_wavenumber_per_kelvin = 0.69503476
+
+# Default fallback values (overridden when [mess_collision_model] is enabled)
+collision_frequency_per_second = 0.0
+pseudo_first_order_capture_loss_per_second = 0.0
+stepladder_base_downward_probability = 0.10
+
+# Scalar source strength
+formation_flux = 1.0
+
+[microcanonical]
+provider = rrkm_c2h3
+# One unimolecular channel for W1 -> P1 dissociation
+placeholder_channel_count = 1
+
+[collision]
+# fixed | exponential_down | exponential_down_lj_omega | lj_omega_only
+model = exponential_down_lj_omega
+# Collision-kernel implementation for the energy-grained ME:
+# - spd  : MarXus symmetric/SPD kernel (with reactive-region probability cap)
+# - mess : MESS-like per-source row-normalized kernel
+kernel_implementation = spd
+energy_relax_factor_cm1 = 200.0
+energy_relax_power = 0.85
+energy_relax_exponent_cutoff = 15.0
+lennard_jones_epsilons_cm1 = [6.95, 292.0]
+lennard_jones_sigmas_angstrom = [2.55, 4.36]
+lennard_jones_masses_amu = [4.0, 75.0]
+
+[high_pressure]
+# delta_g_dagger_kcal_mol intentionally omitted:
+# high-pressure calculator falls back to Ea_forward = E(TS)-E(W1).
+freq_cutoff_cm1 = 0.0
+
+[tunneling]
+# For comparison to the *no tunneling* MESS run, disable tunneling here.
+model = none
+imaginary_frequency_cm1 = 872.23
+forward_barrier_kcal_mol = 38.86
+reverse_barrier_kcal_mol = 4.42
+integration_step_kcal_mol = 0.05
+integration_max_kcal_mol = 120.0
+
+[source]
+active = thermal_ts
+
+[source_thermal_ts]
+# Barrier height 4.42 kcal/mol ~ 1546 cm^-1 (MESS uses 4.42 kcal/mol).
+# This value is not exactly commensurate with ΔE, and is mapped to the nearest bin shift.
+threshold_wavenumber = 1545.91724
+# For provider=rrkm_c2h3, the example computes TS W(E) directly with the RRKM module.
+
+[source_convolution]
+threshold_wavenumber = 1550.0
+reactant_a_distribution = [0.15, 0.25, 0.30, 0.20, 0.10]
+reactant_b_distribution = [0.10, 0.20, 0.40, 0.20, 0.10]
+
+[source_shift]
+reaction_energy_wavenumber = 1550.0
+partner_mean_energy_wavenumber = 500.0
+reactant_distribution = [0.05, 0.10, 0.20, 0.30, 0.20, 0.10, 0.05]

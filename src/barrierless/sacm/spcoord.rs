@@ -101,7 +101,11 @@ fn center_of_mass(atoms: &[AtomCoord], indices: &[usize]) -> ([f64; 3], f64) {
     }
 
     (
-        [acc[0] / total_mass, acc[1] / total_mass, acc[2] / total_mass],
+        [
+            acc[0] / total_mass,
+            acc[1] / total_mass,
+            acc[2] / total_mass,
+        ],
         total_mass,
     )
 }

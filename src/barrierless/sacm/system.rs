@@ -1,8 +1,8 @@
 use super::phase_space::phase_space_states;
 use super::spcoord::compute_spcoord;
 use super::types::{
-    SacmCaptureGeometry, SacmEnergyGrid, SacmJRange, SacmPhaseSpaceStates, SacmReactantPair,
-    SacmReactantStates, SacmJResolved, SacmSpCoordInput, SacmSpCoordResult,
+    SacmCaptureGeometry, SacmEnergyGrid, SacmJRange, SacmJResolved, SacmPhaseSpaceStates,
+    SacmReactantPair, SacmReactantStates, SacmSpCoordInput, SacmSpCoordResult,
 };
 
 #[derive(Debug)]
@@ -36,8 +36,14 @@ pub fn prepare_sacm(input: &SacmInput) -> SacmPrepared {
     });
     let reactant_a = input.reactants.reactant_a.rovib_states(input.grid);
     let reactant_b = input.reactants.reactant_b.rovib_states(input.grid);
-    let reactant_a_j = input.reactants.reactant_a.j_resolved_states(input.grid, input.j_range);
-    let reactant_b_j = input.reactants.reactant_b.j_resolved_states(input.grid, input.j_range);
+    let reactant_a_j = input
+        .reactants
+        .reactant_a
+        .j_resolved_states(input.grid, input.j_range);
+    let reactant_b_j = input
+        .reactants
+        .reactant_b
+        .j_resolved_states(input.grid, input.j_range);
     let phase_space = phase_space_states(&input.reactants, input.grid);
 
     SacmPrepared {

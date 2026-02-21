@@ -18,7 +18,10 @@ pub fn build_pst_simplified(
         w_e[i] = w * wcap;
     }
 
-    PstChannels { w_e, energy_offset: e0_j }
+    PstChannels {
+        w_e,
+        energy_offset: e0_j,
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -31,7 +34,10 @@ pub struct PstSimplifiedInput<'a> {
 /// PST-simplified from raw mode data with optional SPOL interpolation.
 pub fn build_pst_simplified_from_modes(
     input: PstSimplifiedInput<'_>,
-) -> (PstChannels, Option<super::interpol_react_prod::ChannelEigenvalues>) {
+) -> (
+    PstChannels,
+    Option<super::interpol_react_prod::ChannelEigenvalues>,
+) {
     let grid = input.pst.grid;
     let (w0, channel) = build_pst_detailed_with_interpolation(input.pst);
     let pst = build_pst_simplified(&w0.w_e, grid, input.e0_j, input.model);

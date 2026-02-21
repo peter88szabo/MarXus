@@ -19,7 +19,12 @@ use crate::numeric::lanczos_gamma::gamma_func;
 // or alternatively it can be initialized as pure rotational density or number of states
 // to obtain the ro-vibrational energy-dependent rho(E) and W(E)
 //=============================================================================================
-pub fn beyer_swinehart_counting(nvib: usize, nebin: usize, freq_bin: &[usize], res: &Vec<f64>) -> Vec<f64> {
+pub fn beyer_swinehart_counting(
+    nvib: usize,
+    nebin: usize,
+    freq_bin: &[usize],
+    res: &Vec<f64>,
+) -> Vec<f64> {
     let mut results = res.clone();
 
     for i in 0..nvib {
@@ -72,7 +77,6 @@ pub fn get_pure_rotational_WE_or_rhoE(
     return res;
 }
 //=============================================================================================
-
 
 //=============================================================================================
 // Calculating the ro-vibrational W(E) or rho(E)
@@ -135,7 +139,7 @@ fn bin_index(energy: f64, dE: f64) -> usize {
 
 //==========================================================================================
 pub fn get_Jres_rovib_WEJ_or_rhoEJ(
-//==========================================================================================
+    //==========================================================================================
     rotor: RotorSymmetry,
     jtot: usize,
     dE: f64,
@@ -191,7 +195,8 @@ pub fn get_Jres_rovib_WEJ_or_rhoEJ(
                     out[i] = 2.0 * base[base_idx];
 
                     let (kmin, include_k0) = if ei < rot_energy {
-                        let kmin = (((b * j * (j + 1.0) - ei) / delta).sqrt() + 1.0).floor() as usize;
+                        let kmin =
+                            (((b * j * (j + 1.0) - ei) / delta).sqrt() + 1.0).floor() as usize;
                         (kmin, false)
                     } else {
                         (1, true)

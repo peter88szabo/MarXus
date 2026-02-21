@@ -1,11 +1,11 @@
-use crate::numeric::lanczos_gamma::gamma_func;
 use super::types::ReactantRotorCase;
+use crate::numeric::lanczos_gamma::gamma_func;
 
 // This function calculates angular momentum coupling factors Fame(E,J).
 // Ref.: JCP 79, 6017 (1983), eqs. A17, C1, C11, prolate symmetric top
 // expression (C10) modified after Ber. Bunsenges. Phys. Chem. 98, 1563
 // (1994).
-// 
+//
 // Rotor-case parameter decides the linear/non-linear limit.
 // ene: energy
 // jtot: rotational quantum number
@@ -28,11 +28,14 @@ pub fn factor_angmom(
     match rotor_case {
         ReactantRotorCase::Linear => {
             // Linear molecule case
-            sstar += 1.0;  // SSTAR adjustment
-            
+            sstar += 1.0; // SSTAR adjustment
+
             let f1 = gamma_func(sstar + 1.0) / gamma_func(sstar - 1.0)
-                * (1.0 + jot) * (1.0 + jot / 2.0) * arg * arg;
-            
+                * (1.0 + jot)
+                * (1.0 + jot / 2.0)
+                * arg
+                * arg;
+
             f1 / (f1 + 1.0)
         }
         ReactantRotorCase::SphericalTop | ReactantRotorCase::OblateSymmetricTop => {

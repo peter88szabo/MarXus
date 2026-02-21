@@ -72,7 +72,7 @@ pub fn eckart(beta: f64, omega: f64, vf: f64, vb: f64, de: f64, emax: f64) -> (f
 
     let a = (vf.sqrt() + vb.sqrt()).powi(2);
     let b = vf - vb;
-    let d = ( (b*b - a*a).powi(2) / (a*a*a) / 8.0).sqrt() /  omega;
+    let d = ((b * b - a * a).powi(2) / (a * a * a) / 8.0).sqrt() / omega;
 
     let e0 = 0.0;
     for i in 0..n_emax {
@@ -84,7 +84,6 @@ pub fn eckart(beta: f64, omega: f64, vf: f64, vb: f64, de: f64, emax: f64) -> (f
 
         to_int1[i] = (-e * beta).exp() * ptun1;
         to_int2[i] = (-e * beta).exp() * ptun2;
-
     }
     let n_emin = 0;
 
@@ -108,7 +107,6 @@ pub fn tunprop1(alpha1: f64, alpha2: f64, csi: f64) -> f64 {
     let twopi_b = 2.0 * ((alpha1 * csi) + (alpha1 - alpha2).abs()).sqrt() / denom;
     let twopi_d = 2.0 * ((alpha1 * alpha2) - (PI * PI / 4.0)).sqrt();
 
-
     let csh_amb = (twopi_a - twopi_b).cosh();
     let csh_apb = (twopi_a + twopi_b).cosh();
     let csh_d = twopi_d.cosh();
@@ -121,7 +119,7 @@ pub fn tunprop2(a: f64, b: f64, d: f64, e: f64) -> f64 {
     let twopi_d = 2.0 * PI * d;
 
     let alpha = twopi_d * (2.0 * e).sqrt();
-    let beta  = twopi_d * (2.0 * (e - b)).sqrt();
+    let beta = twopi_d * (2.0 * (e - b)).sqrt();
     let delta = twopi_d * ((2.0 * a) - (1.0 / (2.0 * d * d))).sqrt();
 
     let csh_amb = (alpha - beta).cosh();
@@ -143,21 +141,20 @@ fn simpson_integrate(func: &[f64], nmin: usize, nmax: usize, step: f64) -> f64 {
 
     let ndata: usize = nmax - nmin;
 
-    for i in (nmin..nmax-2).step_by(2) {
-         s1 += func[i];
-         s0 += func[i+1];
-         s2 += func[i + 2];
-     }
+    for i in (nmin..nmax - 2).step_by(2) {
+        s1 += func[i];
+        s0 += func[i + 1];
+        s2 += func[i + 2];
+    }
 
-     //println!("sm1 =  {}, s0 = {}, sp1 = {}", s1, s0, s2);
-     let mut res = step * (s1 + 4.0 * s0 + s2) / 3.0;
-     //println!("step =  {}, res = {}", step, res);
+    //println!("sm1 =  {}, s0 = {}, sp1 = {}", s1, s0, s2);
+    let mut res = step * (s1 + 4.0 * s0 + s2) / 3.0;
+    //println!("step =  {}, res = {}", step, res);
 
-     // If n is even, add the last slice separately
-     if ndata % 2 == 0 {
-        res += step * (5.0 * func[nmax-1] + 8.0 * func[nmax - 2] - func[nmax - 3]) / 12.0;
-     }
+    // If n is even, add the last slice separately
+    if ndata % 2 == 0 {
+        res += step * (5.0 * func[nmax - 1] + 8.0 * func[nmax - 2] - func[nmax - 3]) / 12.0;
+    }
 
     return res;
-
 }

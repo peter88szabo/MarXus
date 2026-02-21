@@ -1,4 +1,4 @@
-use super::pst_channels::{KB_CM, PstChannels};
+use super::pst_channels::{PstChannels, KB_CM};
 use super::types::SacmEnergyGrid;
 
 #[derive(Debug, Clone, Copy)]

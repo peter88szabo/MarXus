@@ -173,19 +173,23 @@ pub fn compute_thermal_rates_debug(input: &SacmThermalInput) -> Vec<SacmThermalD
 
         let mut qstarp = qstar_product(&input.qstar_eps, &input.qstar_x, kt);
         if input.internal_rot_frag1.len() + input.internal_rot_frag2.len() > 0 {
-            qstarp *= (input.internal_rot_frag1.len() + input.internal_rot_frag2.len()) as f64 * 2.0;
+            qstarp *=
+                (input.internal_rot_frag1.len() + input.internal_rot_frag2.len()) as f64 * 2.0;
         }
 
         let qprod = qcent * famc / input.transition_symmetry * qstarp * (-delta_e0 / kt).exp();
         let k_diss = kt / 3.3356e-11 * qprod / qvra * (-input.enthalpy_0k / kt).exp();
-        let k_recomb = kt / 3.3356e-11
-            * 3.0835e-21
+        let k_recomb = kt / 3.3356e-11 * 3.0835e-21
             / (input.red_mass * kt * (input.red_mass * kt).sqrt())
             * input.electronic_q_reactant
             / (input.electronic_q_frag1 * input.electronic_q_frag2)
             * qprod
             / (qvrb * qvrc);
-        let k_eq = if k_recomb > 0.0 { k_diss / k_recomb } else { 0.0 };
+        let k_eq = if k_recomb > 0.0 {
+            k_diss / k_recomb
+        } else {
+            0.0
+        };
 
         rates.push(SacmThermalDebugRate {
             temperature: temp,
@@ -344,9 +348,7 @@ fn external_rotor_partition_products(
 ) -> (f64, f64) {
     match rotor_case {
         ProductRotorCase::LinearAtom => (0.695 * temp / rot_b1, 1.0),
-        ProductRotorCase::SphericalAtom => {
-            (1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(), 1.0)
-        }
+        ProductRotorCase::SphericalAtom => (1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(), 1.0),
         ProductRotorCase::LinearLinear => (0.695 * temp / rot_b1, 0.695 * temp / rot_b2),
         ProductRotorCase::LinearSpherical => (
             1.027 * temp / rot_b1 * (temp / rot_b1).sqrt(),

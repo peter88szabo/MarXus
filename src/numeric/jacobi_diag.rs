@@ -1,4 +1,9 @@
-pub fn jacobi(a: &mut Vec<Vec<f64>>, itmax: usize, th: f64, iord: i32) -> (Vec<Vec<f64>>, Vec<f64>) {
+pub fn jacobi(
+    a: &mut Vec<Vec<f64>>,
+    itmax: usize,
+    th: f64,
+    iord: i32,
+) -> (Vec<Vec<f64>>, Vec<f64>) {
     //================================================================================================
     // a(:,:)--> input matrix to be diagonalized. (It's restored at the end of the procedure)
     // th    --> treshold for the iteration
@@ -248,4 +253,3 @@ fn min_max_abs_value_1d_array(vector: &[f64]) -> (f64, f64) {
 
     return (min_abs, max_abs);
 }
-

@@ -1,10 +1,10 @@
 use super::anharmcorr::anharmonic_product_w_e;
+use super::fame_angmomcoupling::factor_angmom;
 use super::hindered_rotor::hindered_rotor_sum_factor;
-use super::threshold_energy::morse_threshold_energy;
-use super::types::{ReactantRotorCase, SacmEnergyGrid, SacmJResolved};
 use super::system::{prepare_sacm, SacmInput, SacmPrepared};
 use super::thermal_rates::{compute_thermal_rates, SacmThermalInput, SacmThermalRate};
-use super::fame_angmomcoupling::factor_angmom;
+use super::threshold_energy::morse_threshold_energy;
+use super::types::{ReactantRotorCase, SacmEnergyGrid, SacmJResolved};
 
 #[derive(Debug, Clone, Copy)]
 pub enum SacmDensitySource {
@@ -94,13 +94,17 @@ pub struct SacmEnergyRate {
     pub rho_e: Vec<f64>,
 }
 
-
 /// Run SACM: PST baseline plus correction factors, returning k(E) per J.
 pub fn run_sacm(
     input: &SacmInput,
     config: SacmRateConfig,
     corrections: SacmCorrections,
-) -> (SacmPrepared, Vec<SacmRateCurve>, SacmEnergyRate, Vec<SacmThermalRate>) {
+) -> (
+    SacmPrepared,
+    Vec<SacmRateCurve>,
+    SacmEnergyRate,
+    Vec<SacmThermalRate>,
+) {
     let prepared = prepare_sacm(input);
     let mut config = config;
     if config.capture_geometry.is_none() {
@@ -170,8 +174,8 @@ fn sacm_rates(
             let base_we = &prepared.phase_space.we_ts;
             let we_corr = apply_corrections(base_we, j_states, grid.dE, corrections);
 
-            let factor =
-                config.symmetry.reactant_symmetry / (config.symmetry.transition_symmetry * 3.3356e-11);
+            let factor = config.symmetry.reactant_symmetry
+                / (config.symmetry.transition_symmetry * 3.3356e-11);
             let mut k_e = vec![0.0; nbin + 1];
             for i in 0..=nbin {
                 let idx = i + start_bin;
@@ -220,10 +224,7 @@ fn apply_corrections(
 ) -> Vec<f64> {
     let mut out = vec![0.0; base_we.len()];
     let use_corrections = corrections.alpha_over_beta > 0.0;
-    let faminf = corrections
-        .faminf_baseline
-        .as_deref()
-        .unwrap_or(&[]);
+    let faminf = corrections.faminf_baseline.as_deref().unwrap_or(&[]);
 
     for (i, &we) in base_we.iter().enumerate() {
         let ei = i as f64 * dE;
@@ -233,7 +234,8 @@ fn apply_corrections(
             if let Some(fam) = corrections.angular_coupling {
                 let faminf_val = faminf.get(i).copied().unwrap_or(1.0);
                 let eif = if fam.reactant_freq_sum > 0.0 {
-                    let wr = whitten_rabinovitch_factor(2.0 * ei / fam.reactant_freq_sum, fam.wr_beta);
+                    let wr =
+                        whitten_rabinovitch_factor(2.0 * ei / fam.reactant_freq_sum, fam.wr_beta);
                     ei + wr * fam.reactant_freq_sum / 2.0
                 } else {
                     ei
@@ -267,7 +269,11 @@ fn apply_corrections(
             }
 
             if let Some(hind) = corrections.hindered {
-                factor *= hindered_rotor_sum_factor(hind.vibrational_count as i32, hind.barrier_height, ei);
+                factor *= hindered_rotor_sum_factor(
+                    hind.vibrational_count as i32,
+                    hind.barrier_height,
+                    ei,
+                );
             }
         }
 
@@ -314,8 +320,7 @@ fn derive_centrifugal_params(
     let theta = angle_deg.to_radians();
     let cos_theta = theta.cos();
 
-    let anen = mx * (my + mz) * q2e * q2e
-        - 2.0 * mx * mz * q2e * qe * cos_theta
+    let anen = mx * (my + mz) * q2e * q2e - 2.0 * mx * mz * q2e * qe * cos_theta
         + mz * (mx + my) * qe * qe;
 
     if anen == 0.0 {

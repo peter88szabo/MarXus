@@ -2,12 +2,12 @@ use crate::numeric::lanczos_gamma::gamma_func;
 
 // This function calculates the correction factor between the partition
 // function of a hindered and a free internal rotor.
-// 
+//
 // KT: Boltzmann constant times temperature (in energy units)
 // V0: barrier height for the hindered rotor
 // QFREE: partition function of the free internal rotor
 // N: number of hindered rotors
-// 
+//
 // Returns the correction factor FQHIND.
 pub fn fqhind(kt: f64, v0: f64, qfree: f64, n: f64) -> f64 {
     if v0 != 0.0 {
@@ -20,7 +20,6 @@ pub fn fqhind(kt: f64, v0: f64, qfree: f64, n: f64) -> f64 {
         1.0
     }
 }
-
 
 // This function calculates the correction factor Whind(E)/Wfree(E)
 // for the sums of states of an ensemble of S oscillators and one
@@ -44,9 +43,7 @@ pub fn hindered_rotor_sum_factor(s: i32, v0: f64, e: f64) -> f64 {
     let mut b = vec![0.0; s_usize];
     for ny in 0..s_usize {
         let ny_f = ny as f64;
-        b[ny] = (-1.0_f64).powi(ny as i32)
-            * gs
-            * (ny_f + 2.5)
+        b[ny] = (-1.0_f64).powi(ny as i32) * gs * (ny_f + 2.5)
             / (gamma_func(ny_f + 1.0)
                 * gamma_func(s as f64 - ny_f)
                 * sqrt_pi
@@ -88,9 +85,7 @@ pub fn hindered_rotor_density_factor(s: i32, v0: f64, e: f64) -> f64 {
     let mut b = vec![0.0; s_usize - 1];
     for ny in 0..s_usize - 1 {
         let ny_f = ny as f64;
-        b[ny] = (-1.0_f64).powi(ny as i32)
-            * gs
-            * (ny_f + 2.5)
+        b[ny] = (-1.0_f64).powi(ny as i32) * gs * (ny_f + 2.5)
             / (gamma_func(ny_f + 1.0)
                 * gamma_func(s as f64 - 1.0 - ny_f)
                 * sqrt_pi
@@ -109,7 +104,3 @@ pub fn hindered_rotor_density_factor(s: i32, v0: f64, e: f64) -> f64 {
     }
     rhind
 }
-
-
-
-

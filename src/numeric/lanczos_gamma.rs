@@ -24,7 +24,7 @@ pub fn gamma_func(a: f64) -> f64 {
     let gamm: f64;
 
     if x < 0.5 {
-        gamm = PI / (f64::sin(x*PI) * gamma_func(1.0 - x));
+        gamm = PI / (f64::sin(x * PI) * gamma_func(1.0 - x));
     } else {
         x = x - 1.0;
         let mut t = P[0];
@@ -32,10 +32,9 @@ pub fn gamma_func(a: f64) -> f64 {
             t = t + P[i] / (x + i as f64);
         }
         let w = x + (CG as f64) + 0.5;
-        gamm = f64::sqrt(2.0 * PI) * f64::powf(w,x + 0.5) * (f64::exp(-w)) * t;
+        gamm = f64::sqrt(2.0 * PI) * f64::powf(w, x + 0.5) * (f64::exp(-w)) * t;
     }
 
     gamm
 }
 //=============================================================================================
-

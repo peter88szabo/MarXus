@@ -20,8 +20,8 @@ pub fn get_kE(
     Brot_cpx: &[f64],
     sigma_ts: f64,
     sigma_cpx: f64,
-    dH0: f64) -> Vec<f64> {
-
+    dH0: f64,
+) -> Vec<f64> {
     let mut freq_bin_cpx = vec![0; nvib_cpx];
     for i in 0..nvib_cpx {
         freq_bin_cpx[i] = (omega_cpx[i] / dE + 0.5) as usize;

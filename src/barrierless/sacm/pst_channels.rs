@@ -31,7 +31,11 @@ pub fn convolve_states(a: &[f64], b: &[f64], out_len: usize) -> Vec<f64> {
 }
 
 /// Build PST open-channel counts by convolving conserved and transitional sums of states.
-pub fn build_convolved_channels(conserved: &[f64], transitional: &[f64], out_len: usize) -> Vec<f64> {
+pub fn build_convolved_channels(
+    conserved: &[f64],
+    transitional: &[f64],
+    out_len: usize,
+) -> Vec<f64> {
     convolve_states(conserved, transitional, out_len)
 }
 

@@ -1,9 +1,9 @@
 use super::anharmcorr::anharmonic_product_w_e;
 use super::fame_angmomcoupling::factor_angmom;
 use super::hindered_rotor::hindered_rotor_sum_factor;
+use super::interpol_react_prod::ChannelEigenvalues;
 use super::pst_channels::PstChannels;
 use super::pst_detailed::{build_pst_detailed_with_interpolation, PstDetailedInput};
-use super::interpol_react_prod::ChannelEigenvalues;
 use super::types::{ReactantRotorCase, SacmEnergyGrid};
 
 #[derive(Debug, Clone, Copy)]
@@ -49,10 +49,7 @@ pub fn apply_olzmanm_rigidity(
     corrections: &OlzmanmCorrections,
 ) -> Vec<f64> {
     let mut out = vec![0.0; pst.w_e.len()];
-    let faminf = corrections
-        .faminf_baseline
-        .as_deref()
-        .unwrap_or(&[]);
+    let faminf = corrections.faminf_baseline.as_deref().unwrap_or(&[]);
 
     for (i, &we) in pst.w_e.iter().enumerate() {
         let ei = i as f64 * grid.dE;
@@ -95,11 +92,8 @@ pub fn apply_olzmanm_rigidity(
         }
 
         if let Some(hind) = corrections.hindered {
-            factor *= hindered_rotor_sum_factor(
-                hind.vibrational_count as i32,
-                hind.barrier_height,
-                ei,
-            );
+            factor *=
+                hindered_rotor_sum_factor(hind.vibrational_count as i32, hind.barrier_height, ei);
         }
 
         out[i] = we * factor;

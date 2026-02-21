@@ -25,7 +25,6 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
         let y2 = y * y;
         let z2 = z * z;
 
-
         ixx += mass * (y2 + z2);
         iyy += mass * (x2 + z2);
         izz += mass * (x2 + y2);
@@ -46,7 +45,7 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
     let mut brot_cm1 = [0.0; 3]; // Initialize with a size of 3
     let mut brot_mhz = [0.0; 3]; // Initialize with a size of 3
 
-    for i in 0..3{
+    for i in 0..3 {
         brot_cm1[i] = TOCM1 / eigval[i];
         brot_mhz[i] = TOMHZ / eigval[i];
         inertia_amuang2[i] = eigval[i] / AV * 10.0;
@@ -55,4 +54,3 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
     //if you need brot or intertia in other units, then just print them
     return brot_cm1;
 }
-

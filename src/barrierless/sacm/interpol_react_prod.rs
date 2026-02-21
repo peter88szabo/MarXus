@@ -27,7 +27,11 @@ pub fn channel_eigval_interpol(
     x_react: &[f64],
     x_prod: &[f64],
 ) -> ChannelEigenvalues {
-    let nfg = freq_react.len().min(freq_prod.len()).min(x_react.len()).min(x_prod.len());
+    let nfg = freq_react
+        .len()
+        .min(freq_prod.len())
+        .min(x_react.len())
+        .min(x_prod.len());
     let mut freq_ts = vec![0.0; nfg];
     let mut x_ts = vec![0.0; nfg];
 
@@ -87,12 +91,7 @@ pub fn format_correlation_table(
         let tag_prod = if x_prod[i] <= 0.6 { "rot" } else { "vib" };
         out.push_str(&format!(
             "          {:>7.2}   ({:>3})  ---->  {:>7.2}   ({:>3})  ---->  {:>7.2}   ({:>3})\n",
-            freq_react[i],
-            tag_react,
-            freq_ts[i],
-            tag_ts,
-            freq_prod[i],
-            tag_prod,
+            freq_react[i], tag_react, freq_ts[i], tag_ts, freq_prod[i], tag_prod,
         ));
     }
     out

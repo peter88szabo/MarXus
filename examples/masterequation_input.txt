@@ -1,0 +1,85 @@
+[parameters]
+temperature_kelvin = 300.0
+pressure_torr = 760.0
+boltzmann_constant_wavenumber_per_kelvin = 0.69503476
+collision_band_half_width = 20
+outgoing_rate_threshold = 0.0
+internal_rate_threshold = 0.0
+bathgas_number_density_prefactor = 3.262e16
+mean_speed_prefactor = 1.0e4
+default_collision_sigma_angstrom = 4.0
+default_collision_epsilon_kelvin = 200.0
+default_collision_reduced_mass_amu = 28.0
+default_collision_alpha_1000k_cm1 = 300.0
+default_collision_alpha_exponent = 0.7
+default_energy_grain_width_cm1 = 50.0
+default_lowest_included_grain_index = 0
+default_one_past_highest_included_grain_index = 200
+default_alignment_offset_in_grains = 0
+default_nonreactive_grain_count = 10
+energy_unit = cm-1
+
+[reactions]
+W1 <--> W2;
+W2 <--> W3;
+W3 <--> P1;
+
+[species]
+W1:
+well = true
+geometry = [1.0, 1.0, 1.0]
+linear = false
+vib = [100.0, 200.0, 300.0]
+Eelec = 0.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+W2:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [120.0, 240.0, 360.0]
+Eelec = 100.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+W3:
+well = true
+geometry = [1.1, 1.1, 1.1]
+linear = true
+vib = [150.0, 250.0, 350.0]
+dH0 = 50.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+P1:
+bimol = true
+fragments = Fragment1 + Fragment2
+
+Fragment1:
+well = true
+geometry = [0.9, 0.9, 0.9]
+linear = true
+vib = [80.0, 160.0]
+Eelec = 10.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+Fragment2:
+well = true
+geometry = [1.2, 1.2, 1.2]
+linear = false
+vib = [90.0, 180.0, 270.0]
+Eelec = 20.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1

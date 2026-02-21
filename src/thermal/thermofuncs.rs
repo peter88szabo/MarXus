@@ -23,10 +23,10 @@ const PASCAL_TO_AU: f64 = 1.0e-13 / 2.9421912;
 // -----------------------------
 // SI constants needed ONLY for Grimme free-rotor entropy (dimensionless inside ln)
 // -----------------------------
-const PLANCK_SI: f64 = 6.62607015e-34;      // J*s
-const BOLTZMANN_SI: f64 = 1.380649e-23;     // J/K
-const RGAS_SI: f64 = 8.31446261815324;      // J/mol/K
-const CLIGHT_SI: f64 = 2.99792458e8;        // m/s
+const PLANCK_SI: f64 = 6.62607015e-34; // J*s
+const BOLTZMANN_SI: f64 = 1.380649e-23; // J/K
+const RGAS_SI: f64 = 8.31446261815324; // J/mol/K
+const CLIGHT_SI: f64 = 2.99792458e8; // m/s
 
 // 1 Hartree/mol = AU_TO_KJ kJ/mol = AU_TO_KJ*1000 J/mol
 const J_PER_HARTREE_PER_MOL: f64 = AU_TO_KJ * 1000.0;
@@ -36,7 +36,6 @@ const GRIMME_BAV_SI: f64 = 1.0e-44;
 
 // Damping exponent in Grimme qRRHO
 const GRIMME_ALPHA: f64 = 4.0;
-
 
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
@@ -338,7 +337,6 @@ impl MoleculeStruct {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,7 +369,10 @@ mod tests {
         water.eval_all_therm_func(temp, pressure, freq_cutoff);
 
         println!("\n============================== INPUT ==============================");
-        println!("T = {:.2} K   p = {:.1} Pa   Grimme cutoff = {:.1} cm^-1", temp, pressure, freq_cutoff);
+        println!(
+            "T = {:.2} K   p = {:.1} Pa   Grimme cutoff = {:.1} cm^-1",
+            temp, pressure, freq_cutoff
+        );
         println!("symnum:  {:?}", water.symnum);
         println!("multi:   {:?}", water.multi);
         println!("chiral:  {:?}", water.chiral);
@@ -382,7 +383,8 @@ mod tests {
         println!("\n==================== ELECTRONIC / ZPE (as stored) ===================");
         println!("E0:  {:15.8} Eh", water.ene * CM1_TO_HARTREE);
         println!("H0:  {:15.8} Eh", water.dh0 * CM1_TO_HARTREE);
-        println!("ZPE: {:15.8} Eh   {:12.3} kcal/mol",
+        println!(
+            "ZPE: {:15.8} Eh   {:12.3} kcal/mol",
             water.zpe * CM1_TO_HARTREE,
             water.zpe * CM1_TO_KCAL
         );
@@ -395,45 +397,56 @@ mod tests {
         println!("Q_tot  : {:15.6e}", water.thermo.pftot);
 
         println!("\n====================== CONTRIBUTIONS (Hartree) ======================");
-        println!("U_elec : {:15.8}   H_elec : {:15.8}   F_elec : {:15.8}   G_elec : {:15.8}",
+        println!(
+            "U_elec : {:15.8}   H_elec : {:15.8}   F_elec : {:15.8}   G_elec : {:15.8}",
             water.thermo.uelec, water.thermo.helec, water.thermo.felec, water.thermo.gelec
         );
-        println!("U_trans: {:15.8}   H_trans: {:15.8}   F_trans: {:15.8}   G_trans: {:15.8}",
+        println!(
+            "U_trans: {:15.8}   H_trans: {:15.8}   F_trans: {:15.8}   G_trans: {:15.8}",
             water.thermo.utrans, water.thermo.htrans, water.thermo.ftrans, water.thermo.gtrans
         );
-        println!("U_rot  : {:15.8}   H_rot  : {:15.8}   F_rot  : {:15.8}   G_rot  : {:15.8}",
+        println!(
+            "U_rot  : {:15.8}   H_rot  : {:15.8}   F_rot  : {:15.8}   G_rot  : {:15.8}",
             water.thermo.urot, water.thermo.hrot, water.thermo.frot, water.thermo.grot
         );
-        println!("U_vib  : {:15.8}   H_vib  : {:15.8}   F_vib  : {:15.8}   G_vib  : {:15.8}",
+        println!(
+            "U_vib  : {:15.8}   H_vib  : {:15.8}   F_vib  : {:15.8}   G_vib  : {:15.8}",
             water.thermo.uvib, water.thermo.hvib, water.thermo.fvib, water.thermo.gvib
         );
 
         println!("\n====================== TOTAL THERMAL (Hartree) ======================");
-        println!("U_therm: {:15.8}   H_therm: {:15.8}   F_therm: {:15.8}   G_therm: {:15.8}",
+        println!(
+            "U_therm: {:15.8}   H_therm: {:15.8}   F_therm: {:15.8}   G_therm: {:15.8}",
             water.thermo.utherm, water.thermo.htherm, water.thermo.ftherm, water.thermo.gtherm
         );
-        println!("U_tot  : {:15.8}   H_tot  : {:15.8}   F_tot  : {:15.8}   G_tot  : {:15.8}",
+        println!(
+            "U_tot  : {:15.8}   H_tot  : {:15.8}   F_tot  : {:15.8}   G_tot  : {:15.8}",
             water.thermo.utot, water.thermo.htot, water.thermo.ftot, water.thermo.gtot
         );
 
         println!("\n=================== ENTROPY (J/mol/K and S*T) =======================");
-        println!("S_elec : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+        println!(
+            "S_elec : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
             water.thermo.selec * 1000.0 * AU_TO_KJ,
             water.thermo.selec * temp * AU_TO_KCAL
         );
-        println!("S_trans: {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+        println!(
+            "S_trans: {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
             water.thermo.strans * 1000.0 * AU_TO_KJ,
             water.thermo.strans * temp * AU_TO_KCAL
         );
-        println!("S_rot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+        println!(
+            "S_rot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
             water.thermo.srot * 1000.0 * AU_TO_KJ,
             water.thermo.srot * temp * AU_TO_KCAL
         );
-        println!("S_vib  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+        println!(
+            "S_vib  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
             water.thermo.svib * 1000.0 * AU_TO_KJ,
             water.thermo.svib * temp * AU_TO_KCAL
         );
-        println!("S_tot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
+        println!(
+            "S_tot  : {:12.3} J/mol/K   (S*T = {:10.3} kcal/mol)",
             water.thermo.stot * 1000.0 * AU_TO_KJ,
             water.thermo.stot * temp * AU_TO_KCAL
         );
@@ -451,14 +464,24 @@ mod tests {
             let s_fr = s_fr_au * 1000.0 * AU_TO_KJ;
             let s_mix = s_mix_au * 1000.0 * AU_TO_KJ;
 
-            println!("{:>3}  {:10.2}  {:8.5}      {:12.3}        {:12.3}      {:12.3}",
-                i + 1, nu, w, s_rrho, s_fr, s_mix
+            println!(
+                "{:>3}  {:10.2}  {:8.5}      {:12.3}        {:12.3}      {:12.3}",
+                i + 1,
+                nu,
+                w,
+                s_rrho,
+                s_fr,
+                s_mix
             );
         }
 
         println!("\n============================== SANITY ===============================");
         let kbt = RGAS_AU * temp;
-        println!("kB*T = {:12.6} Eh  ({:8.3} kcal/mol)", kbt, kbt * AU_TO_KCAL);
+        println!(
+            "kB*T = {:12.6} Eh  ({:8.3} kcal/mol)",
+            kbt,
+            kbt * AU_TO_KCAL
+        );
 
         // Lightweight sanity assertions (won’t overconstrain your conventions)
         assert!(water.thermo.pftot.is_finite() && water.thermo.pftot > 0.0);
@@ -466,4 +489,3 @@ mod tests {
         assert!(water.thermo.gtot.is_finite());
     }
 }
-
