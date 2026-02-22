@@ -9,6 +9,7 @@ pub mod reaction_network;
 pub mod state_index;
 pub mod api;
 pub mod steady_state_chemical_activation_me;
-pub mod tridiagonal_solvers;
 pub mod report;
 pub mod text_input;
+pub mod placeholder_microcanonical;
+pub mod example;

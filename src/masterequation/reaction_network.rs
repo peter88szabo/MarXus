@@ -89,6 +89,14 @@ pub struct MasterEquationSettings {
 
     /// Mean relative speed prefactor (model constant), gives v̄ = prefactor * sqrt(T / μ)
     pub mean_speed_prefactor: f64,
+
+    /// If enabled, internal inter-well isomerization channels are enforced to satisfy
+    /// microreversibility (detailed balance) on the aligned energy grid.
+    ///
+    /// When enabled, internal channels are excluded from the generic sink term and are
+    /// instead handled in `add_interwell_couplings` as explicit bidirectional transfers
+    /// (with matching diagonal losses) using detailed-balance-corrected rates.
+    pub enforce_interwell_detailed_balance: bool,
 }
 
 /// Trait that supplies microcanonical data ρ(E) and k_c(E).

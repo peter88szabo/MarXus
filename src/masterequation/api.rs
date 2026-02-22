@@ -18,7 +18,9 @@ use crate::masterequation::reaction_network::{
     ChemicalActivationDefinition, MasterEquationSettings, MicrocanonicalProvider, SolutionResults,
     WellDefinition,
 };
-use crate::masterequation::steady_state_chemical_activation_me::MasterEquationEngine;
+use crate::masterequation::steady_state_chemical_activation_me::{
+    MasterEquationEngine, MasterEquationSolveDiagnostics,
+};
 
 // -----------------------------------------------------------------------------
 // Multi-well steady-state chemical activation (dense operator)
@@ -43,6 +45,14 @@ pub fn run_multiwell_chemical_activation(
     engine.solve_steady_state_chemical_activation(micro, input.activation)
 }
 
+pub fn run_multiwell_chemical_activation_with_diagnostics(
+    input: MultiWellChemicalActivationInput,
+    micro: &dyn MicrocanonicalProvider,
+) -> Result<(SolutionResults, MasterEquationSolveDiagnostics), String> {
+    let engine = MasterEquationEngine::new(input.wells, input.settings);
+    engine.solve_steady_state_chemical_activation_with_diagnostics(micro, input.activation)
+}
+
 pub fn run_multiwell_from_network(
     input: MultiWellFromNetworkInput,
     micro: &dyn MicrocanonicalProvider,
@@ -50,6 +60,15 @@ pub fn run_multiwell_from_network(
     let (settings, wells) = input.network.build_settings_and_wells()?;
     let engine = MasterEquationEngine::new(wells, settings);
     engine.solve_steady_state_chemical_activation(micro, input.activation)
+}
+
+pub fn run_multiwell_from_network_with_diagnostics(
+    input: MultiWellFromNetworkInput,
+    micro: &dyn MicrocanonicalProvider,
+) -> Result<(SolutionResults, MasterEquationSolveDiagnostics), String> {
+    let (settings, wells) = input.network.build_settings_and_wells()?;
+    let engine = MasterEquationEngine::new(wells, settings);
+    engine.solve_steady_state_chemical_activation_with_diagnostics(micro, input.activation)
 }
 
 // -----------------------------------------------------------------------------

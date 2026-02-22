@@ -114,6 +114,7 @@ pub struct MasterEquationInputSettings {
     pub internal_rate_threshold: f64,
     pub bathgas_number_density_prefactor: f64,
     pub mean_speed_prefactor: f64,
+    pub enforce_interwell_detailed_balance: bool,
 
     /// Default collision parameters (used unless species overrides).
     pub default_collision_params: CollisionModelParams,
@@ -161,6 +162,7 @@ impl MasterEquationInput {
             internal_rate_threshold: self.settings.internal_rate_threshold,
             bathgas_number_density_prefactor: self.settings.bathgas_number_density_prefactor,
             mean_speed_prefactor: self.settings.mean_speed_prefactor,
+            enforce_interwell_detailed_balance: self.settings.enforce_interwell_detailed_balance,
         };
 
         let mut wells: Vec<WellDefinition> = Vec::new();
@@ -613,6 +615,11 @@ fn build_settings_from_parameters(
     let internal_rate_threshold = parse_f64(&get("internal_rate_threshold")?, 0)?;
     let bathgas_number_density_prefactor = parse_f64(&get("bathgas_number_density_prefactor")?, 0)?;
     let mean_speed_prefactor = parse_f64(&get("mean_speed_prefactor")?, 0)?;
+    let enforce_interwell_detailed_balance = raw
+        .get("enforce_interwell_detailed_balance")
+        .map(|s| s.trim().to_lowercase())
+        .map(|s| matches!(s.as_str(), "true" | "1" | "yes" | "y" | "on"))
+        .unwrap_or(false);
 
     let default_collision_params = CollisionModelParams {
         lennard_jones_sigma_angstrom: parse_f64(&get("default_collision_sigma_angstrom")?, 0)?,
@@ -643,6 +650,7 @@ fn build_settings_from_parameters(
         internal_rate_threshold,
         bathgas_number_density_prefactor,
         mean_speed_prefactor,
+        enforce_interwell_detailed_balance,
         default_collision_params,
         default_energy_grain_width_cm1,
         default_lowest_included_grain_index,

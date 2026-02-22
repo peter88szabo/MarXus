@@ -6,7 +6,84 @@ use super::reaction_network::{
     ChemicalActivationDefinition, CollisionKernelImplementation, MasterEquationSettings,
     MicrocanonicalProvider, SolutionResults, WellDefinition,
 };
-use crate::numeric::linear_algebra::{cholesky_solve_spd, DenseMatrix, DiagonalScale};
+use crate::numeric::iterative_solvers::{solve_bicgstab_left_jacobi_dense, BiCgStabDiagnostics};
+use crate::numeric::ldlt_solvers::{solve_symmetric_indefinite_ldlt_bunch_kaufman, LdltDiagnostics};
+use crate::numeric::linear_algebra::{
+    cholesky_solve_spd_with_diagnostics, CholeskyDiagnostics, DenseMatrix, DiagonalScale,
+};
+
+pub enum LinearSolveMethod {
+    CholeskySpd,
+    LdltSymmetricIndefinite,
+    BiCgStab,
+}
+
+pub struct MasterEquationSolveDiagnostics {
+    pub collision_conservation_max_abs: f64,
+    pub transformed_symmetry_relative_frobenius: f64,
+    pub solve_method: LinearSolveMethod,
+    pub cholesky: Option<CholeskyDiagnostics>,
+    pub ldlt: Option<LdltDiagnostics>,
+    pub bicgstab: Option<BiCgStabDiagnostics>,
+}
+
+#[derive(Default)]
+struct CollisionDiagnostics {
+    max_column_sum_abs: f64,
+}
+
+fn absolute_energy_cm1(well: &WellDefinition, local_grain: usize) -> f64 {
+    let abs_grain = (local_grain as isize) + well.alignment_offset_in_grains;
+    (abs_grain as f64) * well.energy_grain_width_cm1
+}
+
+fn map_grain_by_aligned_energy(
+    from_well: &WellDefinition,
+    from_grain: usize,
+    to_well: &WellDefinition,
+) -> Result<Option<usize>, String> {
+    let e_abs = absolute_energy_cm1(from_well, from_grain);
+    let delta_to = to_well.energy_grain_width_cm1;
+    if delta_to <= 0.0 {
+        return Err("Non-positive energy_grain_width_cm1 in target well.".into());
+    }
+
+    let exact = (e_abs / delta_to) - (to_well.alignment_offset_in_grains as f64);
+    let rounded = exact.round();
+    let to_grain_isize = rounded as isize;
+    if to_grain_isize < 0 {
+        return Ok(None);
+    }
+    let to_grain = to_grain_isize as usize;
+
+    let e_back = absolute_energy_cm1(to_well, to_grain);
+    let mismatch = (e_abs - e_back).abs();
+    let tol = 0.5 * delta_to + 1e-10 * delta_to;
+    if mismatch > tol {
+        let e_min = absolute_energy_cm1(to_well, to_well.lowest_included_grain_index);
+        let e_max = absolute_energy_cm1(
+            to_well,
+            to_well.one_past_highest_included_grain_index.saturating_sub(1),
+        );
+        let lo = e_min.min(e_max) - delta_to;
+        let hi = e_min.max(e_max) + delta_to;
+        if e_abs >= lo && e_abs <= hi {
+            return Err(format!(
+                "Energy alignment mismatch between wells (ΔE differs or offsets inconsistent): E_abs={:.6} cm^-1 cannot be mapped within tolerance {:.6} cm^-1.",
+                e_abs, tol
+            ));
+        }
+        return Ok(None);
+    }
+
+    if to_grain < to_well.lowest_included_grain_index
+        || to_grain >= to_well.one_past_highest_included_grain_index
+    {
+        return Ok(None);
+    }
+
+    Ok(Some(to_grain))
+}
 
 /// Main engine: assembles and solves the steady-state chemical activation master equation.
 pub struct MasterEquationEngine {
@@ -19,17 +96,12 @@ impl MasterEquationEngine {
         Self { wells, settings }
     }
 
-    /// Solve the steady-state chemical activation problem.
-    ///
-    /// Returns:
-    /// - steady_state_population: p (stacked over all wells/grains)
-    /// - macroscopic_rate_constants: per (well, channel) averaged rates k(T,p)
-    /// - total_outgoing_rate_constant: sum of outgoing channels (+ stabilization leakage if truncation is used)
-    pub fn solve_steady_state_chemical_activation(
+    pub fn solve_steady_state_chemical_activation_with_diagnostics(
         &self,
         micro: &dyn MicrocanonicalProvider,
         activation: ChemicalActivationDefinition,
-    ) -> Result<SolutionResults, String> {
+    ) -> Result<(SolutionResults, MasterEquationSolveDiagnostics), String> {
+        let mut collision_diag = CollisionDiagnostics::default();
         let global_layout = GlobalLayout::from_wells(&self.wells)?;
 
         // 1) Assemble the raw operator L (collisions + sinks + inter-well couplings)
@@ -43,6 +115,7 @@ impl MasterEquationEngine {
                 well_index,
                 well,
                 &mut raw_operator,
+                &mut collision_diag,
             )?;
         }
 
@@ -62,11 +135,74 @@ impl MasterEquationEngine {
         let transformed_operator = raw_operator.similarity_transform(&similarity_scale);
         let transformed_rhs = similarity_scale.inverse_apply_to_vector(&source_vector);
 
-        // 4) Solve (-A) q = b using Cholesky (requires SPD)
+        // We solve (-A) q = b.
         let negative_transformed = transformed_operator.scaled(-1.0);
+        let symmetry_rel = negative_transformed.symmetry_relative_frobenius();
 
-        let transformed_solution = cholesky_solve_spd(&negative_transformed, &transformed_rhs)
-            .map_err(|e| format!("Cholesky solve failed: {e}"))?;
+        // 4) Solve using SPD Cholesky if possible, else fall back.
+        let mut diag = MasterEquationSolveDiagnostics {
+            collision_conservation_max_abs: collision_diag.max_column_sum_abs,
+            transformed_symmetry_relative_frobenius: symmetry_rel,
+            solve_method: LinearSolveMethod::CholeskySpd,
+            cholesky: None,
+            ldlt: None,
+            bicgstab: None,
+        };
+
+        let transformed_solution = match cholesky_solve_spd_with_diagnostics(
+            &negative_transformed,
+            &transformed_rhs,
+        ) {
+            Ok((x, chol)) => {
+                diag.solve_method = LinearSolveMethod::CholeskySpd;
+                diag.cholesky = Some(chol);
+                x
+            }
+            Err(chol_err) => {
+                // If matrix is close to symmetric, try LDLT; otherwise fall back to BiCGSTAB.
+                let sym_tol = 1e-12;
+                if symmetry_rel <= sym_tol {
+                    match solve_symmetric_indefinite_ldlt_bunch_kaufman(
+                        &negative_transformed,
+                        &transformed_rhs,
+                    ) {
+                        Ok((x, ldlt)) => {
+                            diag.solve_method = LinearSolveMethod::LdltSymmetricIndefinite;
+                            diag.ldlt = Some(ldlt);
+                            x
+                        }
+                        Err(ldlt_err) => {
+                            // Final fallback: BiCGSTAB with left Jacobi preconditioner.
+                            let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                                &negative_transformed,
+                                &transformed_rhs,
+                                1e-10,
+                                8000,
+                            )
+                            .map_err(|e| {
+                                format!(
+                                    "All solvers failed.\nCholesky: {chol_err}\nLDLT: {ldlt_err}\nBiCGSTAB: {e}"
+                                )
+                            })?;
+                            diag.solve_method = LinearSolveMethod::BiCgStab;
+                            diag.bicgstab = Some(bicg);
+                            x
+                        }
+                    }
+                } else {
+                    let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                        &negative_transformed,
+                        &transformed_rhs,
+                        1e-10,
+                        8000,
+                    )
+                    .map_err(|e| format!("Cholesky failed: {chol_err}\nBiCGSTAB failed: {e}"))?;
+                    diag.solve_method = LinearSolveMethod::BiCgStab;
+                    diag.bicgstab = Some(bicg);
+                    x
+                }
+            }
+        };
 
         // 5) Recover p = W q
         let steady_state_population = similarity_scale.apply_to_vector(&transformed_solution);
@@ -75,7 +211,23 @@ impl MasterEquationEngine {
         let macro_rates =
             self.compute_macroscopic_rates(micro, &global_layout, &steady_state_population)?;
 
-        Ok(macro_rates)
+        Ok((macro_rates, diag))
+    }
+
+    /// Solve the steady-state chemical activation problem.
+    ///
+    /// Returns:
+    /// - steady_state_population: p (stacked over all wells/grains)
+    /// - macroscopic_rate_constants: per (well, channel) averaged rates k(T,p)
+    /// - total_outgoing_rate_constant: sum of outgoing channels (+ stabilization leakage if truncation is used)
+    pub fn solve_steady_state_chemical_activation(
+        &self,
+        micro: &dyn MicrocanonicalProvider,
+        activation: ChemicalActivationDefinition,
+    ) -> Result<SolutionResults, String> {
+        let (res, _diag) =
+            self.solve_steady_state_chemical_activation_with_diagnostics(micro, activation)?;
+        Ok(res)
     }
 
     /// Adds collision terms for one well using a band-limited kernel with detailed balance.
@@ -106,6 +258,7 @@ impl MasterEquationEngine {
         well_index: usize,
         well: &WellDefinition,
         operator: &mut DenseMatrix,
+        diag: &mut CollisionDiagnostics,
     ) -> Result<(), String> {
         let temperature = self.settings.temperature_kelvin;
         let pressure = self.settings.pressure_torr;
@@ -214,6 +367,11 @@ impl MasterEquationEngine {
                         global_source,
                         collision_frequency_s_inv * (p_same - 1.0),
                     );
+
+                    // Column-sum diagnostic: Σ_i L(i,j) should be 0 for collision-only operator.
+                    let residual = (p_same + offdiag_prob_sum) - 1.0;
+                    diag.max_column_sum_abs =
+                        diag.max_column_sum_abs.max((collision_frequency_s_inv * residual).abs());
                 }
             }
             CollisionKernelImplementation::Spd => {
@@ -302,16 +460,19 @@ impl MasterEquationEngine {
 
                 for (idx, source_grain) in (local_start..local_end_exclusive).enumerate() {
                     let global_source = layout.global_index_of(well_index, source_grain)?;
+                    let mut col_sum = -omega_eff * out_raw[idx];
                     for (target_grain, w) in &weights_by_source[idx] {
                         if *w <= 0.0 {
                             continue;
                         }
                         let global_target = layout.global_index_of(well_index, *target_grain)?;
                         operator.add(global_target, global_source, omega_eff * (*w));
+                        col_sum += omega_eff * (*w);
                     }
 
                     // diagonal: -ω_eff * Σ_{i≠j} p_move(j->i)
                     operator.add(global_source, global_source, -omega_eff * out_raw[idx]);
+                    diag.max_column_sum_abs = diag.max_column_sum_abs.max(col_sum.abs());
                 }
             }
         }
@@ -333,6 +494,7 @@ impl MasterEquationEngine {
         operator: &mut DenseMatrix,
     ) -> Result<(), String> {
         let out_thresh = self.settings.outgoing_rate_threshold;
+        let skip_internal = self.settings.enforce_interwell_detailed_balance;
 
         for (well_index, well) in self.wells.iter().enumerate() {
             for local_grain in
@@ -345,6 +507,9 @@ impl MasterEquationEngine {
                 // k(E)=0 for nonreactive grains
                     if local_grain >= well.nonreactive_grain_count {
                         for (channel_index, channel) in well.channels.iter().enumerate() {
+                            if skip_internal && channel.connected_well_index.is_some() {
+                                continue;
+                            }
                             let mut k =
                                 micro.microcanonical_rate(well_index, channel_index, local_grain);
                             if channel.connected_well_index.is_none() && k < out_thresh {
@@ -378,48 +543,140 @@ impl MasterEquationEngine {
         operator: &mut DenseMatrix,
     ) -> Result<(), String> {
         let internal_thresh = self.settings.internal_rate_threshold;
+        let enforce_db = self.settings.enforce_interwell_detailed_balance;
+        let temperature = self.settings.temperature_kelvin;
+        let boltzmann = self.settings.boltzmann_constant_wavenumber_per_kelvin;
 
-        for (from_well_index, from_well) in self.wells.iter().enumerate() {
-            for from_grain in from_well.lowest_included_grain_index
-                ..from_well.one_past_highest_included_grain_index
+        if !enforce_db {
+            for (from_well_index, from_well) in self.wells.iter().enumerate() {
+                for from_grain in from_well.lowest_included_grain_index
+                    ..from_well.one_past_highest_included_grain_index
+                {
+                    if from_grain < from_well.nonreactive_grain_count {
+                        continue;
+                    }
+
+                    let global_from = layout.global_index_of(from_well_index, from_grain)?;
+
+                    for (channel_index, channel) in from_well.channels.iter().enumerate() {
+                        let Some(to_well_index) = channel.connected_well_index else {
+                            continue;
+                        };
+
+                        let k_forward =
+                            micro.microcanonical_rate(from_well_index, channel_index, from_grain);
+                        if k_forward < internal_thresh {
+                            continue;
+                        }
+
+                        let to_well = &self.wells[to_well_index];
+                        let Some(to_grain) =
+                            map_grain_by_aligned_energy(from_well, from_grain, to_well)?
+                        else {
+                            continue;
+                        };
+
+                        let global_to = layout.global_index_of(to_well_index, to_grain)?;
+                        operator.add(global_to, global_from, k_forward);
+                    }
+                }
+            }
+
+            return Ok(());
+        }
+
+        // Enforced detailed balance:
+        // - Require unique internal channels between wells (one per direction).
+        // - Use energy-based grain mapping (supports differing ΔE with commensurate offsets).
+        // - Replace internal sinks by explicit bidirectional transfers (including diagonal losses).
+
+        let mut unique_to: Vec<std::collections::HashMap<usize, usize>> =
+            vec![std::collections::HashMap::new(); self.wells.len()];
+        for (w, well) in self.wells.iter().enumerate() {
+            for (ch, channel) in well.channels.iter().enumerate() {
+                let Some(to) = channel.connected_well_index else {
+                    continue;
+                };
+                if unique_to[w].insert(to, ch).is_some() {
+                    return Err(format!(
+                        "Multiple internal channels from well {} to well {} are not supported when enforce_interwell_detailed_balance=true.",
+                        w, to
+                    ));
+                }
+            }
+        }
+
+        let mut links: Vec<(usize, usize, usize, usize)> = Vec::new();
+        for from in 0..self.wells.len() {
+            for (&to, &ch_from_to) in unique_to[from].iter() {
+                if to <= from {
+                    continue;
+                }
+                let Some(&ch_to_from) = unique_to[to].get(&from) else {
+                    return Err(format!(
+                        "Missing reverse internal channel for wells {} <-> {} with enforce_interwell_detailed_balance=true.",
+                        from, to
+                    ));
+                };
+                links.push((from, to, ch_from_to, ch_to_from));
+            }
+        }
+
+        for (w_i, w_j, ch_i_to_j, ch_j_to_i) in links {
+            let well_i = &self.wells[w_i];
+            let well_j = &self.wells[w_j];
+
+            for grain_i in well_i.lowest_included_grain_index..well_i.one_past_highest_included_grain_index
             {
-                if from_grain < from_well.nonreactive_grain_count {
+                if grain_i < well_i.nonreactive_grain_count {
                     continue;
                 }
 
-                let global_from = layout.global_index_of(from_well_index, from_grain)?;
-
-                for (channel_index, channel) in from_well.channels.iter().enumerate() {
-                    let Some(to_well_index) = channel.connected_well_index else {
-                        continue;
-                    };
-
-                    let k_forward =
-                        micro.microcanonical_rate(from_well_index, channel_index, from_grain);
-                    if k_forward < internal_thresh {
-                        continue;
-                    }
-
-                    let to_well = &self.wells[to_well_index];
-
-                    let aligned_to_grain_isize = (from_grain as isize)
-                        + from_well.alignment_offset_in_grains
-                        - to_well.alignment_offset_in_grains;
-
-                    if aligned_to_grain_isize < 0 {
-                        continue;
-                    }
-                    let to_grain = aligned_to_grain_isize as usize;
-
-                    if to_grain < to_well.lowest_included_grain_index
-                        || to_grain >= to_well.one_past_highest_included_grain_index
-                    {
-                        continue;
-                    }
-
-                    let global_to = layout.global_index_of(to_well_index, to_grain)?;
-                    operator.add(global_to, global_from, k_forward);
+                let Some(grain_j) = map_grain_by_aligned_energy(well_i, grain_i, well_j)? else {
+                    continue;
+                };
+                if grain_j < well_j.nonreactive_grain_count {
+                    continue;
                 }
+
+                let k_ij = micro
+                    .microcanonical_rate(w_i, ch_i_to_j, grain_i)
+                    .max(0.0);
+                let k_ji = micro
+                    .microcanonical_rate(w_j, ch_j_to_i, grain_j)
+                    .max(0.0);
+
+                if k_ij < internal_thresh || k_ji < internal_thresh {
+                    continue;
+                }
+
+                let rho_i = micro.density_of_states(w_i, grain_i);
+                let rho_j = micro.density_of_states(w_j, grain_j);
+                if rho_i <= 0.0 || rho_j <= 0.0 {
+                    return Err("Non-positive density of states in inter-well detailed balance.".into());
+                }
+
+                let e_i = absolute_energy_cm1(well_i, grain_i);
+                let e_j = absolute_energy_cm1(well_j, grain_j);
+                let w_i_eq = rho_i * (-e_i / (boltzmann * temperature)).exp();
+                let w_j_eq = rho_j * (-e_j / (boltzmann * temperature)).exp();
+                if w_i_eq <= 0.0 || w_j_eq <= 0.0 || !w_i_eq.is_finite() || !w_j_eq.is_finite() {
+                    return Err("Invalid equilibrium weights in inter-well detailed balance.".into());
+                }
+
+                let g = (k_ij * k_ji).sqrt();
+                let ratio = (w_j_eq / w_i_eq).sqrt();
+                let k_ij_corr = g * ratio;
+                let k_ji_corr = g / ratio;
+
+                let gi = layout.global_index_of(w_i, grain_i)?;
+                let gj = layout.global_index_of(w_j, grain_j)?;
+
+                operator.add(gj, gi, k_ij_corr);
+                operator.add(gi, gi, -k_ij_corr);
+
+                operator.add(gi, gj, k_ji_corr);
+                operator.add(gj, gj, -k_ji_corr);
             }
         }
 
@@ -454,7 +711,6 @@ impl MasterEquationEngine {
 
         let temperature = self.settings.temperature_kelvin;
         let boltzmann = self.settings.boltzmann_constant_wavenumber_per_kelvin;
-        let grain_width = well.energy_grain_width_cm1;
 
         let mut normalization_sum = 0.0;
 
@@ -474,7 +730,7 @@ impl MasterEquationEngine {
                 0.0
             };
 
-            let energy_cm1 = (local_grain as f64) * grain_width;
+            let energy_cm1 = absolute_energy_cm1(well, local_grain);
             let boltzmann_weight = (-energy_cm1 / (boltzmann * temperature)).exp();
 
             let raw = rho * boltzmann_weight * k_recomb;
