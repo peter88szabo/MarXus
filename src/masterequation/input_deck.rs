@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::reaction_network::{
     CollisionKernelImplementation, CollisionModelParams, MasterEquationSettings, ReactionChannel,
-    WellDefinition,
+    MultiwellLinearSolver, WellDefinition,
 };
 
 macro_rules! bail {
@@ -115,6 +115,10 @@ pub struct MasterEquationInputSettings {
     pub bathgas_number_density_prefactor: f64,
     pub mean_speed_prefactor: f64,
     pub enforce_interwell_detailed_balance: bool,
+    pub linear_solver: MultiwellLinearSolver,
+    pub krylov_tolerance: f64,
+    pub krylov_max_iter: usize,
+    pub gmres_restart: usize,
 
     /// Default collision parameters (used unless species overrides).
     pub default_collision_params: CollisionModelParams,
@@ -163,6 +167,10 @@ impl MasterEquationInput {
             bathgas_number_density_prefactor: self.settings.bathgas_number_density_prefactor,
             mean_speed_prefactor: self.settings.mean_speed_prefactor,
             enforce_interwell_detailed_balance: self.settings.enforce_interwell_detailed_balance,
+            linear_solver: self.settings.linear_solver,
+            krylov_tolerance: self.settings.krylov_tolerance,
+            krylov_max_iter: self.settings.krylov_max_iter,
+            gmres_restart: self.settings.gmres_restart,
         };
 
         let mut wells: Vec<WellDefinition> = Vec::new();
@@ -621,6 +629,36 @@ fn build_settings_from_parameters(
         .map(|s| matches!(s.as_str(), "true" | "1" | "yes" | "y" | "on"))
         .unwrap_or(false);
 
+    let linear_solver = raw
+        .get("linear_solver")
+        .map(|s| s.trim().to_lowercase())
+        .unwrap_or_else(|| "direct".to_string());
+    let linear_solver = match linear_solver.as_str() {
+        "direct" => MultiwellLinearSolver::Direct,
+        "gmres" => MultiwellLinearSolver::Gmres,
+        "bicgstab" | "bicg" => MultiwellLinearSolver::BiCgStab,
+        other => bail!(
+            "Unknown linear_solver='{}'. Use direct | gmres | bicgstab.",
+            other
+        ),
+    };
+
+    let krylov_tolerance = raw
+        .get("krylov_tolerance")
+        .map(|s| parse_f64(s, 0))
+        .transpose()?
+        .unwrap_or(1e-10);
+    let krylov_max_iter = raw
+        .get("krylov_max_iter")
+        .map(|s| parse_usize(s, 0))
+        .transpose()?
+        .unwrap_or(8000);
+    let gmres_restart = raw
+        .get("gmres_restart")
+        .map(|s| parse_usize(s, 0))
+        .transpose()?
+        .unwrap_or(50);
+
     let default_collision_params = CollisionModelParams {
         lennard_jones_sigma_angstrom: parse_f64(&get("default_collision_sigma_angstrom")?, 0)?,
         lennard_jones_epsilon_kelvin: parse_f64(&get("default_collision_epsilon_kelvin")?, 0)?,
@@ -651,6 +689,10 @@ fn build_settings_from_parameters(
         bathgas_number_density_prefactor,
         mean_speed_prefactor,
         enforce_interwell_detailed_balance,
+        linear_solver,
+        krylov_tolerance,
+        krylov_max_iter,
+        gmres_restart,
         default_collision_params,
         default_energy_grain_width_cm1,
         default_lowest_included_grain_index,

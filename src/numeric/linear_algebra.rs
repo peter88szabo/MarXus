@@ -53,6 +53,22 @@ impl DenseMatrix {
         Ok(y)
     }
 
+    pub(crate) fn matvec_into(&self, x: &[f64], y: &mut [f64]) -> Result<(), String> {
+        let n = self.n;
+        if x.len() != n || y.len() != n {
+            return Err("Dimension mismatch in DenseMatrix::matvec_into".into());
+        }
+        for row in 0..n {
+            let mut sum = 0.0;
+            let base = row * n;
+            for col in 0..n {
+                sum += self.data[base + col] * x[col];
+            }
+            y[row] = sum;
+        }
+        Ok(())
+    }
+
     pub(crate) fn frobenius_norm(&self) -> f64 {
         self.data
             .iter()

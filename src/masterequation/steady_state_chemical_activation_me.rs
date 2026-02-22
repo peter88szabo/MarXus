@@ -6,16 +6,22 @@ use super::reaction_network::{
     ChemicalActivationDefinition, CollisionKernelImplementation, MasterEquationSettings,
     MicrocanonicalProvider, SolutionResults, WellDefinition,
 };
+use crate::numeric::krylov::{
+    solve_bicgstab_left_preconditioned, solve_gmres_left_preconditioned_restarted,
+    JacobiPreconditioner, KrylovDiagnostics, LinearOperator,
+};
 use crate::numeric::iterative_solvers::{solve_bicgstab_left_jacobi_dense, BiCgStabDiagnostics};
 use crate::numeric::ldlt_solvers::{solve_symmetric_indefinite_ldlt_bunch_kaufman, LdltDiagnostics};
 use crate::numeric::linear_algebra::{
     cholesky_solve_spd_with_diagnostics, CholeskyDiagnostics, DenseMatrix, DiagonalScale,
 };
+use super::reaction_network::MultiwellLinearSolver;
 
 pub enum LinearSolveMethod {
     CholeskySpd,
     LdltSymmetricIndefinite,
     BiCgStab,
+    Gmres,
 }
 
 pub struct MasterEquationSolveDiagnostics {
@@ -25,6 +31,7 @@ pub struct MasterEquationSolveDiagnostics {
     pub cholesky: Option<CholeskyDiagnostics>,
     pub ldlt: Option<LdltDiagnostics>,
     pub bicgstab: Option<BiCgStabDiagnostics>,
+    pub krylov: Option<KrylovDiagnostics>,
 }
 
 #[derive(Default)]
@@ -132,12 +139,34 @@ impl MasterEquationEngine {
         let similarity_scale = self.build_similarity_scale(micro, &global_layout)?;
 
         // Transform matrix A = W L W^{-1}, rhs b = W^{-1} s
-        let transformed_operator = raw_operator.similarity_transform(&similarity_scale);
         let transformed_rhs = similarity_scale.inverse_apply_to_vector(&source_vector);
 
-        // We solve (-A) q = b.
-        let negative_transformed = transformed_operator.scaled(-1.0);
-        let symmetry_rel = negative_transformed.symmetry_relative_frobenius();
+        // We solve (-A) q = b, where A = W L W^{-1}.
+        // For iterative modes we apply -A via matvec without explicitly forming A.
+        let symmetry_rel = {
+            let n = raw_operator.size();
+            let mut norm2 = 0.0;
+            let mut diff2 = 0.0;
+
+            for i in 0..n {
+                let aii = -raw_operator.get(i, i);
+                norm2 += aii * aii;
+            }
+
+            for i in 0..n {
+                for j in (i + 1)..n {
+                    let aij = -raw_operator.get(i, j)
+                        * (similarity_scale.diagonal[i] / similarity_scale.diagonal[j]);
+                    let aji = -raw_operator.get(j, i)
+                        * (similarity_scale.diagonal[j] / similarity_scale.diagonal[i]);
+                    norm2 += 2.0 * aij * aij;
+                    let d = aij - aji;
+                    diff2 += 2.0 * d * d;
+                }
+            }
+
+            (diff2.sqrt()) / (norm2.sqrt().max(1e-300))
+        };
 
         // 4) Solve using SPD Cholesky if possible, else fall back.
         let mut diag = MasterEquationSolveDiagnostics {
@@ -147,60 +176,146 @@ impl MasterEquationEngine {
             cholesky: None,
             ldlt: None,
             bicgstab: None,
+            krylov: None,
         };
 
-        let transformed_solution = match cholesky_solve_spd_with_diagnostics(
-            &negative_transformed,
-            &transformed_rhs,
-        ) {
-            Ok((x, chol)) => {
-                diag.solve_method = LinearSolveMethod::CholeskySpd;
-                diag.cholesky = Some(chol);
-                x
-            }
-            Err(chol_err) => {
-                // If matrix is close to symmetric, try LDLT; otherwise fall back to BiCGSTAB.
-                let sym_tol = 1e-12;
-                if symmetry_rel <= sym_tol {
-                    match solve_symmetric_indefinite_ldlt_bunch_kaufman(
-                        &negative_transformed,
-                        &transformed_rhs,
-                    ) {
-                        Ok((x, ldlt)) => {
-                            diag.solve_method = LinearSolveMethod::LdltSymmetricIndefinite;
-                            diag.ldlt = Some(ldlt);
-                            x
-                        }
-                        Err(ldlt_err) => {
-                            // Final fallback: BiCGSTAB with left Jacobi preconditioner.
-                            let (x, bicg) = solve_bicgstab_left_jacobi_dense(
-                                &negative_transformed,
+        let transformed_solution = match self.settings.linear_solver {
+            MultiwellLinearSolver::Direct => {
+                let negative_transformed_dense = raw_operator
+                    .similarity_transform(&similarity_scale)
+                    .scaled(-1.0);
+                match cholesky_solve_spd_with_diagnostics(&negative_transformed_dense, &transformed_rhs)
+                {
+                    Ok((x, chol)) => {
+                        diag.solve_method = LinearSolveMethod::CholeskySpd;
+                        diag.cholesky = Some(chol);
+                        x
+                    }
+                    Err(chol_err) => {
+                        // If matrix is close to symmetric, try LDLT; otherwise fall back to BiCGSTAB.
+                        let sym_tol = 1e-12;
+                        if symmetry_rel <= sym_tol {
+                            match solve_symmetric_indefinite_ldlt_bunch_kaufman(
+                                &negative_transformed_dense,
                                 &transformed_rhs,
-                                1e-10,
-                                8000,
+                            ) {
+                                Ok((x, ldlt)) => {
+                                    diag.solve_method = LinearSolveMethod::LdltSymmetricIndefinite;
+                                    diag.ldlt = Some(ldlt);
+                                    x
+                                }
+                                Err(ldlt_err) => {
+                                    let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                                        &negative_transformed_dense,
+                                        &transformed_rhs,
+                                        self.settings.krylov_tolerance,
+                                        self.settings.krylov_max_iter,
+                                    )
+                                    .map_err(|e| {
+                                        format!(
+                                            "All solvers failed.\nCholesky: {chol_err}\nLDLT: {ldlt_err}\nBiCGSTAB: {e}"
+                                        )
+                                    })?;
+                                    diag.solve_method = LinearSolveMethod::BiCgStab;
+                                    diag.bicgstab = Some(bicg);
+                                    x
+                                }
+                            }
+                        } else {
+                            let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                                &negative_transformed_dense,
+                                &transformed_rhs,
+                                self.settings.krylov_tolerance,
+                                self.settings.krylov_max_iter,
                             )
-                            .map_err(|e| {
-                                format!(
-                                    "All solvers failed.\nCholesky: {chol_err}\nLDLT: {ldlt_err}\nBiCGSTAB: {e}"
-                                )
-                            })?;
+                            .map_err(|e| format!("Cholesky failed: {chol_err}\nBiCGSTAB failed: {e}"))?;
                             diag.solve_method = LinearSolveMethod::BiCgStab;
                             diag.bicgstab = Some(bicg);
                             x
                         }
                     }
-                } else {
-                    let (x, bicg) = solve_bicgstab_left_jacobi_dense(
-                        &negative_transformed,
-                        &transformed_rhs,
-                        1e-10,
-                        8000,
-                    )
-                    .map_err(|e| format!("Cholesky failed: {chol_err}\nBiCGSTAB failed: {e}"))?;
-                    diag.solve_method = LinearSolveMethod::BiCgStab;
-                    diag.bicgstab = Some(bicg);
-                    x
                 }
+            }
+            MultiwellLinearSolver::Gmres | MultiwellLinearSolver::BiCgStab => {
+                struct NegativeSimilarityOp<'a> {
+                    l: &'a DenseMatrix,
+                    w: &'a DiagonalScale,
+                    tmp: Vec<f64>,
+                    tmp2: Vec<f64>,
+                }
+
+                impl<'a> NegativeSimilarityOp<'a> {
+                    fn new(l: &'a DenseMatrix, w: &'a DiagonalScale) -> Self {
+                        let n = l.size();
+                        Self {
+                            l,
+                            w,
+                            tmp: vec![0.0; n],
+                            tmp2: vec![0.0; n],
+                        }
+                    }
+                }
+
+                impl LinearOperator for NegativeSimilarityOp<'_> {
+                    fn dim(&self) -> usize {
+                        self.l.size()
+                    }
+
+                    fn matvec(&mut self, x: &[f64], y: &mut [f64]) -> Result<(), String> {
+                        let n = self.l.size();
+                        if x.len() != n || y.len() != n {
+                            return Err("Dimension mismatch in NegativeSimilarityOp::matvec".into());
+                        }
+                        // tmp = W^{-1} x
+                        for i in 0..n {
+                            self.tmp[i] = x[i] / self.w.diagonal[i];
+                        }
+                        // tmp2 = L tmp
+                        self.l.matvec_into(&self.tmp, &mut self.tmp2)?;
+                        // y = - W tmp2
+                        for i in 0..n {
+                            y[i] = -self.tmp2[i] * self.w.diagonal[i];
+                        }
+                        Ok(())
+                    }
+                }
+
+                // Jacobi preconditioner on diag(-A) = -diag(L).
+                let mut diag_a = vec![0.0; raw_operator.size()];
+                for i in 0..raw_operator.size() {
+                    diag_a[i] = -raw_operator.get(i, i);
+                }
+                let jacobi = JacobiPreconditioner::from_diagonal(&diag_a)?;
+
+                let mut op = NegativeSimilarityOp::new(&raw_operator, &similarity_scale);
+                let (x, kdiag) = match self.settings.linear_solver {
+                    MultiwellLinearSolver::Gmres => {
+                        let (x, kd) = solve_gmres_left_preconditioned_restarted(
+                            &mut op,
+                            &jacobi,
+                            &transformed_rhs,
+                            self.settings.krylov_tolerance,
+                            self.settings.krylov_max_iter,
+                            self.settings.gmres_restart,
+                        )?;
+                        diag.solve_method = LinearSolveMethod::Gmres;
+                        (x, kd)
+                    }
+                    MultiwellLinearSolver::BiCgStab => {
+                        let (x, kd) = solve_bicgstab_left_preconditioned(
+                            &mut op,
+                            &jacobi,
+                            &transformed_rhs,
+                            self.settings.krylov_tolerance,
+                            self.settings.krylov_max_iter,
+                        )?;
+                        diag.solve_method = LinearSolveMethod::BiCgStab;
+                        (x, kd)
+                    }
+                    MultiwellLinearSolver::Direct => unreachable!(),
+                };
+                diag.krylov = Some(kdiag);
+                x
             }
         };
 

@@ -97,6 +97,28 @@ pub struct MasterEquationSettings {
     /// instead handled in `add_interwell_couplings` as explicit bidirectional transfers
     /// (with matching diagonal losses) using detailed-balance-corrected rates.
     pub enforce_interwell_detailed_balance: bool,
+
+    /// Linear solver choice for the multiwell steady-state solve.
+    pub linear_solver: MultiwellLinearSolver,
+
+    /// Krylov solver relative tolerance (used for GMRES/BiCGSTAB).
+    pub krylov_tolerance: f64,
+
+    /// Maximum iterations for Krylov solvers.
+    pub krylov_max_iter: usize,
+
+    /// GMRES restart length.
+    pub gmres_restart: usize,
+}
+
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
+pub enum MultiwellLinearSolver {
+    /// Dense direct (Cholesky/LDLT/BiCGSTAB fallback).
+    Direct,
+    /// Iterative GMRES on similarity-scaled operator, with Jacobi preconditioning.
+    Gmres,
+    /// Iterative BiCGSTAB on similarity-scaled operator, with Jacobi preconditioning.
+    BiCgStab,
 }
 
 /// Trait that supplies microcanonical data ρ(E) and k_c(E).
