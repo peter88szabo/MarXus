@@ -1,4 +1,6 @@
-use super::energy_grained_me::{EnergyGrid, OlzmannMasterEquationSettings, SourceConstructionChoice};
+use super::energy_grained_me::{
+    EnergyGrid, OlzmannMasterEquationSettings, SourceConstructionChoice,
+};
 
 /// Build a normalized source distribution F over the energy grid.
 pub fn build_normalized_source_distribution(

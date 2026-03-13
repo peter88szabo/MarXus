@@ -1,8 +1,6 @@
 use std::f64::consts::PI;
 
-use super::reaction_network::{
-    CollisionModelParams, MasterEquationSettings,
-};
+use super::reaction_network::{CollisionModelParams, MasterEquationSettings};
 
 /// Computes alpha(T) in cm^-1: alpha(T)=alpha_1000*(T/1000)^exp
 pub(crate) fn compute_alpha_cm1(

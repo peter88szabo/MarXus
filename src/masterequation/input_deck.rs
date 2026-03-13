@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
+use super::chemical_network_builder::{build_master_equation_settings, build_wells_and_channels};
 use super::reaction_network::{
-    CollisionKernelImplementation, CollisionModelParams, MasterEquationSettings, ReactionChannel,
+    CollisionKernelImplementation, CollisionModelParams, MasterEquationSettings,
     MultiwellLinearSolver, WellDefinition,
 };
 
@@ -154,104 +155,8 @@ impl MasterEquationInput {
     pub fn build_settings_and_wells(
         &self,
     ) -> Result<(MasterEquationSettings, Vec<WellDefinition>), String> {
-        let settings = MasterEquationSettings {
-            temperature_kelvin: self.settings.temperature_kelvin,
-            pressure_torr: self.settings.pressure_torr,
-            boltzmann_constant_wavenumber_per_kelvin: self
-                .settings
-                .boltzmann_constant_wavenumber_per_kelvin,
-            collision_band_half_width: self.settings.collision_band_half_width,
-            collision_kernel_implementation: self.settings.collision_kernel_implementation,
-            outgoing_rate_threshold: self.settings.outgoing_rate_threshold,
-            internal_rate_threshold: self.settings.internal_rate_threshold,
-            bathgas_number_density_prefactor: self.settings.bathgas_number_density_prefactor,
-            mean_speed_prefactor: self.settings.mean_speed_prefactor,
-            enforce_interwell_detailed_balance: self.settings.enforce_interwell_detailed_balance,
-            linear_solver: self.settings.linear_solver,
-            krylov_tolerance: self.settings.krylov_tolerance,
-            krylov_max_iter: self.settings.krylov_max_iter,
-            gmres_restart: self.settings.gmres_restart,
-        };
-
-        let mut wells: Vec<WellDefinition> = Vec::new();
-        let mut well_index_by_name: HashMap<String, usize> = HashMap::new();
-
-        for sp in &self.species {
-            if sp.kind != SpeciesKind::Well {
-                continue;
-            }
-
-            let collision_params = sp
-                .collision_params_override
-                .clone()
-                .unwrap_or_else(|| self.settings.default_collision_params.clone());
-
-            let well = WellDefinition {
-                well_name: sp.name.clone(),
-                energy_grain_width_cm1: sp
-                    .energy_grain_width_cm1
-                    .unwrap_or(self.settings.default_energy_grain_width_cm1),
-                lowest_included_grain_index: sp
-                    .lowest_included_grain_index
-                    .unwrap_or(self.settings.default_lowest_included_grain_index),
-                one_past_highest_included_grain_index: sp
-                    .one_past_highest_included_grain_index
-                    .unwrap_or(self.settings.default_one_past_highest_included_grain_index),
-                alignment_offset_in_grains: sp
-                    .alignment_offset_in_grains
-                    .unwrap_or(self.settings.default_alignment_offset_in_grains),
-                nonreactive_grain_count: sp
-                    .nonreactive_grain_count
-                    .unwrap_or(self.settings.default_nonreactive_grain_count),
-                collision_params,
-                channels: Vec::new(),
-            };
-
-            let idx = wells.len();
-            wells.push(well);
-            well_index_by_name.insert(sp.name.clone(), idx);
-        }
-
-        // Build channels from reactions (reversible).
-        for link in &self.reactions {
-            let left_is_well = well_index_by_name.contains_key(&link.left);
-            let right_is_well = well_index_by_name.contains_key(&link.right);
-
-            if !left_is_well && !right_is_well {
-                bail!(
-                    "Reaction links non-well species on both sides: {} <--> {}",
-                    link.left,
-                    link.right
-                );
-            }
-
-            if left_is_well {
-                let from_idx = well_index_by_name[&link.left];
-                let connected = if right_is_well {
-                    Some(well_index_by_name[&link.right])
-                } else {
-                    None
-                };
-                wells[from_idx].channels.push(ReactionChannel {
-                    name: format!("{}_to_{}", link.left, link.right),
-                    connected_well_index: connected,
-                });
-            }
-
-            if right_is_well {
-                let from_idx = well_index_by_name[&link.right];
-                let connected = if left_is_well {
-                    Some(well_index_by_name[&link.left])
-                } else {
-                    None
-                };
-                wells[from_idx].channels.push(ReactionChannel {
-                    name: format!("{}_to_{}", link.right, link.left),
-                    connected_well_index: connected,
-                });
-            }
-        }
-
+        let settings = build_master_equation_settings(&self.settings);
+        let wells = build_wells_and_channels(&self.species, &self.reactions, &self.settings)?;
         Ok((settings, wells))
     }
 }

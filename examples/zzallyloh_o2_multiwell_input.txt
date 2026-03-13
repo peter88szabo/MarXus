@@ -1,0 +1,130 @@
+[parameters]
+# Mirror of the provided MESS deck (ZZAllylOH + O2) in MarXus' *multiwell network* format.
+#
+# NOTE:
+# - MarXus' current multiwell steady-state solver forms a dense operator, so it cannot handle
+#   the very large energy limits (e.g. 300 kcal/mol) used in MESS' eigenvalue workflow.
+# - This example deck therefore uses a modest truncation (see `default_one_past_highest...`)
+#   so it can be parsed and inspected; it is not meant to be a production-caliber run.
+#
+# The barrierless capture step "R -> G2" is represented in the network as `R <--> G2`,
+# but the capture flux / k(E) for chemical activation is not encoded in this text deck;
+# it is demonstrated in `examples/zzallyloh_o2_mess_mirror.rs` via the PST model.
+
+temperature_kelvin = 300.0
+pressure_torr = 760.0
+boltzmann_constant_wavenumber_per_kelvin = 0.69503476
+
+# Collisional energy transfer (MESS: EnergyRelaxation Exponential Factor=200, Power=0.85).
+collision_kernel_implementation = mess
+collision_band_half_width = 20
+
+outgoing_rate_threshold = 0.0
+internal_rate_threshold = 0.0
+
+# Legacy constants retained from the existing example deck.
+bathgas_number_density_prefactor = 3.262e16
+mean_speed_prefactor = 1.0e4
+
+# CollisionFrequency (MESS: LennardJones Epsilons[1/cm]=417.0, Sigmas[angstrom]=6.5, Masses[amu]=149 and 28).
+# Here we store a *single* LJ parameter set; epsilon is converted to Kelvin (1 cm^-1 = 1.438776877 K)
+# and reduced mass is μ = 149*28/(149+28).
+default_collision_sigma_angstrom = 6.5
+default_collision_epsilon_kelvin = 599.97
+default_collision_reduced_mass_amu = 23.5706214689
+default_collision_alpha_1000k_cm1 = 200.0
+default_collision_alpha_exponent = 0.85
+
+# Energy grid (example truncation).
+default_energy_grain_width_cm1 = 20.0
+default_lowest_included_grain_index = 0
+default_one_past_highest_included_grain_index = 800
+default_alignment_offset_in_grains = 0
+default_nonreactive_grain_count = 10
+
+energy_unit = kcal/mol
+
+# Solver choices (optional; keep robust defaults).
+enforce_interwell_detailed_balance = false
+linear_solver = gmres
+krylov_tolerance = 1e-10
+krylov_max_iter = 8000
+gmres_restart = 50
+
+[reactions]
+# Wells (subset from the provided MESS excerpt).
+G2 <--> G3;
+G2 <--> G4;
+G3 <--> G4;
+G3 <--> G6;
+G3 <--> G13;
+
+# Outgoing sinks (bimolecular products in MESS).
+G4 <--> P1;
+G4 <--> P5;
+G4 <--> P7;
+
+# Chemical-activation capture entrance channel (MESS: Reactant R, Barrier B12: R -> G2).
+G2 <--> R;
+
+[species]
+# For the multiwell network, MarXus currently requires each well to define geometry/brot,
+# linear flag, vibrational frequencies, and basic symmetry/degeneracy metadata.
+# The microcanonical provider is responsible for the *actual* ρ(E) and k(E), so these
+# are placeholders sufficient for deck parsing and network construction.
+
+G2:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [100.0]
+Eelec = 0.0
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+G3:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [100.0]
+Eelec = 1.8
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+G4:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [100.0]
+Eelec = -6.5
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+G6:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [100.0]
+Eelec = -5.1
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+
+G13:
+well = true
+brot = [0.10, 0.08, 0.06]
+linear = false
+vib = [100.0]
+Eelec = -2.2
+electronic_degeneracy = 1
+spin_multiplicity = 1
+symmetry_number = 1
+chirality_number = 1
+

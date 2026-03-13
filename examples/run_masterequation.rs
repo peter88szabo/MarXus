@@ -46,7 +46,10 @@ fn main() -> Result<(), String> {
     let out = run_energy_grained_steady_state(input, &micro)?;
     match out {
         EnergyGrainedSteadyStateOutput::ChemicalActivation(r) => {
-            println!("Total loss = {:.6e} s^-1", r.total_unimolecular_loss_rate_constant);
+            println!(
+                "Total loss = {:.6e} s^-1",
+                r.total_unimolecular_loss_rate_constant
+            );
             println!("Channel k  = {:?}", r.chemically_activated_rate_constants);
         }
         _ => return Err("Unexpected run result variant.".into()),

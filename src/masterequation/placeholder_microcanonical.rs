@@ -32,4 +32,3 @@ impl MicrocanonicalGridData for PlaceholderMicrocanonicalData {
         self.channel_count
     }
 }
-

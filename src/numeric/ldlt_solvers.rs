@@ -138,8 +138,7 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
                 for j in i..n {
                     let lj1 = a.get(j, k);
                     let lj2 = a.get(j, k + 1);
-                    let corr =
-                        a11 * li1 * lj1 + a21 * (li1 * lj2 + li2 * lj1) + a22 * li2 * lj2;
+                    let corr = a11 * li1 * lj1 + a21 * (li1 * lj2 + li2 * lj1) + a22 * li2 * lj2;
                     let new = a.get(i, j) - corr;
                     a.set(i, j, new);
                     a.set(j, i, new);
@@ -207,4 +206,3 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
         },
     ))
 }
-

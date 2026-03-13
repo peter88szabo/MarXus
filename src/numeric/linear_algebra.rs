@@ -70,12 +70,7 @@ impl DenseMatrix {
     }
 
     pub(crate) fn frobenius_norm(&self) -> f64 {
-        self.data
-            .iter()
-            .copied()
-            .map(|x| x * x)
-            .sum::<f64>()
-            .sqrt()
+        self.data.iter().copied().map(|x| x * x).sum::<f64>().sqrt()
     }
 
     pub(crate) fn symmetry_relative_frobenius(&self) -> f64 {

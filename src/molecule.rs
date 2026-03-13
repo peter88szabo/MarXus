@@ -195,6 +195,32 @@ pub struct MoleculeStruct {
     pub moltype: MolType,     // molecule type
     pub tunnel: Tunneling,    // tunneling information
     pub thermo: ThermoStruct, // thermodynamic properties
+
+    /// Transition-state model choice.
+    ///
+    /// For `moltype = MolType::ts`, you can optionally specify whether the TS is treated as
+    /// a "tight" saddle-point (conventional RRHO/TST usage) or as a "loose" capture-type
+    /// transition state, where the relevant number-of-states model is better described
+    /// by a phase-space / long-range capture model (PST).
+    ///
+    /// This field is *metadata*: it does not automatically change rate calculations yet.
+    pub transition_state_model: Option<TransitionStateModel>,
+}
+
+/// How to interpret a structure that is declared as a transition state.
+#[derive(Debug, Clone)]
+pub enum TransitionStateModel {
+    /// Conventional tight transition state (old-school TST).
+    TightTst,
+
+    /// Loose, capture-like transition state (barrierless/association bottleneck).
+    ///
+    /// Parameters match the MESS `PhaseSpaceTheory` model.
+    BarrierlessPhaseSpaceTheory {
+        symmetry_operations: f64,
+        potential_prefactor_au: f64,
+        potential_power_exponent: f64,
+    },
 }
 
 #[allow(unused_variables)]
@@ -220,6 +246,7 @@ impl Default for MoleculeStruct {
             moltype: MolType::mol,
             tunnel: Tunneling::default(),
             thermo: ThermoStruct::default(),
+            transition_state_model: None,
         }
     }
 }

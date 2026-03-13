@@ -1,0 +1,117 @@
+TemperatureList[K]                  300.
+PressureList[torr]                  760.
+EnergyStepOverTemperature               0.2
+ModelEnergyLimit[kcal/mol]              300
+Reactant				R
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]                      200
+      Power                             .85
+    End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm]                  417.0  33.4
+      Sigmas[angstrom]                  6.5   3.9
+      Masses[amu]                       149   28
+    End
+  End
+!!!!!!!!!!!!!!!!!!!!!!! Species !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Bimolecular		R
+    Fragment    C5H9O3
+      RRHO
+        Geometry[angstrom]      		1
+        C      0.000000    0.000000    0.000000
+        Core    RigidRotor
+          SymmetryFactor        		1.0
+        End
+        Frequencies[1/cm]       		1
+        100.00
+        ZeroEnergy[kcal/mol]                	0
+        ElectronicLevels[1/cm]                  1
+                0       2
+      End
+    Fragment	O2
+      RRHO
+	Geometry[angstrom]			2
+ 		O          0.0000000000        0.0000000000       -0.6060625836
+ 		O          0.0000000000        0.0000000000        0.6060625836
+	Core	RigidRotor
+	  SymmetryFactor			2
+	End
+	Frequencies[1/cm]			1
+		1585.09
+	ZeroEnergy[1/cm]			0
+	ElectronicLevels[1/cm]			1
+		0	3
+      End
+    GroundEnergy[kcal/mol]    			16.3
+  End
+  Well     G2
+    Species
+     RRHO
+       Geometry[angstrom]               2
+       O      0.0 0.0 -0.5
+       O      0.0 0.0  0.5
+       Core      RigidRotor
+         SymmetryFactor                  0.5
+       End
+       Frequencies[1/cm]                 1
+       100.00
+       ZeroEnergy[kcal/mol]              0.0
+       ElectronicLevels[1/cm]                  1
+                0       2
+     End
+  End
+  Well     G3
+    Species
+     RRHO
+       Geometry[angstrom]               2
+       O      0.0 0.0 -0.6
+       O      0.0 0.0  0.6
+       Core      RigidRotor
+         SymmetryFactor                  0.5
+       End
+       Frequencies[1/cm]                 1
+       100.00
+       ZeroEnergy[kcal/mol]              1.8
+       ElectronicLevels[1/cm]                  1
+                0       2
+     End
+  End
+  Barrier       B23      G2      G3
+    RRHO
+      Geometry[angstrom]                       2
+      O      0.0 0.0 -0.55
+      O      0.0 0.0  0.55
+      Core      RigidRotor
+        SymmetryFactor                          0.5
+      End
+      Frequencies[1/cm]                         1
+      100.00
+      ZeroEnergy[kcal/mol]                      19.5
+      ElectronicLevels[1/cm]                    1
+                0       2
+    End
+  End
+  Barrier  B12  R  G2
+    RRHO
+      Core      PhaseSpaceTheory
+        FragmentGeometry[angstrom]      1
+        C      0.000000    0.000000    0.000000
+        FragmentGeometry[angstrom]      2
+          O          0.0000000000        0.0000000000       -0.6060625836
+          O          0.0000000000        0.0000000000        0.6060625836
+        SymmetryFactor                  2.0
+        PotentialPrefactor[au]          2.4
+        PotentialPowerExponent          6.
+      End
+      Frequencies[1/cm]                 1
+      1585.09
+      ZeroEnergy[kcal/mol]            16.3
+      ElectronicLevels[1/cm]            1
+        0       2
+   End
+  End
+End
+

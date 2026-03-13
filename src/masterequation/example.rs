@@ -26,4 +26,3 @@ impl MicrocanonicalProvider for PlaceholderMicroData {
         (w * c) * (1.0e-4 * i).max(0.0)
     }
 }
-

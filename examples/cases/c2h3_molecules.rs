@@ -99,4 +99,3 @@ pub fn build_p1_reactant_molecules(product_dh0_kcal_mol: f64) -> (MoleculeStruct
 
     (c2h2, h)
 }
-

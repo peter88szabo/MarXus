@@ -1,0 +1,244 @@
+SSUMES Master-Equation Steady-State Solvers: DISLIT vs CARATE
+============================================================
+
+Short summary
+-------------
+Both DISLIT and CARATE solve the same multi-well, energy-grained chemical master-equation operator in a steady-state setting, using the same core matrix-construction machinery and linear algebra backend. The key difference is the source term and solve strategy:
+
+- DISLIT (LinSS) solves a dissociation steady-state problem by iterating the source distribution self-consistently until the total loss/outgoing rate converges.
+- CARATE (LinEq) solves a chemical-activation steady-state problem with a fixed source (recombination-channel flux, single-grain excitation, or arbitrary excitation profile), usually by one direct linear solve per (T,p).
+
+In both cases, rates are extracted by integrating k(E) against the solved population vector, and well-resolved outgoing/internal channel rates and well populations are reported.
+
+
+Algorithm in detail: DISLIT (steady-state dissociation, LinSS)
+-------------------------------------------------------------
+Input and setup
+1. Parse control input:
+   - Wells, RRKM file names, offsets, inter-well channel connections.
+   - Optional: one reactant well marker (`reactant`), truncation, err3, alpha(T), kEthInt/kEthOut, maxCyc.
+   - Optional outputs: vectors, HPL/HPLonly.
+2. Enforce reactant/truncation logic:
+   - At most one explicitly tagged reactant well.
+   - Reactant well cannot be truncated.
+   - If no reactant is tagged (all-well reactant mode), truncation is disallowed.
+3. Read UNIMOL/RRKMTH well data and perform consistency/connectivity/equilibrium checks.
+4. Merge or read T and p lists.
+5. Initialize master-equation problem dimensions and well block positions in the global matrix.
+
+Per-temperature/per-pressure solve flow
+A. (Optional HPL branch)
+   1. Build a Boltzmann vector over all wells at given T (high-pressure-limit-like vector use).
+   2. Apply similarity scaling and compute integrated rates directly (no finite-p linear solve loop).
+
+B. Main DISLIT steady-state solve at each (T,p)
+   1. Build initial source vector in v:
+      - If a reactant well is defined: Boltzmann over that well only.
+      - Else: Boltzmann over all wells.
+   2. Build matrix and source for LinSS:
+      - Assemble operator B(T,p) from collisional transfer + reaction losses + inter-well couplings.
+      - For LinSS, source r is restored from v (reactant-only or all-well mode).
+      - Symmetrize by detailed-balance scaling with S, and apply S-transform to r.
+      - Invert sign of matrix so SPD solve is done on -B.
+   3. First direct solve:
+      - Solve (-B) g = r by Cholesky (dposv), storing solution in r.
+      - Normalize and compute well populations/rates; obtain current koutTot.
+   4. Self-consistent iteration loop:
+      - Compare current koutTot with previous value.
+      - Adapt mixing step (heuristic increase/decrease depending on sign pattern of successive delta-k).
+      - Update stored source shape v by mixing old source with newly solved population:
+        v <- (1-step)*v + step*normalized(g*S)
+        (reactant-only block or whole vector depending on mode).
+      - Rebuild RHS from v, apply S-transform, and resolve with dpotrs (reuse Cholesky factorization).
+      - Recompute koutTot and test convergence: |k_old-k_new|/k_new <= 1e-5.
+      - Stop on convergence or return MAXCYCLE if exceeding maxCycLinSs.
+   5. Output total and channel-resolved rates/fractions/populations.
+
+Why DISLIT iterates
+- The LinSS dissociation formulation in this code is not treated as a purely one-shot fixed-source solve. Instead, source and steady-state population are coupled by the chosen dissociation steady-state condition, and the code enforces that coupling by fixed-point-like mixing iterations on the source vector.
+
+
+Algorithm in detail: CARATE (steady-state chemical activation, LinEq)
+---------------------------------------------------------------------
+Input and setup
+1. Parse control input:
+   - Wells, RRKM files, offsets, inter-well connections.
+   - Chemical-activation descriptor in exactly one well:
+     a) `recombChan` (channel-index-based recombination source), or
+     b) `excitGrain` (delta-source at one grain), or
+     c) `excitArbit` (read arbitrary excitation profile from file).
+   - Optional truncation, err3, alpha(T), kEthInt/kEthOut, vector output.
+2. Read UNIMOL well data and run checkCA:
+   - Exactly one activation/excitation descriptor is required.
+   - Validate channel index or excitation grain bounds.
+   - If arbitrary excitation is used, read and normalize flux profile from file.
+3. Merge or read T and p lists.
+4. Initialize matrix dimensions and well positions.
+
+Per-temperature/per-pressure solve flow
+1. Assemble matrix and source with LinEq mode:
+   - Build B(T,p) from collisional transfer + reaction + inter-well couplings.
+   - Construct source r according to selected CA mode:
+     a) recombChan source: r(E) proportional to rho(E)*exp(-E/kT)*k_recomb(E), then normalized.
+     b) excitGrain source: unit impulse at one grain.
+     c) excitArbit source: directly from normalized input profile.
+   - Symmetrize by S-scaling and apply S-transform to r.
+   - Invert sign to solve (-B) g = r.
+2. Solve once with dposv (Cholesky).
+3. Normalize and integrate rates/populations.
+4. Output fractions, rates, internal channel rates, and well populations.
+
+How CARATE treats the source
+- CARATE treats source as externally specified and fixed for each (T,p) construction.
+- There is no DISLIT-like iterative source repopulation loop.
+- Source normalization is built in per mode (especially recombination-source and arbitrary-profile paths).
+
+
+Algorithmic matrix assembly (shared core, both solvers)
+-------------------------------------------------------
+The two solvers call the same matrix assembly engine (`setMatMW` and then `setMatMWinvSgn`), with only probtype-dependent source handling differences.
+
+Global structure
+1. For each well, define its contiguous block in the global energy-grain state vector.
+2. Problem size psiz is total retained grains across all wells (after truncation/top-cut processing).
+
+Within each well block
+1. Set current thermodynamic/collision parameters at (T,p):
+   - alpha(T), collision frequency z, etc.
+2. Build collisional energy-transfer kernel P(E<-E') into B:
+   - Uses exponential-down-like parameterization with err3-based bandwidth control.
+   - Includes low-energy correction (`redExpon`) logic to avoid pathological transfer probabilities.
+3. Add diagonal chemical loss terms:
+   - Subtract total microcanonical reactive rate sum over channels from B diagonal.
+4. Build similarity-transform weights S(E):
+   - S(E) = sqrt(rho(E)*exp(-E/kT) with offset handling).
+
+Inter-well coupling
+1. For each connected pair of wells, identify channels mapping one well to the other.
+2. For each energy grain, map forward/backward corresponding grains by offsets.
+3. Insert off-diagonal inter-well reactive transfer rates (forward and backward contributions).
+
+Symmetrization and final matrix form
+1. Apply detailed-balance-like scaling:
+   B[j,i] <- B[j,i] * S[j]/S[i]
+2. Check asymmetry level (warning/error thresholds).
+3. Apply source scaling consistently (r <- r/S) when relevant probtype uses RHS.
+4. Band-limit deep off-diagonal elements according to transfer bandwidth estimate.
+5. Multiply by -1 (`invSignB`) before linear solve so the system is solved as SPD with Cholesky.
+
+Linear algebra stage
+- First solve usually via dposv (factor + solve), subsequent DISLIT iterations via dpotrs (reuse factorization).
+
+Rate recovery (shared)
+1. Convert solved vector to normalized populations via S and total norm.
+2. Integrate channel-resolved and stabilization rates over grains:
+   k_channel = integral g(E)*S(E)*k_channel(E) / norm
+   k_stab from downward-flux accumulator d(E).
+3. Aggregate outgoing + stabilization totals and per-well population fractions.
+
+
+Notes on interpretation
+-----------------------
+- Both solvers rely on the same physics/kernel representation; differences arise from boundary/source modeling and iterative vs one-shot solution strategy.
+- DISLIT is best viewed as a self-consistent dissociation steady-state solver.
+- CARATE is best viewed as a forced steady-state response solver to a prescribed activation source.
+
+
+Proposed unified solver algorithm (single code path for DISLIT + CARATE)
+------------------------------------------------------------------------
+Goal
+- Use one executable/driver with a mode switch: `mode = DISLIT` or `mode = CARATE`.
+- Reuse one shared matrix assembly and rate-postprocessing engine.
+- Branch only in (i) input validation, (ii) source construction, and (iii) iteration policy.
+
+Unified input model
+1. Common input (always required):
+   - Well definitions, RRKM file names, offsets.
+   - Inter-well `connect` definitions.
+   - Optional common numerics: `truncate`, `topCut`, `err3`, `alphaTdep`, `kEthInt`, `kEthOut`, `verbose`, output flags.
+   - T list and p list.
+2. Mode selector:
+   - `mode = DISLIT` or `mode = CARATE`.
+3. DISLIT-only input:
+   - Optional single `reactant` tag (if absent => all-well reactant mode).
+   - Optional `maxCyc` for self-consistent loop.
+   - Optional HPL/HPLonly output request.
+4. CARATE-only input:
+   - Exactly one CA source descriptor across all wells:
+     a) `recombChan`, or
+     b) `excitGrain`, or
+     c) `excitArbit` (+ file).
+
+Unified preprocessing and validation
+1. Read all wells from RRKM outputs.
+2. Run common checks:
+   - consistency (grain size, masses), connectivity validity, k(E) equilibrium/connect checks, channel info, kEth filtering.
+3. Branched checks:
+   - If mode=DISLIT:
+     - enforce reactant/truncation rules used by current DISLIT.
+   - If mode=CARATE:
+     - enforce exactly one CA source and validate descriptor bounds/file.
+4. Initialize total size and block indices (`initMW`, `setPosBmat`).
+
+Unified per-(T,p) runtime skeleton
+1. Build matrix core (shared):
+   - `setMatMW(...)` with common E-transfer, rates, couplings, symmetrization, banding.
+   - Convert to solve form with `invSignB` (inside `setMatMWinvSgn`).
+2. Build RHS source (branch by mode):
+   - DISLIT:
+     - Initial source guess v from Boltzmann:
+       - selected reactant well OR all wells.
+     - restore `r` from v (same as current LinSS path), then S-transform.
+   - CARATE:
+     - Build fixed `r` from one CA descriptor:
+       - recombChan / excitGrain / excitArbit.
+     - apply S-transform.
+3. Solve branch:
+   - DISLIT:
+     - First solve with `dposv`.
+     - Iterate source-mixing update until convergence in `koutTot`:
+       - update v using solved distribution and step control,
+       - rebuild RHS from updated v,
+       - resolve with `dpotrs` (reuse factorization).
+   - CARATE:
+     - One direct solve with `dposv` (no source iteration).
+4. Shared postprocessing:
+   - normalize vector with S,
+   - integrate channel/stabilization rates,
+   - compute per-well populations and totals,
+   - write outputs.
+
+Branch points to implement in a single code base
+1. `parse_mode_specific_input(mode, ...)`
+2. `validate_mode_specific_constraints(mode, ...)`
+3. `build_initial_source(mode, T, p, wells, source_state)`
+4. `solve_mode(mode, matrix_state, source_state, solution_state)`:
+   - DISLIT => iterative self-consistent loop
+   - CARATE => single-shot linear solve
+5. `write_mode_specific_outputs(mode, ...)`
+
+Initial guess / source state in unified code
+1. DISLIT:
+   - Keep `source_state.v` as persistent evolving source shape during LinSS iteration.
+   - Initialization:
+     - reactant-selected Boltzmann vector, or
+     - all-well Boltzmann vector.
+   - This `v` is part of the fixed-point iteration state.
+2. CARATE:
+   - No iterative guess required.
+   - Build `source_state.r` directly from CA descriptor each (T,p).
+   - `r` is fixed during the solve at that (T,p).
+
+Minimal architectural recommendation
+1. Introduce `enum SolveMode { DISLIT_MODE, CARATE_MODE };`
+2. Keep one `assemble_matrix_common(...)` function.
+3. Implement two pluggable source providers:
+   - `DissociationSourceProvider` (Boltzmann + iterative update),
+   - `ActivationSourceProvider` (recomb/excitation/arbitrary fixed source).
+4. Implement one common `postprocess_rates(...)`.
+5. Main loop:
+   - for T in Tlist:
+   - for p in Plist:
+   - assemble common matrix
+   - dispatch to mode-specific source/solve policy
+   - run shared postprocess/output.

@@ -1,9 +1,5 @@
 mod cases;
 
-use MarXus::masterequation::api::{
-    run_master_equation, EnergyGrainedSteadyStateInput, EnergyGrainedSteadyStateMode,
-    EnergyGrainedSteadyStateOutput,
-};
 use MarXus::masterequation::collisional_energy_transfer::{
     derive_steady_state_collision_parameters, ExponentialDownParameters, LennardJonesParameters,
 };
@@ -18,9 +14,12 @@ use MarXus::masterequation::report::{
     print_high_pressure_limit, print_reaction_header, print_source_threshold,
     print_species_species_table, print_steady_state_summary, ReactionEnergetics,
 };
+use MarXus::masterequation::singlewell_solver::{
+    run_master_equation, EnergyGrainedSteadyStateInput, EnergyGrainedSteadyStateMode,
+    EnergyGrainedSteadyStateOutput,
+};
 use MarXus::masterequation::text_input::{
-    get_f64, get_f64_or, get_string, get_string_or, get_usize, get_vec_f64,
-    parse_sectioned_kv,
+    get_f64, get_f64_or, get_string, get_string_or, get_usize, get_vec_f64, parse_sectioned_kv,
 };
 
 fn main() -> Result<(), String> {
@@ -44,7 +43,9 @@ fn main() -> Result<(), String> {
     let sig = get_vec_f64(&cfg, "collision", "lennard_jones_sigmas_angstrom")?;
     let masses = get_vec_f64(&cfg, "collision", "lennard_jones_masses_amu")?;
     if eps.len() != 2 || sig.len() != 2 || masses.len() != 2 {
-        return Err("collision LJ epsilon/sigma/mass lists must each have exactly 2 values.".into());
+        return Err(
+            "collision LJ epsilon/sigma/mass lists must each have exactly 2 values.".into(),
+        );
     }
     let lj = LennardJonesParameters {
         epsilon_1_cm1: eps[0],
@@ -116,8 +117,18 @@ fn main() -> Result<(), String> {
                 "reverse_barrier_kcal_mol",
                 e.ea_reverse_kcal_mol(),
             )?,
-            integration_step_kcal_mol: get_f64_or(&cfg, "tunneling", "integration_step_kcal_mol", 0.05)?,
-            integration_max_kcal_mol: get_f64_or(&cfg, "tunneling", "integration_max_kcal_mol", 120.0)?,
+            integration_step_kcal_mol: get_f64_or(
+                &cfg,
+                "tunneling",
+                "integration_step_kcal_mol",
+                0.05,
+            )?,
+            integration_max_kcal_mol: get_f64_or(
+                &cfg,
+                "tunneling",
+                "integration_max_kcal_mol",
+                120.0,
+            )?,
         })?
     } else {
         get_f64_or(&cfg, "high_pressure", "tunneling_kappa", 1.0)?
@@ -259,9 +270,7 @@ fn main() -> Result<(), String> {
 
     println!(
         "{:<20} {:>18} {:>18}",
-        "Kernel",
-        "SPD (MarXus)",
-        "MESS-like"
+        "Kernel", "SPD (MarXus)", "MESS-like"
     );
     println!(
         "{:<20} {:>18.6e} {:>18.6e}",
@@ -269,17 +278,10 @@ fn main() -> Result<(), String> {
         res_spd.total_unimolecular_loss_rate_constant,
         res_mess.total_unimolecular_loss_rate_constant
     );
+    println!("{:<20} {:>18.6e} {:>18.6e}", "W1->P1 @1 atm", k_spd, k_mess);
     println!(
         "{:<20} {:>18.6e} {:>18.6e}",
-        "W1->P1 @1 atm",
-        k_spd,
-        k_mess
-    );
-    println!(
-        "{:<20} {:>18.6e} {:>18.6e}",
-        "P1->W1 @1 atm",
-        krev_spd,
-        krev_mess
+        "P1->W1 @1 atm", krev_spd, krev_mess
     );
 
     // -------------------------------------------------------------------------

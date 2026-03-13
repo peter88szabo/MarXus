@@ -1,0 +1,114 @@
+• I’ve centralized the single-well orchestration in one file and re-exported it in api.rs. Next I’m wiring examples/steadystate_me_c2h3.rs to import from the new
+  singlewell_solver module path directly.
+
+• Edited ../../examples/steadystate_me_c2h3.rs (+1 -1)
+    2
+    3 -use MarXus::masterequation::api::{
+    3 +use MarXus::masterequation::singlewell_solver::{
+    4      run_master_equation, EnergyGrainedSteadyStateInput, EnergyGrainedSteadyStateMode,
+
+• Ran cargo fmt && cargo test -q
+  └ warning: unused variable: `morse_mode_cm1`
+      --> examples/co_oh_interpol.rs:18:9
+    … +470 lines
+    test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Done. I created a dedicated, heavily commented single-well solver file and wired the C2H3 example to call it directly.
+
+  What I added
+
+  - New single-well orchestration module:
+  - singlewell_solver.rs:1
+
+  It now contains:
+
+  - EnergyGrainedSteadyStateInput
+  - EnergyGrainedSteadyStateMode
+  - EnergyGrainedSteadyStateOutput
+  - SingleWellSteadyStateSolver (with new + solve)
+  - run_energy_grained_steady_state
+  - run_master_equation
+
+  And it is thoroughly commented to explain:
+
+  - why this file exists,
+  - what is orchestration vs physics,
+  - mode-by-mode execution flow.
+
+  Wiring changes
+
+  - Exported module in:
+  - mod.rs:1
+  - api.rs now re-exports the single-well API from the new module (so old API path still works):
+  - api.rs:11
+  - C2H3 example now imports the new path directly:
+  - steadystate_me_c2h3.rs:3
+
+  Validation
+
+  - Ran cargo fmt
+  - Ran cargo test -q successfully (tests pass; only existing warnings).
+
+
+› so, in this single well case, we have a single well that may thermilize by third body collsions and it may dissociate into some other product. Do we solve with the
+  steady state solver the master eqiation? and do we iterate the soltution to get a convergent flux for the source term?
+
+
+• Yes, for the single-well chemical-activation steady-state modes, you solve a steady-state master equation of the form:
+
+  J * N_ss = R_form * F
+
+  where:
+
+  - J contains collision + reactive loss terms,
+  - F is a normalized source shape,
+  - R_form (formation flux) is fixed input.
+
+  But no, you do not do DISLIT-style self-consistent source iteration in this single-well path.
+
+  - Source is fixed during the solve.
+  - You solve once per condition.
+  - In one kernel variant (ExponentialBandedMess), the linear algebra solver may iterate (BiCGSTAB/Gauss-Seidel), but that is only numerical iteration for N_ss, not
+    source-flux repopulation.
+
+  Also, in ThermalDissociation mode, it does not solve the steady-state source-driven equation; it computes canonical averaging directly.
+
+
+› in the example do we have where cor C2H3 chemical activation?
+
+
+• Yes. In examples/steadystate_me_c2h3.rs, C2H3 chemical activation is explicitly set.
+
+  - The run mode is EnergyGrainedSteadyStateMode::ChemicalActivation:
+  - steadystate_me_c2h3.rs:202
+  - steadystate_me_c2h3.rs:227
+  - The source is built as a thermal TS source (ThermalTransitionStateSumOfStates):
+  - steadystate_me_c2h3.rs:182
+  - The source strength comes from formation_flux read from input:
+  - steadystate_me_c2h3.rs:180
+
+
+› is any reactant defined in th einput?
+
+
+• I’ll check the example input file directly and confirm whether a reactant is explicitly defined.
+
+• Explored
+  └ Read steadystate_me_c2h3_input.txt
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• No explicit reactant species is defined in this input for the active run path.
+
+  - The active source is thermal_ts:
+  - steadystate_me_c2h3_input.txt:86
+  - steadystate_me_c2h3_input.txt:89
+
+  So the example uses a TS-based source, not an explicit reactant distribution from input.
+  There are example reactant distributions in [source_convolution] / [source_shift], but they are not the active source in this case.
+Token usage: total=200,504 input=172,818 (+ 4,228,096 cached) output=27,686 (reasoning 6,129)
+To continue this session, run codex resume 019c9fd7-183a-7521-907c-cceb69f23eb1
+

@@ -7,7 +7,9 @@ use crate::numeric::banded_solvers::{
     solve_banded_bicgstab_left_jacobi, solve_banded_gauss_seidel,
     solve_spd_symmetric_banded_cholesky, solve_spd_symmetric_banded_dense_fallback,
 };
-use crate::numeric::tridiagonal_solvers::{solve_spd_symmetric_tridiagonal, solve_tridiagonal_general};
+use crate::numeric::tridiagonal_solvers::{
+    solve_spd_symmetric_tridiagonal, solve_tridiagonal_general,
+};
 
 /// Main solver: single intermediate, stepladder collisions, steady-state CA.
 pub struct OlzmannStepladderMasterEquationSolver {
@@ -41,8 +43,11 @@ impl OlzmannStepladderMasterEquationSolver {
                 .iter()
                 .map(|f_i| formation_flux * f_i)
                 .collect::<Vec<f64>>();
-            let populations = solve_banded_bicgstab_left_jacobi(&diag, &upper, &lower, &rhs, 1e-10, 4000)
-                .or_else(|_| solve_banded_gauss_seidel(&diag, &upper, &lower, &rhs, 1e-12, 40000))?;
+            let populations =
+                solve_banded_bicgstab_left_jacobi(&diag, &upper, &lower, &rhs, 1e-10, 4000)
+                    .or_else(|_| {
+                        solve_banded_gauss_seidel(&diag, &upper, &lower, &rhs, 1e-12, 40000)
+                    })?;
             return self.postprocess_steady_state_populations(micro, populations);
         }
 
@@ -55,8 +60,8 @@ impl OlzmannStepladderMasterEquationSolver {
 
         let x_transformed = match &self.settings.collision_kernel_model {
             CollisionKernelModel::Stepladder => {
-                let (diag_a, offdiag_a) =
-                    self.build_transformed_symmetric_tridiagonal_operator(micro, &similarity_weights)?;
+                let (diag_a, offdiag_a) = self
+                    .build_transformed_symmetric_tridiagonal_operator(micro, &similarity_weights)?;
                 match solve_spd_symmetric_tridiagonal(&diag_a, &offdiag_a, &rhs_transformed) {
                     Ok(x) => x,
                     Err(_) => solve_tridiagonal_general(
@@ -78,17 +83,18 @@ impl OlzmannStepladderMasterEquationSolver {
                         *mean_downstep_wavenumber,
                         *exponent_cutoff,
                     )?;
-                solve_spd_symmetric_banded_cholesky(&diag_a, &bands, &rhs_transformed)
-                    .or_else(|e| {
+                solve_spd_symmetric_banded_cholesky(&diag_a, &bands, &rhs_transformed).or_else(
+                    |e| {
                         // Fallback: expand to dense and try dense Cholesky.
                         // This is slower but can rescue borderline cases without stalling.
                         solve_spd_symmetric_banded_dense_fallback(&diag_a, &bands, &rhs_transformed)
                             .map_err(|e2| format!("{e}; dense fallback: {e2}"))
-                    })?
+                    },
+                )?
             }
-            CollisionKernelModel::ExponentialBandedMess {
-                ..
-            } => unreachable!("ExponentialBandedMess is solved in untransformed space above."),
+            CollisionKernelModel::ExponentialBandedMess { .. } => {
+                unreachable!("ExponentialBandedMess is solved in untransformed space above.")
+            }
         };
 
         let steady_state_populations = x_transformed
@@ -126,8 +132,7 @@ impl OlzmannStepladderMasterEquationSolver {
             let mut sum_loss_here = 0.0;
 
             for (ch, k_ca) in channel_k_ca.iter_mut().enumerate().take(n_channels) {
-                let k = micro.microcanonical_rate_for_channel(ch, i)
-                    .max(0.0);
+                let k = micro.microcanonical_rate_for_channel(ch, i).max(0.0);
                 *k_ca += weight * k;
                 sum_loss_here += k;
             }
@@ -226,8 +231,7 @@ impl OlzmannStepladderMasterEquationSolver {
         for (i, w) in thermal.iter().copied().enumerate() {
             let mut sum_loss_here = 0.0;
             for (ch, k_th) in channel_rates.iter_mut().enumerate().take(n_channels) {
-                let k = micro.microcanonical_rate_for_channel(ch, i)
-                    .max(0.0);
+                let k = micro.microcanonical_rate_for_channel(ch, i).max(0.0);
                 *k_th += w * k;
                 sum_loss_here += k;
             }
@@ -281,7 +285,6 @@ impl OlzmannStepladderMasterEquationSolver {
 
         Ok(weights)
     }
-
 
     fn build_transformed_symmetric_tridiagonal_operator(
         &self,
@@ -345,7 +348,8 @@ impl OlzmannStepladderMasterEquationSolver {
             if source + 1 < n && p_up > 0.0 {
                 let upper = source + 1;
                 let j_off = -omega * p_up;
-                offdiag_a[source] = j_off * (similarity_weights[upper] / similarity_weights[source]);
+                offdiag_a[source] =
+                    j_off * (similarity_weights[upper] / similarity_weights[source]);
             }
         }
 
@@ -432,16 +436,17 @@ impl OlzmannStepladderMasterEquationSolver {
             .filter(|(_, k)| *k > 0.0)
             .map(|(out, _)| out)
             .fold(0.0_f64, |a, b| a.max(b));
-        let max_out_all = out_raw
-            .iter()
-            .copied()
-            .fold(0.0_f64, |a, b| a.max(b));
+        let max_out_all = out_raw.iter().copied().fold(0.0_f64, |a, b| a.max(b));
         let out_cap = if max_out_reactive > 0.0 {
             max_out_reactive
         } else {
             max_out_all
         };
-        let omega_eff = if out_cap > 1.0 { omega / out_cap } else { omega };
+        let omega_eff = if out_cap > 1.0 {
+            omega / out_cap
+        } else {
+            omega
+        };
 
         let mut diag = vec![0.0; n];
         let mut bands = (0..half_bandwidth)
@@ -667,8 +672,7 @@ impl OlzmannStepladderMasterEquationSolver {
         for (i, value) in loss_rates.iter_mut().enumerate() {
             let mut sum_k = 0.0;
             for ch in 0..n_channels {
-                sum_k += micro.microcanonical_rate_for_channel(ch, i)
-                    .max(0.0);
+                sum_k += micro.microcanonical_rate_for_channel(ch, i).max(0.0);
             }
             *value = sum_k;
         }
