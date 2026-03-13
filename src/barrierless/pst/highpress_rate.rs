@@ -6,12 +6,7 @@ const HPLANCK: f64 = TWOPI;
 /// Ref: Troe & Ushakov J. Phys. Chem. A, 110, 2006, 6732-6741
 /// Eq 2.9 in Ref.
 
-pub fn kcapture_pst(
-    temp: f64,
-    mu: f64,
-    vmax: &Vec<f64>,
-) -> f64 {
-
+pub fn kcapture_pst_highpress(temp: f64, mu: f64, vmax: &Vec<f64>) -> f64 {
     let kT = KB * temp;
 
     // Translational partition function
@@ -20,10 +15,7 @@ pub fn kcapture_pst(
     let mut sum = 0.0;
 
     for j in 0..vmax.len() {
-
-        jp1 = (j as f64) + 1.0;
-
-        sum += (2.0 * jp1) * f64::exp((-vmax[j] / kT);
+        sum += (2.0 * ((j + 1) as f64)) * f64::exp((-vmax[j] / kT));
     }
 
     let kcap = (kT / (HPLANCK * qtr)) * sum;
