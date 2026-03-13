@@ -5,14 +5,7 @@
 /// of Wl(E,J) with the vibrational degrees of freedom of the fragments
 /// via the Beyer-Swinehart algorithm followed by the convolution with
 /// eventually existing free internal rotors of the fragments.
-///
-/// Notes:
-/// - This is a direct structural translation of the Fortran logic.
-/// - The helper functions `wlla`, `wlsa`, `wlll`, `wlsl`, `wlss`,
-///   `count`, and `rhoiro` are assumed to exist elsewhere.
-/// - `mw`, `mt`, and `rhoir` correspond to the old COMMON arrays.
-/// - `mr` is built here locally and passed into `count`.
-pub fn wcount(
+pub fn wEJ_vib_rot_pst(
     kzp: usize,
     nce: usize,
     emax: f64,
@@ -35,9 +28,9 @@ pub fn wcount(
     match kzp {
         1 => wlla(emax, length, j, b1, mt),
         2 => wlsa(emax, length, j, b1, mt),
-        3 => wlll(nce, emax, length, j, b1, b2, mt),
-        4 => wlsl(nce, emax, length, j, b1, b2, mt),
-        5 => wlss(nce, emax, length, j, b1, b2, mt),
+        3 => W0_linear_and_linear(nce, emax, length, j, b1, b2, mt),
+        4 => W0_linear_and_sphericaltop(nce, emax, length, j, b1, b2, mt),
+        5 => W0_sphericaltop_and_sphericaltop(nce, emax, length, j, b1, b2, mt),
         _ => panic!("invalid KZP value: {}", kzp),
     }
 
@@ -77,9 +70,7 @@ pub fn wcount(
     }
 }
 
-
-/// This subroutine calculates Wl(E,J) for systems linear/atom and
-/// creates the starting vector for the Beyer-Swinehart count.
+//--------------------------------------------------------------------------------
 pub fn W0_atom_and_linear(aemax: f64, length: f64, j: usize, b: f64, mt: &mut [f64]) {
 
     fn wlliat(e: f64, j: usize, b: f64) -> f64 {
@@ -102,10 +93,10 @@ pub fn W0_atom_and_linear(aemax: f64, length: f64, j: usize, b: f64, mt: &mut [f
         mt[i] = wlliat(e, j, b) - wlliat(em, j, b);
     }
 }
+//--------------------------------------------------------------------------------
 
 
-/// This subroutine calculates Wl(E,J) for systems spherical top/atom and
-/// creates the starting vector for the Beyer-Swinehart count.
+//--------------------------------------------------------------------------------
 pub fn W0_atom_and_sphericaltop(aemax: f64, length: f64, j: usize, b: f64, mt: &mut [f64]) {
 
     /// This function calculates exact values of Wl(E,J) for systems
@@ -131,11 +122,12 @@ pub fn W0_atom_and_sphericaltop(aemax: f64, length: f64, j: usize, b: f64, mt: &
         mt[i] = wlstat(e, j, b) - wlstat(em, j, b);
     }
 }
+//--------------------------------------------------------------------------------
 
 
 /// This subroutine estimates Wl(E,J) for systems linear/linear and
 /// creates the starting vector for the Beyer-Swinehart count.
-pub fn wlll(
+pub fn W0_linear_and_linear(
     nce: i32,
     aemax: f64,
     length: f64,
@@ -192,9 +184,7 @@ pub fn wlll(
 
 
 
-/// This subroutine estimates Wl(E,J) for systems spherical top/linear
-/// and creates the starting vector for the Beyer-Swinehart count.
-pub fn wlsl(
+pub fn W0_linear_and_sphericaltop(
     nce: i32,
     aemax: f64,
     length: f64,
@@ -252,9 +242,7 @@ pub fn wlsl(
 
 
 
-/// This subroutine estimates Wl(E,J) for systems spherical top/spherical
-/// top and creates the starting vector for the Beyer-Swinehart count.
-pub fn wlss(
+pub fn W0_sphericaltop_and_sphericaltop(
     nce: i32,
     aemax: f64,
     length: f64,
