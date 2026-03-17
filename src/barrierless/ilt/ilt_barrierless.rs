@@ -76,7 +76,7 @@ pub mod ilt_barrierless {
     ///
     ///     bimol_prefactor_cm = ((2πμ/h^2)^(3/2)) * (g_a g_b / g_c)
     ///
-    /// but converted beforehand to the same wavenumber-based convention you use elsewhere.
+    /// but converted beforehand to the same wavenumber-based convention we use elsewhere.
     ///
     /// Units:
     /// - e, ea, delta_h0 -> cm-1
