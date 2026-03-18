@@ -1,7 +1,5 @@
 use super::types::SacmEnergyGrid;
-
-pub const HCM: f64 = 3.3356e-11;
-pub const KB_CM: f64 = 0.69503;
+pub use crate::constants::{H_PLANCK_CM, KB_CM};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PstCaptureModel {

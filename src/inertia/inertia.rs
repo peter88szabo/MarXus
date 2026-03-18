@@ -1,11 +1,8 @@
-use std::f64::consts::PI; // Import PI from the standard library
-const AV: f64 = 6.022045e0;
-const PH: f64 = 6.626176e0;
-const SL: f64 = 2.99792458e0;
-const TOCM1: f64 = 1.0e2 * (PH * AV) / (8.0 * PI * PI * SL);
-const TOMHZ: f64 = 1.0e6 * (PH * AV) / (8.0 * PI * PI);
-
+use crate::constants::{INERTIA_AV, INERTIA_PH, INERTIA_SL, PI};
 use crate::numeric::jacobi_diag::jacobi;
+
+const TOCM1: f64 = 1.0e2 * (INERTIA_PH * INERTIA_AV) / (8.0 * PI * PI * INERTIA_SL);
+const TOMHZ: f64 = 1.0e6 * (INERTIA_PH * INERTIA_AV) / (8.0 * PI * PI);
 
 pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
     let mut ixx = 0.0;
@@ -48,7 +45,7 @@ pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {
     for i in 0..3 {
         brot_cm1[i] = TOCM1 / eigval[i];
         brot_mhz[i] = TOMHZ / eigval[i];
-        inertia_amuang2[i] = eigval[i] / AV * 10.0;
+        inertia_amuang2[i] = eigval[i] / INERTIA_AV * 10.0;
     }
 
     //if you need brot or intertia in other units, then just print them

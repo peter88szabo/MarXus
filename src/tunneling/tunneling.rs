@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use crate::constants::PI;
 
 pub fn wigner(beta: f64, omega: f64) -> f64 {
     let u = omega * beta;

@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+mod constants;
 mod inertia;
 mod molecule;
 mod numeric;
@@ -9,6 +10,7 @@ mod utils;
 use crate::molecule::MolType;
 use crate::molecule::MoleculeBuilder;
 use crate::rrkm::rrkm_rate::get_kE;
+use crate::constants::CM1_TO_KCAL;
 use crate::utils::print_rates::print_rrkm_rates;
 use crate::utils::time::format_duration;
 use std::time::Instant;
@@ -141,12 +143,12 @@ fn main() {
     println!(
         "ZPE of complex:                 {:>12.1} cm-1 {:>12.2} kcal/mol",
         ZPE_cpx,
-        ZPE_cpx * 2.85914e-3
+        ZPE_cpx * CM1_TO_KCAL
     );
     println!(
         "ZPE of TS:                      {:>12.1} cm-1 {:>12.2} kcal/mol\n",
         ZPE_ts,
-        ZPE_ts * 2.85914e-3
+        ZPE_ts * CM1_TO_KCAL
     );
 
     //--------------------------------------------------
@@ -178,11 +180,11 @@ fn main() {
     let dH0 = Ezero + ZPE_ts - ZPE_cpx;
     println!(
         "E0  (reaction energy at 0K):    {:>12.1} cm-1 {:>12.2} kcal/mol   (no ZPE only pure electronic)",
-        Ezero, Ezero * 2.85914e-3
+        Ezero, Ezero * CM1_TO_KCAL
     );
     println!(
         "ΔH0 (reaction enthalpy at 0K):  {:>12.1} cm-1 {:>12.2} kcal/mol   (ΔH0 = E0 + ZPE_ts - ZPE_cpx)\n",
-        dH0, dH0 * 2.85914e-3
+        dH0, dH0 * CM1_TO_KCAL
     );
 
     if Ezero >= Emax {

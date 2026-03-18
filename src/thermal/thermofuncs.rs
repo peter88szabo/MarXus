@@ -1,33 +1,14 @@
 // thermofuncs.rs
+use crate::constants::{
+    AMU_TO_ELECMASS, AU_TO_KCAL, AU_TO_KJ, BOLTZMANN_SI, CLIGHT_SI, CM1_TO_HARTREE, CM1_TO_K,
+    CM1_TO_KCAL, HPLANCK_AU, PASCAL_TO_AU, PI, PI_SQ, PLANCK_SI, RGAS_AU, RGAS_SI, TWO_PI,
+};
 use crate::molecule::MoleculeStruct;
-
-const PI: f64 = std::f64::consts::PI;
-const PI_SQ: f64 = PI * PI;
-const TWOPI: f64 = 2.0 * PI;
-
-const CLIGHT: f64 = 137.035999074;
-const AMU_TO_ELECMASS: f64 = 1836.15267343;
-
-const HPLANCK_AU: f64 = TWOPI;
-const HPLANCK_AU_SQ: f64 = TWOPI * TWOPI;
-
-const AU_TO_KJ: f64 = 2625.5;
-const AU_TO_KCAL: f64 = 627.51;
-
-const RGAS_AU: f64 = 8.31446261815324 / 1000.0 / AU_TO_KJ; // Hartree/mol/K
-const CM1_TO_K: f64 = 1.43877;
-const CM1_TO_HARTREE: f64 = 4.55635e-6;
-const CM1_TO_KCAL: f64 = 2.85914e-3;
-const PASCAL_TO_AU: f64 = 1.0e-13 / 2.9421912;
+const HPLANCK_AU_SQ: f64 = HPLANCK_AU * HPLANCK_AU;
 
 // -----------------------------
 // SI constants needed ONLY for Grimme free-rotor entropy (dimensionless inside ln)
 // -----------------------------
-const PLANCK_SI: f64 = 6.62607015e-34; // J*s
-const BOLTZMANN_SI: f64 = 1.380649e-23; // J/K
-const RGAS_SI: f64 = 8.31446261815324; // J/mol/K
-const CLIGHT_SI: f64 = 2.99792458e8; // m/s
-
 // 1 Hartree/mol = AU_TO_KJ kJ/mol = AU_TO_KJ*1000 J/mol
 const J_PER_HARTREE_PER_MOL: f64 = AU_TO_KJ * 1000.0;
 
@@ -115,7 +96,7 @@ impl MoleculeStruct {
         let mass = self.mass * AMU_TO_ELECMASS;
 
         // lambda_factor = sqrt(2π m RT / h^2), then cube it
-        let mut lam = f64::sqrt(TWOPI * mass * RT / HPLANCK_AU_SQ);
+        let mut lam = f64::sqrt(TWO_PI * mass * RT / HPLANCK_AU_SQ);
         lam = lam * lam * lam;
 
         let Vol = RT / (pressure * PASCAL_TO_AU);

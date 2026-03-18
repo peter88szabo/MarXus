@@ -24,7 +24,7 @@ pub use interpol_react_prod::{
 };
 pub use phase_space::phase_space_states;
 pub use pst_channels::{
-    capture_probability, microcanonical_rate, PstCaptureModel, PstChannels, HCM, KB_CM,
+    capture_probability, microcanonical_rate, PstCaptureModel, PstChannels, H_PLANCK_CM, KB_CM,
 };
 pub use pst_detailed::{
     build_pst_detailed, build_pst_detailed_with_interpolation, PstDetailedInput,

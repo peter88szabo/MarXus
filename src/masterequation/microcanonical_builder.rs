@@ -31,11 +31,11 @@
 //! smoothing or other statistical post-processing.
 
 use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
+use crate::constants::H_PLANCK_CM;
 use crate::masterequation::energy_grained_me::EnergyGrid;
 use crate::masterequation::reaction_network::{
     MicrocanonicalProvider, ReactionChannel, WellDefinition,
 };
-use crate::rrkm::rrkm_rate::rrkm_rate_from_sum_states_and_density;
 use crate::rrkm::sum_and_density::get_rovib_WE_or_rhoE;
 
 /// Minimal microcanonical input model for a species (well or tight TS).
@@ -236,12 +236,19 @@ pub fn build_microcanonical_network_data(
         for ch in 0..well.channels.len() {
             let ch_model = &channel_micro_models[well_index][ch];
             let w_ts = compute_transition_state_sum_of_states(&grid, &ch_model.transition_state)?;
-            let k = rrkm_rate_from_sum_states_and_density(
-                grid.bin_width_wavenumber,
-                &w_ts,
-                rho,
-                ch_model.threshold_energy_cm1,
-            )?;
+            let shift = (ch_model.threshold_energy_cm1 / grid.bin_width_wavenumber + 0.5) as usize;
+            let mut k = vec![0.0; w_ts.len()];
+            for i in shift..w_ts.len() {
+                let rho_i = rho[i];
+                let w_i = w_ts[i - shift];
+                if rho_i <= 0.0 || !rho_i.is_finite() {
+                    continue;
+                }
+                if w_i <= 0.0 || !w_i.is_finite() {
+                    continue;
+                }
+                k[i] = w_i / rho_i / H_PLANCK_CM;
+            }
             per_channel.push(k);
         }
 

@@ -18,15 +18,11 @@
 //! - This module works in atomic units internally for consistency with MESS.
 //! - Energies passed in cm^-1 are converted to Hartree.
 
-use std::f64::consts::PI;
-
-use crate::numeric::special_functions::gamma;
+use crate::constants::{AMU_TO_ELECTRON_MASS, CM1_TO_HARTREE, PI};
+use crate::numeric::lanczos_gamma::gamma_func;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
 use super::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput};
-
-const CM1_TO_HARTREE: f64 = 4.55635e-6;
-const AMU_TO_ELECTRON_MASS: f64 = 1822.888_486_209;
 
 /// Resulting analytical PST state-count model:
 ///   N(E) = states_prefactor * E^power
@@ -139,7 +135,7 @@ impl PhaseSpaceTheoryModel {
         let power = internal_dimension_count / 2.0 - 2.0 / n;
 
         // Canonical weight factor uses Γ(power+1).
-        let gamma_factor = gamma(power + 1.0)?;
+        let gamma_factor = gamma_func(power + 1.0);
         let weight_prefactor = states_prefactor * gamma_factor;
 
         Ok(Self {

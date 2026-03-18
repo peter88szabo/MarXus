@@ -55,7 +55,7 @@ pub fn compute_spcoord(input: &SpCoordInput) -> SpCoordResult {
         } else {
             1.0
         };
-        let angle_deg = cos_angle.clamp(-1.0, 1.0).acos() * 180.0 / std::f64::consts::PI;
+        let angle_deg = cos_angle.clamp(-1.0, 1.0).acos() * 180.0 / PI;
 
         SpCoordResult {
             center_x,
@@ -117,3 +117,4 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
 fn norm(v: [f64; 3]) -> f64 {
     dot(v, v).sqrt()
 }
+use crate::constants::PI;

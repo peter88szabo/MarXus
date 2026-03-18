@@ -5,5 +5,4 @@ pub mod krylov;
 pub mod lanczos_gamma;
 pub mod ldlt_solvers;
 pub mod linear_algebra;
-pub mod special_functions;
 pub mod tridiagonal_solvers;

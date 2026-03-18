@@ -1,3 +1,5 @@
+use crate::constants::{ATM_TO_PASCAL, BOLTZMANN_SI, CM1_TO_K, PI};
+
 #[derive(Clone, Debug)]
 pub struct ExponentialDownParameters {
     pub factor_cm1: f64,
@@ -105,10 +107,7 @@ pub fn estimate_lj_collision_frequency_per_second(
         return Err("Lennard-Jones sigmas and masses must be > 0.".into());
     }
 
-    const ATM_TO_PA: f64 = 101_325.0;
-    const KB_J_PER_K: f64 = 1.380_649e-23;
     const AMU_TO_KG: f64 = 1.660_539_066_60e-27;
-    const CM1_TO_K: f64 = 1.438_776_877;
 
     let sigma_m = 0.5 * (lj.sigma_1_angstrom + lj.sigma_2_angstrom) * 1.0e-10;
     let epsilon_cm1 = (lj.epsilon_1_cm1 * lj.epsilon_2_cm1).sqrt().max(1e-12);
@@ -124,12 +123,11 @@ pub fn estimate_lj_collision_frequency_per_second(
     let reduced_mass = (m1 * m2) / (m1 + m2);
 
     let relative_speed =
-        (8.0 * KB_J_PER_K * temperature_kelvin / (std::f64::consts::PI * reduced_mass)).sqrt();
-    let collision_rate_constant_m3_s =
-        std::f64::consts::PI * sigma_m * sigma_m * relative_speed * omega_22;
+        (8.0 * BOLTZMANN_SI * temperature_kelvin / (PI * reduced_mass)).sqrt();
+    let collision_rate_constant_m3_s = PI * sigma_m * sigma_m * relative_speed * omega_22;
 
-    let pressure_pa = pressure_atm * ATM_TO_PA;
-    let number_density_m3 = pressure_pa / (KB_J_PER_K * temperature_kelvin);
+    let pressure_pa = pressure_atm * ATM_TO_PASCAL;
+    let number_density_m3 = pressure_pa / (BOLTZMANN_SI * temperature_kelvin);
 
     Ok(collision_rate_constant_m3_s * number_density_m3)
 }

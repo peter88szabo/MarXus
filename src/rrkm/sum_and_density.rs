@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use crate::constants::PI;
 use crate::numeric::lanczos_gamma::gamma_func;
 
 //=============================================================================================
@@ -54,7 +55,7 @@ pub fn get_pure_rotational_WE_or_rhoE(
 
     let rdim = (nrot as f64) / 2.0;
 
-    let sqrt_pi = f64::sqrt(std::f64::consts::PI);
+    let sqrt_pi = PI.sqrt();
     let crt = (f64::powf(sqrt_pi, nrot as f64)) / prod_Brot;
 
     let const_W = crt / gamma_func(1.0 + rdim);

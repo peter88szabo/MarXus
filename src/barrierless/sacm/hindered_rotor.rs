@@ -1,3 +1,4 @@
+use crate::constants::PI;
 use crate::numeric::lanczos_gamma::gamma_func;
 
 // This function calculates the correction factor between the partition
@@ -12,7 +13,7 @@ use crate::numeric::lanczos_gamma::gamma_func;
 pub fn fqhind(kt: f64, v0: f64, qfree: f64, n: f64) -> f64 {
     if v0 != 0.0 {
         let ktv0 = kt / v0;
-        let hnykt = n * (std::f64::consts::PI / ktv0).sqrt() / qfree;
+        let hnykt = n * (PI / ktv0).sqrt() / qfree;
         let term1 = (-1.2 * ktv0).exp() / (qfree * (1.0 - (-hnykt).exp()));
         let term2 = (1.0 - (-ktv0).exp()).powf(1.2);
         term1 + term2
@@ -36,7 +37,7 @@ pub fn hindered_rotor_sum_factor(s: i32, v0: f64, e: f64) -> f64 {
     }
 
     let s_usize = s as usize;
-    let sqrt_pi = std::f64::consts::PI.sqrt();
+    let sqrt_pi = PI.sqrt();
     let gs = gamma_func(s as f64 + 1.5);
     let a = gs / (sqrt_pi * gamma_func(s as f64 + 2.0));
 
@@ -78,7 +79,7 @@ pub fn hindered_rotor_density_factor(s: i32, v0: f64, e: f64) -> f64 {
     }
 
     let s_usize = s as usize;
-    let sqrt_pi = std::f64::consts::PI.sqrt();
+    let sqrt_pi = PI.sqrt();
     let gs = gamma_func(s as f64 + 0.5);
     let a = gs / (sqrt_pi * gamma_func(s as f64 + 1.0));
 

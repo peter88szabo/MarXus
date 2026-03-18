@@ -1,9 +1,10 @@
+use crate::constants::PI;
+
 //=====================================================================================
 // Lanczos recursive approximation of Gamma function
 // Tested agains Fortran intrinsic DGAMMA function
 //=====================================================================================
 pub fn gamma_func(a: f64) -> f64 {
-    const PI: f64 = 3.14159265358979324;
     const CG: usize = 7;
 
     // These numbers are taken from the sample code in Wikipedia

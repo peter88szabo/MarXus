@@ -28,6 +28,7 @@
 //!
 //! The goal is to let you *start* from a MESS deck and obtain a consistent multiwell micro model.
 
+use crate::constants::{CM1_TO_KCAL, KB_CM};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -45,9 +46,6 @@ use crate::masterequation::reaction_network::{
     WellDefinition,
 };
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
-
-const KB_CM1_PER_K: f64 = 0.695_034_76;
-const KCAL_PER_MOL_PER_CM1: f64 = 2.859_144e-3;
 
 #[derive(Clone, Debug)]
 pub struct MessBuildOptions {
@@ -184,7 +182,7 @@ fn parse_key_value_whitespace(line: &str) -> Option<(&str, &str)> {
 fn energy_to_cm1(value: f64, unit_tag: &str) -> Result<f64, String> {
     let u = unit_tag.trim().to_lowercase();
     if u.contains("kcal") {
-        Ok(value / KCAL_PER_MOL_PER_CM1)
+        Ok(value / CM1_TO_KCAL)
     } else if u.contains("1/cm") || u.contains("cm") {
         Ok(value)
     } else {
@@ -803,7 +801,7 @@ impl MessDeck {
             let step_over_t = self.global.energy_step_over_temperature.ok_or(
                 "Missing EnergyStepOverTemperature (or set energy_grain_width_cm1 override).",
             )?;
-            step_over_t * KB_CM1_PER_K * temperature
+            step_over_t * KB_CM * temperature
         };
         if energy_grain_width_cm1 <= 0.0 || !energy_grain_width_cm1.is_finite() {
             return Err("Computed energy grain width is invalid.".into());
@@ -831,7 +829,7 @@ impl MessDeck {
         let settings = MasterEquationSettings {
             temperature_kelvin: temperature,
             pressure_torr,
-            boltzmann_constant_wavenumber_per_kelvin: KB_CM1_PER_K,
+            boltzmann_constant_wavenumber_per_kelvin: KB_CM,
             collision_band_half_width: options.collision_band_half_width,
             collision_kernel_implementation: CollisionKernelImplementation::Mess,
             outgoing_rate_threshold: 0.0,
@@ -856,7 +854,7 @@ impl MessDeck {
             let sp = &self.wells[name];
             let offset = (sp.zero_energy_cm1 / energy_grain_width_cm1).round() as isize;
 
-            let max_energy_cm1 = options.max_energy_kcal_mol / KCAL_PER_MOL_PER_CM1;
+            let max_energy_cm1 = options.max_energy_kcal_mol / CM1_TO_KCAL;
             let n_bins = (max_energy_cm1 / energy_grain_width_cm1).ceil().max(1.0) as usize + 1;
 
             wells_out.push(WellDefinition {

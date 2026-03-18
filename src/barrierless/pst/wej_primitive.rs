@@ -455,9 +455,6 @@ pub fn polat(x: f64) -> f64 {
 /// This function calculates the classical density of states of the
 /// internal rotations of the fragments.
 ///
-/// Note: `dgamma` corresponds to the double-precision Gamma function.
-/// You will need a Gamma implementation (e.g. from the `statrs` crate)
-/// or your own equivalent function.
 pub fn rhoiro(
     n: usize,
     length: f64,
@@ -483,7 +480,7 @@ pub fn rhoiro(
 
     let gd = r / 2.0 - 1.0;
 
-    let gamma = statrs::function::gamma::gamma(r / 2.0);
+    let gamma = gamma_func(r / 2.0);
 
     for i in 1..=n {
         let e = (i as f64) * length;
@@ -491,3 +488,4 @@ pub fn rhoiro(
         rhos[i] = 1.7725_f64.powf(r) / (gamma * sqrb) * e.powf(gd);
     }
 }
+use crate::numeric::lanczos_gamma::gamma_func;

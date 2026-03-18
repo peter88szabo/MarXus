@@ -1,5 +1,4 @@
-use std::f64::consts::PI;
-
+use crate::constants::PI;
 use super::reaction_network::{CollisionModelParams, MasterEquationSettings};
 
 /// Computes alpha(T) in cm^-1: alpha(T)=alpha_1000*(T/1000)^exp

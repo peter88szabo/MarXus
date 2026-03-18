@@ -1,14 +1,9 @@
+use crate::constants::{
+    ATM_TO_PASCAL, AU_TO_KCAL, BOLTZMANN_SI, CM1_TO_HARTREE, KB_OVER_H_PER_KELVIN_PER_SECOND,
+    PLANCK_SI, R_KCAL_PER_MOL_PER_KELVIN, RGAS_AU,
+};
 use crate::molecule::MoleculeStruct;
 use crate::tunneling::tunneling::{eckart, wigner};
-
-const KB_OVER_H_PER_KELVIN_PER_SECOND: f64 = 2.083_661_912e10;
-const BOLTZMANN_SI: f64 = 1.380_649e-23; // J/K
-const PLANCK_SI: f64 = 6.626_070_15e-34; // J*s
-const KCAL_PER_HARTREE: f64 = 627.51;
-const R_KCAL_PER_MOL_PER_KELVIN: f64 = 1.987_204_258_640_83e-3;
-const ATM_TO_PASCAL: f64 = 101_325.0;
-const CM1_TO_HARTREE: f64 = 4.55635e-6;
-const RGAS_AU: f64 = 8.31446261815324 / 1000.0 / 2625.5; // Hartree/mol/K
 
 #[derive(Clone, Copy, Debug)]
 pub enum ReactionMolecularity {
@@ -131,8 +126,8 @@ pub fn high_pressure_unimolecular_tst_from_molecules(
     reactant.eval_all_therm_func(temperature_kelvin, pressure_pa, freq_cutoff_cm1);
     transition_state.eval_all_therm_func(temperature_kelvin, pressure_pa, freq_cutoff_cm1);
 
-    let g_reactant_kcal_mol = reactant.thermo.gtot * KCAL_PER_HARTREE;
-    let g_ts_kcal_mol = transition_state.thermo.gtot * KCAL_PER_HARTREE;
+    let g_reactant_kcal_mol = reactant.thermo.gtot * AU_TO_KCAL;
+    let g_ts_kcal_mol = transition_state.thermo.gtot * AU_TO_KCAL;
     let delta_g_dagger_kcal_mol = g_ts_kcal_mol - g_reactant_kcal_mol;
 
     let rate = high_pressure_unimolecular_tst_rate(HighPressureTstInput {
@@ -210,13 +205,13 @@ pub fn high_pressure_tst_with_thermo(
         }
     };
     let prefactor = tunneling_kappa * (BOLTZMANN_SI / PLANCK_SI) * temperature_kelvin * vmolar;
-    let d_g_kcal = d_g * KCAL_PER_HARTREE;
+    let d_g_kcal = d_g * AU_TO_KCAL;
     let rate = prefactor * (-(d_g_kcal) / (R_KCAL_PER_MOL_PER_KELVIN * temperature_kelvin)).exp();
 
     Ok(HighPressureThermoResult {
         d_g_kcal_mol: d_g_kcal,
-        d_zpe_kcal_mol: d_zpe * KCAL_PER_HARTREE,
-        d_h0_kcal_mol: d_h0 * KCAL_PER_HARTREE,
+        d_zpe_kcal_mol: d_zpe * AU_TO_KCAL,
+        d_h0_kcal_mol: d_h0 * AU_TO_KCAL,
         prefactor,
         rate_constant: rate,
     })
@@ -239,10 +234,10 @@ pub fn eckart_tunneling_kappa(input: EckartTunnelingInput) -> Result<f64, String
 
     let beta = 1.0 / (RGAS_AU * input.temperature_kelvin);
     let omega = input.imaginary_frequency_cm1 * CM1_TO_HARTREE;
-    let vf = input.forward_barrier_kcal_mol / KCAL_PER_HARTREE;
-    let vb = input.reverse_barrier_kcal_mol / KCAL_PER_HARTREE;
-    let de = input.integration_step_kcal_mol / KCAL_PER_HARTREE;
-    let emax = input.integration_max_kcal_mol / KCAL_PER_HARTREE;
+    let vf = input.forward_barrier_kcal_mol / AU_TO_KCAL;
+    let vb = input.reverse_barrier_kcal_mol / AU_TO_KCAL;
+    let de = input.integration_step_kcal_mol / AU_TO_KCAL;
+    let emax = input.integration_max_kcal_mol / AU_TO_KCAL;
 
     let (kappa1, _kappa2) = eckart(beta, omega, vf, vb, de, emax);
     if kappa1.is_finite() && kappa1 > 0.0 && kappa1 < 1.0e4 {
