@@ -1724,3 +1724,4 @@ pub fn internal_rotor(
             1.7725_f64.powf(total_internal_rotors) / (gamma * prod_Brot_sqrt) * e.powf(exponent);
     }
 }
+//asd

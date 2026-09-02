@@ -33,10 +33,19 @@ use crate::barrierless::pst::collision_type::{CollisionType, ReactantType};
 pub fn wcorr(colltype: CollisionType, ene: f64, j: usize, vmax: &[f64]) -> f64 {
     let ntype = match colltype {
         CollisionType::AtomLinear => 1.0,
-        CollisionType::AtomSphericalTop => 1.5,
+        CollisionType::AtomProlate => 1.5,
+        CollisionType::AtomOblate => 1.5,
+        CollisionType::AtomSpherical => 1.5,
         CollisionType::LinearLinear => 2.0,
-        CollisionType::LinearSphericalTop => 2.5,
-        CollisionType::SphericalTopSphericalTop => 3.0,
+        CollisionType::LinearProlate => 2.5,
+        CollisionType::LinearOblate => 2.5,
+        CollisionType::LinearSpherical => 2.5,
+        CollisionType::ProlateOblate => 3.0,
+        CollisionType::ProlateProlate => 3.0,
+        CollisionType::OblateOblate => 3.0,
+        CollisionType::SphericalProlate => 3.0,
+        CollisionType::SphericalOblate => 3.0,
+        CollisionType::SphericalSpherical => 3.0,
          _ => panic!("unsupported collision type"),
     };
 
