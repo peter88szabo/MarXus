@@ -17,6 +17,8 @@
 //!   - RRHO -> ElectronicLevels[1/cm] N (only the ground-level degeneracy is used)
 //! - MarXus extension: `InverseLaplaceTransform ... End` inside the RRHO block of a barrier
 //!   (high-pressure rate coefficient of a barrierless channel, see `IltSpecification`).
+//! - MarXus extension: `MarXus ... End` in the header, the solution method and its settings
+//!   (`parse_marxus_header`, `solution_method.rs`).
 //!
 //!   - RRHO -> Tunneling Eckart (ImaginaryFrequency, two WellDepth values); other models recorded
 //! Not read: excited electronic levels, hindered rotors and other model types.
@@ -29,6 +31,8 @@ use crate::barrierless::ilt::ilt_barrierless::ModifiedArrhenius;
 use crate::barrierless::phasespace::types::PstTstLevel;
 use crate::inertia::inertia::get_brot;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
+
+use super::solution_method::{eigen_solver_from_keyword, SolutionMethod, SolutionSettings, SteadyStateVersions};
 
 #[derive(Clone, Debug)]
 pub struct MessGlobal {
@@ -52,6 +56,9 @@ pub struct MessGlobal {
 
     pub reactant_name: Option<String>,
     pub excess_reactant_concentration_cm3: Option<f64>,
+
+    /// Solution method and its settings from the MarXus header block (`parse_marxus_header`).
+    pub solution: SolutionSettings,
 }
 
 #[derive(Clone, Debug)]
@@ -221,6 +228,7 @@ fn is_block_starter(tok: &str) -> bool {
             | "LennardJones"
             | "TimeEvolution"
             | "InverseLaplaceTransform"
+            | "MarXus"
             | "Atom"
     )
 }
@@ -453,6 +461,47 @@ fn unit_tag(line: &str) -> Option<&str> {
     first.split('[').nth(1).and_then(|t| t.split(']').next())
 }
 
+/// The MarXus header block, a MarXus extension of the deck header: the solution method and its settings
+/// (`solution_method.rs`). Every keyword is optional; the command line overrides them.
+///
+///   MarXus
+///     Method                              SteadyState        (or CSE)
+///     SteadyState                         Both               (Intermediate, Final or Both)
+///     AbsorbingBarrierBelowThreshold[kT]  10                 (intermediate steady state)
+///     EigenSolver                         InverseIteration   (FullDecomposition or Lapack)
+///     SumRuleTolerance                    1.5e-2             (thermal eigenpair of the final steady state)
+///   End
+fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
+    let context = |what: &str| format!("MarXus header block: {what}");
+    let mut settings = SolutionSettings::default();
+    let mut seen: Vec<&str> = Vec::new();
+    for line in block.iter().skip(1) {
+        let key = first_token(line).unwrap_or("");
+        if key == "End" {
+            break;
+        }
+        if seen.contains(&key) {
+            return Err(context(&format!("{key} given twice")));
+        }
+        seen.push(key);
+        let value = line.split_whitespace().nth(1).ok_or_else(|| context(&format!("no value in '{line}'")))?;
+        match key {
+            "Method" => settings.method = Some(SolutionMethod::from_keyword(value).map_err(|e| context(&e))?),
+            "SteadyState" => settings.steady_state = Some(SteadyStateVersions::from_keyword(value).map_err(|e| context(&e))?),
+            "AbsorbingBarrierBelowThreshold[kT]" => settings.absorbing_barrier_kt = Some(parse_f64(value)?),
+            "EigenSolver" => settings.eigen_solver = Some(eigen_solver_from_keyword(value).map_err(|e| context(&e))?),
+            "SumRuleTolerance" => settings.sum_rule_tolerance = Some(parse_f64(value)?),
+            _ => {
+                return Err(context(&format!(
+                    "unknown keyword '{key}' (Method, SteadyState, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
+                     SumRuleTolerance)"
+                )))
+            }
+        }
+    }
+    Ok(settings)
+}
+
 /// All numbers after the keyword of a list line such as "TemperatureList[K] 300 400 500".
 fn parse_list(line: &str) -> Result<Vec<f64>, String> {
     line.split_whitespace().skip(1).map(parse_f64).collect()
@@ -654,6 +703,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         lj_masses_amu: None,
         reactant_name: None,
         excess_reactant_concentration_cm3: None,
+        solution: SolutionSettings::default(),
     };
 
     let mut wells: HashMap<String, MessSpeciesRrho> = HashMap::new();
@@ -661,12 +711,25 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let mut barriers: Vec<MessBarrier> = Vec::new();
     let mut well_escape_rate_s_inv: HashMap<String, f64> = HashMap::new();
     let mut well_order: Vec<String> = Vec::new();
+    let mut marxus_header_read = false;
 
     let mut i = 0usize;
     while i < lines.len() {
         let line = strip_comment(&lines[i]);
         if line.is_empty() {
             i += 1;
+            continue;
+        }
+
+        // MarXus header block: solution method and its settings.
+        if first_token(line) == Some("MarXus") {
+            if marxus_header_read {
+                return Err("Input deck: the MarXus header block is given twice.".into());
+            }
+            let (block, next) = collect_block(&lines, i);
+            global.solution = parse_marxus_header(&block)?;
+            marxus_header_read = true;
+            i = next;
             continue;
         }
 
@@ -865,7 +928,7 @@ pub fn parse_mess_input_file(path: impl AsRef<Path>) -> Result<MessDeck, String>
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_mess_input, MessBarrierCore, PstTstLevel};
+    use super::{parse_mess_input, MessBarrierCore, PstTstLevel, SolutionSettings};
 
     #[test]
     fn bimolecular_fragment_headers_do_not_require_end_blocks() {
@@ -1080,6 +1143,49 @@ End
         }
         let unknown = deck.replace("PotentialPowerExponent 6.", "PotentialPowerExponent 6.\n      TSTLevel X");
         assert!(parse_mess_input(&unknown).is_err());
+    }
+
+    const MARXUS_HEADER_DECK: &str = "TemperatureList[K] 300.\nPressureList[torr] 760\n\
+MarXus\n  Method SteadyState\n  SteadyState Final   ! the thermal eigenpair is part of it\n  EigenSolver Lapack\n  \
+SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n";
+
+    #[test]
+    fn the_marxus_header_block_gives_the_solution_settings() {
+        use super::super::chemical_activation_eigen::EigenSolver;
+        use super::super::solution_method::{SolutionMethod, SteadyStateVersions};
+        let parsed = parse_mess_input(MARXUS_HEADER_DECK).expect("should parse");
+        assert_eq!(
+            parsed.global.solution,
+            SolutionSettings {
+                method: Some(SolutionMethod::SteadyState),
+                steady_state: Some(SteadyStateVersions::Final),
+                absorbing_barrier_kt: Some(5.0),
+                eigen_solver: Some(EigenSolver::FullDecompositionLapack),
+                sum_rule_tolerance: Some(0.02),
+            }
+        );
+        // The header keywords around the block are still read.
+        assert_eq!(parsed.global.pressures_torr, vec![760.0]);
+        let cse = parse_mess_input(&MARXUS_HEADER_DECK.replace("Method SteadyState", "Method CSE")).unwrap();
+        assert_eq!(cse.global.solution.method, Some(SolutionMethod::ChemicallySignificantEigenvalues));
+    }
+
+    #[test]
+    fn a_deck_without_a_marxus_header_block_leaves_the_solution_settings_unset() {
+        let parsed = parse_mess_input("TemperatureList[K] 300.\nPressureList[torr] 760\nModel\nEnd\n").unwrap();
+        assert_eq!(parsed.global.solution, SolutionSettings::default());
+    }
+
+    #[test]
+    fn the_marxus_header_block_refuses_unknown_keywords_values_and_repetitions() {
+        let unknown = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "Solver Lapack");
+        assert!(parse_mess_input(&unknown).unwrap_err().contains("MarXus"));
+        let eigenvalue = MARXUS_HEADER_DECK.replace("SteadyState Final", "SteadyState Eigenvalue");
+        assert!(parse_mess_input(&eigenvalue).unwrap_err().contains("final steady state"));
+        let repeated = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  EigenSolver Full");
+        assert!(parse_mess_input(&repeated).unwrap_err().contains("EigenSolver"));
+        let two_blocks = MARXUS_HEADER_DECK.replace("Model\n", "MarXus\n  Method CSE\nEnd\nModel\n");
+        assert!(parse_mess_input(&two_blocks).unwrap_err().contains("MarXus"));
     }
 
     #[test]

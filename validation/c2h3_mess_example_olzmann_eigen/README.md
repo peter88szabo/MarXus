@@ -1,8 +1,15 @@
-# H + C₂H₂ ⇌ C₂H₃: Olzmann's eigenvalue analysis in MarXus compared with MESS
+# H + C₂H₂ ⇌ C₂H₃: thermal rate coefficients of Olzmann's final steady state (eigenvalue route) compared with MESS
 
 **MarXus, 2026-10-05**. Updated after Peter's decisions of 20:01 (k_uni = eigenvector average; the sum rule warns and never rejects; threshold 1.5%) and of 20:18 (shifted factorization in the inverse iteration). All runs on at most 4 cores.
 
-This directory repeats the comparison of `../c2h3_mess_example/` with the **eigenvalue analysis** (Olzmann's solution method). That earlier comparison used the absorbing-barrier route (intermediate steady state) and is kept unchanged.
+> **Re-run (2026-10-05, after the change to isotopic atomic masses, AME2020, in `src/utils/atomic_masses.rs`).** All MarXus outputs, tables and plots of this directory were regenerated, on at most 4 cores. Every MarXus rate coefficient changed by at most 1.3·10⁻⁵ relative (H: 1.00784 → 1.007825 u), so all numbers quoted in this README are unchanged at the digits shown.
+
+> **Update (2026-10-05, evening): two solution methods.** MarXus has two solution methods: the steady state J·N = F (GO10 eqs. 7, 8), in the intermediate (absorbing barrier) and final (no barrier) versions, and the CSE method. The eigenvalue analysis of this directory is **not a method of its own**. It gives the thermal rate coefficients of the final steady state from the lowest eigenpair of the same J: "the rate coefficient of the thermal unimolecular decomposition … can be obtained from eqn (7) as the lowest eigenvalue λ₁ of the matrix J" (GO10, before eq. 12), and its eigenvector is the thermal steady-state population Ñs^th.
+> - `run_marxus.sh` therefore runs `--method steady-state --steady-state final`. The outputs contain the final steady-state table, then the thermal table, titled "thermal rate coefficients of the final steady state".
+> - Below, "eigenvalue route" means these thermal rate coefficients and "barrier route" means the intermediate steady state.
+> - Re-run after the change: `comparison_table.csv` is byte-identical, and the thermal and association rows of all eight outputs equal the previous ones. The sum-rule warnings are unchanged: 6 for inverse iteration and 9 for LAPACK on the full deck. The final steady-state table now in the outputs is "not available" at 300 and 500 K on the full deck (`c2h3_tight_*`), because J·N = F is numerically singular for the deep well without a sink. The thermal eigenpair is unaffected. `plot_comparison.py` now reads the "not available" and warning lines of the thermal block only, so these lines do not mark the thermal results as missing.
+
+This directory repeats the comparison of `../c2h3_mess_example/` with the **thermal rate coefficients of the final steady state** (the lowest eigenpair of its J, GO10 eq. 12). That earlier comparison used the absorbing-barrier route (intermediate steady state) and is kept unchanged.
 
 The pressure-dependent unimolecular rate coefficient comes from the thermal eigenvector of the relaxation matrix J of the final steady state, **without an absorbing barrier**. The association follows by detailed balance. Same decks, same MESS reference output, same MarXus adapter as before; only the solution method differs.
 
@@ -12,7 +19,7 @@ The pressure-dependent unimolecular rate coefficient comes from the thermal eige
 |---|---|
 | `input/*.inp` | the three decks (copies of `../c2h3_mess_example/input`) |
 | `reference_mess_output/*.out` | the stored MESS results (copies) |
-| `run_marxus.sh` | runs `chemical_activation_from_deck --steady-state eigenvalue` with the eigen-solvers |
+| `run_marxus.sh` | runs `chemical_activation_from_deck --method steady-state --steady-state final` (final steady state with its thermal rate coefficients) with the eigen-solvers |
 | `marxus_output/<deck>_<solver>.out` | MarXus results, solver = `inverse` (default), `lapack`, `full` |
 | `plot_comparison.py` | reads all of the above (and, read-only, `../c2h3_mess_example/comparison_table.csv`, `../c2h3_mess_example/barrier_distance_sensitivity.csv`), writes the plots and `comparison_table.csv` |
 | `comparison_table.csv` | every compared number (Section 4) |
@@ -79,7 +86,7 @@ source ~/.venvs/science/bin/activate && python3 plot_comparison.py
 2. **The absorbing-barrier problem at high T is gone.** For the association (`plots/eigen_vs_absorbing_barrier.png`):
    - The barrier route needed a user-chosen barrier distance and still failed above ~1500 K: −13% at 1500 K / 0.1 atm with 10 kT, −42% at 1750 K, no result at 2000 K.
    - The eigenvalue route needs no choice. It is within ±2.5% from 750 to 1750 K at all pressures, and +3 … +7% at 2000 K.
-3. **At 300–1000 K both solution methods give the same association to 0.01%.** Eigenvalue route (k_uni·K) vs absorbing barrier at 10 kT, at every pressure:
+3. **At 300–1000 K both versions of the steady state give the same association to 0.01%.** Eigenvalue route (k_uni·K) vs absorbing barrier at 10 kT, at every pressure:
 
 | T (K) | eigenvalue route | barrier route |
 |---|---|---|

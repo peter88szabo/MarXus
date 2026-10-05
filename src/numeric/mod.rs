@@ -1,4 +1,5 @@
 pub mod banded_solvers;
+pub mod dense_inverse;
 pub mod iterative_solvers;
 pub mod jacobi_diag;
 pub mod krylov;

@@ -36,6 +36,7 @@ use std::io::Write;
 use crate::constants::KB_CM;
 
 use super::chemical_activation_eigen::{thermal_rate_coefficients, EigenSolver, ThermalRateCoefficients};
+use super::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, PhenomenologicalRates};
 use super::chemical_activation_network::{
     ChannelDestination, ChemicalActivationNetwork, ChemicalActivationOptions, CollisionModel, Conditions, SteadyState,
 };
@@ -325,6 +326,106 @@ pub fn write_thermal_table<W: Write>(
     Ok(())
 }
 
+/// Phenomenological rate coefficients at one temperature and pressure.
+#[derive(Debug, Clone)]
+pub struct PhenomenologicalConditionResult {
+    pub conditions: Conditions,
+    pub rates: PhenomenologicalRates,
+}
+
+/// Phenomenological rate coefficients from the chemically significant eigenvalues at every (T, p)
+/// (`chemically_significant_eigenvalues.rs`; operator without absorbing barrier). `reactant`: name of the
+/// bimolecular reactant channel and its capture rate coefficient k^(c)(T) in cm3 s-1.
+pub fn run_phenomenological_rates(
+    network: &ChemicalActivationNetwork,
+    temperatures_kelvin: &[f64],
+    pressures_torr: &[f64],
+    collision_model: CollisionModel,
+    solver: EigenSolver,
+    reactant: Option<(&str, &dyn Fn(f64) -> f64)>,
+) -> Result<Vec<PhenomenologicalConditionResult>, String> {
+    network.validate()?;
+    let options = ChemicalActivationOptions { collision_model, steady_state: SteadyState::Final };
+    let mut results = Vec::with_capacity(temperatures_kelvin.len() * pressures_torr.len());
+    for &temperature_kelvin in temperatures_kelvin {
+        for &pressure_torr in pressures_torr {
+            let conditions = Conditions { temperature_kelvin, pressure_torr };
+            let context = |e: String| format!("T = {temperature_kelvin} K, p = {pressure_torr} Torr: {e}");
+            let op = assemble_operator(network, &conditions, &options).map_err(context)?;
+            let reactant_now = reactant.map(|(name, capture)| (name, capture(temperature_kelvin)));
+            let rates = phenomenological_rate_coefficients(network, &op, reactant_now, solver).map_err(context)?;
+            results.push(PhenomenologicalConditionResult { conditions, rates });
+        }
+    }
+    Ok(results)
+}
+
+/// Explanation written before the phenomenological rate tables.
+const PHENOMENOLOGICAL_TABLE_EXPLANATION: &str = "\
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+";
+
+/// MESS-style species tables of the phenomenological rate coefficients, one block per condition.
+pub fn write_phenomenological_tables<W: Write>(results: &[PhenomenologicalConditionResult], out: &mut W) -> std::io::Result<()> {
+    write!(out, "{PHENOMENOLOGICAL_TABLE_EXPLANATION}")?;
+    let label = |text: &str| text.replace(',', ";");
+    let join = |values: &[f64]| values.iter().map(|v| format!("{v:.4e}")).collect::<Vec<_>>().join(", ");
+    for r in results {
+        let x = &r.rates;
+        writeln!(
+            out,
+            "\n# T = {} K, p = {} Torr: chemical eigenvalues [1/s]: {}; lowest relaxation eigenvalue {:.4e} 1/s \
+             (separation {:.3e}); relaxational projections {}; loss balance deviation {:.2e}; detailed balance \
+             deviation {:.2e}; precision floor {:.3e} 1/s",
+            r.conditions.temperature_kelvin,
+            r.conditions.pressure_torr,
+            join(&x.chemical_eigenvalues_s_inv),
+            x.relaxation_eigenvalue_s_inv,
+            x.chemical_eigenvalues_s_inv.last().copied().unwrap_or(f64::NAN) / x.relaxation_eigenvalue_s_inv,
+            join(&x.relaxational_projection),
+            x.loss_balance_max_deviation,
+            x.detailed_balance_max_deviation,
+            x.precision_floor_s_inv
+        )?;
+        if let Some(reactant) = &x.reactant {
+            let r_index = x.bimolecular.iter().position(|b| *b == reactant.name).unwrap();
+            writeln!(
+                out,
+                "# reactant {}: capture {:.4e} cm3/s, return to the reactant {:.4e} cm3/s",
+                reactant.name, reactant.capture_cm3_s, reactant.to_bimolecular_cm3_s[r_index]
+            )?;
+        }
+        for warning in &x.warnings {
+            writeln!(out, "# warning: {warning}")?;
+        }
+        let mut header = vec!["From\\To".to_string()];
+        header.extend(x.wells.iter().map(|w| label(w)));
+        header.extend(x.bimolecular.iter().map(|b| label(b)));
+        writeln!(out, "{}", header.join(","))?;
+        for (i, well) in x.wells.iter().enumerate() {
+            let mut row = vec![label(well)];
+            row.extend(x.well_to_well_s_inv[i].iter().map(|k| format!("{k:.6e}")));
+            row.extend(x.well_to_bimolecular_s_inv[i].iter().map(|k| format!("{k:.6e}")));
+            writeln!(out, "{}", row.join(","))?;
+        }
+        if let Some(reactant) = &x.reactant {
+            let r_index = x.bimolecular.iter().position(|b| *b == reactant.name).unwrap();
+            let mut row = vec![label(&reactant.name)];
+            row.extend(reactant.to_well_cm3_s.iter().map(|k| format!("{k:.6e}")));
+            for (nu, k) in reactant.to_bimolecular_cm3_s.iter().enumerate() {
+                let value = if nu == r_index { reactant.capture_cm3_s - k } else { *k };
+                row.push(format!("{value:.6e}"));
+            }
+            writeln!(out, "{}", row.join(","))?;
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -486,6 +587,33 @@ mod tests {
         write_thermal_table(&network, &results, &mut out).unwrap();
         let text = String::from_utf8(out).unwrap();
         assert!(text.lines().any(|l| l == "# warning: T = 300 K, p = 1000 Torr: test warning"), "{text}");
+    }
+
+    #[test]
+    fn the_cse_route_writes_a_species_table_per_condition() {
+        // Phenomenological rate coefficients from the chemically significant eigenvalues (Georgievskii et al.
+        // 2013): one block per (T, p) with the wells and bimolecular channels as rows and columns; the reactant
+        // row in cm3 s-1 with its capture rate coefficient.
+        let network = network_with_entrance();
+        let capture = |_t: f64| 2.0e-11;
+        let results = run_phenomenological_rates(
+            &network,
+            &[300.0],
+            &[10.0, 760.0],
+            CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 },
+            EigenSolver::FullDecomposition,
+            Some(("R", &capture)),
+        )
+        .unwrap();
+        assert_eq!(results.len(), 2);
+        let mut out = Vec::new();
+        write_phenomenological_tables(&results, &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        let headers: Vec<&str> = text.lines().filter(|l| l.starts_with("From\\To")).collect();
+        assert_eq!(headers.len(), 2);
+        assert!(headers[0].starts_with("From\\To,A,B,"), "{}", headers[0]);
+        assert!(text.lines().any(|l| l.starts_with("R,")), "{text}");
+        assert!(text.contains("Georgievskii") && text.contains("chemical eigenvalues"), "{text}");
     }
 
     #[test]

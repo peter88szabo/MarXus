@@ -21,7 +21,10 @@
 //! (`tunneling::eckart_tunneling_sum_of_states`); k(E) is then non-zero down to the higher of the two
 //! asymptotes, min(well depths) below the transition state, while the channel's classical threshold
 //! (the transition-state grain) remains the reference of the absorbing barrier. Other tunneling models
-//! are refused; `ignore_tunneling` leaves tunneling out.
+//! are refused; `ignore_tunneling` leaves tunneling out. `eckart_tunneling` selects the transmission model of
+//! the Eckart blocks: the exact Eckart probability (default) or the MESS semiclassical model
+//! (`tunneling::mess_eckart_tunneling`, same convolution with its own P(E) and cutoff energy), to reproduce
+//! MESS results.
 //! Barrierless channels: the inverse Laplace transform of the high-pressure rate coefficient given in
 //! the MarXus `InverseLaplaceTransform` block of the barrier (`barrierless::ilt::ilt_barrierless`;
 //! Davies, Green, Pilling, Chem. Phys. Lett. 126, 373 (1986)):
@@ -48,6 +51,7 @@ use crate::barrierless::ilt::ilt_barrierless::{
     ilt_sum_of_states_association, ilt_sum_of_states_dissociation, translational_partition_constant,
 };
 use crate::constants::{CM1_TO_KCAL, H_PLANCK_CM, KB_CM};
+use crate::tunneling::mess_eckart_tunneling::{mess_eckart_tunneling_sum_of_states, MessEckartTunneling};
 use crate::tunneling::tunneling::eckart_tunneling_sum_of_states;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
@@ -85,11 +89,30 @@ pub struct MessNetworkSettings {
     pub top_energy_cm1: Option<f64>,
     /// Leave tunneling out of k(E) although the deck has Tunneling blocks.
     pub ignore_tunneling: bool,
+    /// Transmission model of `Tunneling Eckart` blocks: the exact Eckart probability (default) or the MESS
+    /// semiclassical model (`tunneling::mess_eckart_tunneling`).
+    pub eckart_tunneling: EckartTunnelingModel,
+}
+
+/// Transmission model of an Eckart barrier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum EckartTunnelingModel {
+    /// Exact Eckart transmission probability (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8).
+    #[default]
+    Exact,
+    /// MESS semiclassical Eckart model (`tunneling::mess_eckart_tunneling`), to reproduce MESS decks.
+    Mess,
 }
 
 impl Default for MessNetworkSettings {
     fn default() -> Self {
-        Self { grain_width_cm1: None, cell_width_cm1: 1.0, top_energy_cm1: None, ignore_tunneling: false }
+        Self {
+            grain_width_cm1: None,
+            cell_width_cm1: 1.0,
+            top_energy_cm1: None,
+            ignore_tunneling: false,
+            eckart_tunneling: EckartTunnelingModel::default(),
+        }
     }
 }
 
@@ -341,17 +364,31 @@ pub fn chemical_activation_model_from_mess(
             let model = species_model(&barrier.rrho)?;
             match (&barrier.tunneling, settings.ignore_tunneling) {
                 (Some(TunnelingSpecification::Eckart { imaginary_frequency_cm1, well_depths_cm1 }), false) => {
-                    // N‡ is needed m cells beyond the top (contract of eckart_tunneling_sum_of_states).
-                    let m = (well_depths_cm1[0].min(well_depths_cm1[1]) / cell + 0.5).floor() as usize;
-                    let ts_states = rrho_sum_of_states(n + m, cell, &model)?;
-                    let (below, w_cells) = eckart_tunneling_sum_of_states(
-                        &ts_states,
-                        cell,
-                        well_depths_cm1[0],
-                        well_depths_cm1[1],
-                        *imaginary_frequency_cm1,
-                    );
-                    debug_assert_eq!(below, m);
+                    let (below, w_cells) = match settings.eckart_tunneling {
+                        EckartTunnelingModel::Exact => {
+                            // N‡ is needed m cells beyond the top (contract of eckart_tunneling_sum_of_states).
+                            let m = (well_depths_cm1[0].min(well_depths_cm1[1]) / cell + 0.5).floor() as usize;
+                            let ts_states = rrho_sum_of_states(n + m, cell, &model)?;
+                            let (below, w_cells) = eckart_tunneling_sum_of_states(
+                                &ts_states,
+                                cell,
+                                well_depths_cm1[0],
+                                well_depths_cm1[1],
+                                *imaginary_frequency_cm1,
+                            );
+                            debug_assert_eq!(below, m);
+                            (below, w_cells)
+                        }
+                        EckartTunnelingModel::Mess => {
+                            // Same contract, with the MESS cutoff energy E_c (m = round(E_c / cell)).
+                            let tunnel = MessEckartTunneling::new(*imaginary_frequency_cm1, *well_depths_cm1)
+                                .map_err(|e| format!("Barrier '{name}': {e}"))?;
+                            let m = (tunnel.cutoff_cm1() / cell).round() as usize;
+                            let ts_states = rrho_sum_of_states(n + m, cell, &model)?;
+                            mess_eckart_tunneling_sum_of_states(&ts_states, cell, *well_depths_cm1, *imaginary_frequency_cm1)
+                                .map_err(|e| format!("Barrier '{name}': {e}"))?
+                        }
+                    };
                     let first_cell = threshold - below as isize;
                     let drop = (floor_cell - first_cell).clamp(0, below as isize) as usize;
                     Ok((first_cell + drop as isize, threshold, w_cells[drop..].to_vec()))
@@ -957,6 +994,36 @@ End
     }
 
     #[test]
+    fn the_mess_eckart_model_scales_the_channel_by_its_canonical_tunneling_factor() {
+        // B12 (W1 <-> W2) with Eckart tunneling (1500 cm-1, depths 25 and 20 kcal/mol): the high-pressure rate
+        // coefficient, the Boltzmann average of k(E) over W1, is kappa(T) times the classical one, so the ratio
+        // of the two models is kappa_MESS/kappa_exact (tunneling::mess_eckart_tunneling, tunneling::eckart).
+        use crate::tunneling::mess_eckart_tunneling::MessEckartTunneling;
+        use crate::tunneling::tunneling::eckart;
+        let exact = build(&deck_with_tunneling(), &MessNetworkSettings::default()).unwrap();
+        let settings = MessNetworkSettings { eckart_tunneling: EckartTunnelingModel::Mess, ..Default::default() };
+        let mess = build(&deck_with_tunneling(), &settings).unwrap();
+        let k_inf = |m: &MessChemicalActivationModel, t: f64| -> f64 {
+            let well = &m.network.wells[0];
+            let channel = well.channels.iter().find(|c| c.name == "B12").unwrap();
+            let kt = KB_CM * t;
+            let f: Vec<f64> = (0..well.grain_count())
+                .map(|i| well.density_of_states[i] * (-(i as f64) * m.network.grain_width_cm1 / kt).exp())
+                .collect();
+            channel.rate_constant_s_inv.iter().zip(&f).map(|(k, f)| k * f).sum::<f64>() / f.iter().sum::<f64>()
+        };
+        let depths = [25.0 / CM1_TO_KCAL, 20.0 / CM1_TO_KCAL];
+        for t in [300.0, 500.0] {
+            let kt = KB_CM * t;
+            let kappa_exact = eckart(1.0 / kt, 1500.0, depths[0], depths[1], 0.1, depths[0] + 40.0 * kt);
+            let kappa_mess = MessEckartTunneling::new(1500.0, depths).unwrap().canonical_factor(kt);
+            let ratio = k_inf(&mess, t) / k_inf(&exact, t);
+            assert!((ratio / (kappa_mess / kappa_exact) - 1.0).abs() < 1e-2, "T {t}: {ratio} vs {}", kappa_mess / kappa_exact);
+            assert!(ratio < 1.0);
+        }
+    }
+
+    #[test]
     fn unsupported_tunneling_models_are_refused() {
         let deck = deck_with_tunneling().replace("Tunneling Eckart", "Tunneling Read");
         assert!(build(&deck, &MessNetworkSettings::default()).is_err());
@@ -1030,7 +1097,8 @@ End
         let b_c2h2 = rotational_constants_from_geometry_cm1(&c2h2.geometry_symbols, &c2h2.geometry_angstrom).unwrap();
         let q_c2h2 = q_vib(&c2h2.vibrational_frequencies_cm1) * kt / (2.0 * b_c2h2[0]);
         let q_h = 2.0;
-        let (m_c2h2, m_h) = (2.0 * 12.0 + 2.0 * 1.007_84, 1.007_84);
+        let mass = |symbol: &str| crate::utils::atomic_masses::atomic_mass_amu(symbol).unwrap();
+        let (m_c2h2, m_h) = (2.0 * mass("C") + 2.0 * mass("H"), mass("H"));
         let mu = m_c2h2 * m_h / (m_c2h2 + m_h);
         let k_tst = kt / H_PLANCK_CM * q_ts * (-(ts.zero_energy_cm1 - pair.ground_energy_cm1) / kt).exp()
             / (translational_partition_constant(mu) * kt.powf(1.5) * q_c2h2 * q_h);

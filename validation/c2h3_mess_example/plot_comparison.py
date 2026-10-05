@@ -78,7 +78,8 @@ def read_marxus(path):
     for line in open(path):
         line = line.rstrip("\n")
         if line.startswith("# intermediate steady state") or line.startswith("# final steady state") \
-                or line.startswith("# bimolecular rate coefficients"):
+                or line.startswith("# bimolecular rate coefficients") \
+                or line.startswith("# thermal rate coefficients of the final steady state"):
             title, header = line[2:], None
             blocks[title] = []
         elif line.startswith("#") or not line.strip() or title is None:

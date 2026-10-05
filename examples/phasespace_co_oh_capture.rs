@@ -15,8 +15,8 @@ fn main() -> Result<(), String> {
     let co_bond_length_angstrom = 1.128;
 
     // Derived rigid-rotor rotational constants (cm^-1).
-    let oh_brot_cm1 = diatomic_brot_cm1(15.999, 1.008, oh_bond_length_angstrom);
-    let co_brot_cm1 = diatomic_brot_cm1(12.0, 15.999, co_bond_length_angstrom);
+    let oh_brot_cm1 = diatomic_brot_cm1(mass("O"), mass("H"), oh_bond_length_angstrom);
+    let co_brot_cm1 = diatomic_brot_cm1(mass("C"), mass("O"), co_bond_length_angstrom);
 
     // --------------------------
     // Barrierless capture inputs
@@ -238,4 +238,9 @@ fn hard_sphere_collision_limit_cm3_molecule_s(
     let v_rel = (8.0 * BOLTZMANN_SI * temperature_kelvin / (std::f64::consts::PI * mu)).sqrt();
     let k_m3_s = sigma_m2 * v_rel;
     k_m3_s * 1.0e6
+}
+
+/// Isotopic atomic mass (u) from the MarXus table (AME2020).
+fn mass(symbol: &str) -> f64 {
+    MarXus::utils::atomic_masses::atomic_mass_amu(symbol).expect("element in the mass table")
 }

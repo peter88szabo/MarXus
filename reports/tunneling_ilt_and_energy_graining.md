@@ -398,3 +398,33 @@ This is the near-singular situation of the postponed double-precision topic. The
 - **ILT and fragment convolutions are O(n²)** on the cells: about 10⁸ operations for Case1, < 1 s in release. An FFT would be needed for much larger grids.
 - **Excited electronic levels** are still ignored (ground-level degeneracy only).
 - **`inertia::get_brot` prints** "Iterative diagonalization is done …" for every geometry.
+
+## Update (2026-10-05): the MESS Eckart model as an option
+
+**Peter's request:** "build a new tunneling model call it mess_eckart_tunneling, mimic it" (MESS is under the Apache License 2.0).
+
+**What MESS calls Eckart tunneling.** It is a semiclassical model, not the exact Eckart transmission of Miller (1979), eq. 8. Source: MESS `src/libmess/model.cc`, `Model::Tunnel` and `Model::EckartTunnel`.
+- **Transmission:** P(E) = 1/(1 + e^{−S(E)}), with S(E) = 4π/(d₀^{−½} + d₁^{−½})·Σ_w[√(max(E/ω + d_w, 0)) − √d_w], d_w = V_w/ω. Near the top this is the parabolic barrier.
+- **Clamps:** P = 1 for S > 100, P = 0 for S < −100.
+- **Cutoff:** E_c is the smaller well depth, lowered by bisection if −S(−E_c) > 100.
+- **Convolution:** of the number of states up to 2ω above the top.
+- **Canonical factor:** a rectangle sum on 0.01 kT up to 10 kT.
+
+**In MarXus:**
+- `src/tunneling/mess_eckart_tunneling.rs`, with the same interface as `eckart_tunneling_sum_of_states`.
+- Selection through `MessNetworkSettings::eckart_tunneling` (`EckartTunnelingModel::{Exact, Mess}`, default Exact) or `--tunneling mess-eckart`.
+- `examples/eckart_kappa_from_deck.rs` prints both factors.
+
+**Tests:**
+- the parabolic limit, P(0) = ½, the clamps;
+- the cutoff rule;
+- the Stieltjes property of the convolution;
+- the reproduction of the factors printed in the MESS log of `validation/ZZAllyl+O2_Gamma_Case2`;
+- the adapter scaling of k∞ by κ_MESS/κ_exact.
+
+**Agreement with the MESS log.** ≤ 5·10⁻⁵ for 15 of 18 values. For deep tunneling below 300 K (B23, B24, B34), +0.06 … +0.4% at 300 K and up to +2.5% at 200 K: MESS's ground-state bookkeeping lowers the cutoff by about 60 cm⁻¹ there.
+
+**The exact model is larger.** The exact Eckart factor exceeds the MESS model by 17–23% for deep H-transfer tunneling (κ ≈ 10²–10⁵) and by 2–6% otherwise. This explains the systematic MarXus/MESS offsets of the validations (C₂H₃: +3–6% at 300–500 K; ZZ-allyl + O₂ Case 2: +17–22% for B23, B24, B34).
+
+**The exact Eckart remains the MarXus default** (Peter's decision on exact Eckart tunneling).
+

@@ -2,6 +2,8 @@
 
 **Date:** 2026-10-05. The MarXus results come from the current, uncommitted working tree.
 
+> **Re-run (2026-10-05, after the change to isotopic atomic masses, AME2020, in `src/utils/atomic_masses.rs`).** All MarXus outputs, tables and plots of this directory were regenerated, on at most 4 cores. Every MarXus rate coefficient changed by at most 1.3·10⁻⁵ relative (H: 1.00784 → 1.007825 u), so all numbers quoted in this README are unchanged at the digits shown.
+
 **Purpose.** Reproduce a published master-equation example with MarXus's steady-state chemical-activation solver:
 - Olzmann-type steady state;
 - 1 cm⁻¹ cells averaged into grains;
@@ -9,6 +11,9 @@
 - exponential-down kernel.
 
 **Reference.** The MESS example set ("Examples_From_Argon"), case `c2h3`: one well and one tight transition state, with and without Eckart tunneling. It is the model of Miller & Klippenstein (2004), H + C₂H₂ (+M) ⇌ C₂H₃ (+M); the PDF `miller2004.pdf` is in the original example directory.
+
+
+> **Update (2026-10-05, evening): two solution methods.** MarXus has two solution methods: the steady state, in the intermediate and final versions, and CSE. The thermal rate coefficients (lowest eigenpair of J, GO10 eq. 12) are part of the final steady state. The default runs of `run_marxus.sh` (`both`) therefore now also write them after the final steady-state table. After the re-run, `comparison_table.csv` and `barrier_distance_sensitivity.csv` are byte-identical. The default runs (`both`) now also contain the thermal rate coefficients of the final steady state. `plot_comparison.py` recognizes that block: without it, the parser failed with a ValueError on the new table header. See `../../reports/solution_methods_and_deck_settings.md`.
 
 ## 1. Contents of this directory
 
@@ -196,6 +201,7 @@ At 2000 K MarXus now refuses the intermediate steady state with an explanatory e
 
 - **(b) The user chooses the absorbing-barrier distance.** The default stays 10 kT below the lowest threshold (Pilling & Robertson 2003; Carstensen & Dean 2007). The library accepts any distance (`AbsorbingBarrier::BelowLowestThreshold { kt_multiple }`) or explicit grains (`AtGrains`). The example program takes `--barrier-kt X`. If the barrier would lie below the well bottom, the error message suggests a smaller distance.
 - **Eigenvalue route.** It is an optional choice, `SteadyState::EigenvalueAnalysis` (`--steady-state eigenvalue`), but **it is not available yet**. Selecting it is reported as "not available yet" and is never replaced by another method. MarXus currently has no eigenvalue analysis of J; there is only a general Jacobi diagonalizer in `numeric/jacobi_diag.rs`.
+  - *Superseded (2026-10-05, evening).* The eigenvalue analysis now exists, as the thermal rate coefficients of the final steady state (lowest eigenpair of its J, GO10 eq. 12), and is not a separate method. See `../c2h3_mess_example_olzmann_eigen/` and the main README: two methods, steady state (`--steady-state intermediate|final|both`) and CSE (`--method cse`).
 
 ### 5.5 Sensitivity to the absorbing-barrier distance
 
@@ -241,7 +247,7 @@ At 2000 K (well depth 9.8 kT) even 3 kT remains 10% low. That is the regime of t
   - bimolecular rate coefficients k(R→X) = k∞ Φ_X;
   - every (T, p) is solved separately; a condition without a valid steady state is reported as "not available";
   - `--barrier-kt X` sets the absorbing-barrier distance;
-  - `--steady-state intermediate|final|eigenvalue|both` selects the solution.
+  - `--steady-state intermediate|final|eigenvalue|both` selects the solution. *(Now `--method steady-state|cse` and `--steady-state intermediate|final|both`, or the `MarXus` block of the deck header; see the main README.)*
 - **`SteadyState::EigenvalueAnalysis`**: a selectable option that is reported as not available yet.
 - **Absorbing barrier below the well bottom.** Now an error instead of a silent clamp.
 

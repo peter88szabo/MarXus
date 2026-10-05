@@ -107,7 +107,7 @@ Additional abbreviations:
   - `steady_state_window` (O02).
 - **Driver and example.**
   - `run_thermal_rate_coefficients`, `write_thermal_table`.
-  - Example options `--steady-state eigenvalue|all`, `--eigen-solver inverse|full|lapack`, `--sum-rule-tolerance`.
+  - Example options `--steady-state eigenvalue|all`, `--eigen-solver inverse|full|lapack`, `--sum-rule-tolerance`. *Changed (2026-10-05, evening): the thermal eigenpair is part of the final steady state, not a method of its own (GO10 eq. 12; Peter). It is computed with `--steady-state final|both`, or `SteadyState Final|Both` in the `MarXus` header block (`reports/solution_methods_and_deck_settings.md`).*
   - For one well with one entrance, the association by detailed balance, k = λ₁·k∞,assoc/k∞,diss.
 
 **Result for C₂H₃** (`validation/c2h3_mess_example_olzmann_eigen/README.md`).

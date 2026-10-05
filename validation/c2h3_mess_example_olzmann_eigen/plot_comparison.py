@@ -4,7 +4,8 @@
 Reads
   input/c2h3_tight.inp                         the deck (stationary points for the PES diagram)
   reference_mess_output/*.out                  the stored MESS results
-  marxus_output/<deck>_<solver>.out            MarXus, --steady-state eigenvalue (run_marxus.sh);
+  marxus_output/<deck>_<solver>.out            MarXus, --steady-state final (run_marxus.sh): thermal
+                                               rate coefficients of the final steady state;
                                                solver: inverse (default), lapack, full
   ../c2h3_mess_example/comparison_table.csv    the earlier absorbing-barrier (intermediate steady state)
   ../c2h3_mess_example/barrier_distance_sensitivity.csv   results, for comparison (read only)
@@ -97,15 +98,17 @@ def read_eigen(path):
     target, header = None, None
     for line in open(path):
         line = line.rstrip("\n")
+        # Messages of the thermal block only: the final steady-state table before it has its own
+        # "not available" lines (J N = F singular for the deep well without a sink at 300 and 500 K).
         m = re.match(r"# (not available|warning): T = (\S+) K, p = (\S+) Torr: (.*)", line)
-        if m:
+        if m and target is thermal:
             key = (float(m.group(2)), round(float(m.group(3)) / TORR_PER_ATM, 6))
             if m.group(1) == "warning":
                 warned.add(key)
             else:
                 unavailable[key] = m.group(4)
             continue
-        if line.startswith("# eigenvalue analysis"):
+        if line.startswith("# thermal rate coefficients of the final steady state"):
             target, header = thermal, None
             continue
         if line.startswith("# bimolecular rate coefficients"):

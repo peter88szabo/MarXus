@@ -70,7 +70,7 @@ pub enum EigenSolver {
 }
 
 /// All eigenpairs of the symmetrized operator by one of the full decompositions.
-fn full_decomposition(dense: &[Vec<f64>], solver: EigenSolver) -> Result<(Vec<f64>, Vec<Vec<f64>>), String> {
+pub(crate) fn full_decomposition(dense: &[Vec<f64>], solver: EigenSolver) -> Result<(Vec<f64>, Vec<Vec<f64>>), String> {
     match solver {
         EigenSolver::FullDecomposition => symmetric_eigen(dense),
         EigenSolver::FullDecompositionLapack => symmetric_eigen_lapack(dense),
@@ -273,7 +273,7 @@ pub fn thermal_rate_coefficients(
     })
 }
 
-fn require_symmetry(asymmetry: f64) -> Result<(), String> {
+pub(crate) fn require_symmetry(asymmetry: f64) -> Result<(), String> {
     if asymmetry > SYMMETRY_TOLERANCE {
         return Err(format!(
             "Eigenvalue analysis: the operator is not symmetrizable (relative asymmetry {asymmetry:e}); the \

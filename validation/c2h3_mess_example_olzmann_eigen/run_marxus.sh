@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Olzmann's eigenvalue analysis of J without absorbing barrier for the three reference decks (input/*.inp,
-# the decks run by both codes), reactant P1 (H + C2H2). Results in marxus_output/.
+# Final steady state (Olzmann; no absorbing barrier) with its thermal rate coefficients from the lowest
+# eigenpair of the same J (GO10 eq. 12) for the three reference decks (input/*.inp, the decks run by both
+# codes), reactant P1 (H + C2H2). Results in marxus_output/.
 #   inverse iteration with the banded Cholesky factor of S + sigma I (default solver): all decks;
 #   full decomposition by LAPACK DSYEVD: all decks;
 #   full decomposition by the in-house Householder/QL (Olzmann's tred2/tql2 route): the two 1000 K decks
@@ -17,7 +18,7 @@ cargo build -j 4 --release --example chemical_activation_from_deck
 run() {  # deck solver
     echo "running $1 ($2)"
     ./target/release/examples/chemical_activation_from_deck "$here/input/$1.inp" P1 \
-        --steady-state eigenvalue --eigen-solver "$2" \
+        --method steady-state --steady-state final --eigen-solver "$2" \
         | grep -v "Iterative diagonalization" > "$here/marxus_output/$1_$2.out"
 }
 for deck in c2h3_tight c2h3_tight_short c2h3_tight_short_notunneling; do

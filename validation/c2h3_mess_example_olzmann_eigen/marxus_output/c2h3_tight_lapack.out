@@ -1,7 +1,51 @@
 # deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example_olzmann_eigen/input/c2h3_tight.inp: grain 21.000 cm-1
+# solution method: steady state J N = F (GO10 eqs. 7, 8): final, with its thermal eigenpair by FullDecompositionLapack (sum-rule tolerance 1.5e-2)
 #   well W1       grains   2634 (absolute -574 .. 2059), channels: B1
 
-# eigenvalue analysis (FullDecompositionLapack) of J without absorbing barrier; sum-rule tolerance 1.5e-2
+# final steady state
+# not available: T = 300 K, p = 76 Torr: Banded Cholesky: non-positive pivot -1.1954920851836908e9 in row 445; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 300 K, p = 228 Torr: relative residual 3.2742110216646947e0 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 300 K, p = 760 Torr: Banded Cholesky: non-positive pivot -1.2838046191181953e10 in row 480; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 300 K, p = 2280 Torr: Banded Cholesky: non-positive pivot -2.3704966501283226e9 in row 456; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 300 K, p = 7600 Torr: Banded Cholesky: non-positive pivot -3.2544591097841507e10 in row 449; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 500 K, p = 76 Torr: relative residual 3.388062193914456e-4 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 228 Torr: relative residual 1.1882649625651037e-3 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 760 Torr: relative residual 4.138704493443859e-3 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 2280 Torr: relative residual 1.0616345789218844e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 7600 Torr: relative residual 4.61435661513591e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 750 K, p = 2280 Torr: relative residual 1.1155528561171053e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 750 K, p = 7600 Torr: relative residual 3.696560269961535e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+750,76,1.000000e0,0.000000e0,0.000000e0,2.485081e2,2.485081e2,1.000000e0,1.799733e3,0.999999999828,3.926e-10
+750,228,1.000000e0,0.000000e0,0.000000e0,2.485081e2,2.485081e2,1.000000e0,1.799733e3,1.000000000379,1.136e-9
+750,760,1.000000e0,0.000000e0,0.000000e0,2.485081e2,2.485081e2,1.000000e0,1.799733e3,0.999999999794,4.122e-9
+1000,76,1.000000e0,0.000000e0,0.000000e0,2.580427e5,2.580427e5,1.000000e0,2.934792e3,1.000000000000,3.704e-13
+1000,228,1.000000e0,0.000000e0,0.000000e0,2.580427e5,2.580427e5,1.000000e0,2.934792e3,1.000000000000,9.103e-13
+1000,760,1.000000e0,0.000000e0,0.000000e0,2.580427e5,2.580427e5,1.000000e0,2.934792e3,1.000000000000,3.339e-12
+1000,2280,1.000000e0,0.000000e0,0.000000e0,2.580427e5,2.580427e5,1.000000e0,2.934792e3,1.000000000001,1.036e-11
+1000,7600,1.000000e0,0.000000e0,0.000000e0,2.580427e5,2.580427e5,1.000000e0,2.934792e3,1.000000000005,3.219e-11
+1250,76,1.000000e0,0.000000e0,0.000000e0,1.765487e7,1.765487e7,1.000000e0,4.230820e3,1.000000000000,4.630e-15
+1250,228,1.000000e0,0.000000e0,0.000000e0,1.765487e7,1.765487e7,1.000000e0,4.230820e3,1.000000000000,1.300e-14
+1250,760,1.000000e0,0.000000e0,0.000000e0,1.765487e7,1.765487e7,1.000000e0,4.230820e3,1.000000000000,4.625e-14
+1250,2280,1.000000e0,0.000000e0,0.000000e0,1.765487e7,1.765487e7,1.000000e0,4.230820e3,1.000000000000,1.325e-13
+1250,7600,1.000000e0,0.000000e0,0.000000e0,1.765487e7,1.765487e7,1.000000e0,4.230820e3,1.000000000000,4.154e-13
+1500,76,1.000000e0,0.000000e0,0.000000e0,3.036366e8,3.036366e8,1.000000e0,5.645440e3,1.000000000000,2.518e-16
+1500,228,1.000000e0,0.000000e0,0.000000e0,3.036366e8,3.036366e8,1.000000e0,5.645440e3,1.000000000000,7.824e-16
+1500,760,1.000000e0,0.000000e0,0.000000e0,3.036366e8,3.036366e8,1.000000e0,5.645440e3,1.000000000000,2.388e-15
+1500,2280,1.000000e0,0.000000e0,0.000000e0,3.036366e8,3.036366e8,1.000000e0,5.645440e3,1.000000000000,7.211e-15
+1500,7600,1.000000e0,0.000000e0,0.000000e0,3.036366e8,3.036366e8,1.000000e0,5.645440e3,1.000000000000,2.408e-14
+1750,76,1.000000e0,0.000000e0,0.000000e0,2.350688e9,2.350688e9,1.000000e0,7.147077e3,1.000000000000,5.576e-17
+1750,228,1.000000e0,0.000000e0,0.000000e0,2.350688e9,2.350688e9,1.000000e0,7.147077e3,1.000000000000,8.985e-17
+1750,760,1.000000e0,0.000000e0,0.000000e0,2.350688e9,2.350688e9,1.000000e0,7.147077e3,1.000000000000,3.217e-16
+1750,2280,1.000000e0,0.000000e0,0.000000e0,2.350688e9,2.350688e9,1.000000e0,7.147077e3,1.000000000000,9.833e-16
+1750,7600,1.000000e0,0.000000e0,0.000000e0,2.350688e9,2.350688e9,1.000000e0,7.147077e3,1.000000000000,2.170e-15
+2000,76,1.000000e0,0.000000e0,0.000000e0,1.100153e10,1.100153e10,1.000000e0,8.712896e3,1.000000000000,5.514e-17
+2000,228,1.000000e0,0.000000e0,0.000000e0,1.100153e10,1.100153e10,1.000000e0,8.712896e3,1.000000000000,6.403e-17
+2000,760,1.000000e0,0.000000e0,0.000000e0,1.100153e10,1.100153e10,1.000000e0,8.712896e3,1.000000000000,8.756e-17
+2000,2280,1.000000e0,0.000000e0,0.000000e0,1.100153e10,1.100153e10,1.000000e0,8.712896e3,1.000000000000,1.605e-16
+2000,7600,1.000000e0,0.000000e0,0.000000e0,1.100153e10,1.100153e10,1.000000e0,8.712896e3,1.000000000000,4.531e-16
+
+# thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by FullDecompositionLapack; sum-rule tolerance 1.5e-2
 # k_uni = sum_j k_th(j) + k_sink: the specific rate coefficients k(E) of the product channels (and the sink)
 #   averaged over the normalized thermal eigenvector of J, the eigenvector of the lowest eigenvalue lambda_1,
 #   "analogous to eqn (9) but with Ns = Ns_th being the normalized eigenvector associated with the lowest
@@ -15,96 +59,96 @@
 #   is not a merging of eigenvalues, which would show as a small lambda_2/k_uni (thermal decay no longer
 #   separated from relaxation).
 # sum_rule_deviation = |lambda_1 - k_uni| / k_uni; above the tolerance a warning is listed below.
-# warning: T = 300 K, p = 76 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 4.836348476692584e-8 s-1, k_uni = 5.97828060458162e-16 s-1, relative deviation 8.090e7 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 300 K, p = 228 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 9.080660933498344e-7 s-1, k_uni = 7.486853409726268e-16 s-1, relative deviation 1.213e9 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 300 K, p = 760 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -2.547321427932997e-5 s-1, k_uni = 8.739363368352214e-16 s-1, relative deviation 2.915e10 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -2.547321427932997e-5 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0045602645022555e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 9.888391646949455e23 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 300 K, p = 2280 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.1332294160789751e-4 s-1, k_uni = 9.433752811145842e-16 s-1, relative deviation 1.201e11 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 300 K, p = 7600 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -1.6589360130979417e-5 s-1, k_uni = 9.809528297269448e-16 s-1, relative deviation 1.691e10 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -1.6589360130979417e-5 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0066669495776547e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 8.809623152420482e24 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 500 K, p = 228 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 9.528991490739011e-5 s-1, k_uni = 9.84445577238242e-5 s-1, relative deviation 3.204e-2 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 500 K, p = 760 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 2.3827700485433713e-4 s-1, k_uni = 1.5100008409988768e-4 s-1, relative deviation 5.780e-1 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 500 K, p = 2280 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -4.650934954282881e-4 s-1, k_uni = 2.0131560160492517e-4 s-1, relative deviation 3.310e0 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -4.650934954282881e-4 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0048282956102394e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 6.69802221857872e12 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
-# warning: T = 500 K, p = 7600 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -2.4930960375336444e-3 s-1, k_uni = 2.483345631242931e-4 s-1, relative deviation 1.104e1 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -2.4930960375336444e-3 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0059998791410089e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 1.8099415470433523e13 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 300 K, p = 76 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -3.850879836510422e-7 s-1, k_uni = 5.978270303399375e-16 s-1, relative deviation 6.441e8 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -3.850879836510422e-7 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0043480597376276e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 1.445539322732294e23 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 300 K, p = 228 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -2.2826519004571807e-6 s-1, k_uni = 7.486843519502317e-16 s-1, relative deviation 3.049e9 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -2.2826519004571807e-6 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0043948749615252e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 3.462804357257595e23 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 300 K, p = 760 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -1.3201371640615849e-5 s-1, k_uni = 8.739352457698053e-16 s-1, relative deviation 1.511e10 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -1.3201371640615849e-5 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0045587282451675e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 9.888403992122754e23 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 300 K, p = 2280 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 7.223944297645731e-5 s-1, k_uni = 9.433732434295525e-16 s-1, relative deviation 7.658e10 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 300 K, p = 7600 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 5.449903696382706e-4 s-1, k_uni = 9.808305307813355e-16 s-1, relative deviation 5.556e11 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 500 K, p = 228 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.0075628469778971e-4 s-1, k_uni = 9.844446799316136e-5 s-1, relative deviation 2.348e-2 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 500 K, p = 760 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.469658189910828e-4 s-1, k_uni = 1.509999238310075e-4 s-1, relative deviation 2.672e-2 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 500 K, p = 2280 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.536118788951017e-5 s-1, k_uni = 2.0131536093998112e-4 s-1, relative deviation 9.237e-1 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+# warning: T = 500 K, p = 7600 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = -3.517550585502039e-4 s-1, k_uni = 2.4833423390112087e-4 s-1, relative deviation 2.416e0 > 1.5e-2. The lowest eigenvalue is not positive, which is impossible for J when population can leave the network (all eigenvalues are positive, GO10 text before eq. 12): lambda_1 = -3.517550585502039e-4 s-1 is rounding noise below the double-precision floor eps*max(S_ii) = 1.0059983428839209e-2 s-1. This is not a merging of eigenvalues (thermal decay indistinguishable from relaxation): the separation lambda_2/k_uni = 1.809943946525918e13 is large; merging would show as a small lambda_2/k_uni. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
 T[K],P[Torr],k_uni[1/s],lambda_1[1/s],precision_floor[1/s],sum_rule_deviation,lambda_2/k_uni,k_th(W1:B1)[1/s],k_inf(W1:B1)[1/s],k_sink(W1)[1/s],fpop(W1)
-300,76,5.978281e-16,4.836348e-8,1.004e-2,8.090e7,1.445537e23,5.978281e-16,1.002885e-15,0.000000e0,1.000000e0
-300,228,7.486853e-16,9.080661e-7,1.004e-2,1.213e9,3.462800e23,7.486853e-16,1.002885e-15,0.000000e0,1.000000e0
-300,760,8.739363e-16,-2.547321e-5,1.005e-2,2.915e10,9.888392e23,8.739363e-16,1.002885e-15,0.000000e0,1.000000e0
-300,2280,9.433753e-16,1.133229e-4,1.005e-2,1.201e11,2.748161e24,9.433753e-16,1.002885e-15,0.000000e0,1.000000e0
-300,7600,9.809528e-16,-1.658936e-5,1.007e-2,1.691e10,8.809623e24,9.809528e-16,1.002885e-15,0.000000e0,1.000000e0
-500,76,6.023875e-5,6.015748e-5,1.004e-2,1.349e-3,7.461606e11,6.023875e-5,3.067975e-4,0.000000e0,1.000000e0
-500,228,9.844456e-5,9.528991e-5,1.004e-2,3.204e-2,1.369732e12,9.844456e-5,3.067975e-4,0.000000e0,1.000000e0
-500,760,1.510001e-4,2.382770e-4,1.004e-2,5.780e-1,2.976644e12,1.510001e-4,3.067975e-4,0.000000e0,1.000000e0
-500,2280,2.013156e-4,-4.650935e-4,1.005e-2,3.310e0,6.698022e12,2.013156e-4,3.067975e-4,0.000000e0,1.000000e0
-500,7600,2.483346e-4,-2.493096e-3,1.006e-2,1.104e1,1.809942e13,2.483346e-4,3.067975e-4,0.000000e0,1.000000e0
-750,76,1.158175e1,1.158174e1,1.004e-2,2.441e-7,2.437848e6,1.158175e1,2.485085e2,0.000000e0,1.000000e0
-750,228,2.303899e1,2.303901e1,1.004e-2,9.861e-7,3.673656e6,2.303899e1,2.485085e2,0.000000e0,1.000000e0
-750,760,4.472267e1,4.472233e1,1.004e-2,7.567e-6,6.303003e6,4.472267e1,2.485085e2,0.000000e0,1.000000e0
-750,2280,7.463994e1,7.464006e1,1.005e-2,1.627e-6,1.132179e7,7.463994e1,2.485085e2,0.000000e0,1.000000e0
-750,7600,1.170242e2,1.170254e2,1.006e-2,1.014e-5,2.405437e7,1.170242e2,2.485085e2,0.000000e0,1.000000e0
-1000,76,3.173327e3,3.173327e3,1.004e-2,2.475e-9,6.930363e3,3.173327e3,2.580431e5,0.000000e0,1.000000e0
-1000,228,7.105251e3,7.105251e3,1.004e-2,3.460e-10,9.222776e3,7.105251e3,2.580431e5,0.000000e0,1.000000e0
-1000,760,1.601897e4,1.601897e4,1.004e-2,1.455e-8,1.352715e4,1.601897e4,2.580431e5,0.000000e0,1.000000e0
-1000,2280,3.119107e4,3.119107e4,1.005e-2,3.144e-8,2.068394e4,3.119107e4,2.580431e5,0.000000e0,1.000000e0
-1000,7600,5.880328e4,5.880328e4,1.005e-2,5.023e-10,3.626941e4,5.880328e4,2.580431e5,0.000000e0,1.000000e0
-1250,76,6.441128e4,6.441128e4,1.004e-2,3.308e-10,2.979935e2,6.441128e4,1.765490e7,0.000000e0,1.000000e0
-1250,228,1.559126e5,1.559126e5,1.004e-2,1.595e-9,3.637937e2,1.559126e5,1.765490e7,0.000000e0,1.000000e0
-1250,760,3.889271e5,3.889271e5,1.004e-2,1.689e-9,4.771081e2,3.889271e5,1.765490e7,0.000000e0,1.000000e0
-1250,2280,8.434837e5,8.434837e5,1.005e-2,2.359e-10,6.476446e2,8.434837e5,1.765490e7,0.000000e0,1.000000e0
-1250,7600,1.820551e6,1.820551e6,1.005e-2,8.315e-11,9.782931e2,1.820551e6,1.765490e7,0.000000e0,1.000000e0
-1500,76,3.744756e5,3.744756e5,1.004e-2,2.498e-10,5.185188e1,3.744756e5,3.036371e8,0.000000e0,1.000000e0
-1500,228,9.543847e5,9.543847e5,1.004e-2,1.880e-10,5.967509e1,9.543847e5,3.036371e8,0.000000e0,1.000000e0
-1500,760,2.548962e6,2.548962e6,1.004e-2,2.730e-10,7.235923e1,2.548962e6,3.036371e8,0.000000e0,1.000000e0
-1500,2280,5.956607e6,5.956607e6,1.005e-2,1.247e-10,9.012257e1,5.956607e6,3.036371e8,0.000000e0,1.000000e0
-1500,7600,1.416549e7,1.416549e7,1.005e-2,3.105e-11,1.216853e2,1.416549e7,3.036371e8,0.000000e0,1.000000e0
-1750,76,1.136475e6,1.136475e6,1.004e-2,1.094e-10,1.847207e1,1.136475e6,2.350691e9,0.000000e0,1.000000e0
-1750,228,2.995703e6,2.995703e6,1.004e-2,1.674e-10,2.044098e1,2.995703e6,2.350691e9,0.000000e0,1.000000e0
-1750,760,8.370300e6,8.370300e6,1.004e-2,1.489e-11,2.351816e1,8.370300e6,2.350691e9,0.000000e0,1.000000e0
-1750,2280,2.056548e7,2.056548e7,1.005e-2,5.917e-11,2.763313e1,2.056548e7,2.350691e9,0.000000e0,1.000000e0
-1750,7600,5.227142e7,5.227142e7,1.005e-2,1.471e-11,3.452652e1,5.227142e7,2.350691e9,0.000000e0,1.000000e0
-2000,76,2.381981e6,2.381981e6,1.004e-2,1.516e-10,9.806477e0,2.381981e6,1.100154e10,0.000000e0,1.000000e0
-2000,228,6.434189e6,6.434189e6,1.004e-2,3.949e-11,1.050626e1,6.434189e6,1.100154e10,0.000000e0,1.000000e0
-2000,760,1.856990e7,1.856990e7,1.004e-2,4.423e-11,1.158944e1,1.856990e7,1.100154e10,0.000000e0,1.000000e0
-2000,2280,4.728188e7,4.728188e7,1.005e-2,1.271e-11,1.301346e1,4.728188e7,1.100154e10,0.000000e0,1.000000e0
-2000,7600,1.259756e8,1.259756e8,1.005e-2,1.666e-11,1.533483e1,1.259756e8,1.100154e10,0.000000e0,1.000000e0
+300,76,5.978270e-16,-3.850880e-7,1.004e-2,6.441e8,1.445539e23,5.978270e-16,1.002883e-15,0.000000e0,1.000000e0
+300,228,7.486844e-16,-2.282652e-6,1.004e-2,3.049e9,3.462804e23,7.486844e-16,1.002883e-15,0.000000e0,1.000000e0
+300,760,8.739352e-16,-1.320137e-5,1.005e-2,1.511e10,9.888404e23,8.739352e-16,1.002883e-15,0.000000e0,1.000000e0
+300,2280,9.433732e-16,7.223944e-5,1.005e-2,7.658e10,2.748167e24,9.433732e-16,1.002883e-15,0.000000e0,1.000000e0
+300,7600,9.808305e-16,5.449904e-4,1.007e-2,5.556e11,8.810722e24,9.808305e-16,1.002883e-15,0.000000e0,1.000000e0
+500,76,6.023870e-5,6.031322e-5,1.004e-2,1.237e-3,7.461612e11,6.023870e-5,3.067971e-4,0.000000e0,1.000000e0
+500,228,9.844447e-5,1.007563e-4,1.004e-2,2.348e-2,1.369733e12,9.844447e-5,3.067971e-4,0.000000e0,1.000000e0
+500,760,1.509999e-4,1.469658e-4,1.004e-2,2.672e-2,2.976647e12,1.509999e-4,3.067971e-4,0.000000e0,1.000000e0
+500,2280,2.013154e-4,1.536119e-5,1.005e-2,9.237e-1,6.698030e12,2.013154e-4,3.067971e-4,0.000000e0,1.000000e0
+500,7600,2.483342e-4,-3.517551e-4,1.006e-2,2.416e0,1.809944e13,2.483342e-4,3.067971e-4,0.000000e0,1.000000e0
+750,76,1.158174e1,1.158174e1,1.004e-2,9.535e-8,2.437850e6,1.158174e1,2.485081e2,0.000000e0,1.000000e0
+750,228,2.303898e1,2.303899e1,1.004e-2,4.756e-7,3.673658e6,2.303898e1,2.485081e2,0.000000e0,1.000000e0
+750,760,4.472263e1,4.472216e1,1.004e-2,1.054e-5,6.303008e6,4.472263e1,2.485081e2,0.000000e0,1.000000e0
+750,2280,7.463987e1,7.464017e1,1.005e-2,3.947e-6,1.132180e7,7.463987e1,2.485081e2,0.000000e0,1.000000e0
+750,7600,1.170241e2,1.170228e2,1.006e-2,1.121e-5,2.405439e7,1.170241e2,2.485081e2,0.000000e0,1.000000e0
+1000,76,3.173326e3,3.173326e3,1.004e-2,7.920e-10,6.930366e3,3.173326e3,2.580427e5,0.000000e0,1.000000e0
+1000,228,7.105248e3,7.105248e3,1.004e-2,5.939e-9,9.222780e3,7.105248e3,2.580427e5,0.000000e0,1.000000e0
+1000,760,1.601897e4,1.601896e4,1.004e-2,2.901e-8,1.352716e4,1.601897e4,2.580427e5,0.000000e0,1.000000e0
+1000,2280,3.119105e4,3.119105e4,1.005e-2,3.761e-8,2.068395e4,3.119105e4,2.580427e5,0.000000e0,1.000000e0
+1000,7600,5.880323e4,5.880324e4,1.005e-2,2.151e-8,3.626944e4,5.880323e4,2.580427e5,0.000000e0,1.000000e0
+1250,76,6.441127e4,6.441127e4,1.004e-2,1.584e-10,2.979935e2,6.441127e4,1.765487e7,0.000000e0,1.000000e0
+1250,228,1.559126e5,1.559126e5,1.004e-2,1.081e-9,3.637938e2,1.559126e5,1.765487e7,0.000000e0,1.000000e0
+1250,760,3.889269e5,3.889269e5,1.004e-2,1.154e-9,4.771083e2,3.889269e5,1.765487e7,0.000000e0,1.000000e0
+1250,2280,8.434832e5,8.434832e5,1.005e-2,3.207e-10,6.476449e2,8.434832e5,1.765487e7,0.000000e0,1.000000e0
+1250,7600,1.820549e6,1.820549e6,1.005e-2,7.074e-10,9.782936e2,1.820549e6,1.765487e7,0.000000e0,1.000000e0
+1500,76,3.744755e5,3.744755e5,1.004e-2,2.588e-11,5.185189e1,3.744755e5,3.036366e8,0.000000e0,1.000000e0
+1500,228,9.543844e5,9.543844e5,1.004e-2,3.082e-10,5.967510e1,9.543844e5,3.036366e8,0.000000e0,1.000000e0
+1500,760,2.548962e6,2.548962e6,1.004e-2,1.764e-10,7.235925e1,2.548962e6,3.036366e8,0.000000e0,1.000000e0
+1500,2280,5.956605e6,5.956605e6,1.005e-2,1.166e-10,9.012260e1,5.956605e6,3.036366e8,0.000000e0,1.000000e0
+1500,7600,1.416549e7,1.416549e7,1.005e-2,3.005e-11,1.216853e2,1.416549e7,3.036366e8,0.000000e0,1.000000e0
+1750,76,1.136474e6,1.136474e6,1.004e-2,3.608e-11,1.847207e1,1.136474e6,2.350688e9,0.000000e0,1.000000e0
+1750,228,2.995702e6,2.995702e6,1.004e-2,1.503e-10,2.044098e1,2.995702e6,2.350688e9,0.000000e0,1.000000e0
+1750,760,8.370297e6,8.370297e6,1.004e-2,7.630e-11,2.351817e1,8.370297e6,2.350688e9,0.000000e0,1.000000e0
+1750,2280,2.056547e7,2.056547e7,1.005e-2,2.080e-11,2.763314e1,2.056547e7,2.350688e9,0.000000e0,1.000000e0
+1750,7600,5.227140e7,5.227140e7,1.005e-2,1.805e-11,3.452654e1,5.227140e7,2.350688e9,0.000000e0,1.000000e0
+2000,76,2.381981e6,2.381981e6,1.004e-2,2.649e-11,9.806478e0,2.381981e6,1.100153e10,0.000000e0,1.000000e0
+2000,228,6.434188e6,6.434188e6,1.004e-2,1.018e-10,1.050626e1,6.434188e6,1.100153e10,0.000000e0,1.000000e0
+2000,760,1.856989e7,1.856989e7,1.004e-2,1.149e-11,1.158945e1,1.856989e7,1.100153e10,0.000000e0,1.000000e0
+2000,2280,4.728186e7,4.728186e7,1.005e-2,6.445e-12,1.301346e1,4.728186e7,1.100153e10,0.000000e0,1.000000e0
+2000,7600,1.259756e8,1.259756e8,1.005e-2,4.515e-12,1.533483e1,1.259756e8,1.100153e10,0.000000e0,1.000000e0
 
-# bimolecular rate coefficients of P1 [cm3/s] by detailed balance, eigenvalue analysis
+# bimolecular rate coefficients of P1 [cm3/s] by detailed balance from the thermal k_uni of the final steady state
 T[K],P[Torr],k_inf_assoc[cm3/s],k_inf_diss[1/s],k_uni[1/s],k(P1->W1)
-300,76,2.560198e-13,1.002885e-15,5.978281e-16,1.526155e-13
-300,228,2.560198e-13,1.002885e-15,7.486853e-16,1.911269e-13
-300,760,2.560198e-13,1.002885e-15,8.739363e-16,2.231014e-13
-300,2280,2.560198e-13,1.002885e-15,9.433753e-16,2.408280e-13
-300,7600,2.560198e-13,1.002885e-15,9.809528e-16,2.504209e-13
-500,76,3.685501e-12,3.067975e-4,6.023875e-5,7.236367e-13
-500,228,3.685501e-12,3.067975e-4,9.844456e-5,1.182596e-12
-500,760,3.685501e-12,3.067975e-4,1.510001e-4,1.813935e-12
-500,2280,3.685501e-12,3.067975e-4,2.013156e-4,2.418366e-12
-500,7600,3.685501e-12,3.067975e-4,2.483346e-4,2.983196e-12
-750,76,1.731570e-11,2.485085e2,1.158175e1,8.069988e-13
-750,228,1.731570e-11,2.485085e2,2.303899e1,1.605322e-12
-750,760,1.731570e-11,2.485085e2,4.472267e1,3.116208e-12
-750,2280,1.731570e-11,2.485085e2,7.463994e1,5.200799e-12
-750,7600,1.731570e-11,2.485085e2,1.170242e2,8.154070e-12
-1000,76,4.145122e-11,2.580431e5,3.173327e3,5.097531e-13
-1000,228,4.145122e-11,2.580431e5,7.105251e3,1.141365e-12
-1000,760,4.145122e-11,2.580431e5,1.601897e4,2.573237e-12
-1000,2280,4.145122e-11,2.580431e5,3.119107e4,5.010434e-12
-1000,7600,4.145122e-11,2.580431e5,5.880328e4,9.445972e-12
-1250,76,7.398510e-11,1.765490e7,6.441128e4,2.699237e-13
-1250,228,7.398510e-11,1.765490e7,1.559126e5,6.533717e-13
-1250,760,7.398510e-11,1.765490e7,3.889271e5,1.629849e-12
-1250,2280,7.398510e-11,1.765490e7,8.434837e5,3.534726e-12
-1250,7600,7.398510e-11,1.765490e7,1.820551e6,7.629250e-12
-1500,76,1.128475e-10,3.036371e8,3.744756e5,1.391748e-13
-1500,228,1.128475e-10,3.036371e8,9.543847e5,3.546996e-13
-1500,760,1.128475e-10,3.036371e8,2.548962e6,9.473286e-13
-1500,2280,1.128475e-10,3.036371e8,5.956607e6,2.213789e-12
-1500,7600,1.128475e-10,3.036371e8,1.416549e7,5.264643e-12
-1750,76,1.564599e-10,2.350691e9,1.136475e6,7.564275e-14
-1750,228,1.564599e-10,2.350691e9,2.995703e6,1.993913e-13
-1750,760,1.564599e-10,2.350691e9,8.370300e6,5.571198e-13
-1750,2280,1.564599e-10,2.350691e9,2.056548e7,1.368820e-12
-1750,7600,1.564599e-10,2.350691e9,5.227142e7,3.479139e-12
-2000,76,2.036797e-10,1.100154e10,2.381981e6,4.409936e-14
-2000,228,2.036797e-10,1.100154e10,6.434189e6,1.191209e-13
-2000,760,2.036797e-10,1.100154e10,1.856990e7,3.437981e-13
-2000,2280,2.036797e-10,1.100154e10,4.728188e7,8.753641e-13
-2000,7600,2.036797e-10,1.100154e10,1.259756e8,2.332280e-12
+300,76,2.560176e-13,1.002883e-15,5.978270e-16,1.526142e-13
+300,228,2.560176e-13,1.002883e-15,7.486844e-16,1.911253e-13
+300,760,2.560176e-13,1.002883e-15,8.739352e-16,2.230996e-13
+300,2280,2.560176e-13,1.002883e-15,9.433732e-16,2.408258e-13
+300,7600,2.560176e-13,1.002883e-15,9.808305e-16,2.503880e-13
+500,76,3.685470e-12,3.067971e-4,6.023870e-5,7.236312e-13
+500,228,3.685470e-12,3.067971e-4,9.844447e-5,1.182587e-12
+500,760,3.685470e-12,3.067971e-4,1.509999e-4,1.813921e-12
+500,2280,3.685470e-12,3.067971e-4,2.013154e-4,2.418347e-12
+500,7600,3.685470e-12,3.067971e-4,2.483342e-4,2.983172e-12
+750,76,1.731556e-11,2.485081e2,1.158174e1,8.069929e-13
+750,228,1.731556e-11,2.485081e2,2.303898e1,1.605310e-12
+750,760,1.731556e-11,2.485081e2,4.472263e1,3.116185e-12
+750,2280,1.731556e-11,2.485081e2,7.463987e1,5.200759e-12
+750,7600,1.731556e-11,2.485081e2,1.170241e2,8.154006e-12
+1000,76,4.145088e-11,2.580427e5,3.173326e3,5.097495e-13
+1000,228,4.145088e-11,2.580427e5,7.105248e3,1.141357e-12
+1000,760,4.145088e-11,2.580427e5,1.601897e4,2.573218e-12
+1000,2280,4.145088e-11,2.580427e5,3.119105e4,5.010396e-12
+1000,7600,4.145088e-11,2.580427e5,5.880323e4,9.445900e-12
+1250,76,7.398448e-11,1.765487e7,6.441127e4,2.699218e-13
+1250,228,7.398448e-11,1.765487e7,1.559126e5,6.533670e-13
+1250,760,7.398448e-11,1.765487e7,3.889269e5,1.629837e-12
+1250,2280,7.398448e-11,1.765487e7,8.434832e5,3.534700e-12
+1250,7600,7.398448e-11,1.765487e7,1.820549e6,7.629193e-12
+1500,76,1.128466e-10,3.036366e8,3.744755e5,1.391739e-13
+1500,228,1.128466e-10,3.036366e8,9.543844e5,3.546971e-13
+1500,760,1.128466e-10,3.036366e8,2.548962e6,9.473218e-13
+1500,2280,1.128466e-10,3.036366e8,5.956605e6,2.213773e-12
+1500,7600,1.128466e-10,3.036366e8,1.416549e7,5.264605e-12
+1750,76,1.564586e-10,2.350688e9,1.136474e6,7.564222e-14
+1750,228,1.564586e-10,2.350688e9,2.995702e6,1.993900e-13
+1750,760,1.564586e-10,2.350688e9,8.370297e6,5.571158e-13
+1750,2280,1.564586e-10,2.350688e9,2.056547e7,1.368810e-12
+1750,7600,1.564586e-10,2.350688e9,5.227140e7,3.479114e-12
+2000,76,2.036780e-10,1.100153e10,2.381981e6,4.409906e-14
+2000,228,2.036780e-10,1.100153e10,6.434188e6,1.191200e-13
+2000,760,2.036780e-10,1.100153e10,1.856989e7,3.437957e-13
+2000,2280,2.036780e-10,1.100153e10,4.728186e7,8.753579e-13
+2000,7600,2.036780e-10,1.100153e10,1.259756e8,2.332263e-12

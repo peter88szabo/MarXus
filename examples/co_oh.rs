@@ -11,8 +11,8 @@ fn main() {
     let co_freq_cm1 = 2169.814;
     let co_req_ang = 1.128;
 
-    let oh_brot_cm1 = diatomic_brot_cm1(15.999, 1.008, oh_req_ang);
-    let co_brot_cm1 = diatomic_brot_cm1(12.0, 15.999, co_req_ang);
+    let oh_brot_cm1 = diatomic_brot_cm1(mass("O"), mass("H"), oh_req_ang);
+    let co_brot_cm1 = diatomic_brot_cm1(mass("C"), mass("O"), co_req_ang);
 
     // Morse well depth and disappearing-mode frequency (from user).
     let de_kj_mol = 150.0;
@@ -95,4 +95,9 @@ fn diatomic_brot_cm1(m1_amu: f64, m2_amu: f64, bond_angstrom: f64) -> f64 {
     // B (cm^-1) = h / (8 pi^2 c I), with I in amu*Å^2 and the constant folded below.
     let inertia = mu * bond_angstrom * bond_angstrom;
     16.857629 / inertia
+}
+
+/// Isotopic atomic mass (u) from the MarXus table (AME2020).
+fn mass(symbol: &str) -> f64 {
+    MarXus::utils::atomic_masses::atomic_mass_amu(symbol).expect("element in the mass table")
 }

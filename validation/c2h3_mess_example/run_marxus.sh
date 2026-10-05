@@ -2,10 +2,12 @@
 # Runs MarXus on the three reference decks (input/*.inp, the decks run by both codes) with the reactant P1 (H + C2H2)
 # and writes the results into marxus_output/. Run from anywhere; the repository is two levels up.
 set -euo pipefail
+# At most 4 cores: compilation and runs (OpenBLAS threads included).
+export CARGO_BUILD_JOBS=4 OPENBLAS_NUM_THREADS=4 OMP_NUM_THREADS=4 RAYON_NUM_THREADS=4
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "$here/../.." && pwd)"
 cd "$repo"
-cargo build --release --example chemical_activation_from_deck
+cargo build -j 4 --release --example chemical_activation_from_deck
 for deck in c2h3_tight c2h3_tight_short c2h3_tight_short_notunneling; do
     echo "running $deck"
     ./target/release/examples/chemical_activation_from_deck "$here/input/$deck.inp" P1 \

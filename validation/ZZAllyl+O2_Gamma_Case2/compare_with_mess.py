@@ -6,12 +6,21 @@ Reads
   Gamma-Case2_..._12.7kcal.log              MESS log (tunneling correction factors)
   marxus_output/case2_tstlevel_E_*.out      MarXus (run_marxus.sh)
   marxus_output/case2_default_EJ_steady_states.out   MarXus with the PST cores at the EJ level
+  marxus_output/eckart_kappa.csv            MarXus canonical Eckart factors kappa(T): exact and MESS model
+  marxus_output/case2_tstlevel_E_mess_eckart_*.out   MarXus with the MESS Eckart tunneling model, including
+                                            the CSE species tables (case2_tstlevel_E_mess_eckart_cse.out)
 and writes
   capture_comparison.csv          k_inf(R -> G2) of the phase-space-theory entrance
   high_pressure_comparison.csv    high-pressure rate coefficients of every channel
   net_yields_comparison.csv       long-time shares of P5, escape (ESC), P1, P7 in the net reaction
   apparent_rates_comparison.csv   apparent bimolecular rate coefficients k(R -> X)
-  plots/pes.png, plots/p5_share.png, plots/high_pressure_deviation.png, plots/apparent_rates_760torr.png
+  kappa_comparison.csv            tunneling factors kappa(T): MESS log vs MarXus (exact Eckart)
+  cse_comparison.csv              every species-to-species rate coefficient: MESS vs the MarXus CSE method
+  plots/cse_vs_mess.png           CSE method vs MESS: reactant row at 760 Torr and deviations of all entries
+  plots/pes.png                   the network
+  plots/iepox_oh_yield.png        P5 (IEPOX + OH): long-time share, deviation, apparent k(R -> P5)
+  plots/tunneling_ratio_bars.png  kappa(MarXus)/kappa(MESS) per barrier at 200, 300, 400 K; kappa at 300 K
+  plots/high_pressure_deviation.png, plots/apparent_rates_760torr.png
 
 Long-time fate from the MESS tables: R forms the wells and end channels with the rate coefficients
 k(R -> X) of each (T, p) table; every well w then ends in X with the absorption probability of the
@@ -79,7 +88,8 @@ def read_marxus_blocks(path):
     for line in open(path):
         line = line.rstrip("\n")
         if line.startswith("# intermediate steady state") or line.startswith("# final steady state") \
-                or line.startswith("# bimolecular rate coefficients") or line.startswith("# eigenvalue analysis"):
+                or line.startswith("# bimolecular rate coefficients") \
+                or line.startswith("# thermal rate coefficients of the final steady state"):
             title, header = line[2:], None
             blocks[title] = []
         elif line.startswith("#") or not line.strip() or title is None:
@@ -118,6 +128,25 @@ def mess_long_time_shares(table):
     return {x: final[x] / net for x in ["P1", "P5", "P7", "ESC"]}
 
 
+def read_cse(path):
+    """MarXus CSE species tables: {(T, p_torr): {from: {to: value}}} (escape(G4) renamed ESC)."""
+    out, key, header = {}, None, None
+    for line in open(path):
+        line = line.rstrip("\n")
+        m = re.match(r"# T = (\S+) K, p = (\S+) Torr", line)
+        if m:
+            key, header = (float(m.group(1)), float(m.group(2))), None
+            out[key] = {}
+            continue
+        if line.startswith("From\\To"):
+            header = [("ESC" if h == "escape(G4)" else h) for h in line.split(",")[1:]]
+            continue
+        if header and line and not line.startswith("#"):
+            fields = line.split(",")
+            out[key][fields[0]] = dict(zip(header, map(float, fields[1:])))
+    return out
+
+
 def write_csv(name, rows):
     with open(os.path.join(HERE, name), "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -126,13 +155,38 @@ def write_csv(name, rows):
             writer.writerow({k: (v if isinstance(v, str) else "%.6g" % v) for k, v in r.items()})
 
 
+def read_mess_kappa(path):
+    """Tunneling correction factors of the MESS log: {barrier: {T: kappa}}."""
+    lines = open(path).read().split("\n")
+    start = next(i for i, l in enumerate(lines) if "tunneling partition function correction factors" in l)
+    header = lines[start + 1].split()[1:]          # B23 D B24 D ...
+    names = header[0::2]
+    kappa = {n: {} for n in names}
+    for line in lines[start + 2:]:
+        fields = line.split()
+        if not fields or not re.match(r"^\d+$", fields[0]):
+            break
+        t = float(fields[0])
+        for k, n in enumerate(names):
+            kappa[n][t] = float(fields[1 + 2 * k])
+    return kappa
+
+
+def read_marxus_kappa(path, column="kappa"):
+    kappa = {}
+    with open(path) as f:
+        for row in csv.DictReader(f):
+            kappa.setdefault(row["barrier"], {})[float(row["T[K]"])] = float(row[column])
+    return kappa
+
+
 # ----------------------------------------------------------------------------------------------
 # Data
 # ----------------------------------------------------------------------------------------------
 mess_high, mess_p = read_mess_out(os.path.join(HERE, STEM + ".out"))
 mx_e = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_steady_states.out"))
 mx_ej = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_default_EJ_steady_states.out"))
-mx_eig = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_eigenvalue.out"))
+mx_me = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_steady_states.out"))
 temperatures = sorted(mess_high)
 pressures = sorted({p for _, p in mess_p})
 
@@ -147,32 +201,46 @@ for t in temperatures:
 write_csv("capture_comparison.csv", capture)
 
 # 2. High-pressure rate coefficients of every channel.
-eig = {r["T[K]"]: r for r in block(mx_eig, "eigenvalue analysis")}
+# Thermal rate coefficients of the final steady state (lowest eigenpair of J, GO10 eq. 12).
+eig = {r["T[K]"]: r for r in block(mx_e, "thermal rate coefficients of the final steady state")}
+eig_me = {r["T[K]"]: r for r in block(mx_me, "thermal rate coefficients of the final steady state")}
 high = []
 for t in temperatures:
     for c, pairs in CHANNELS.items():
         for a, b in pairs:
             m = mess_high[t][a].get(b, np.nan)
             x = eig[t].get(f"k_inf({a}:{c})[1/s]", np.nan)
+            y = eig_me[t].get(f"k_inf({a}:{c})[1/s]", np.nan)
             high.append({"T_K": t, "channel": c, "from": a, "to": b, "mess": m, "marxus": x,
-                         "dev_percent": 100 * (x / m - 1)})
+                         "dev_percent": 100 * (x / m - 1), "marxus_mess_eckart": y,
+                         "dev_mess_eckart_percent": 100 * (y / m - 1)})
 write_csv("high_pressure_comparison.csv", high)
 
 # 3. Long-time shares of the net reaction.
 final = {(r["T[K]"], r["P[Torr]"]): r for r in block(mx_e, "final steady state")}
+final_me = {(r["T[K]"], r["P[Torr]"]): r for r in block(mx_me, "final steady state")}
+
+
+def marxus_shares(f):
+    xs = {"P1": f["Phi(G4:B4P1)"], "P5": f["Phi(G4:B4P5)"], "P7": f["Phi(G6:B6P7)"], "ESC": f["Phi_sink(G4)"]}
+    net = sum(xs.values())
+    return {x: v / net for x, v in xs.items()}
+
+
 shares = []
 for t in temperatures:
     for p in pressures:
         ms = mess_long_time_shares(mess_p[(t, p)])
-        f = final[(t, p)]
-        xs = {"P1": f["Phi(G4:B4P1)"], "P5": f["Phi(G4:B4P5)"], "P7": f["Phi(G6:B6P7)"], "ESC": f["Phi_sink(G4)"]}
-        net = sum(xs.values())
+        xs = marxus_shares(final[(t, p)])
+        ys = marxus_shares(final_me[(t, p)])
         row = {"T_K": t, "p_torr": p}
         for x in ["P5", "ESC", "P1", "P7"]:
             row[f"mess_{x}"] = ms[x]
-            row[f"marxus_{x}"] = xs[x] / net
-            row[f"dev_{x}_percent"] = 100 * (xs[x] / net / ms[x] - 1)
-        row["marxus_back_to_R"] = f["Phi(G2:B12)"]
+            row[f"marxus_{x}"] = xs[x]
+            row[f"dev_{x}_percent"] = 100 * (xs[x] / ms[x] - 1)
+            row[f"marxus_mess_eckart_{x}"] = ys[x]
+            row[f"dev_mess_eckart_{x}_percent"] = 100 * (ys[x] / ms[x] - 1)
+        row["marxus_back_to_R"] = final[(t, p)]["Phi(G2:B12)"]
         shares.append(row)
 write_csv("net_yields_comparison.csv", shares)
 
@@ -189,6 +257,34 @@ for t in temperatures:
             row[f"marxus_{x}"] = bimol[(t, p)][col]
         apparent.append(row)
 write_csv("apparent_rates_comparison.csv", apparent)
+
+# 5. Tunneling factors.
+kappa_mess = read_mess_kappa(os.path.join(HERE, STEM + ".log"))
+kappa_mx = read_marxus_kappa(os.path.join(HERE, "marxus_output", "eckart_kappa.csv"))
+kappa_mimic = read_marxus_kappa(os.path.join(HERE, "marxus_output", "eckart_kappa.csv"), "kappa_mess")
+tunneling_barriers = [b for b in ["B23", "B24", "B34", "B36", "B4P1", "B4P5"] if b in kappa_mx]
+kappa_rows = []
+for b in tunneling_barriers:
+    for t in sorted(kappa_mess[b]):
+        if t in kappa_mx[b]:
+            kappa_rows.append({"barrier": b, "T_K": t, "kappa_mess": kappa_mess[b][t], "kappa_marxus": kappa_mx[b][t],
+                               "ratio": kappa_mx[b][t] / kappa_mess[b][t],
+                               "kappa_marxus_mess_model": kappa_mimic[b][t],
+                               "ratio_mess_model": kappa_mimic[b][t] / kappa_mess[b][t]})
+write_csv("kappa_comparison.csv", kappa_rows)
+
+# 6. CSE species tables vs MESS.
+cse = read_cse(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_cse.out"))
+cse_rows = []
+for (t, p), table in sorted(cse.items()):
+    for a in WELLS + ["R"]:
+        for b in WELLS + ENDS:
+            if a == b == "R" or b not in table.get(a, {}) or b not in mess_p[(t, p)][a]:
+                continue
+            m, x = mess_p[(t, p)][a][b], table[a][b]
+            cse_rows.append({"T_K": t, "p_torr": p, "from": a, "to": b, "mess": m, "marxus_cse": x,
+                             "dev_percent": 100 * (x / m - 1) if m != 0 else np.nan})
+write_csv("cse_comparison.csv", cse_rows)
 
 # ----------------------------------------------------------------------------------------------
 # Plots
@@ -223,40 +319,121 @@ fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "pes.png"), dpi=200)
 plt.close(fig)
 
-# P5 share of the net reaction.
-fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6))
+# IEPOX + OH (P5): long-time share of the net reaction, its deviation, and the apparent k(R -> P5).
+fig, axes = plt.subplots(1, 3, figsize=(15.5, 4.6))
 colors = plt.cm.plasma(np.linspace(0.0, 0.8, len(pressures)))
 for p, c in zip(pressures, colors):
     sel = [r for r in shares if r["p_torr"] == p]
-    axes[0].plot([r["T_K"] for r in sel], [100 * r["mess_P5"] for r in sel], "-o", color=c, mfc="none", label=f"MESS {p:g} Torr")
-    axes[0].plot([r["T_K"] for r in sel], [100 * r["marxus_P5"] for r in sel], "s", color=c, label=f"MarXus {p:g} Torr")
-    axes[1].plot([r["T_K"] for r in sel], [r["dev_P5_percent"] for r in sel], "-s", color=c, label=f"P5, {p:g} Torr")
-    axes[1].plot([r["T_K"] for r in sel], [r["dev_ESC_percent"] for r in sel], "--^", color=c, mfc="none", label=f"escape, {p:g} Torr")
-axes[0].set_ylabel("P5 (IEPOX + OH) share of the net reaction (%)")
-axes[0].set_title("long-time P5 yield")
+    ts = [r["T_K"] for r in sel]
+    axes[0].plot(ts, [100 * r["mess_P5"] for r in sel], "-o", color=c, mfc="none", label=f"MESS {p:g} Torr")
+    axes[0].plot(ts, [100 * r["marxus_P5"] for r in sel], "s", color=c, label=f"MarXus exact Eckart {p:g} Torr")
+    axes[0].plot(ts, [100 * r["marxus_mess_eckart_P5"] for r in sel], "^", color=c, label=f"MarXus MESS Eckart {p:g} Torr")
+    axes[1].plot(ts, [r["dev_P5_percent"] for r in sel], "-s", color=c, label=f"exact Eckart, {p:g} Torr")
+    axes[1].plot(ts, [r["dev_mess_eckart_P5_percent"] for r in sel], "--^", color=c, label=f"MESS Eckart, {p:g} Torr")
+    sel_a = [r for r in apparent if r["p_torr"] == p]
+    axes[2].plot([r["T_K"] for r in sel_a], [r["mess_P5"] for r in sel_a], "-o", color=c, mfc="none", label=f"MESS {p:g} Torr")
+    axes[2].plot([r["T_K"] for r in sel_a], [r["marxus_P5"] for r in sel_a], "s", color=c, label=f"MarXus {p:g} Torr")
+axes[0].set_ylabel("IEPOX + OH share of the net reaction (%)")
+axes[0].set_title("long-time IEPOX + OH yield\n(MarXus: final steady state; MESS: from its rate tables)", fontsize=10)
 axes[1].axhline(0, color="k", lw=0.8)
 axes[1].set_ylabel("MarXus / MESS - 1 (%)")
-axes[1].set_title("deviation of the shares")
+axes[1].set_title("deviation of the IEPOX + OH share from MESS", fontsize=10)
+axes[2].set_yscale("log")
+axes[2].set_ylabel("k(R -> IEPOX + OH) (cm$^3$ s$^{-1}$)")
+axes[2].set_title("apparent rate coefficient\n(MarXus: intermediate steady state)", fontsize=10)
 for ax in axes:
     ax.set_xlabel("T (K)")
     ax.legend(fontsize=7)
 fig.tight_layout()
-fig.savefig(os.path.join(HERE, "plots", "p5_share.png"), dpi=200)
+fig.savefig(os.path.join(HERE, "plots", "iepox_oh_yield.png"), dpi=200)
 plt.close(fig)
 
-# High-pressure deviations per channel.
-fig, ax = plt.subplots(figsize=(8.5, 4.8))
-for c, pairs_c in CHANNELS.items():
-    a, b = pairs_c[0]
-    sel = [r for r in high if r["channel"] == c and r["from"] == a]
-    ax.plot([r["T_K"] for r in sel], [r["dev_percent"] for r in sel], "-o", label=f"{c} ({a}->{b})")
-ax.axhline(0, color="k", lw=0.8)
-ax.set_xlabel("T (K)")
-ax.set_ylabel("k$_\\infty$: MarXus / MESS - 1 (%)")
-ax.set_title("High-pressure rate coefficients: tunneling barriers differ by the Eckart factor")
-ax.legend(fontsize=8, ncol=2)
+# Tunneling factors: ratio MarXus/MESS per barrier (grouped bars) and kappa at 300 K.
+fig, axes = plt.subplots(1, 3, figsize=(18, 4.8))
+group_t = [t for t in (200.0, 300.0, 400.0) if all(t in kappa_mess[b] and t in kappa_mx[b] for b in tunneling_barriers)]
+width = 0.8 / len(group_t)
+xs = np.arange(len(tunneling_barriers))
+for k, (t, c) in enumerate(zip(group_t, ["tab:blue", "tab:orange", "tab:green"])):
+    ratios = [kappa_mx[b][t] / kappa_mess[b][t] for b in tunneling_barriers]
+    bars = axes[0].bar(xs + (k - (len(group_t) - 1) / 2) * width, [100 * (r - 1) for r in ratios], width, color=c, label=f"{t:.0f} K")
+    for bar, r in zip(bars, ratios):
+        axes[0].text(bar.get_x() + bar.get_width() / 2, 100 * (r - 1), f"{100 * (r - 1):+.0f}%", ha="center", va="bottom", fontsize=6)
+axes[0].set_xticks(xs)
+axes[0].set_xticklabels([f"{b}\n{CHANNELS[b][0][0]}->{CHANNELS[b][0][1]}" for b in tunneling_barriers])
+axes[0].axhline(0, color="k", lw=0.8)
+axes[0].set_ylabel("$\\kappa$(MarXus) / $\\kappa$(MESS) - 1 (%)")
+axes[0].set_title("Eckart tunneling factor: MarXus (exact Eckart) vs MESS log", fontsize=10)
+axes[0].legend()
+k_m = [kappa_mess[b][300.0] for b in tunneling_barriers]
+k_x = [kappa_mx[b][300.0] for b in tunneling_barriers]
+axes[1].bar(xs - 0.2, k_m, 0.4, color="tab:gray", label="MESS")
+axes[1].bar(xs + 0.2, k_x, 0.4, color="tab:red", label="MarXus")
+axes[1].set_yscale("log")
+axes[1].set_xticks(xs)
+axes[1].set_xticklabels(tunneling_barriers)
+axes[1].set_ylabel("$\\kappa$(300 K)")
+axes[1].set_title("tunneling factor at 300 K", fontsize=10)
+axes[1].legend()
+for k, (t, c) in enumerate(zip(group_t, ["tab:blue", "tab:orange", "tab:green"])):
+    ratios = [kappa_mimic[b][t] / kappa_mess[b][t] for b in tunneling_barriers]
+    axes[2].bar(xs + (k - (len(group_t) - 1) / 2) * width, [100 * (r - 1) for r in ratios], width, color=c, label=f"{t:.0f} K")
+axes[2].set_xticks(xs)
+axes[2].set_xticklabels(tunneling_barriers)
+axes[2].axhline(0, color="k", lw=0.8)
+axes[2].set_ylabel("$\\kappa$(MarXus MESS model) / $\\kappa$(MESS log) - 1 (%)")
+axes[2].set_title("reproduction of the MESS factors by mess_eckart_tunneling", fontsize=10)
+axes[2].legend()
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "tunneling_ratio_bars.png"), dpi=200)
+plt.close(fig)
+
+# High-pressure deviations per channel, both tunneling models.
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.8), sharey=True)
+for ax, key, title in ((axes[0], "dev_percent", "exact Eckart tunneling (MarXus default)"),
+                       (axes[1], "dev_mess_eckart_percent", "MESS Eckart tunneling model")):
+    for c, pairs_c in CHANNELS.items():
+        a, b = pairs_c[0]
+        sel = [r for r in high if r["channel"] == c and r["from"] == a]
+        ax.plot([r["T_K"] for r in sel], [r[key] for r in sel], "-o", label=f"{c} ({a}->{b})")
+    ax.axhline(0, color="k", lw=0.8)
+    ax.set_xlabel("T (K)")
+    ax.set_title(title, fontsize=10)
+axes[0].set_ylabel("k$_\\infty$: MarXus / MESS - 1 (%)")
+axes[1].legend(fontsize=8, ncol=2)
+fig.suptitle("High-pressure rate coefficients of every channel")
 fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "high_pressure_deviation.png"), dpi=200)
+plt.close(fig)
+
+# CSE method vs MESS.
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+sel = [r for r in cse_rows if r["from"] == "R" and r["p_torr"] == 760.0]
+for b, c in zip(["G2", "G3", "G4", "P5", "P1", "P7"], plt.cm.tab10(np.arange(6))):
+    pts = [r for r in sel if r["to"] == b]
+    axes[0].plot([r["T_K"] for r in pts], [r["mess"] for r in pts], "-o", color=c, mfc="none", label=f"MESS R->{b}")
+    axes[0].plot([r["T_K"] for r in pts], [r["marxus_cse"] for r in pts], "s", color=c, label=f"MarXus R->{b}")
+axes[0].set_yscale("log")
+axes[0].set_xlabel("T (K)")
+axes[0].set_ylabel("k(R -> X) (cm$^3$ s$^{-1}$), 760 Torr")
+axes[0].set_title("reactant row: MarXus CSE (MESS Eckart, TST level E) vs MESS", fontsize=10)
+axes[0].legend(fontsize=7, ncol=2)
+# Deviations of the significant entries (|k| above 1e-6 of the largest entry of its row).
+significant = []
+for r in cse_rows:
+    row_max = max(abs(x["mess"]) for x in cse_rows if x["T_K"] == r["T_K"] and x["p_torr"] == r["p_torr"] and x["from"] == r["from"])
+    if abs(r["mess"]) > 1e-6 * row_max and not np.isnan(r["dev_percent"]):
+        significant.append(r)
+pairs_sig = sorted({(r["from"], r["to"]) for r in significant})
+for k, (a, b) in enumerate(pairs_sig):
+    vals = [r["dev_percent"] for r in significant if (r["from"], r["to"]) == (a, b)]
+    axes[1].plot([k] * len(vals), vals, "o", ms=3, color="tab:blue" if a != "R" else "tab:red")
+axes[1].set_xticks(range(len(pairs_sig)))
+axes[1].set_xticklabels([f"{a}->{b}" for a, b in pairs_sig], rotation=90, fontsize=7)
+axes[1].axhline(0, color="k", lw=0.8)
+axes[1].set_ylabel("MarXus CSE / MESS - 1 (%)")
+axes[1].set_title("all significant entries, 21 conditions (red: from the reactant, cm$^3$ s$^{-1}$)", fontsize=10)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "cse_vs_mess.png"), dpi=200)
 plt.close(fig)
 
 # Apparent rate coefficients at 760 Torr.
@@ -275,7 +452,14 @@ fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "apparent_rates_760torr.png"), dpi=200)
 plt.close(fig)
 
-print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))), "and the four CSV tables")
+print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))), "and the five CSV tables")
+for r in kappa_rows:
+    if r["T_K"] == 300.0:
+        print(f"kappa 300 K {r['barrier']}: MESS {r['kappa_mess']:.4e} exact {r['kappa_marxus']:.4e} ({r['ratio']:.4f}) "
+              f"MESS model {r['kappa_marxus_mess_model']:.4e} ({r['ratio_mess_model']:.5f})")
+for r in shares:
+    if r["p_torr"] == 760.0:
+        print(f"T={r['T_K']:.0f} 760 Torr MESS-Eckart: P5 {100*r['marxus_mess_eckart_P5']:.3f}% ({r['dev_mess_eckart_P5_percent']:+.1f}%)")
 for r in capture[:1] + capture[-1:]:
     print(f"capture T={r['T_K']:.0f}: E {r['dev_E_percent']:+.2f}%  EJ {r['dev_EJ_percent']:+.2f}%")
 for r in shares:
