@@ -153,3 +153,13 @@ The bimolecular rate-coefficient table follows the intermediate-steady-state res
 - `entrance_high_pressure_rate_of_a_tight_transition_state_is_transition_state_theory`
 - `an_absorbing_barrier_below_the_well_bottom_is_an_error`
 - `deep_tunneling_keeps_the_eckart_correction` (Wigner fallback removed)
+
+## 7. Decision on shallow wells (Peter, 2026-10-05)
+
+- **(b) The user chooses the absorbing-barrier distance.** The default is 10 kT. The library takes `kt_multiple` or `AtGrains`; the example program takes `--barrier-kt X`.
+- **Eigenvalue route:** a selectable option, `SteadyState::EigenvalueAnalysis`, that is reported as **not available yet**. It is to be implemented later. MarXus has no eigenvalue analysis of J at present.
+- **Sensitivity study:** in `validation/c2h3_mess_example/README.md` §5.5.
+  - At ≤ 750 K the barrier distance changes the result by less than 1%.
+  - At 1500–1750 K a barrier 3 kT below the threshold reproduces MESS within 2%. The default 10 kT is 10–36% low there.
+  - At 2000 K even 3 kT is 10% low.
+

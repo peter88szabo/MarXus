@@ -360,6 +360,18 @@ impl SymmetricBandMatrix {
         self.diag[i] = value;
     }
 
+    /// Largest |A_ii|.
+    pub fn max_abs_diagonal(&self) -> f64 {
+        self.diag.iter().fold(0.0_f64, |m, d| m.max(d.abs()))
+    }
+
+    /// The matrix A + sigma I.
+    pub fn shifted(&self, sigma: f64) -> Self {
+        let mut shifted = self.clone();
+        shifted.diag.iter_mut().for_each(|d| *d += sigma);
+        shifted
+    }
+
     /// Set A_{i,k} = A_{k,i} for k < i, i - k <= bandwidth.
     pub fn set_lower(&mut self, i: usize, k: usize, value: f64) {
         assert!(k < i && i - k <= self.bandwidth, "element ({i},{k}) outside the lower band");

@@ -1,4 +1,5 @@
 pub mod chemical_activation_driver;
+pub mod chemical_activation_eigen;
 pub mod chemical_activation_from_mess_input;
 pub mod chemical_activation_network;
 pub mod chemical_activation_observables;

@@ -18,17 +18,18 @@
 | `input/c2h3_tight_short.inp` | 1000 K, 1 atm, Eckart tunneling |
 | `input/c2h3_tight_short_notunneling.inp` | 1000 K, 1 atm, no tunneling |
 | `reference_mess_output/*.out` | stored MESS results for the same decks (unchanged copies) |
-| `marxus_output/*.out` | MarXus results, from `run_marxus.sh` |
+| `marxus_output/*.out` | MarXus results, from `run_marxus.sh`; `c2h3_tight_barrier_{5,3}kT.out` are the barrier-distance runs |
 | `run_marxus.sh` | builds the MarXus example program and runs the three decks with reactant P1 |
 | `plot_comparison.py` | reads all outputs, writes the figures and `comparison_table.csv` |
 | `comparison_table.csv` | every compared number of the full deck |
+| `barrier_distance_sensitivity.csv` | association for barrier distances 10, 5 and 3 kT, all conditions |
 | `plots/*.png` | the figures below |
 
 The decks are byte-identical copies of `MESS_kinetics/Examples_From_Argon/examples/c2h3/*.inp`, and MarXus reads them unchanged. The decks contain no `Reactant` line, so the reactant P1 (H + C₂H₂) is given on the command line.
 
 To reproduce:
 
-    ./run_marxus.sh                                                       # about 50 s
+    ./run_marxus.sh                                                       # about 1.5 min
     source ~/.venvs/science/bin/activate && python3 plot_comparison.py
 
 ## 2. System and settings
@@ -191,13 +192,42 @@ MESS obtains these rate coefficients from the eigenvalue analysis, which needs n
 
 At 2000 K MarXus now refuses the intermediate steady state with an explanatory error. It previously clamped the barrier to the well bottom without warning and returned zero stabilization.
 
-### 5.4 Open decisions (Peter)
+### 5.4 Decision for shallow wells (Peter, 2026-10-05)
 
-1. **Wells that are shallow compared with 10 kT plus their thermal width.** Options:
-   - (a) report the thermal fraction below the barrier as a validity diagnostic, and refuse below a threshold;
-   - (b) allow a smaller barrier distance, with a result that depends on that choice;
-   - (c) add an eigenvalue-based route for such conditions.
-2. **Final steady state of deep wells without a sink at low T** (double precision): postponed.
+- **(b) The user chooses the absorbing-barrier distance.** The default stays 10 kT below the lowest threshold (Pilling & Robertson 2003; Carstensen & Dean 2007). The library accepts any distance (`AbsorbingBarrier::BelowLowestThreshold { kt_multiple }`) or explicit grains (`AtGrains`). The example program takes `--barrier-kt X`. If the barrier would lie below the well bottom, the error message suggests a smaller distance.
+- **Eigenvalue route.** It is an optional choice, `SteadyState::EigenvalueAnalysis` (`--steady-state eigenvalue`), but **it is not available yet**. Selecting it is reported as "not available yet" and is never replaced by another method. MarXus currently has no eigenvalue analysis of J; there is only a general Jacobi diagonalizer in `numeric/jacobi_diag.rs`.
+
+### 5.5 Sensitivity to the absorbing-barrier distance
+
+![barrier distance](plots/barrier_distance_sensitivity.png)
+
+`run_marxus.sh` also runs the full deck with the barrier 5 and 3 kT below the threshold (`marxus_output/c2h3_tight_barrier_5kT.out`, `..._3kT.out`). All 40 conditions are in `barrier_distance_sensitivity.csv`.
+
+The 1 atm rows (MarXus k(P1→W1) relative to MESS):
+
+| T (K) | MESS k(P1→W1) | 10 kT (default) | 5 kT | 3 kT |
+|---|---|---|---|---|
+| 300 | 2.1203e-13 | +5.2% | +5.2% | +5.3% |
+| 500 | 1.7523e-12 | +3.5% | +3.6% | +3.8% |
+| 750 | 3.0644e-12 | +1.7% | +1.9% | +2.5% |
+| 1000 | 2.5737e-12 | −0.0% | +0.6% | +2.0% |
+| 1250 | 1.6573e-12 | −2.4% | −0.8% | +2.0% |
+| 1500 | 9.6459e-13 | −10.2% | −3.4% | +1.5% |
+| 1750 | 5.5199e-13 | −36.2% | −9.9% | −1.8% |
+| 2000 | 3.2672e-13 | not defined | −26.8% | −10.0% |
+
+**At low T (≤ 750 K) the result does not depend on the barrier distance.** The steady state lies on a plateau: the change is less than 1% between 10 and 3 kT, so the remaining +2…+5% is the tunneling-model difference (§5.2).
+
+**At high T a smaller distance recovers MESS.** The barrier then lies above the thermal distribution of the shallow well. With 3 kT the agreement is within 2% up to 1750 K.
+
+At 1000–1250 K, 3 kT overshoots slightly (+2%). The distance should therefore be chosen per condition: as large as the well allows while staying above its thermal distribution, and checked for a plateau by varying it.
+
+At 2000 K (well depth 9.8 kT) even 3 kT remains 10% low. That is the regime of the eigenvalue route, which is not available yet.
+
+### 5.6 Still open
+
+- **Final steady state of deep wells without a sink at low T** (double precision): postponed by Peter.
+- **Eigenvalue route:** to be implemented later.
 
 ## 6. Code changes made for this validation (MarXus, uncommitted)
 
@@ -209,7 +239,10 @@ At 2000 K MarXus now refuses the intermediate steady state with an explanatory e
 - **Example program** `chemical_activation_from_deck`:
   - optional reactant argument;
   - bimolecular rate coefficients k(R→X) = k∞ Φ_X;
-  - every (T, p) is solved separately; a condition without a valid steady state is reported as "not available".
+  - every (T, p) is solved separately; a condition without a valid steady state is reported as "not available";
+  - `--barrier-kt X` sets the absorbing-barrier distance;
+  - `--steady-state intermediate|final|eigenvalue|both` selects the solution.
+- **`SteadyState::EigenvalueAnalysis`**: a selectable option that is reported as not available yet.
 - **Absorbing barrier below the well bottom.** Now an error instead of a silent clamp.
 
-Full test suite: 115 library and 18 binary tests pass.
+Full test suite: 117 library and 18 binary tests pass.

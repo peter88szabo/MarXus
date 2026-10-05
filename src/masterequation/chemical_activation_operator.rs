@@ -141,12 +141,6 @@ pub fn assemble_operator(
         .map_err(|e| format!("Well '{}': {e}", well.name))?;
 
         let barrier = match &options.steady_state {
-            SteadyState::EigenvalueAnalysis => {
-                return Err("The eigenvalue route (rate coefficients from the eigenvalues of J) is not available \
-                            yet; use the intermediate steady state (with a smaller absorbing-barrier distance for \
-                            shallow wells) or the final steady state."
-                    .into());
-            }
             SteadyState::Final => 0,
             SteadyState::Intermediate { barrier } => match barrier {
                 AbsorbingBarrier::BelowLowestThreshold { kt_multiple } => {
@@ -166,7 +160,8 @@ pub fn assemble_operator(
                             "Well '{}': the absorbing barrier {kt_multiple} k_BT below the lowest threshold lies at \
                              or below the bottom of the well (threshold {:.0} cm-1 = {:.1} k_BT above the well \
                              bottom). Nothing can be stabilized and the intermediate steady state is not defined \
-                             at {temperature} K; choose a smaller distance (kt_multiple) or the final steady state.",
+                             at {temperature} K; choose a smaller distance (kt_multiple), the final steady state, or the \
+                             eigenvalue analysis (k_uni = lambda_1, no absorbing barrier).",
                             well.name,
                             threshold as f64 * d_e,
                             threshold as f64 * d_e / kt_cm1
@@ -514,17 +509,6 @@ pub(crate) mod tests {
         let hot = Conditions { temperature_kelvin: 400.0, pressure_torr: 760.0 };
         let err = assemble_operator(&network, &hot, &options).unwrap_err();
         assert!(err.contains("'A'"), "{err}");
-    }
-
-    #[test]
-    fn the_eigenvalue_route_is_reported_as_not_available_yet() {
-        let network = two_well_network();
-        let options = ChemicalActivationOptions {
-            collision_model: CollisionModel::Stepladder,
-            steady_state: SteadyState::EigenvalueAnalysis,
-        };
-        let err = assemble_operator(&network, &conditions(), &options).unwrap_err();
-        assert!(err.contains("not available yet"), "{err}");
     }
 
     #[test]

@@ -1,13 +1,29 @@
 //! Steady-state chemical-activation calculation for an input deck in the MESS input format.
 //!
 //!   cargo run --release --example chemical_activation_from_deck -- [deck.inp] [reactant]
-//!       [--barrier-kt X] [--steady-state intermediate|final|eigenvalue|both]
+//!       [--barrier-kt X] [--steady-state intermediate|final|eigenvalue|both|all] [--eigen-solver inverse|full|lapack]
+//!       [--sum-rule-tolerance X]
 //!
 //! --barrier-kt X   absorbing barrier X k_BT below the lowest threshold of each well (default 10; a
 //!                  smaller value for wells that are shallow compared with 10 k_BT plus their thermal width;
 //!                  the stabilization then depends on this choice)
-//! --steady-state   which solution to compute (default both steady states); `eigenvalue` selects the
-//!                  eigenvalue route, which is not available yet and is reported as such
+//! --steady-state   which solution to compute: the two steady states (`both`, default), one of them, the
+//!                  eigenvalue analysis (`eigenvalue`), or all three (`all`)
+//! --eigen-solver   eigenvalue analysis by inverse iteration with the banded Cholesky factor (`inverse`,
+//!                  default), by the full Householder/QL decomposition (`full`), or by the full decomposition
+//!                  of LAPACK DSYEVD (`lapack`, needs the `openblas` build feature, on by default)
+//! --sum-rule-tolerance X   relative deviation |lambda_1 - k_uni| / k_uni of the eigenvalue analysis above which
+//!                  a warning is printed (default 1.5e-2); the result is kept
+//!
+//! Eigenvalue analysis (Olzmann's solution method, `chemical_activation_eigen.rs`) of J without absorbing
+//! barrier: k_uni(T, p) = sum_j k_j^th + k_c[D], the specific rate coefficients averaged over the
+//! normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010),
+//! text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12), which is printed beside it; a
+//! deviation between the two above the tolerance is reported as a warning (on stderr and in the table).
+//! The output explains this with the reference. For a single well formed through one entrance channel, the
+//! association rate coefficient follows by detailed balance, k(R -> W, T, p) = k_uni(T, p) K(T), with the
+//! equilibrium constant K = k_inf,assoc/k_inf,diss of the high-pressure rate coefficients of the entrance
+//! channel; no absorbing barrier is involved.
 //!
 //! The deck's `Reactant` (a Bimolecular species) forms the wells through its barriers; the source is
 //! thermal (Pfeifle, Olzmann, Int. J. Chem. Kinet. 46, 231 (2014), eqs. 7 and 9). The results table is
@@ -19,8 +35,10 @@
 //! bimolecular sink of a well.
 
 use MarXus::masterequation::chemical_activation_driver::{
-    run_chemical_activation, write_results_table, ChemicalActivationRun, SourceSpecification,
+    run_chemical_activation, run_thermal_rate_coefficients, write_results_table, write_thermal_table,
+    ChemicalActivationRun, SourceSpecification,
 };
+use MarXus::masterequation::chemical_activation_eigen::{EigenSolver, DEFAULT_SUM_RULE_TOLERANCE};
 use MarXus::masterequation::chemical_activation_from_mess_input::{chemical_activation_model_from_mess, MessNetworkSettings};
 use MarXus::masterequation::chemical_activation_network::{
     AbsorbingBarrier, ChannelDestination, ChemicalActivationOptions, SteadyState,
@@ -29,10 +47,12 @@ use MarXus::masterequation::chemical_activation_steady_state::LinearSolver;
 use MarXus::masterequation::mess_input::parse_mess_input_file;
 
 fn main() -> Result<(), String> {
-    // Positional arguments: deck, reactant; options: --barrier-kt X, --steady-state S.
+    // Positional arguments: deck, reactant; options: see the module documentation.
     let mut positional = Vec::new();
     let mut barrier_kt = 10.0;
     let mut selection = "both".to_string();
+    let mut eigen_solver = EigenSolver::default();
+    let mut sum_rule_tolerance = DEFAULT_SUM_RULE_TOLERANCE;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -41,6 +61,19 @@ fn main() -> Result<(), String> {
                 barrier_kt = value.parse::<f64>().map_err(|_| format!("--barrier-kt: invalid number '{value}'"))?;
             }
             "--steady-state" => selection = args.next().ok_or("--steady-state needs a value")?,
+            "--eigen-solver" => {
+                eigen_solver = match args.next().ok_or("--eigen-solver needs a value")?.as_str() {
+                    "inverse" => EigenSolver::InverseIteration,
+                    "full" => EigenSolver::FullDecomposition,
+                    "lapack" => EigenSolver::FullDecompositionLapack,
+                    other => return Err(format!("--eigen-solver: unknown choice '{other}' (inverse, full, lapack)")),
+                }
+            }
+            "--sum-rule-tolerance" => {
+                let value = args.next().ok_or("--sum-rule-tolerance needs a value")?;
+                sum_rule_tolerance =
+                    value.parse::<f64>().map_err(|_| format!("--sum-rule-tolerance: invalid number '{value}'"))?;
+            }
             _ => positional.push(arg),
         }
     }
@@ -53,12 +86,13 @@ fn main() -> Result<(), String> {
     let intermediate = ("intermediate steady state", SteadyState::Intermediate {
         barrier: AbsorbingBarrier::BelowLowestThreshold { kt_multiple: barrier_kt },
     });
-    let solutions = match selection.as_str() {
-        "both" => vec![intermediate, ("final steady state", SteadyState::Final)],
-        "intermediate" => vec![intermediate],
-        "final" => vec![("final steady state", SteadyState::Final)],
-        "eigenvalue" => vec![("eigenvalue analysis", SteadyState::EigenvalueAnalysis)],
-        other => return Err(format!("--steady-state: unknown choice '{other}' (intermediate, final, eigenvalue, both)")),
+    let (solutions, eigenvalue_analysis) = match selection.as_str() {
+        "both" => (vec![intermediate, ("final steady state", SteadyState::Final)], false),
+        "intermediate" => (vec![intermediate], false),
+        "final" => (vec![("final steady state", SteadyState::Final)], false),
+        "eigenvalue" => (vec![], true),
+        "all" => (vec![intermediate, ("final steady state", SteadyState::Final)], true),
+        other => return Err(format!("--steady-state: unknown choice '{other}' (intermediate, final, eigenvalue, both, all)")),
     };
     let model = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default())?;
     if model.entrance_channels.is_empty() {
@@ -156,6 +190,54 @@ fn main() -> Result<(), String> {
                     }
                 }
                 println!("{}", row.join(","));
+            }
+        }
+    }
+
+    if eigenvalue_analysis {
+        println!(
+            "\n# eigenvalue analysis ({eigen_solver:?}) of J without absorbing barrier; sum-rule tolerance \
+             {sum_rule_tolerance:e}"
+        );
+        let mut results = Vec::new();
+        for &t in &model.temperatures_kelvin {
+            for &p in &model.pressures_torr {
+                match run_thermal_rate_coefficients(network, &[t], &[p], model.collision_model, eigen_solver, sum_rule_tolerance) {
+                    Ok(mut r) => {
+                        for warning in r.iter().filter_map(|c| c.thermal.warning.as_ref()) {
+                            eprintln!("warning: T = {t} K, p = {p} Torr: {warning}");
+                        }
+                        results.append(&mut r)
+                    }
+                    Err(e) => println!("# not available: {e}"),
+                }
+            }
+        }
+        if !results.is_empty() {
+            write_thermal_table(network, &results, &mut stdout).map_err(|e| e.to_string())?;
+        }
+        // Association by detailed balance for a single well with one entrance channel.
+        if let (1, [(w, c)], Some(k_inf), Some(reactant)) = (
+            network.wells.len(),
+            model.entrance_channels.as_slice(),
+            &model.entrance_high_pressure_rate,
+            deck.global.reactant_name.as_ref(),
+        ) {
+            println!("\n# bimolecular rate coefficients of {reactant} [cm3/s] by detailed balance, eigenvalue analysis");
+            println!("T[K],P[Torr],k_inf_assoc[cm3/s],k_inf_diss[1/s],k_uni[1/s],k({reactant}->{})", network.wells[*w].name);
+            for r in &results {
+                let k_assoc_inf = k_inf.rate_cm3_s(r.conditions.temperature_kelvin);
+                let entrance = r.thermal.channels.iter().find(|ch| ch.well == *w && ch.channel == *c).unwrap();
+                let k_diss_inf = entrance.high_pressure_rate_s_inv;
+                println!(
+                    "{},{},{:.6e},{:.6e},{:.6e},{:.6e}",
+                    r.conditions.temperature_kelvin,
+                    r.conditions.pressure_torr,
+                    k_assoc_inf,
+                    k_diss_inf,
+                    r.thermal.k_uni_s_inv,
+                    r.thermal.k_uni_s_inv * k_assoc_inf / k_diss_inf
+                );
             }
         }
     }

@@ -11,6 +11,8 @@ and writes
   plots/deviation.png                        MarXus/MESS - 1 for association and dissociation
   plots/high_pressure_limits.png             k_inf of both directions versus 1000/T
   plots/short_decks_1000K.png                1000 K, 1 atm, with and without tunneling
+  plots/barrier_distance_sensitivity.png     association deviation for absorbing barriers 10, 5, 3 kT
+                                             below the threshold (marxus_output/c2h3_tight_barrier_*kT.out)
   comparison_table.csv                       all compared numbers
 
 MarXus quantities:
@@ -310,5 +312,40 @@ ax.margins(y=0.15)
 fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "short_decks_1000K.png"), dpi=200)
 plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
+# 6. Sensitivity to the absorbing-barrier distance (user choice for shallow wells)
+# ----------------------------------------------------------------------------------------------
+fig, ax = plt.subplots(figsize=(8, 5))
+runs = (("10 kT (default)", "c2h3_tight.out", "tab:blue"),
+        ("5 kT", "c2h3_tight_barrier_5kT.out", "tab:orange"),
+        ("3 kT", "c2h3_tight_barrier_3kT.out", "tab:green"))
+sensitivity = {}
+for label, name, color in runs:
+    _, ka, _, _ = marxus_quantities(os.path.join(HERE, "marxus_output", name))
+    sensitivity[label] = ka
+    for p, style in ((0.1, "--"), (10.0, "-")):
+        d = [(t, 100 * (ka[(t, p)] / mess_p[(t, p)][1] - 1)) for t in temperatures if (t, p) in ka]
+        if d:
+            ax.plot(*zip(*d), style, marker="o", color=color, label=f"{label}, {p:g} atm")
+ax.axhspan(-5, 5, color="green", alpha=0.08)
+ax.axhline(0, color="k", lw=0.8)
+ax.set_xlabel("T (K)")
+ax.set_ylabel("k(P1$\\rightarrow$W1): MarXus / MESS - 1 (%)")
+ax.set_title("Absorbing-barrier distance below the threshold (intermediate steady state)")
+ax.legend(fontsize=8, ncol=2)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "barrier_distance_sensitivity.png"), dpi=200)
+plt.close(fig)
+with open(os.path.join(HERE, "barrier_distance_sensitivity.csv"), "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["T_K", "p_atm", "mess_k_P1_W1"] + [f"marxus_{l.split()[0]}kT" for l, _, _ in runs]
+                    + [f"dev_{l.split()[0]}kT_percent" for l, _, _ in runs])
+    for t in temperatures:
+        for p in pressures:
+            m = mess_p[(t, p)][1]
+            ks = [sensitivity[l].get((t, p), math.nan) for l, _, _ in runs]
+            writer.writerow([f"{t:g}", f"{p:g}", f"{m:.6g}"] + [f"{k:.6g}" for k in ks]
+                            + [f"{100 * (k / m - 1):.2f}" for k in ks])
 
 print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))), "and comparison_table.csv")

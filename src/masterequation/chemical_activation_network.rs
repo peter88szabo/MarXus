@@ -193,7 +193,12 @@ impl ChemicalActivationNetwork {
     }
 }
 
-/// Collisional energy-transfer model (implemented in `collision_kernels.rs`).
+/// Default exponential-down cutoff in units of <dE_down>: the neglected tail of the kernel is
+/// exp(-15), about 3e-7 of a deactivating collision.
+pub const DEFAULT_EXPONENTIAL_DOWN_CUTOFF: f64 = 15.0;
+
+/// Collisional energy-transfer model (implemented in `collision_kernels.rs`). The default is the exponential
+/// down model, the model most widely used in master-equation work (R19 ch. 4).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CollisionModel {
     /// Exponential down with exact normalization (R19 eq. 4.16); transitions up to
@@ -203,6 +208,12 @@ pub enum CollisionModel {
     /// "represents the average amount of energy transferred in down collisions" (GO10, text before eq. 16;
     /// eq. 16 relates it to the average over up and down collisions, <dE> = dE_SL tanh(dE_SL/(2 F_E kT))).
     Stepladder,
+}
+
+impl Default for CollisionModel {
+    fn default() -> Self {
+        CollisionModel::ExponentialDown { cutoff_in_mean_down: DEFAULT_EXPONENTIAL_DOWN_CUTOFF }
+    }
 }
 
 /// Position of the absorbing barrier of the intermediate steady state.
@@ -234,10 +245,6 @@ pub enum SteadyState {
     /// them is the stabilization; "implemented by introducing a lower absorbing barrier into the
     /// master equation" (GO10 p. 12295; O02 p. 3616).
     Intermediate { barrier: AbsorbingBarrier },
-    /// Rate coefficients from the eigenvalues and eigenvectors of J instead of a steady state (for wells
-    /// that are shallow compared with the absorbing-barrier distance plus their thermal width). Not
-    /// available yet: selecting it is reported as an error, never replaced by another method.
-    EigenvalueAnalysis,
 }
 
 /// Temperature and bath-gas pressure.
@@ -280,6 +287,15 @@ pub(crate) mod tests {
             },
             bimolecular_sink_s_inv: 0.0,
         }
+    }
+
+    #[test]
+    fn exponential_down_is_the_default_collision_model() {
+        assert_eq!(
+            CollisionModel::default(),
+            CollisionModel::ExponentialDown { cutoff_in_mean_down: DEFAULT_EXPONENTIAL_DOWN_CUTOFF }
+        );
+        assert_eq!(DEFAULT_EXPONENTIAL_DOWN_CUTOFF, 15.0);
     }
 
     #[test]

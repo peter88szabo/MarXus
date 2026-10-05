@@ -112,37 +112,16 @@ pub fn solve_steady_state(
         return Ok(SteadyStateSolution { population: vec![0.0; n], relative_residual: 0.0, max_relative_asymmetry: 0.0 });
     }
 
-    // D = diag(sqrt(f)) relative to the largest weight (the overall scale of D cancels in S = D^-1 J D);
-    // logarithms avoid under- and overflow of rho exp(-E/kT).
-    let log_max = op.log_boltzmann_weight.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let half_log_d: Vec<f64> = op.log_boltzmann_weight.iter().map(|l| 0.5 * (l - log_max)).collect();
-    let d: Vec<f64> = half_log_d.iter().map(|h| h.exp()).collect();
-
-    // S_rc = J_rc sqrt(f_c/f_r) (R19 eq. 5.75), rows sorted by column like J.
-    let s_rows: Vec<Vec<(usize, f64)>> = op
-        .rows
-        .iter()
-        .enumerate()
-        .map(|(r, row)| row.iter().map(|&(c, v)| (c, v * (half_log_d[c] - half_log_d[r]).exp())).collect())
-        .collect();
-    let element = |r: usize, c: usize| -> f64 {
-        s_rows[r].binary_search_by_key(&c, |&(col, _)| col).map(|k| s_rows[r][k].1).unwrap_or(0.0)
-    };
-    let mut max_relative_asymmetry: f64 = 0.0;
-    for (r, row) in s_rows.iter().enumerate() {
-        for &(c, v) in row {
-            if c != r {
-                let w = element(c, r);
-                max_relative_asymmetry = max_relative_asymmetry.max((v - w).abs() / v.abs().max(w.abs()));
-            }
-        }
-    }
+    let symmetrized = symmetrize(op);
+    let (s_rows, half_log_d, d) = (&symmetrized.rows, &symmetrized.half_log_d, &symmetrized.d);
+    let element = |r: usize, c: usize| symmetrized.element(r, c);
+    let max_relative_asymmetry = symmetrized.max_relative_asymmetry;
 
     // Right-hand side of S y = D^-1 F, from logarithms (F/D can exceed the floating-point range only
     // through the factor 1/D).
     let scaled_rhs = |rhs: &[f64]| -> Vec<f64> {
         rhs.iter()
-            .zip(&half_log_d)
+            .zip(half_log_d.iter())
             .map(|(&x, &h)| if x == 0.0 { 0.0 } else { x.signum() * (x.abs().ln() - h).exp() })
             .collect()
     };
@@ -156,23 +135,7 @@ pub fn solve_steady_state(
                      rho_a k_ab = rho_b k_ba. Fix the rates or use the BiCGSTAB solver."
                 ));
             }
-            let bandwidth = s_rows
-                .iter()
-                .enumerate()
-                .flat_map(|(r, row)| row.iter().map(move |&(c, _)| r.abs_diff(c)))
-                .max()
-                .unwrap_or(0);
-            let mut band = SymmetricBandMatrix::zeros(n, bandwidth);
-            for (r, row) in s_rows.iter().enumerate() {
-                for &(c, v) in row {
-                    if c == r {
-                        band.set_diagonal(r, v);
-                    } else if c < r {
-                        band.set_lower(r, c, 0.5 * (v + element(c, r)));
-                    }
-                }
-            }
-            let factor = band.cholesky().map_err(|e| {
+            let factor = symmetrized.band_matrix().cholesky().map_err(|e| {
                 format!(
                     "{e} The symmetrized operator must be positive definite; in the final steady state this \
                      fails when the thermal rate coefficient is negligible compared with the collision frequency \
@@ -181,7 +144,7 @@ pub fn solve_steady_state(
             })?;
 
             // N = D y, then iterative refinement on J N = F: N <- N + D S^-1 D^-1 (F - J N).
-            let to_population = |y: Vec<f64>| -> Vec<f64> { y.iter().zip(&d).map(|(a, b)| a * b).collect() };
+            let to_population = |y: Vec<f64>| -> Vec<f64> { y.iter().zip(d).map(|(a, b)| a * b).collect() };
             let mut population = to_population(factor.solve(&scaled_rhs(source_on_states))?);
             let mut residual_norm = l2_norm(&residual(op, &population, source_on_states));
             for _ in 0..MAX_REFINEMENT_STEPS {
@@ -221,12 +184,92 @@ pub fn solve_steady_state(
                 relative_tolerance,
                 max_iterations,
             )?;
-            y.iter().zip(&d).map(|(a, b)| a * b).collect()
+            y.iter().zip(d.iter()).map(|(a, b)| a * b).collect()
         }
     };
 
     let relative_residual = l2_norm(&residual(op, &population, source_on_states)) / f_norm;
     Ok(SteadyStateSolution { population, relative_residual, max_relative_asymmetry })
+}
+
+/// The symmetrized operator S = D^-1 J D with D = diag(sqrt(f)), S_rc = J_rc sqrt(f_c/f_r)
+/// (R19 eq. 5.75), shared by the steady-state solution and the eigenvalue analysis.
+pub(crate) struct SymmetrizedOperator {
+    /// Rows of S, sorted by column like J.
+    pub rows: Vec<Vec<(usize, f64)>>,
+    /// ln D_r = (ln f_r - max ln f)/2: D relative to the largest weight (the overall scale of D cancels
+    /// in S); logarithms avoid under- and overflow of rho exp(-E/kT).
+    pub half_log_d: Vec<f64>,
+    /// D_r.
+    pub d: Vec<f64>,
+    /// max |S_rc - S_cr| / max(|S_rc|, |S_cr|).
+    pub max_relative_asymmetry: f64,
+}
+
+impl SymmetrizedOperator {
+    pub fn element(&self, r: usize, c: usize) -> f64 {
+        self.rows[r].binary_search_by_key(&c, |&(col, _)| col).map(|k| self.rows[r][k].1).unwrap_or(0.0)
+    }
+
+    /// S as a symmetric band matrix, (S_rc + S_cr)/2 off the diagonal.
+    pub fn band_matrix(&self) -> SymmetricBandMatrix {
+        let n = self.rows.len();
+        let bandwidth = self
+            .rows
+            .iter()
+            .enumerate()
+            .flat_map(|(r, row)| row.iter().map(move |&(c, _)| r.abs_diff(c)))
+            .max()
+            .unwrap_or(0);
+        let mut band = SymmetricBandMatrix::zeros(n, bandwidth);
+        for (r, row) in self.rows.iter().enumerate() {
+            for &(c, v) in row {
+                if c == r {
+                    band.set_diagonal(r, v);
+                } else if c < r {
+                    band.set_lower(r, c, 0.5 * (v + self.element(c, r)));
+                }
+            }
+        }
+        band
+    }
+
+    /// S as a dense symmetric matrix, (S_rc + S_cr)/2 off the diagonal.
+    pub fn dense(&self) -> Vec<Vec<f64>> {
+        let n = self.rows.len();
+        let mut a = vec![vec![0.0; n]; n];
+        for (r, row) in self.rows.iter().enumerate() {
+            for &(c, v) in row {
+                a[r][c] += 0.5 * v;
+                a[c][r] += 0.5 * v;
+            }
+        }
+        a
+    }
+}
+
+pub(crate) fn symmetrize(op: &ChemicalActivationOperator) -> SymmetrizedOperator {
+    let log_max = op.log_boltzmann_weight.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let half_log_d: Vec<f64> = op.log_boltzmann_weight.iter().map(|l| 0.5 * (l - log_max)).collect();
+    let d = half_log_d.iter().map(|h| h.exp()).collect();
+    let rows: Vec<Vec<(usize, f64)>> = op
+        .rows
+        .iter()
+        .enumerate()
+        .map(|(r, row)| row.iter().map(|&(c, v)| (c, v * (half_log_d[c] - half_log_d[r]).exp())).collect())
+        .collect();
+    let mut symmetrized = SymmetrizedOperator { rows, half_log_d, d, max_relative_asymmetry: 0.0 };
+    let mut asymmetry: f64 = 0.0;
+    for (r, row) in symmetrized.rows.iter().enumerate() {
+        for &(c, v) in row {
+            if c != r {
+                let w = symmetrized.element(c, r);
+                asymmetry = asymmetry.max((v - w).abs() / v.abs().max(w.abs()));
+            }
+        }
+    }
+    symmetrized.max_relative_asymmetry = asymmetry;
+    symmetrized
 }
 
 /// F - J N.
