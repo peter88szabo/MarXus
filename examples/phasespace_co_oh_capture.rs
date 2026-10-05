@@ -1,6 +1,6 @@
 use MarXus::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
 use MarXus::barrierless::phasespace::types::{
-    CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput,
+    CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput, PstTstLevel,
 };
 use MarXus::molecule::{MolType, MoleculeBuilder};
 
@@ -59,6 +59,8 @@ fn main() -> Result<(), String> {
         symmetry_operations,
         potential_prefactor_au,
         potential_power_exponent,
+        // MESS default TST level (EJ).
+        tst_level: PstTstLevel::default(),
     })?;
 
     // Build reactant molecules to get internal partition functions (rot+vib+elec).

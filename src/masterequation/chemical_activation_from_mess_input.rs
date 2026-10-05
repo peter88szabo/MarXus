@@ -29,8 +29,12 @@
 //!     (rho_AB(E) = sum_E' rho_A(E') rho_B(E - E') dE), E_th = E(asymptote) + E_inf;
 //!   dissociation, k_inf in s-1: W(E - E_th) from the density of the well, E_th = E(well) + E_inf,
 //!     which may not lie below the dissociation asymptote.
-//! A phase-space-theory core without an ILT block is refused: the barrierless module is not yet
-//! connected for chemical activation.
+//! Without an ILT block, a barrier with a phase-space-theory core (`Core PhaseSpaceTheory`) uses that core
+//! (`barrierless::phasespace`, `TSTLevel` T, E or EJ, default EJ as in MESS): W(E - E_barrier) is the
+//! core number of states times the electronic degeneracy of the barrier, convolved with its conserved
+//! vibrations (`microcanonical_builder::transition_state_sum_of_states`); for an isotropic -V0/R^n
+//! potential its canonical capture rate is Georgievskii, Klippenstein, J. Chem. Phys. 122, 194103 (2005),
+//! eq. 55. An ILT block, when present, takes precedence.
 //!
 //! Collisions: Lennard-Jones parameters combined as sigma = (sigma_1 + sigma_2)/2,
 //! eps = sqrt(eps_1 eps_2) (Troe, J. Chem. Phys. 66, 4758 (1977), Sec. III), reduced mass of the two
@@ -56,7 +60,12 @@ use super::mess_input::{
     rotational_constants_from_geometry_cm1, IltDirection, MessBarrierCore, MessDeck, MessSpeciesRrho,
     TunnelingSpecification,
 };
-use super::microcanonical_builder::{rrho_density_of_states, rrho_sum_of_states, SpeciesMicroModel};
+use super::microcanonical_builder::{
+    rrho_density_of_states, rrho_sum_of_states, transition_state_sum_of_states, SpeciesMicroModel,
+    TransitionStateModel,
+};
+use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
+use crate::barrierless::phasespace::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput};
 
 /// Conversion factor from Epsilons[1/cm] to K (hc/k_B in cm K).
 const CM1_TO_KELVIN: f64 = 1.438_776_877;
@@ -281,18 +290,51 @@ pub fn chemical_activation_model_from_mess(
     let mut channels: Vec<Vec<Channel>> = vec![Vec::new(); grids.len()];
     for barrier in &deck.barriers {
         let name = &barrier.name;
-        let phase_space_core = matches!(barrier.core, MessBarrierCore::PhaseSpaceTheory { .. });
         // Tight transition state: (first cell of W, classical threshold cell, W on the cells), with the
         // Eckart tunneling convolution of Miller (1979, eqs. 8-9) when the barrier has one. Tunneling
         // reaches energies only down to `floor_cell`, the higher ground state of the two sides (below it
         // one side has no states).
         let tight_sum_of_states = |floor_cell: isize| -> Result<(isize, isize, Vec<f64>), String> {
-            if phase_space_core {
-                return Err(format!(
-                    "Barrier '{name}' is barrierless (phase-space-theory core): give its high-pressure rate \
-                     coefficient in an InverseLaplaceTransform block; the barrierless module is not yet \
-                     connected for chemical activation."
-                ));
+            // Barrierless transition state with a phase-space-theory core (MESS `Core PhaseSpaceTheory`):
+            // the core number of states (`barrierless::phasespace`, TSTLevel as in the deck, default EJ),
+            // times the electronic degeneracy, convolved with the conserved vibrations of the barrier
+            // (`microcanonical_builder::transition_state_sum_of_states`), from the barrier energy on.
+            if let MessBarrierCore::PhaseSpaceTheory {
+                fragment_a_geometry_symbols,
+                fragment_a_geometry_angstrom,
+                fragment_b_geometry_symbols,
+                fragment_b_geometry_angstrom,
+                symmetry_operations,
+                potential_prefactor_au,
+                potential_power_exponent,
+                tst_level,
+            } = &barrier.core
+            {
+                let fragment = |symbols: &Vec<String>, coordinates: &Vec<[f64; 3]>| CaptureFragment {
+                    mass_amu: None,
+                    rotor: CaptureFragmentRotorModel::GeometryAngstrom {
+                        symbols: symbols.clone(),
+                        coordinates_angstrom: coordinates.clone(),
+                    },
+                };
+                let pst_core = PhaseSpaceTheoryModel::new(PhaseSpaceTheoryInput {
+                    fragment_a: fragment(fragment_a_geometry_symbols, fragment_a_geometry_angstrom),
+                    fragment_b: fragment(fragment_b_geometry_symbols, fragment_b_geometry_angstrom),
+                    symmetry_operations: *symmetry_operations,
+                    potential_prefactor_au: *potential_prefactor_au,
+                    potential_power_exponent: *potential_power_exponent,
+                    tst_level: *tst_level,
+                })
+                .map_err(|e| format!("Barrier '{name}': {e}"))?;
+                let threshold = grid.cell_of_energy(barrier.rrho.zero_energy_cm1);
+                let n = cells_from(threshold, &format!("Barrier '{name}'"))?;
+                let ts = TransitionStateModel::PhaseSpaceTheoryRRHO {
+                    pst_core,
+                    vibrational_frequencies_cm1: barrier.rrho.vibrational_frequencies_cm1.clone(),
+                    electronic_degeneracy: barrier.rrho.electronic_degeneracy_ground,
+                };
+                let w_cells = transition_state_sum_of_states(n, cell, &ts).map_err(|e| format!("Barrier '{name}': {e}"))?;
+                return Ok((threshold, threshold, w_cells));
             }
             let threshold = grid.cell_of_energy(barrier.rrho.zero_energy_cm1);
             let n = cells_from(threshold, &format!("Barrier '{name}'"))?;
@@ -835,12 +877,36 @@ End
     }
 
     #[test]
-    fn a_phase_space_barrier_without_an_ilt_block_is_refused() {
+    fn a_phase_space_barrier_without_an_ilt_block_uses_the_phase_space_core() {
+        // B0 (R -> W1) without its ILT block: the phase-space-theory core (default TSTLevel EJ) gives the
+        // transition-state sum of states. In the test deck the core fragments are the reactant fragments
+        // (same geometries), the TS frequencies are the fragment frequencies, g_TS/(g_A g_B) = 6/(2*3) = 1 and
+        // sigma_A sigma_B / sigma_PST = 1*2/2 = 1, so the entrance high-pressure rate coefficient is the
+        // isotropic capture rate of Georgievskii, Klippenstein, J. Chem. Phys. 122, 194103 (2005), eq. 55:
+        //   k(T) = (8 pi)^(1/2) ((n-2)/2)^(2/n) Gamma(1 - 2/n) mu^(-1/2) V0^(2/n) T^(1/2 - 2/n)  (atomic units).
+        use crate::numeric::lanczos_gamma::gamma_func;
+        use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
         let start = DECK.find("      InverseLaplaceTransform").unwrap();
         let end = start + DECK[start..].find("      End\n").unwrap() + "      End\n".len();
         let deck = format!("{}{}", &DECK[..start], &DECK[end..]);
-        let err = build(&deck, &MessNetworkSettings::default()).unwrap_err();
-        assert!(err.contains("B0"), "{err}");
+        let m = build(&deck, &MessNetworkSettings::default()).unwrap();
+        let rate = m.entrance_high_pressure_rate.as_ref().expect("the deck has a bimolecular Reactant");
+        let mass = |symbols: &[&str]| -> f64 {
+            mass_vector_from_symbols_amu(&symbols.iter().map(|s| s.to_string()).collect::<Vec<_>>()).unwrap().iter().sum()
+        };
+        let (m_a, m_b) = (mass(&["H", "C", "O"]), mass(&["O", "O"]));
+        let mu_au = m_a * m_b / (m_a + m_b) * crate::constants::AMU_TO_ELECTRON_MASS;
+        let (v0, n) = (2.4_f64, 6.0_f64);
+        // Atomic units (CODATA 2018): k_B = 3.166811563e-6 Hartree/K, a0 = 0.529177210903e-8 cm,
+        // t_au = 2.4188843265857e-17 s.
+        let au_to_cm3_s = 0.529177210903e-8_f64.powi(3) / 2.4188843265857e-17;
+        for t in [300.0_f64, 500.0] {
+            let kt_au = 3.166811563e-6 * t;
+            let k_capture = (8.0 * std::f64::consts::PI).sqrt() * ((n - 2.0) / 2.0).powf(2.0 / n) * gamma_func(1.0 - 2.0 / n)
+                * mu_au.powf(-0.5) * v0.powf(2.0 / n) * kt_au.powf(0.5 - 2.0 / n) * au_to_cm3_s;
+            let k = rate.rate_cm3_s(t);
+            assert!((k / k_capture - 1.0).abs() < 5e-3, "T = {t}: {k:e} vs capture {k_capture:e}");
+        }
     }
 
     #[test]

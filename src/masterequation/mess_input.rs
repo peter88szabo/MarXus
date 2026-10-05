@@ -26,6 +26,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::barrierless::ilt::ilt_barrierless::ModifiedArrhenius;
+use crate::barrierless::phasespace::types::PstTstLevel;
 use crate::inertia::inertia::get_brot;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
@@ -86,6 +87,8 @@ pub enum MessBarrierCore {
         symmetry_operations: f64,
         potential_prefactor_au: f64,
         potential_power_exponent: f64,
+        /// `TSTLevel` (T, E, EJ, J=0); default EJ, as in MESS.
+        tst_level: PstTstLevel,
     },
 }
 
@@ -564,6 +567,7 @@ fn parse_phasespace_core(block: &[String]) -> Result<Option<MessBarrierCore>, St
     let mut symmetry_operations: Option<f64> = None;
     let mut v0_au: Option<f64> = None;
     let mut n: Option<f64> = None;
+    let mut tst_level = PstTstLevel::default();
 
     let mut i = 0usize;
     while i < block.len() {
@@ -603,6 +607,14 @@ fn parse_phasespace_core(block: &[String]) -> Result<Option<MessBarrierCore>, St
             v0_au = Some(parse_f64(line.split_whitespace().last().unwrap())?);
         } else if line.starts_with("PotentialPowerExponent") {
             n = Some(parse_f64(line.split_whitespace().last().unwrap())?);
+        } else if first_token(line) == Some("TSTLevel") {
+            tst_level = match line.split_whitespace().nth(1) {
+                Some("T") => PstTstLevel::T,
+                Some("E") => PstTstLevel::E,
+                Some("EJ") => PstTstLevel::EJ,
+                Some("J=0") => PstTstLevel::J0,
+                other => return Err(format!("PhaseSpaceTheory TSTLevel: unknown level {other:?} (T, E, EJ, J=0).")),
+            };
         }
         i += 1;
     }
@@ -621,6 +633,7 @@ fn parse_phasespace_core(block: &[String]) -> Result<Option<MessBarrierCore>, St
         symmetry_operations: symmetry_operations.unwrap_or(1.0),
         potential_prefactor_au: v0_au.ok_or("Missing PotentialPrefactor[au]")?,
         potential_power_exponent: n.ok_or("Missing PotentialPowerExponent")?,
+        tst_level,
     }))
 }
 
@@ -852,7 +865,7 @@ pub fn parse_mess_input_file(path: impl AsRef<Path>) -> Result<MessDeck, String>
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_mess_input, MessBarrierCore};
+    use super::{parse_mess_input, MessBarrierCore, PstTstLevel};
 
     #[test]
     fn bimolecular_fragment_headers_do_not_require_end_blocks() {
@@ -1051,7 +1064,22 @@ End
         let parsed = parse_mess_input(deck).expect("should parse");
         assert_eq!(parsed.barriers.len(), 1);
         assert!(parsed.barriers[0].rrho.geometry_symbols.is_empty());
-        assert!(matches!(parsed.barriers[0].core, MessBarrierCore::PhaseSpaceTheory { .. }));
+        // Without TSTLevel the MESS default EJ applies.
+        assert!(matches!(
+            parsed.barriers[0].core,
+            MessBarrierCore::PhaseSpaceTheory { tst_level: PstTstLevel::EJ, .. }
+        ));
+        // TSTLevel is read: E, EJ, T, J=0.
+        for (keyword, level) in [("E", PstTstLevel::E), ("EJ", PstTstLevel::EJ), ("T", PstTstLevel::T), ("J=0", PstTstLevel::J0)] {
+            let with_level = deck.replace("PotentialPowerExponent 6.", &format!("PotentialPowerExponent 6.\n      TSTLevel {keyword}"));
+            let parsed = parse_mess_input(&with_level).expect("should parse");
+            match &parsed.barriers[0].core {
+                MessBarrierCore::PhaseSpaceTheory { tst_level, .. } => assert_eq!(*tst_level, level, "{keyword}"),
+                _ => panic!("not a phase-space core"),
+            }
+        }
+        let unknown = deck.replace("PotentialPowerExponent 6.", "PotentialPowerExponent 6.\n      TSTLevel X");
+        assert!(parse_mess_input(&unknown).is_err());
     }
 
     #[test]

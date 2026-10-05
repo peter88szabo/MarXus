@@ -22,7 +22,7 @@ use crate::constants::{AMU_TO_ELECTRON_MASS, CM1_TO_HARTREE, PI};
 use crate::numeric::lanczos_gamma::gamma_func;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
-use super::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput};
+use super::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput, PstTstLevel};
 
 /// Resulting analytical PST state-count model:
 ///   N(E) = states_prefactor * E^power
@@ -65,33 +65,52 @@ impl PhaseSpaceTheoryModel {
         // MESS uses `_states_factor = 1/symmetry_operations`.
         let mut states_prefactor = 1.0 / input.symmetry_operations;
 
-        // Numerical factor depends on the total number of rotational constants.
-        // This encodes different combinations of linear/nonlinear fragments.
-        match rotational_constants_hartree.len() {
-            2 => {
-                // (2 + 0): one linear rotor + one atom
+        let n_rot = rotational_constants_hartree.len();
+        let n = input.potential_power_exponent;
+        // MESS: power = (number of rotational constants + 2)/2 - 2/n.
+        let power = (n_rot as f64 + 2.0) / 2.0 - 2.0 / n;
+        if !(2..=6).contains(&n_rot) {
+            return Err(format!(
+                "Unsupported total number of rotational constants for PST: {n_rot} (expected 2..=6)."
+            ));
+        }
+        // Classical rotor phase-space factor: sqrt(pi) per nonlinear fragment (one nonlinear fragment for
+        // 3 or 5 constants, two for 6), as in MESS for the EJ and T levels.
+        let nonlinear_rotor_factor = match n_rot {
+            3 | 5 => PI.sqrt(),
+            6 => PI,
+            _ => 1.0,
+        };
+        match input.tst_level {
+            PstTstLevel::E => {
+                // MESS E level, microcanonical variational TST (Georgievskii, Klippenstein, J. Chem. Phys.
+                // 122, 194103 (2005), eq. 58): c_r d^(2/n) (1 + 1/d)^((r+2)/2), d = (r+2) n/4 - 1.
+                states_prefactor *= match n_rot {
+                    2 => 1.0,
+                    3 => 16.0 / 15.0,
+                    4 => 1.0 / 3.0,
+                    5 => 32.0 / 105.0,
+                    _ => PI / 12.0,
+                };
+                let internal_dimension_count = n_rot as f64 + 2.0;
+                let d_parameter = internal_dimension_count * n / 4.0 - 1.0;
+                states_prefactor *= d_parameter.powf(2.0 / n)
+                    * (1.0 + 1.0 / d_parameter).powf(internal_dimension_count / 2.0);
             }
-            3 => {
-                // (3 + 0): one nonlinear rotor + one atom
-                states_prefactor *= 16.0 / 15.0;
+            PstTstLevel::EJ => {
+                // MESS EJ level (the MESS default), E,J-resolved TST; its canonical capture rate is
+                // GK05 eq. 55: 2 ((n-2)/2)^(2/n) Gamma(1 - 2/n) / Gamma(power + 1).
+                states_prefactor *= nonlinear_rotor_factor * 2.0 * ((n - 2.0) / 2.0).powf(2.0 / n)
+                    * gamma_func(1.0 - 2.0 / n)
+                    / gamma_func(power + 1.0);
             }
-            4 => {
-                // (2 + 2): two linear rotors
-                states_prefactor *= 1.0 / 3.0;
+            PstTstLevel::T => {
+                // MESS T level, canonical variational TST: 2 (n/2)^(2/n) exp(2/n) / Gamma(power + 1).
+                states_prefactor *= nonlinear_rotor_factor * 2.0 * (n / 2.0).powf(2.0 / n) * (2.0 / n).exp()
+                    / gamma_func(power + 1.0);
             }
-            5 => {
-                // (2 + 3): one linear + one nonlinear rotor
-                states_prefactor *= 32.0 / 105.0;
-            }
-            6 => {
-                // (3 + 3): two nonlinear rotors
-                states_prefactor *= PI / 12.0;
-            }
-            other => {
-                return Err(format!(
-                    "Unsupported total number of rotational constants for PST: {} (expected 2..=6).",
-                    other
-                ));
+            PstTstLevel::J0 => {
+                return Err("PST TSTLevel J=0 is not supported (as in MESS).".into());
             }
         }
 
@@ -108,31 +127,8 @@ impl PhaseSpaceTheoryModel {
         }
         states_prefactor /= rotational_constants_product.sqrt();
 
-        // Potential / long-range part:
-        //
-        // MESS uses:
-        //   itemp = n_rot_constants + 2
-        //   dtemp = itemp * n / 4 - 1
-        //   states_factor *= (dtemp*V0)^(2/n) * (1 + 1/dtemp)^(itemp/2)
-        //   power = itemp/2 - 2/n
-        //
-        // where `V0` is in atomic units and n is the potential exponent.
-        let internal_dimension_count = (rotational_constants_hartree.len() as f64) + 2.0;
-        let n = input.potential_power_exponent;
-
-        let d_parameter = internal_dimension_count * n / 4.0 - 1.0;
-        if !(d_parameter > 0.0) || !d_parameter.is_finite() {
-            return Err(format!(
-                "Invalid PST parameter d = (D*n/4 - 1) = {}. Check potential exponent and fragment model.",
-                d_parameter
-            ));
-        }
-
-        let v0 = input.potential_prefactor_au;
-        states_prefactor *= (d_parameter * v0).powf(2.0 / n)
-            * (1.0 + 1.0 / d_parameter).powf(internal_dimension_count / 2.0);
-
-        let power = internal_dimension_count / 2.0 - 2.0 / n;
+        // Potential prefactor contribution, MESS: states_factor *= V0^(2/n).
+        states_prefactor *= input.potential_prefactor_au.powf(2.0 / n);
 
         // Canonical weight factor uses Γ(power+1).
         let gamma_factor = gamma_func(power + 1.0);
@@ -188,8 +184,8 @@ fn validate_input(input: &PhaseSpaceTheoryInput) -> Result<(), String> {
     if input.potential_prefactor_au <= 0.0 || !input.potential_prefactor_au.is_finite() {
         return Err("potential_prefactor_au must be positive and finite.".into());
     }
-    if input.potential_power_exponent <= 1.0 || !input.potential_power_exponent.is_finite() {
-        return Err("potential_power_exponent must be > 1 and finite.".into());
+    if input.potential_power_exponent <= 2.0 || !input.potential_power_exponent.is_finite() {
+        return Err("potential_power_exponent must be > 2 and finite (as in MESS).".into());
     }
     validate_fragment(&input.fragment_a)?;
     validate_fragment(&input.fragment_b)?;
@@ -297,42 +293,26 @@ fn push_rotational_constants(
                 return Ok(());
             }
 
-            // Compute rotational constants from the inertia tensor using the existing inertia module.
-            // This provides principal-axis rotational constants in cm^-1.
+            // Rotational constants from the principal moments of inertia, as in MESS: B_i = 1/(2 I_i); a
+            // fragment with I_min/I_mid < 1e-5 is linear, with B = 1/(2 I_mid) twice.
             let masses_amu = mass_vector_from_symbols_amu(&symbols)?;
             let coords: Vec<[f64; 3]> = coordinates_angstrom.clone();
             let brot = crate::inertia::inertia::get_brot(&coords, &masses_amu);
-
-            // Interpret the inertia-derived constants:
-            // - Nonlinear fragments: 3 finite constants.
-            // - Linear fragments (incl. diatomics): the inertia tensor has one ~0 principal moment,
-            //   which makes one rotational constant blow up. We drop non-finite/huge values and
-            //   treat the remaining two as the degenerate linear constant.
-            let mut finite: Vec<f64> = brot
-                .into_iter()
-                .filter(|b| b.is_finite() && *b > 0.0 && *b < 1.0e6)
-                .collect();
-
-            if finite.is_empty() {
-                return Err("Failed to compute finite rotational constants from geometry.".into());
+            // B is proportional to 1/I: sort B descending, i.e. moments ascending (an infinite B is I = 0).
+            let mut b_desc: Vec<f64> = brot.into_iter().map(|b| if b.is_finite() { b } else { f64::INFINITY }).collect();
+            if b_desc.len() != 3 || b_desc.iter().any(|b| !(*b > 0.0)) {
+                return Err("Failed to compute rotational constants from the fragment geometry.".into());
             }
-
-            if finite.len() == 1 {
-                // Should not happen for a real polyatomic; treat as atom-like.
-                return Ok(());
-            }
-
-            if finite.len() == 2 {
-                let b = 0.5 * (finite[0] + finite[1]);
-                out_rotational_constants_hartree.push(b * CM1_TO_HARTREE);
-                out_rotational_constants_hartree.push(b * CM1_TO_HARTREE);
-                return Ok(());
-            }
-
-            // 3 or more finite (should be exactly 3). Keep first 3.
-            finite.truncate(3);
-            for b in finite {
-                out_rotational_constants_hartree.push(b * CM1_TO_HARTREE);
+            b_desc.sort_by(|x, y| y.partial_cmp(x).unwrap());
+            // I_min/I_mid = B_mid/B_max.
+            let linear = !b_desc[0].is_finite() || b_desc[1] / b_desc[0] < 1.0e-5;
+            if linear {
+                out_rotational_constants_hartree.push(b_desc[1] * CM1_TO_HARTREE);
+                out_rotational_constants_hartree.push(b_desc[1] * CM1_TO_HARTREE);
+            } else {
+                for b in b_desc {
+                    out_rotational_constants_hartree.push(b * CM1_TO_HARTREE);
+                }
             }
             Ok(())
         }
@@ -353,5 +333,162 @@ fn fragment_mass_amu(fragment: &CaptureFragment) -> Result<f64, String> {
             Ok(masses.iter().sum::<f64>())
         }
         _ => Err("Fragment mass_amu is required unless GeometryAngstrom is provided.".into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::barrierless::phasespace::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput, PstTstLevel};
+
+    // Atomic units throughout (hbar = 1, h = 2 pi, k_B = 1): energies and k_B T in Hartree, masses in
+    // electron masses, rate coefficients in bohr^3 per atomic time unit.
+    const B_LIN_CM1: f64 = 1.44;
+    const B_NONLIN_CM1: [f64; 3] = [0.9, 0.31, 0.25];
+
+    fn atom(mass: f64) -> CaptureFragment {
+        CaptureFragment { mass_amu: Some(mass), rotor: CaptureFragmentRotorModel::Atom }
+    }
+    fn linear(mass: f64) -> CaptureFragment {
+        CaptureFragment { mass_amu: Some(mass), rotor: CaptureFragmentRotorModel::LinearRigidRotor { rotational_constant_cm1: B_LIN_CM1 } }
+    }
+    fn nonlinear(mass: f64) -> CaptureFragment {
+        CaptureFragment { mass_amu: Some(mass), rotor: CaptureFragmentRotorModel::NonlinearRigidRotor { rotational_constants_cm1: B_NONLIN_CM1 } }
+    }
+
+    /// Classical rigid-rotor partition function (symmetry number 1): linear kT/B, nonlinear
+    /// pi^(1/2) (kT)^(3/2) / (ABC)^(1/2) (e.g. McQuarrie, Statistical Mechanics (1976), ch. 8).
+    fn rotor_partition_function(fragment: &CaptureFragment, kt: f64) -> f64 {
+        match &fragment.rotor {
+            CaptureFragmentRotorModel::Atom => 1.0,
+            CaptureFragmentRotorModel::LinearRigidRotor { rotational_constant_cm1 } => kt / (rotational_constant_cm1 * CM1_TO_HARTREE),
+            CaptureFragmentRotorModel::NonlinearRigidRotor { rotational_constants_cm1 } => {
+                let abc: f64 = rotational_constants_cm1.iter().map(|b| b * CM1_TO_HARTREE).product();
+                PI.sqrt() * kt.powf(1.5) / abc.sqrt()
+            }
+            CaptureFragmentRotorModel::GeometryAngstrom { .. } => unreachable!(),
+        }
+    }
+
+    /// Canonical capture rate coefficient from the PST weight Q_PST(T):
+    ///   k = (kT/h) Q_PST / ((mu kT / 2 pi)^(3/2) Q_rot,A Q_rot,B)   (atomic units).
+    fn capture_rate_from_model(model: &PhaseSpaceTheoryModel, a: &CaptureFragment, b: &CaptureFragment, kt: f64) -> f64 {
+        let mu = 1.0 / (1.0 / (a.mass_amu.unwrap() * AMU_TO_ELECTRON_MASS) + 1.0 / (b.mass_amu.unwrap() * AMU_TO_ELECTRON_MASS));
+        let q_pst = model.canonical_weight_from_kbt_hartree(kt).unwrap();
+        let q_translation = (mu * kt / (2.0 * PI)).powf(1.5);
+        kt / (2.0 * PI) * q_pst / (q_translation * rotor_partition_function(a, kt) * rotor_partition_function(b, kt))
+    }
+
+    fn input(a: CaptureFragment, b: CaptureFragment, n: f64, level: PstTstLevel) -> PhaseSpaceTheoryInput {
+        PhaseSpaceTheoryInput {
+            fragment_a: a,
+            fragment_b: b,
+            symmetry_operations: 1.0,
+            potential_prefactor_au: 37.0,
+            potential_power_exponent: n,
+            tst_level: level,
+        }
+    }
+
+    fn reduced_mass_au(a: &CaptureFragment, b: &CaptureFragment) -> f64 {
+        1.0 / (1.0 / (a.mass_amu.unwrap() * AMU_TO_ELECTRON_MASS) + 1.0 / (b.mass_amu.unwrap() * AMU_TO_ELECTRON_MASS))
+    }
+
+    fn fragment_pairs() -> Vec<(CaptureFragment, CaptureFragment)> {
+        vec![
+            (atom(1.0), linear(32.0)),       // 2 rotational constants
+            (atom(1.0), nonlinear(117.0)),   // 3
+            (linear(28.0), linear(32.0)),    // 4
+            (nonlinear(117.0), linear(32.0)), // 5
+            (nonlinear(117.0), nonlinear(33.0)), // 6
+        ]
+    }
+
+    #[test]
+    fn the_default_level_is_ej_as_in_mess() {
+        assert_eq!(PstTstLevel::default(), PstTstLevel::EJ);
+    }
+
+    #[test]
+    fn ej_level_reproduces_the_isotropic_capture_rate_of_georgievskii_klippenstein_eq_55() {
+        // k(T) = (8 pi)^(1/2) ((n-2)/2)^(2/n) Gamma(1 - 2/n) mu^(-1/2) V0^(2/n) T^(1/2 - 2/n)
+        // (Georgievskii, Klippenstein, J. Chem. Phys. 122, 194103 (2005), eq. 55), independent of the
+        // rotational degrees of freedom of the fragments.
+        for n in [4.0f64, 6.0] {
+            for (a, b) in fragment_pairs() {
+                let model = PhaseSpaceTheoryModel::new(input(a.clone(), b.clone(), n, PstTstLevel::EJ)).unwrap();
+                for kt in [3.0e-4f64, 1.0e-3, 4.0e-3] {
+                    let mu = reduced_mass_au(&a, &b);
+                    let expected = (8.0 * PI).sqrt() * ((n - 2.0) / 2.0).powf(2.0 / n) * gamma_func(1.0 - 2.0 / n)
+                        * mu.powf(-0.5) * 37.0f64.powf(2.0 / n) * kt.powf(0.5 - 2.0 / n);
+                    let got = capture_rate_from_model(&model, &a, &b, kt);
+                    assert!((got / expected - 1.0).abs() < 1e-10, "n {n}: {got:e} vs {expected:e}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ej_level_for_dispersion_gives_the_numerical_coefficient_of_eq_57() {
+        // n = 6, V0 = C6: k(T) = 8.55 mu^(-1/2) C6^(1/3) T^(1/6) (GK05 eq. 57).
+        let (a, b) = (nonlinear(117.0), linear(32.0));
+        let model = PhaseSpaceTheoryModel::new(input(a.clone(), b.clone(), 6.0, PstTstLevel::EJ)).unwrap();
+        let kt = 1.0e-3;
+        let k = capture_rate_from_model(&model, &a, &b, kt);
+        let coefficient = k / (reduced_mass_au(&a, &b).powf(-0.5) * 37.0f64.powf(1.0 / 3.0) * kt.powf(1.0 / 6.0));
+        assert!((coefficient - 8.55).abs() < 5e-3, "{coefficient}");
+    }
+
+    #[test]
+    fn t_level_is_the_canonical_variational_rate_of_an_isotropic_potential() {
+        // Canonical variational TST for V = -V0/R^n: the capture flux sqrt(8kT/(pi mu)) pi R^2 exp(V0/(R^n kT))
+        // is minimal at R^n = n V0/(2 kT), giving k = sqrt(8kT/(pi mu)) pi (n V0/(2kT))^(2/n) exp(2/n).
+        for n in [4.0f64, 6.0] {
+            for (a, b) in fragment_pairs() {
+                let model = PhaseSpaceTheoryModel::new(input(a.clone(), b.clone(), n, PstTstLevel::T)).unwrap();
+                let kt = 1.0e-3;
+                let mu = reduced_mass_au(&a, &b);
+                let expected = (8.0 * kt / (PI * mu)).sqrt() * PI * (n * 37.0 / (2.0 * kt)).powf(2.0 / n) * (2.0 / n).exp();
+                let got = capture_rate_from_model(&model, &a, &b, kt);
+                assert!((got / expected - 1.0).abs() < 1e-10, "n {n}: {got:e} vs {expected:e}");
+            }
+        }
+    }
+
+    #[test]
+    fn e_level_keeps_the_microcanonical_variational_form_of_eq_58() {
+        // E level: prefactor c_r d^(2/n) (1 + 1/d)^((r+2)/2), d = (r+2) n/4 - 1 (GK05 eq. 58), with the
+        // rotor factor c_r (1, 16/15, 1/3, 32/105, pi/12 for r = 2..6); relative to the EJ level for r = 5,
+        // n = 6 this is 1.125.
+        let (a, b) = (nonlinear(117.0), linear(32.0));
+        let e = PhaseSpaceTheoryModel::new(input(a.clone(), b.clone(), 6.0, PstTstLevel::E)).unwrap();
+        let ej = PhaseSpaceTheoryModel::new(input(a, b, 6.0, PstTstLevel::EJ)).unwrap();
+        assert_eq!(e.power, ej.power);
+        let d: f64 = 7.0 * 6.0 / 4.0 - 1.0;
+        let expected_ratio = (32.0 / 105.0) * d.powf(1.0 / 3.0) * (1.0 + 1.0 / d).powf(3.5)
+            / (PI.sqrt() * 2.0 * 2.0f64.powf(1.0 / 3.0) * gamma_func(2.0 / 3.0) / gamma_func(ej.power + 1.0));
+        assert!((e.states_prefactor / ej.states_prefactor / expected_ratio - 1.0).abs() < 1e-10);
+        assert!((e.states_prefactor / ej.states_prefactor - 1.125).abs() < 1e-3);
+    }
+
+    #[test]
+    fn a_nearly_linear_geometry_counts_as_linear_with_the_middle_moment() {
+        // As in the reference implementation: I_min/I_mid < 1e-5 means linear, B = 1/(2 I_mid).
+        let chain = CaptureFragment {
+            mass_amu: None,
+            rotor: CaptureFragmentRotorModel::GeometryAngstrom {
+                symbols: vec!["O".into(), "C".into(), "O".into()],
+                coordinates_angstrom: vec![[0.0, 0.0, -1.16], [0.0, 1.0e-7, 0.0], [0.0, 0.0, 1.16]],
+            },
+        };
+        let model = PhaseSpaceTheoryModel::new(input(atom(1.0), chain, 6.0, PstTstLevel::EJ)).unwrap();
+        assert!((model.power - (4.0 / 2.0 - 1.0 / 3.0)).abs() < 1e-12, "power {}", model.power);
+    }
+
+    #[test]
+    fn exponents_not_above_two_and_the_j0_level_are_refused() {
+        let (a, b) = (nonlinear(117.0), linear(32.0));
+        assert!(PhaseSpaceTheoryModel::new(input(a.clone(), b.clone(), 2.0, PstTstLevel::EJ)).is_err());
+        assert!(PhaseSpaceTheoryModel::new(input(a, b, 6.0, PstTstLevel::J0)).is_err());
     }
 }

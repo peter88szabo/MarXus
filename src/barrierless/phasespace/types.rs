@@ -71,4 +71,21 @@ pub struct PhaseSpaceTheoryInput {
     ///
     /// In MESS input this is `PotentialPowerExponent`.
     pub potential_power_exponent: f64,
+
+    /// TST level of the PST number of states (MESS `TSTLevel`; default EJ, as in MESS).
+    pub tst_level: PstTstLevel,
+}
+
+/// TST level of the phase-space-theory core (MESS keyword `TSTLevel`: T, E, EJ, J=0).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PstTstLevel {
+    /// Canonical variational TST.
+    T,
+    /// Microcanonical (E-resolved) variational TST.
+    E,
+    /// E,J-resolved TST (MESS default).
+    #[default]
+    EJ,
+    /// J = 0 number of states (not supported, as in the MESS PhaseSpaceTheory constructor).
+    J0,
 }
