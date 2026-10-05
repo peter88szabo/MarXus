@@ -336,3 +336,160 @@ pub(crate) fn solve_spd_symmetric_banded_dense_fallback(
     }
     cholesky_solve_spd(&a, rhs).map_err(|e| format!("Dense Cholesky fallback failed: {e}"))
 }
+
+/// Symmetric band matrix: the diagonal and, for every row i, the elements A_{i,k} with
+/// i - bandwidth <= k < i (stored row by row; A_{k,i} = A_{i,k}).
+#[derive(Debug, Clone)]
+pub struct SymmetricBandMatrix {
+    n: usize,
+    bandwidth: usize,
+    diag: Vec<f64>,
+    lower: Vec<f64>,
+}
+
+impl SymmetricBandMatrix {
+    pub fn zeros(n: usize, bandwidth: usize) -> Self {
+        Self { n, bandwidth, diag: vec![0.0; n], lower: vec![0.0; n * bandwidth] }
+    }
+
+    pub fn dimension(&self) -> usize {
+        self.n
+    }
+
+    pub fn set_diagonal(&mut self, i: usize, value: f64) {
+        self.diag[i] = value;
+    }
+
+    /// Set A_{i,k} = A_{k,i} for k < i, i - k <= bandwidth.
+    pub fn set_lower(&mut self, i: usize, k: usize, value: f64) {
+        assert!(k < i && i - k <= self.bandwidth, "element ({i},{k}) outside the lower band");
+        self.lower[i * self.bandwidth + k + self.bandwidth - i] = value;
+    }
+
+    /// Cholesky factorization A = L L^T of a symmetric positive definite band matrix; L keeps the band.
+    pub fn cholesky(&self) -> Result<BandedCholeskyFactor, String> {
+        let (n, bw) = (self.n, self.bandwidth);
+        let mut l = BandedCholeskyFactor { n, bandwidth: bw, diag: vec![0.0; n], lower: self.lower.clone() };
+        // Row-oriented Cholesky-Crout: for row i and k < i,
+        //   L_ik = (A_ik - sum_{m<k} L_im L_km) / L_kk,   L_ii = sqrt(A_ii - sum_{m<i} L_im^2),
+        // where only band elements contribute; row i of L occupies lower[i*bw .. (i+1)*bw] with
+        // column k at offset k + bw - i.
+        for i in 0..n {
+            let first = i.saturating_sub(bw);
+            for k in first..i {
+                let lo = first.max(k.saturating_sub(bw));
+                let mut sum = l.lower[i * bw + k + bw - i];
+                for m in lo..k {
+                    sum -= l.lower[i * bw + m + bw - i] * l.lower[k * bw + m + bw - k];
+                }
+                l.lower[i * bw + k + bw - i] = sum / l.diag[k];
+            }
+            let mut d = self.diag[i];
+            for m in first..i {
+                let v = l.lower[i * bw + m + bw - i];
+                d -= v * v;
+            }
+            if !(d > 0.0) || !d.is_finite() {
+                return Err(format!("Banded Cholesky: non-positive pivot {d:e} in row {i}; the matrix is not positive definite."));
+            }
+            l.diag[i] = d.sqrt();
+        }
+        Ok(l)
+    }
+}
+
+/// Banded Cholesky factor L (same storage as `SymmetricBandMatrix`).
+#[derive(Debug, Clone)]
+pub struct BandedCholeskyFactor {
+    n: usize,
+    bandwidth: usize,
+    diag: Vec<f64>,
+    lower: Vec<f64>,
+}
+
+impl BandedCholeskyFactor {
+    /// Solve L L^T x = rhs.
+    pub fn solve(&self, rhs: &[f64]) -> Result<Vec<f64>, String> {
+        let (n, bw) = (self.n, self.bandwidth);
+        if rhs.len() != n {
+            return Err(format!("Banded Cholesky solve: right-hand side of length {} for dimension {n}.", rhs.len()));
+        }
+        // Forward substitution L y = rhs.
+        let mut x = rhs.to_vec();
+        for i in 0..n {
+            let mut sum = x[i];
+            for k in i.saturating_sub(bw)..i {
+                sum -= self.lower[i * bw + k + bw - i] * x[k];
+            }
+            x[i] = sum / self.diag[i];
+        }
+        // Back substitution L^T x = y, by rows of L: once x_i is known, remove its contribution
+        // L_ik x_i from the equations k < i.
+        for i in (0..n).rev() {
+            x[i] /= self.diag[i];
+            let xi = x[i];
+            for k in i.saturating_sub(bw)..i {
+                x[k] -= self.lower[i * bw + k + bw - i] * xi;
+            }
+        }
+        Ok(x)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Symmetric, diagonally dominant (hence positive definite) band matrix with pseudo-random entries.
+    fn spd_band(n: usize, bw: usize) -> (SymmetricBandMatrix, DenseMatrix) {
+        let mut band = SymmetricBandMatrix::zeros(n, bw);
+        let mut dense = DenseMatrix::zeros(n);
+        let mut seed: u64 = 12345;
+        let mut next = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            ((seed >> 11) as f64 / (1u64 << 53) as f64) - 0.5
+        };
+        let mut row_sum = vec![0.0; n];
+        for i in 0..n {
+            for k in i.saturating_sub(bw)..i {
+                let v = next();
+                band.set_lower(i, k, v);
+                dense.set(i, k, v);
+                dense.set(k, i, v);
+                row_sum[i] += v.abs();
+                row_sum[k] += v.abs();
+            }
+        }
+        for i in 0..n {
+            let d = row_sum[i] + 1.0 + next().abs();
+            band.set_diagonal(i, d);
+            dense.set(i, i, d);
+        }
+        (band, dense)
+    }
+
+    #[test]
+    fn banded_cholesky_matches_dense_cholesky() {
+        let (band, dense) = spd_band(60, 7);
+        let rhs: Vec<f64> = (0..60).map(|i| (i as f64 * 0.37).sin()).collect();
+        let x = band.cholesky().unwrap().solve(&rhs).unwrap();
+        let x_ref = cholesky_solve_spd(&dense, &rhs).unwrap();
+        for i in 0..60 {
+            assert!((x[i] - x_ref[i]).abs() < 1e-12 * x_ref[i].abs().max(1.0), "x[{i}] = {} vs {}", x[i], x_ref[i]);
+        }
+        let ax = dense.matvec(&x).unwrap();
+        for i in 0..60 {
+            assert!((ax[i] - rhs[i]).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn banded_cholesky_rejects_an_indefinite_matrix() {
+        let mut band = SymmetricBandMatrix::zeros(3, 1);
+        band.set_diagonal(0, 1.0);
+        band.set_diagonal(1, 1.0);
+        band.set_diagonal(2, 1.0);
+        band.set_lower(1, 0, 2.0); // [[1,2],[2,1]] has eigenvalue -1
+        assert!(band.cholesky().is_err());
+    }
+}

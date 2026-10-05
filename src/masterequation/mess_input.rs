@@ -1,79 +1,42 @@
-//! Minimal MESS input parser (subset) and conversion to MarXus multiwell inputs.
+//! Reader of input decks in the MESS input format (a subset).
 //!
-//! Scope (intentionally limited)
-//! ----------------------------
-//! This parser is designed to cover the common subset needed to:
-//! - read wells and barriers from a MESS deck
-//! - compute RRHO microcanonical inputs (ρ(E), W‡(E), k(E)) using existing MarXus routines
-//! - build a MarXus multiwell network topology (`Vec<WellDefinition>`) and per-channel models
+//! MarXus reads this format so that existing decks can be used; the chemical-activation network is
+//! built from the parsed deck in `chemical_activation_from_mess_input.rs`.
 //!
-//! Supported (for the provided decks):
-//! - TemperatureList[K], PressureList[torr], EnergyStepOverTemperature, ModelEnergyLimit[kcal/mol]
-//! - Model -> EnergyRelaxation -> Exponential (Factor/Power)
-//! - Model -> CollisionFrequency -> LennardJones (Epsilons/Sigmas/Masses; uses the first/second as
-//!   "species/bath", and constructs a single reduced-mass + sigma/epsilon set)
-//! - Species blocks: Bimolecular, Well, Barrier
-//!   - RRHO -> Geometry[angstrom] N (computes rotational constants via `inertia::get_brot`)
-//!   - RRHO -> Core -> RigidRotor -> SymmetryFactor
+//! Read:
+//! - TemperatureList[K], PressureList[torr | atm | bar], EnergyStepOverTemperature,
+//!   ModelEnergyLimit[kcal/mol], Reactant
+//! - Model -> EnergyRelaxation -> Exponential (Factor[1/cm] at 300 K, Power, ExponentCutoff)
+//! - Model -> CollisionFrequency -> LennardJones (Epsilons, Sigmas, Masses of species and bath gas)
+//! - Bimolecular (two Fragment RRHO blocks, GroundEnergy), Well (RRHO, Escape pseudo-first-order rate
+//!   constant), Barrier (RRHO, Core RigidRotor or PhaseSpaceTheory, presence of a Tunneling block)
+//!   - RRHO -> Geometry[angstrom] N (rotational constants via `inertia::get_brot`)
+//!   - RRHO -> Core -> SymmetryFactor
 //!   - RRHO -> Frequencies[1/cm] N
-//!   - RRHO -> ZeroEnergy[kcal/mol] or ZeroEnergy[1/cm]
-//!   - RRHO -> ElectronicLevels[1/cm] N (uses the *ground-level degeneracy* as a simple factor)
-//!   - Barrier -> Core PhaseSpaceTheory (fragment geometries + V0 + n + symmetry)
+//!   - RRHO -> ZeroEnergy[kcal/mol | kJ/mol | 1/cm]
+//!   - RRHO -> ElectronicLevels[1/cm] N (only the ground-level degeneracy is used)
+//! - MarXus extension: `InverseLaplaceTransform ... End` inside the RRHO block of a barrier
+//!   (high-pressure rate coefficient of a barrierless channel, see `IltSpecification`).
 //!
-//! Not yet supported:
-//! - multiple temperatures/pressures (we read the first value)
-//! - full electronic level handling (excited electronic energies as shifted state manifolds)
-//! - tunneling models (Eckart/Wigner); currently ignored in microcanonical building
-//! - advanced MESS options like hindered rotors, adiabatic channels, etc.
-//!
-//! The goal is to let you *start* from a MESS deck and obtain a consistent multiwell micro model.
+//! Not read: excited electronic levels, tunneling parameters (only the presence of the block),
+//! hindered rotors and other model types.
 
-use crate::constants::{CM1_TO_KCAL, KB_CM};
+use crate::constants::CM1_TO_KCAL;
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
-use crate::barrierless::phasespace::types::{
-    CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput,
-};
+use crate::barrierless::ilt::ilt_barrierless::ModifiedArrhenius;
 use crate::inertia::inertia::get_brot;
-use crate::masterequation::graph_utils::DisjointSetUnion;
-use crate::masterequation::microcanonical_builder::{
-    ChannelMicroModel, SpeciesMicroModel, TransitionStateModel,
-};
-use crate::masterequation::reaction_network::{
-    CollisionKernelImplementation, CollisionModelParams, MasterEquationSettings, ReactionChannel,
-    WellDefinition,
-};
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
 #[derive(Clone, Debug)]
-pub struct MessBuildOptions {
-    /// Override ΔE (cm^-1). If None, computed from EnergyStepOverTemperature: ΔE = step_over_T * kB * T.
-    pub energy_grain_width_cm1: Option<f64>,
-    /// Maximum energy (kcal/mol) included above each well minimum (local grain axis).
-    pub max_energy_kcal_mol: f64,
-    /// Collision band half width (grains).
-    pub collision_band_half_width: usize,
-    /// Nonreactive grains at bottom (k(E)=0 assumed below).
-    pub nonreactive_grain_count: usize,
-}
-
-impl Default for MessBuildOptions {
-    fn default() -> Self {
-        Self {
-            energy_grain_width_cm1: Some(20.0),
-            max_energy_kcal_mol: 50.0,
-            collision_band_half_width: 20,
-            nonreactive_grain_count: 10,
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
 pub struct MessGlobal {
-    pub temperature_kelvin: f64,
-    pub pressure_torr: f64,
+    /// TemperatureList[K].
+    pub temperatures_kelvin: Vec<f64>,
+    /// PressureList[torr | atm | bar], converted to Torr.
+    pub pressures_torr: Vec<f64>,
+    /// ExponentCutoff of the exponential-down model: transitions beyond cutoff x <dE_down> are neglected.
+    pub exponent_cutoff: Option<f64>,
     pub energy_step_over_temperature: Option<f64>,
     pub model_energy_limit_kcal_mol: Option<f64>,
 
@@ -122,6 +85,32 @@ pub enum MessBarrierCore {
     },
 }
 
+/// Direction to which the high-pressure rate coefficient of an ILT channel refers.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum IltDirection {
+    /// Association of the bimolecular side to the well, k_inf in cm3 s-1.
+    Association,
+    /// Dissociation of the well, k_inf in s-1.
+    Dissociation,
+}
+
+/// MarXus keyword block `InverseLaplaceTransform ... End` inside the RRHO block of a barrier: k(E) of
+/// this barrierless channel follows from the inverse Laplace transform of k_inf(T)
+/// (`barrierless::ilt::ilt_barrierless`) instead of the core of the barrier.
+///
+///   InverseLaplaceTransform
+///     Direction                    Association      (or Dissociation)
+///     PreExponential[cm^3/s]       6.0e-12          ([1/s] for Dissociation)
+///     TemperatureExponent          -0.5
+///     ReferenceTemperature[K]      298.0
+///     ActivationEnergy[kcal/mol]   0.0              ([1/cm] and [kJ/mol] also accepted)
+///   End
+#[derive(Clone, Debug, PartialEq)]
+pub struct IltSpecification {
+    pub direction: IltDirection,
+    pub high_pressure_rate: ModifiedArrhenius,
+}
+
 #[derive(Clone, Debug)]
 pub struct MessBarrier {
     pub name: String,
@@ -129,6 +118,10 @@ pub struct MessBarrier {
     pub right: String,
     pub rrho: MessSpeciesRrho,
     pub core: MessBarrierCore,
+    /// ILT parameters of a barrierless channel (MarXus keyword block), if given.
+    pub inverse_laplace_transform: Option<IltSpecification>,
+    /// The barrier has a `Tunneling` block.
+    pub has_tunneling: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -137,14 +130,12 @@ pub struct MessDeck {
     pub bimolecular: HashMap<String, MessBimolecular>,
     pub wells: HashMap<String, MessSpeciesRrho>,
     pub barriers: Vec<MessBarrier>,
+    /// `Escape` pseudo-first-order rate constant of a well (s-1): the bimolecular sink k_c[D].
+    pub well_escape_rate_s_inv: HashMap<String, f64>,
+    /// Well names in the order of the input deck.
+    pub well_order: Vec<String>,
 }
 
-pub struct MessBuiltNetwork {
-    pub settings: MasterEquationSettings,
-    pub wells: Vec<WellDefinition>,
-    pub well_models_by_name: HashMap<String, SpeciesMicroModel>,
-    pub channel_models_by_name: HashMap<String, ChannelMicroModel>,
-}
 
 fn strip_comment(mut line: &str) -> &str {
     if let Some(idx) = line.find('#') {
@@ -183,6 +174,9 @@ fn energy_to_cm1(value: f64, unit_tag: &str) -> Result<f64, String> {
     let u = unit_tag.trim().to_lowercase();
     if u.contains("kcal") {
         Ok(value / CM1_TO_KCAL)
+    } else if u.contains("kj") {
+        // 1 kcal = 4.184 kJ (thermochemical calorie).
+        Ok(value / (CM1_TO_KCAL * 4.184))
     } else if u.contains("1/cm") || u.contains("cm") {
         Ok(value)
     } else {
@@ -208,6 +202,7 @@ fn is_block_starter(tok: &str) -> bool {
             | "Exponential"
             | "LennardJones"
             | "TimeEvolution"
+            | "InverseLaplaceTransform"
     )
 }
 
@@ -410,6 +405,75 @@ fn parse_rrho_species_impl(
     })
 }
 
+/// Unit tag between square brackets of the first token, e.g. "kcal/mol" for "ZeroEnergy[kcal/mol]".
+fn unit_tag(line: &str) -> Option<&str> {
+    let first = first_token(line)?;
+    first.split('[').nth(1).and_then(|t| t.split(']').next())
+}
+
+/// All numbers after the keyword of a list line such as "TemperatureList[K] 300 400 500".
+fn parse_list(line: &str) -> Result<Vec<f64>, String> {
+    line.split_whitespace().skip(1).map(parse_f64).collect()
+}
+
+/// The MarXus `InverseLaplaceTransform ... End` block inside a barrier, if present.
+fn parse_inverse_laplace_transform(block: &[String], barrier: &str) -> Result<Option<IltSpecification>, String> {
+    let Some(start) = block.iter().position(|l| first_token(l) == Some("InverseLaplaceTransform")) else {
+        return Ok(None);
+    };
+    let context = |what: &str| format!("Barrier '{barrier}', InverseLaplaceTransform: {what}");
+    let mut direction = None;
+    let mut pre_exponential = None;
+    let mut exponent = None;
+    let mut reference_temperature = None;
+    let mut activation_energy = None;
+    for line in &block[start + 1..] {
+        let key = first_token(line).unwrap_or("");
+        if key == "End" {
+            break;
+        }
+        let value = line.split_whitespace().nth(1).ok_or_else(|| context(&format!("no value in '{line}'")))?;
+        if key == "Direction" {
+            direction = Some(match value {
+                "Association" => IltDirection::Association,
+                "Dissociation" => IltDirection::Dissociation,
+                other => return Err(context(&format!("unknown Direction '{other}' (Association or Dissociation)"))),
+            });
+        } else if key.starts_with("PreExponential") {
+            pre_exponential = Some((parse_f64(value)?, unit_tag(line).unwrap_or("").to_string()));
+        } else if key == "TemperatureExponent" {
+            exponent = Some(parse_f64(value)?);
+        } else if key.starts_with("ReferenceTemperature") {
+            reference_temperature = Some(parse_f64(value)?);
+        } else if key.starts_with("ActivationEnergy") {
+            let unit = unit_tag(line).ok_or_else(|| context("ActivationEnergy needs a unit, e.g. [kcal/mol]"))?;
+            activation_energy = Some(energy_to_cm1(parse_f64(value)?, unit)?);
+        } else {
+            return Err(context(&format!("unknown keyword '{key}'")));
+        }
+    }
+    let direction = direction.ok_or_else(|| context("missing Direction"))?;
+    let (a, unit) = pre_exponential.ok_or_else(|| context("missing PreExponential"))?;
+    let expected_unit = match direction {
+        IltDirection::Association => "cm^3/s",
+        IltDirection::Dissociation => "1/s",
+    };
+    if unit != expected_unit {
+        return Err(context(&format!(
+            "PreExponential[{unit}] does not match Direction {direction:?}, which requires PreExponential[{expected_unit}]"
+        )));
+    }
+    Ok(Some(IltSpecification {
+        direction,
+        high_pressure_rate: ModifiedArrhenius {
+            pre_exponential: a,
+            temperature_exponent: exponent.ok_or_else(|| context("missing TemperatureExponent"))?,
+            reference_temperature_kelvin: reference_temperature.ok_or_else(|| context("missing ReferenceTemperature[K]"))?,
+            activation_energy_cm1: activation_energy.ok_or_else(|| context("missing ActivationEnergy"))?,
+        },
+    }))
+}
+
 fn parse_phasespace_core(block: &[String]) -> Result<Option<MessBarrierCore>, String> {
     // Look for "Core PhaseSpaceTheory" within the barrier RRHO block.
     if !block
@@ -488,8 +552,9 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let lines: Vec<String> = input.lines().map(|s| s.to_string()).collect();
 
     let mut global = MessGlobal {
-        temperature_kelvin: 0.0,
-        pressure_torr: 0.0,
+        temperatures_kelvin: Vec::new(),
+        pressures_torr: Vec::new(),
+        exponent_cutoff: None,
         energy_step_over_temperature: None,
         model_energy_limit_kcal_mol: None,
         alpha_factor_cm1: None,
@@ -504,6 +569,8 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let mut wells: HashMap<String, MessSpeciesRrho> = HashMap::new();
     let mut bimolecular: HashMap<String, MessBimolecular> = HashMap::new();
     let mut barriers: Vec<MessBarrier> = Vec::new();
+    let mut well_escape_rate_s_inv: HashMap<String, f64> = HashMap::new();
+    let mut well_order: Vec<String> = Vec::new();
 
     let mut i = 0usize;
     while i < lines.len() {
@@ -516,8 +583,16 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         // Global scalar parameters
         if let Some((k, v)) = parse_key_value_whitespace(line) {
             match k {
-                "TemperatureList[K]" => global.temperature_kelvin = parse_f64(v)?,
-                "PressureList[torr]" => global.pressure_torr = parse_f64(v)?,
+                "TemperatureList[K]" => global.temperatures_kelvin = parse_list(line)?,
+                "PressureList[torr]" => global.pressures_torr = parse_list(line)?,
+                "PressureList[atm]" => {
+                    global.pressures_torr = parse_list(line)?.iter().map(|p| p * 760.0).collect()
+                }
+                // 1 bar = 1e5 Pa, 1 Torr = 101325/760 Pa.
+                "PressureList[bar]" => {
+                    global.pressures_torr = parse_list(line)?.iter().map(|p| p * 1.0e5 * 760.0 / 101_325.0).collect()
+                }
+                "ExponentCutoff" => global.exponent_cutoff = Some(parse_f64(v)?),
                 "EnergyStepOverTemperature" => {
                     global.energy_step_over_temperature = Some(parse_f64(v)?)
                 }
@@ -563,6 +638,16 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let name = parts[1].to_string();
             let (block, next) = collect_block(&lines, i);
             let rrho = parse_rrho_species(&block, &name)?;
+            for l in &block {
+                if first_token(l) == Some("PseudoFirstOrderRateConstant[1/sec]") {
+                    let v = l.split_whitespace().nth(1).ok_or_else(|| format!("Malformed escape line: {l}"))?;
+                    well_escape_rate_s_inv.insert(name.clone(), parse_f64(v)?);
+                }
+            }
+            if wells.contains_key(&name) {
+                return Err(format!("Input deck: well '{name}' defined twice."));
+            }
+            well_order.push(name.clone());
             wells.insert(name, rrho);
             i = next;
             continue;
@@ -645,6 +730,8 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let core = parse_phasespace_core(&block)?.unwrap_or(MessBarrierCore::TightRrho);
             let geometry_required = matches!(core, MessBarrierCore::TightRrho);
             let rrho = parse_rrho_species_impl(&block, &name, geometry_required)?;
+            let inverse_laplace_transform = parse_inverse_laplace_transform(&block, &name)?;
+            let has_tunneling = block.iter().any(|l| first_token(l) == Some("Tunneling"));
 
             barriers.push(MessBarrier {
                 name,
@@ -652,6 +739,8 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 right,
                 rrho,
                 core,
+                inverse_laplace_transform,
+                has_tunneling,
             });
 
             i = next;
@@ -661,11 +750,11 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         i += 1;
     }
 
-    if global.temperature_kelvin <= 0.0 {
-        return Err("MESS input missing TemperatureList[K]".into());
+    if global.temperatures_kelvin.is_empty() || global.temperatures_kelvin.iter().any(|t| !(*t > 0.0)) {
+        return Err("Input deck: TemperatureList[K] missing or not positive.".into());
     }
-    if global.pressure_torr <= 0.0 {
-        return Err("MESS input missing PressureList[torr]".into());
+    if global.pressures_torr.is_empty() || global.pressures_torr.iter().any(|p| !(*p > 0.0)) {
+        return Err("Input deck: PressureList[torr | atm | bar] missing or not positive.".into());
     }
 
     Ok(MessDeck {
@@ -673,6 +762,8 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         bimolecular,
         wells,
         barriers,
+        well_escape_rate_s_inv,
+        well_order,
     })
 }
 
@@ -887,6 +978,123 @@ End
         assert!(matches!(parsed.barriers[0].core, MessBarrierCore::PhaseSpaceTheory { .. }));
     }
 
+    #[test]
+    fn temperature_and_pressure_lists_are_read_in_torr() {
+        let deck = "TemperatureList[K] 300. 400. 500.\nPressureList[atm] 1 10\nModel\nEnd\n";
+        let parsed = parse_mess_input(deck).expect("should parse");
+        assert_eq!(parsed.global.temperatures_kelvin, vec![300.0, 400.0, 500.0]);
+        assert_eq!(parsed.global.pressures_torr, vec![760.0, 7600.0]);
+        let deck = "TemperatureList[K] 300.\nPressureList[bar] 1\nModel\nEnd\n";
+        let parsed = parse_mess_input(deck).expect("should parse");
+        assert!((parsed.global.pressures_torr[0] - 750.061_682_704).abs() < 1e-6);
+    }
+
+    #[test]
+    fn wells_keep_the_order_of_the_input_deck() {
+        let second = ONE_WELL_DECK.replace("Well W1", "Well A0");
+        let deck = format!("{}{}", ONE_WELL_DECK.trim_end().trim_end_matches("End"), &second[second.find("Well A0").unwrap()..]);
+        let parsed = parse_mess_input(&deck).expect("should parse");
+        assert_eq!(parsed.well_order, vec!["W1".to_string(), "A0".to_string()]);
+    }
+
+    #[test]
+    fn exponent_cutoff_and_well_escape_rate_are_read() {
+        let deck = ONE_WELL_DECK.replace("Well W1\n", "Well W1\n  Escape Constant\n    PseudoFirstOrderRateConstant[1/sec]  2.5E7\n  End\n");
+        let parsed = parse_mess_input(&deck).expect("should parse");
+        assert_eq!(parsed.global.exponent_cutoff, Some(15.0));
+        assert_eq!(parsed.well_escape_rate_s_inv.get("W1"), Some(&2.5e7));
+    }
+
+    const ILT_BARRIER_DECK: &str = r#"
+TemperatureList[K] 300.
+PressureList[torr] 760.
+Model
+Barrier B0 R W1
+  RRHO
+    Stoichiometry C1O2
+    Core PhaseSpaceTheory
+      FragmentGeometry[angstrom] 1
+      C 0.0 0.0 0.0
+      FragmentGeometry[angstrom] 2
+      O 0.0 0.0 0.0
+      O 0.0 0.0 1.2
+      SymmetryFactor 2.0
+      PotentialPrefactor[au] 2.4
+      PotentialPowerExponent 6.
+    End
+    InverseLaplaceTransform
+      Direction                    Association
+      PreExponential[cm^3/s]       6.0e-12
+      TemperatureExponent          -0.5
+      ReferenceTemperature[K]      298.0
+      ActivationEnergy[kcal/mol]   0.1
+    End
+    Frequencies[1/cm] 1
+    1585.0
+    ZeroEnergy[kcal/mol] 0.0
+    ElectronicLevels[1/cm] 1
+      0 3
+  End
+Barrier B1 W1 P1
+  RRHO
+    Geometry[angstrom] 1
+    H 0 0 0
+    Core RigidRotor
+      SymmetryFactor 1.0
+    End
+    Tunneling Eckart
+      ImaginaryFrequency[1/cm] 1500
+      WellDepth[kcal/mol] 20
+      WellDepth[kcal/mol] 25
+    End
+    Frequencies[1/cm] 1
+    300.0
+    ZeroEnergy[1/cm] 1000
+    ElectronicLevels[1/cm] 1
+      0 1
+  End
+End
+"#;
+
+    #[test]
+    fn inverse_laplace_transform_block_is_read_inside_a_barrier() {
+        use crate::barrierless::ilt::ilt_barrierless::ModifiedArrhenius;
+        let parsed = parse_mess_input(ILT_BARRIER_DECK).expect("should parse");
+        assert_eq!(parsed.barriers.len(), 2);
+        let ilt = parsed.barriers[0].inverse_laplace_transform.as_ref().expect("ILT block");
+        assert_eq!(ilt.direction, super::IltDirection::Association);
+        let expected = ModifiedArrhenius {
+            pre_exponential: 6.0e-12,
+            temperature_exponent: -0.5,
+            reference_temperature_kelvin: 298.0,
+            activation_energy_cm1: 0.1 / crate::constants::CM1_TO_KCAL,
+        };
+        assert_eq!(ilt.high_pressure_rate, expected);
+        assert_eq!(parsed.barriers[0].rrho.vibrational_frequencies_cm1, vec![1585.0]);
+        assert!(parsed.barriers[1].inverse_laplace_transform.is_none());
+    }
+
+    #[test]
+    fn tunneling_blocks_are_detected() {
+        let parsed = parse_mess_input(ILT_BARRIER_DECK).expect("should parse");
+        assert!(!parsed.barriers[0].has_tunneling);
+        assert!(parsed.barriers[1].has_tunneling);
+        assert_eq!(parsed.barriers[1].rrho.vibrational_frequencies_cm1, vec![300.0]);
+    }
+
+    #[test]
+    fn inverse_laplace_transform_units_must_match_the_direction() {
+        let deck = ILT_BARRIER_DECK.replace("PreExponential[cm^3/s]", "PreExponential[1/s]");
+        assert!(parse_mess_input(&deck).is_err());
+        let deck = ILT_BARRIER_DECK.replace("Direction                    Association", "Direction Dissociation");
+        assert!(parse_mess_input(&deck).is_err());
+        let deck = ILT_BARRIER_DECK
+            .replace("Direction                    Association", "Direction Dissociation")
+            .replace("PreExponential[cm^3/s]", "PreExponential[1/s]");
+        let parsed = parse_mess_input(&deck).expect("dissociation with 1/s parses");
+        assert_eq!(parsed.barriers[0].inverse_laplace_transform.as_ref().unwrap().direction, super::IltDirection::Dissociation);
+    }
+
     const ONE_WELL_DECK: &str = r#"
 TemperatureList[K] 300.
 PressureList[torr] 760.
@@ -921,341 +1129,9 @@ Well W1
 End
 "#;
 
-    #[test]
-    fn energy_transfer_factor_is_the_value_at_300_kelvin() {
-        // Input format: Factor[1/cm] is <dE_down> at T0 = 300 K and
-        // <dE_down>(T) = Factor * (T/T0)^Power. At the deck temperature of 300 K the network must
-        // therefore use exactly Factor.
-        use crate::masterequation::collisional_relaxation::compute_alpha_cm1;
-        let deck = parse_mess_input(ONE_WELL_DECK).expect("should parse");
-        let network = deck.build_multiwell_network(super::MessBuildOptions::default()).unwrap();
-        let p = &network.wells[0].collision_params;
-        let alpha_300 =
-            compute_alpha_cm1(p.alpha_at_1000K_cm1, p.alpha_temperature_exponent, 300.0);
-        assert!((alpha_300 - 200.0).abs() < 1e-9, "alpha(300 K) = {alpha_300} cm-1");
-    }
-
-    #[test]
-    fn lennard_jones_parameters_combine_species_and_bath_gas() {
-        // Troe, J. Chem. Phys. 66, 4758 (1977), Sec. III:
-        //   sigma_AM = (sigma_A + sigma_M)/2,  eps_AM = sqrt(eps_A eps_M)
-        let deck = parse_mess_input(ONE_WELL_DECK).expect("should parse");
-        let network = deck.build_multiwell_network(super::MessBuildOptions::default()).unwrap();
-        let p = &network.wells[0].collision_params;
-        let sigma_ref = 0.5 * (6.5 + 3.9);
-        let eps_ref_kelvin = (417.0_f64 * 33.4).sqrt() * 1.438_776_877;
-        assert!((p.lennard_jones_sigma_angstrom - sigma_ref).abs() < 1e-12, "sigma = {}", p.lennard_jones_sigma_angstrom);
-        assert!(
-            (p.lennard_jones_epsilon_kelvin - eps_ref_kelvin).abs() < 1e-9,
-            "eps/k = {} K, expected {} K",
-            p.lennard_jones_epsilon_kelvin,
-            eps_ref_kelvin
-        );
-    }
 }
 
-impl MessDeck {
-    /// Convert to a MarXus multiwell network + per-well and per-channel micro models.
-    ///
-    /// This builds:
-    /// - `WellDefinition` list containing ONLY MESS `Well` species
-    /// - Channels for:
-    ///   - well<->well barriers: creates both directions
-    ///   - well->sink barriers: creates a sink channel from the well
-    ///
-    /// Bimolecular species (including the MESS "Reactant") are treated as sinks (not wells).
-    pub fn build_multiwell_network(
-        &self,
-        options: MessBuildOptions,
-    ) -> Result<MessBuiltNetwork, String> {
-        let temperature = self.global.temperature_kelvin;
-        let pressure_torr = self.global.pressure_torr;
-
-        let energy_grain_width_cm1 = if let Some(v) = options.energy_grain_width_cm1 {
-            v
-        } else {
-            let step_over_t = self.global.energy_step_over_temperature.ok_or(
-                "Missing EnergyStepOverTemperature (or set energy_grain_width_cm1 override).",
-            )?;
-            step_over_t * KB_CM * temperature
-        };
-        if energy_grain_width_cm1 <= 0.0 || !energy_grain_width_cm1.is_finite() {
-            return Err("Computed energy grain width is invalid.".into());
-        }
-
-        // Global collision model
-        let (m1, m2) = self.global.lj_masses_amu.unwrap_or((0.0, 0.0));
-        let reduced_mass_amu = if m1 > 0.0 && m2 > 0.0 {
-            (m1 * m2) / (m1 + m2)
-        } else {
-            0.0
-        };
-        // Lennard-Jones parameters of the species-bath gas pair (Troe, J. Chem. Phys. 66, 4758
-        // (1977), Sec. III): sigma_AM = (sigma_A + sigma_M)/2, eps_AM = sqrt(eps_A eps_M).
-        let (eps1_cm1, eps2_cm1) = self.global.lj_epsilons_cm1.unwrap_or((0.0, 0.0));
-        let epsilon_kelvin = (eps1_cm1 * eps2_cm1).sqrt() * 1.438_776_877;
-        let (sigma1_a, sigma2_a) = self.global.lj_sigmas_angstrom.unwrap_or((0.0, 0.0));
-        let sigma_a = 0.5 * (sigma1_a + sigma2_a);
-
-        // Energy transfer: in the input deck Factor[1/cm] is <dE_down> at T0 = 300 K with
-        // <dE_down>(T) = Factor * (T/T0)^Power; MarXus stores the value at 1000 K.
-        let alpha_factor_300k = self
-            .global
-            .alpha_factor_cm1
-            .ok_or("Missing EnergyRelaxation Exponential Factor[1/cm] in the input deck.")?;
-        let alpha_power = self
-            .global
-            .alpha_power
-            .ok_or("Missing EnergyRelaxation Exponential Power in the input deck.")?;
-        let alpha_at_1000k_cm1 = alpha_factor_300k * (1000.0_f64 / 300.0).powf(alpha_power);
-
-        let default_collision = CollisionModelParams {
-            lennard_jones_sigma_angstrom: sigma_a,
-            lennard_jones_epsilon_kelvin: epsilon_kelvin,
-            reduced_mass_amu,
-            alpha_at_1000K_cm1: alpha_at_1000k_cm1,
-            alpha_temperature_exponent: alpha_power,
-        };
-
-        let settings = MasterEquationSettings {
-            temperature_kelvin: temperature,
-            pressure_torr,
-            boltzmann_constant_wavenumber_per_kelvin: KB_CM,
-            collision_band_half_width: options.collision_band_half_width,
-            collision_kernel_implementation: CollisionKernelImplementation::Mess,
-            outgoing_rate_threshold: 0.0,
-            internal_rate_threshold: 0.0,
-            enforce_interwell_detailed_balance: false,
-            linear_solver: crate::masterequation::reaction_network::MultiwellLinearSolver::Gmres,
-            krylov_tolerance: 1e-10,
-            krylov_max_iter: 8000,
-            gmres_restart: 50,
-        };
-
-        // Order wells deterministically (sorted by name).
-        let mut well_names: Vec<String> = self.wells.keys().cloned().collect();
-        well_names.sort();
-
-        // Compute alignment offsets from the MESS absolute energies (relative reference):
-        // offset_w = round( E_well_min / ΔE ), so that absolute_energy_cm1(w, i) = (i + offset_w)*ΔE
-        let mut wells_out: Vec<WellDefinition> = Vec::with_capacity(well_names.len());
-        for name in &well_names {
-            let sp = &self.wells[name];
-            let offset = (sp.zero_energy_cm1 / energy_grain_width_cm1).round() as isize;
-
-            let max_energy_cm1 = options.max_energy_kcal_mol / CM1_TO_KCAL;
-            let n_bins = (max_energy_cm1 / energy_grain_width_cm1).ceil().max(1.0) as usize + 1;
-
-            wells_out.push(WellDefinition {
-                well_name: name.clone(),
-                energy_grain_width_cm1: energy_grain_width_cm1,
-                lowest_included_grain_index: 0,
-                one_past_highest_included_grain_index: n_bins,
-                alignment_offset_in_grains: offset,
-                nonreactive_grain_count: options.nonreactive_grain_count,
-                collision_params: default_collision.clone(),
-                channels: Vec::new(),
-            });
-        }
-
-        let well_index_by_name: HashMap<String, usize> = wells_out
-            .iter()
-            .enumerate()
-            .map(|(i, w)| (w.well_name.clone(), i))
-            .collect();
-
-        // Build micro models for wells.
-        let mut well_models_by_name: HashMap<String, SpeciesMicroModel> = HashMap::new();
-        for name in &well_names {
-            let sp = &self.wells[name];
-            let brot = rotational_constants_from_geometry_cm1(
-                &sp.geometry_symbols,
-                &sp.geometry_angstrom,
-            )?;
-            well_models_by_name.insert(
-                name.clone(),
-                SpeciesMicroModel {
-                    name: name.clone(),
-                    vibrational_frequencies_cm1: sp.vibrational_frequencies_cm1.clone(),
-                    rotational_constants_cm1: brot,
-                    symmetry_number: sp.symmetry_factor,
-                    chirality_number: 1.0,
-                    electronic_degeneracy: sp.electronic_degeneracy_ground,
-                },
-            );
-        }
-
-        // Validate barrier connectivity and build per-species adjacency for efficient construction.
-        let mut barrier_indices_by_species: HashMap<String, Vec<usize>> = HashMap::new();
-        let mut first_barrier_by_unordered_pair: HashMap<(String, String), String> = HashMap::new();
-        for (barrier_index, barrier) in self.barriers.iter().enumerate() {
-            if barrier.left == barrier.right {
-                return Err(format!(
-                    "Barrier '{}' connects '{}' to itself; this is not supported.",
-                    barrier.name, barrier.left
-                ));
-            }
-
-            // MESS disallows multiple barriers connecting the same unordered pair of species.
-            let (a, b) = if barrier.left <= barrier.right {
-                (barrier.left.clone(), barrier.right.clone())
-            } else {
-                (barrier.right.clone(), barrier.left.clone())
-            };
-            let key = (a, b);
-            if let Some(existing) = first_barrier_by_unordered_pair.get(&key) {
-                return Err(format!(
-                    "Multiple barriers connect the same species pair ({} <-> {}): '{}' and '{}'.",
-                    key.0, key.1, existing, barrier.name
-                ));
-            }
-            first_barrier_by_unordered_pair.insert(key, barrier.name.clone());
-
-            barrier_indices_by_species
-                .entry(barrier.left.clone())
-                .or_default()
-                .push(barrier_index);
-            barrier_indices_by_species
-                .entry(barrier.right.clone())
-                .or_default()
-                .push(barrier_index);
-        }
-
-        // Ensure the well graph (using only well-well barriers) is connected, like MESS does.
-        if wells_out.len() > 1 {
-            let mut dsu = DisjointSetUnion::new(wells_out.len());
-            for barrier in &self.barriers {
-                let left_well = well_index_by_name.get(&barrier.left).copied();
-                let right_well = well_index_by_name.get(&barrier.right).copied();
-                if let (Some(i), Some(j)) = (left_well, right_well) {
-                    dsu.union(i, j);
-                }
-            }
-            let roots = dsu.component_roots();
-            if roots.len() > 1 {
-                return Err(format!(
-                    "Wells are not all connected by well–well barriers (found {} disconnected components).",
-                    roots.len()
-                ));
-            }
-        }
-
-        // Build channels and per-channel micro models keyed by channel name.
-        let mut channel_models_by_name: HashMap<String, ChannelMicroModel> = HashMap::new();
-
-        for from_idx in 0..wells_out.len() {
-            let from_name = wells_out[from_idx].well_name.clone();
-
-            // Find all barriers touching this well (either well<->well or well->sink).
-            let touching = barrier_indices_by_species
-                .get(&from_name)
-                .cloned()
-                .unwrap_or_default();
-            for barrier_index in touching {
-                let b = &self.barriers[barrier_index];
-                let other = if b.left == from_name {
-                    b.right.clone()
-                } else {
-                    b.left.clone()
-                };
-
-                let connected_well_index = well_index_by_name.get(&other).copied();
-
-                // Add channel in topology.
-                let ch_name = format!("{}_to_{}", from_name, other);
-                wells_out[from_idx].channels.push(ReactionChannel {
-                    name: ch_name.clone(),
-                    connected_well_index,
-                });
-
-                // Threshold energy relative to the FROM well minimum:
-                // E0 = E_TS - E_from_well
-                let e_from = self.wells.get(&from_name).ok_or_else(|| {
-                    format!(
-                        "Internal error: well '{}' not found while building barrier thresholds",
-                        from_name
-                    )
-                })?;
-                let e0_cm1 = (b.rrho.zero_energy_cm1 - e_from.zero_energy_cm1).max(0.0);
-
-                // Build TS model:
-                let ts_model = match &b.core {
-                    MessBarrierCore::TightRrho => {
-                        let brot_ts = rotational_constants_from_geometry_cm1(
-                            &b.rrho.geometry_symbols,
-                            &b.rrho.geometry_angstrom,
-                        )?;
-                        TransitionStateModel::TightRRHO {
-                            species: SpeciesMicroModel {
-                                name: b.name.clone(),
-                                vibrational_frequencies_cm1: b
-                                    .rrho
-                                    .vibrational_frequencies_cm1
-                                    .clone(),
-                                rotational_constants_cm1: brot_ts,
-                                symmetry_number: b.rrho.symmetry_factor,
-                                chirality_number: 1.0,
-                                electronic_degeneracy: b.rrho.electronic_degeneracy_ground,
-                            },
-                        }
-                    }
-                    MessBarrierCore::PhaseSpaceTheory {
-                        fragment_a_geometry_symbols,
-                        fragment_a_geometry_angstrom,
-                        fragment_b_geometry_symbols,
-                        fragment_b_geometry_angstrom,
-                        symmetry_operations,
-                        potential_prefactor_au,
-                        potential_power_exponent,
-                    } => {
-                        let pst = PhaseSpaceTheoryModel::new(PhaseSpaceTheoryInput {
-                            fragment_a: CaptureFragment {
-                                mass_amu: None,
-                                rotor: CaptureFragmentRotorModel::GeometryAngstrom {
-                                    symbols: fragment_a_geometry_symbols.clone(),
-                                    coordinates_angstrom: fragment_a_geometry_angstrom.clone(),
-                                },
-                            },
-                            fragment_b: CaptureFragment {
-                                mass_amu: None,
-                                rotor: CaptureFragmentRotorModel::GeometryAngstrom {
-                                    symbols: fragment_b_geometry_symbols.clone(),
-                                    coordinates_angstrom: fragment_b_geometry_angstrom.clone(),
-                                },
-                            },
-                            symmetry_operations: *symmetry_operations,
-                            potential_prefactor_au: *potential_prefactor_au,
-                            potential_power_exponent: *potential_power_exponent,
-                        })?;
-
-                        TransitionStateModel::PhaseSpaceTheoryRRHO {
-                            pst_core: pst,
-                            vibrational_frequencies_cm1: b.rrho.vibrational_frequencies_cm1.clone(),
-                            electronic_degeneracy: b.rrho.electronic_degeneracy_ground,
-                        }
-                    }
-                };
-
-                channel_models_by_name.insert(
-                    ch_name,
-                    ChannelMicroModel {
-                        threshold_energy_cm1: e0_cm1,
-                        transition_state: ts_model,
-                    },
-                );
-            }
-        }
-
-        Ok(MessBuiltNetwork {
-            settings,
-            wells: wells_out,
-            well_models_by_name,
-            channel_models_by_name,
-        })
-    }
-}
-
-fn rotational_constants_from_geometry_cm1(
+pub(crate) fn rotational_constants_from_geometry_cm1(
     symbols: &[String],
     coords_angstrom: &[[f64; 3]],
 ) -> Result<Vec<f64>, String> {

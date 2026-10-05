@@ -1,41 +1,17 @@
-//! Unified microcanonical builder for multiwell master-equation networks.
+//! State counting for RRHO species and transition states on a uniform grain grid.
 //!
-//! Motivation
-//! ----------
-//! The multiwell master-equation solver (`steady_state_chemical_activation_me`) is written to
-//! assemble and solve the linear system once microcanonical inputs are available:
-//!   - well densities of states ρ_w(E_i)
-//!   - channel microcanonical rates k_{w→ch}(E_i)
+//! - rho(E) of a species: rovibrational density of states (per cm-1) by direct count of harmonic
+//!   vibrations convolved with classical rigid rotors (`rrkm::sum_and_density`).
+//! - W‡(E) of a transition state: rovibrational sum of states of a tight transition state, or the
+//!   cumulative states of a phase-space-theory core combined with harmonic conserved modes.
+//! - Symmetry number, chirality and electronic degeneracy multiply the state counts, so that
+//!   k(E) = W‡(E - E0)/(h rho(E)) carries the ratio of these factors (Forst, Theory of Unimolecular
+//!   Reactions (1973), Sec. 4.5). With rho per cm-1 and W dimensionless, h is taken in cm-1 s.
 //!
-//! Historically, those inputs were provided via an external `MicrocanonicalProvider` trait
-//! implementation. This module provides a *native* builder that generates those arrays
-//! by iterating over all wells/transition states/products in a network and computing:
-//!   - ρ(E) for each well (RRHO-style ro-vibrational counting, classical rotor)
-//!   - W‡(E) / N‡(E) for each channel transition state (tight RRHO or loose PST core wrapped
-//!     in an RRHO-style vibrational/electronic factor)
-//!   - k(E) = c * W‡(E - E0) / ρ(E)  (with E in cm^-1, c in cm/s)
-//!
-//! Notes on units and conventions
-//! ------------------------------
-//! - Energy grids are in wavenumbers (cm^-1) with uniform bin width ΔE.
-//! - ρ(E) is computed as states per cm^-1 (discretized on bins).
-//! - W(E) is computed as a cumulative number of states (dimensionless).
-//! - With these conventions, RRKM gives:
-//!     k(E) [1/s] = c [cm/s] * W‡(E - E0) / ρ(E)
-//!   because converting from per-(cm^-1) to per-energy introduces a factor (h c), and
-//!   the 1/h in RRKM cancels leaving a factor c.
-//! - Symmetry/chirality/electronic degeneracy are handled as multiplicative factors on the
-//!   state counts (same placement as MESS RRHO does for weights/states).
-//!
-//! This module is intentionally straightforward: it does not attempt maximum-entropy
-//! smoothing or other statistical post-processing.
+//! Grain i lies at E = i dE; rho[i] holds the states in ((i-1) dE, i dE] per dE and rho[0] the ground
+//! state (`rrkm::sum_and_density`).
 
 use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
-use crate::constants::H_PLANCK_CM;
-use crate::masterequation::energy_grained_me::EnergyGrid;
-use crate::masterequation::reaction_network::{
-    MicrocanonicalProvider, ReactionChannel, WellDefinition,
-};
 use crate::rrkm::sum_and_density::get_rovib_WE_or_rhoE;
 
 /// Minimal microcanonical input model for a species (well or tight TS).
@@ -104,163 +80,12 @@ pub enum TransitionStateModel {
 
     /// Loose capture/association transition state: PST core + RRHO wrapper (vib + elec).
     ///
-    /// This mirrors the MESS pattern used in your B12 barrier input:
-    /// `RRHO { Core PhaseSpaceTheory { ... } Frequencies[...] ElectronicLevels[...] }`
+    /// Input-deck form: `RRHO { Core PhaseSpaceTheory { ... } Frequencies[...] ElectronicLevels[...] }`.
     PhaseSpaceTheoryRRHO {
         pst_core: PhaseSpaceTheoryModel,
         vibrational_frequencies_cm1: Vec<f64>,
         electronic_degeneracy: f64,
     },
-}
-
-/// Channel microcanonical definition (per well channel).
-#[derive(Clone, Debug)]
-pub struct ChannelMicroModel {
-    /// Threshold energy E0 for this channel direction, in cm^-1, relative to the well minimum.
-    ///
-    /// k(E) will be zero for E < E0.
-    pub threshold_energy_cm1: f64,
-
-    /// Transition-state sum-of-states model.
-    pub transition_state: TransitionStateModel,
-}
-
-/// Built microcanonical arrays for a multiwell network.
-#[derive(Clone, Debug)]
-pub struct MicrocanonicalNetworkData {
-    /// Per well: density of states ρ_w(E_i), i = local grain index.
-    pub rho_by_well: Vec<Vec<f64>>,
-
-    /// Per well, per channel: microcanonical rate k(E_i) in s^-1.
-    ///
-    /// This follows the channel ordering in the corresponding `WellDefinition.channels`.
-    pub k_by_well_by_channel: Vec<Vec<Vec<f64>>>,
-
-    /// Mirror of the channel bookkeeping (targets) so downstream code can build matrices.
-    pub channels_by_well: Vec<Vec<ReactionChannel>>,
-}
-
-/// A `MicrocanonicalProvider` backed by the precomputed arrays.
-pub struct ArrayMicrocanonicalProvider {
-    rho_by_well: Vec<Vec<f64>>,
-    k_by_well_by_channel: Vec<Vec<Vec<f64>>>,
-}
-
-impl ArrayMicrocanonicalProvider {
-    pub fn new(data: &MicrocanonicalNetworkData) -> Self {
-        Self {
-            rho_by_well: data.rho_by_well.clone(),
-            k_by_well_by_channel: data.k_by_well_by_channel.clone(),
-        }
-    }
-}
-
-impl MicrocanonicalProvider for ArrayMicrocanonicalProvider {
-    fn density_of_states(&self, well_index: usize, local_grain_index: usize) -> f64 {
-        self.rho_by_well
-            .get(well_index)
-            .and_then(|v| v.get(local_grain_index))
-            .copied()
-            .unwrap_or(0.0)
-    }
-
-    fn microcanonical_rate(
-        &self,
-        well_index: usize,
-        channel_index: usize,
-        local_grain_index: usize,
-    ) -> f64 {
-        self.k_by_well_by_channel
-            .get(well_index)
-            .and_then(|vv| vv.get(channel_index))
-            .and_then(|v| v.get(local_grain_index))
-            .copied()
-            .unwrap_or(0.0)
-    }
-}
-
-/// Build ρ(E) and k(E) for a multiwell network.
-///
-/// Requirements (current implementation):
-/// - Each well may have its own ΔE and truncation, but within a well the energy grid is uniform.
-/// - `channel_micro_models[well][ch]` must match the well's channel count and ordering.
-pub fn build_microcanonical_network_data(
-    wells: &[WellDefinition],
-    well_models: &[SpeciesMicroModel],
-    channel_micro_models: &[Vec<ChannelMicroModel>],
-) -> Result<MicrocanonicalNetworkData, String> {
-    if wells.len() != well_models.len() || wells.len() != channel_micro_models.len() {
-        return Err(
-            "wells, well_models, and channel_micro_models must have matching lengths.".into(),
-        );
-    }
-
-    // Validate wells + models.
-    for (idx, (w, m)) in wells.iter().zip(well_models.iter()).enumerate() {
-        if w.channels.len() != channel_micro_models[idx].len() {
-            return Err(format!(
-                "Well '{}' channel count mismatch: network has {}, micro models provide {}.",
-                w.well_name,
-                w.channels.len(),
-                channel_micro_models[idx].len()
-            ));
-        }
-        m.validate()?;
-    }
-
-    // 1) Densities of states ρ_w(E)
-    let mut rho_by_well: Vec<Vec<f64>> = Vec::with_capacity(wells.len());
-    for (well, model) in wells.iter().zip(well_models.iter()) {
-        let grid = EnergyGrid {
-            number_of_bins: well.one_past_highest_included_grain_index,
-            bin_width_wavenumber: well.energy_grain_width_cm1,
-            energy_origin_wavenumber: 0.0,
-        };
-        let rho = compute_rrho_density_of_states(&grid, model)?;
-        rho_by_well.push(rho);
-    }
-
-    // 2) k(E) per channel, per well
-    let mut k_by_well_by_channel: Vec<Vec<Vec<f64>>> = Vec::with_capacity(wells.len());
-    for (well_index, well) in wells.iter().enumerate() {
-        let model = &well_models[well_index];
-        let grid = EnergyGrid {
-            number_of_bins: well.one_past_highest_included_grain_index,
-            bin_width_wavenumber: well.energy_grain_width_cm1,
-            energy_origin_wavenumber: 0.0,
-        };
-
-        let rho = &rho_by_well[well_index];
-        let mut per_channel: Vec<Vec<f64>> = Vec::with_capacity(well.channels.len());
-
-        for ch in 0..well.channels.len() {
-            let ch_model = &channel_micro_models[well_index][ch];
-            let w_ts = compute_transition_state_sum_of_states(&grid, &ch_model.transition_state)?;
-            let shift = (ch_model.threshold_energy_cm1 / grid.bin_width_wavenumber + 0.5) as usize;
-            let mut k = vec![0.0; w_ts.len()];
-            for i in shift..w_ts.len() {
-                let rho_i = rho[i];
-                let w_i = w_ts[i - shift];
-                if rho_i <= 0.0 || !rho_i.is_finite() {
-                    continue;
-                }
-                if w_i <= 0.0 || !w_i.is_finite() {
-                    continue;
-                }
-                k[i] = w_i / rho_i / H_PLANCK_CM;
-            }
-            per_channel.push(k);
-        }
-
-        k_by_well_by_channel.push(per_channel);
-        let _ = model;
-    }
-
-    Ok(MicrocanonicalNetworkData {
-        rho_by_well,
-        k_by_well_by_channel,
-        channels_by_well: wells.iter().map(|w| w.channels.clone()).collect(),
-    })
 }
 
 fn effective_rotational_constants_for_counting(rotational_constants_cm1: &[f64]) -> Vec<f64> {
@@ -291,12 +116,16 @@ fn effective_rotational_constants_for_counting(rotational_constants_cm1: &[f64])
     finite
 }
 
-fn compute_rrho_density_of_states(
-    grid: &EnergyGrid,
+/// Rovibrational density of states (per cm-1) of an RRHO species on `grains` grains of width
+/// `grain_width_cm1`, including the statistical weight chirality g_e/sigma.
+pub(crate) fn rrho_density_of_states(
+    grains: usize,
+    grain_width_cm1: f64,
     model: &SpeciesMicroModel,
 ) -> Result<Vec<f64>, String> {
-    let d_e = grid.bin_width_wavenumber;
-    let n_ebin = grid.number_of_bins.saturating_sub(1);
+    model.validate()?;
+    let d_e = grain_width_cm1;
+    let n_ebin = grains.saturating_sub(1);
 
     let brot = effective_rotational_constants_for_counting(&model.rotational_constants_cm1);
     let nrot = brot.len();
@@ -335,19 +164,21 @@ fn compute_rrho_density_of_states(
     Ok(rho)
 }
 
-fn compute_transition_state_sum_of_states(
-    grid: &EnergyGrid,
+/// Sum of states W(E) of a transition state on `grains` grains of width `grain_width_cm1`.
+pub(crate) fn transition_state_sum_of_states(
+    grains: usize,
+    grain_width_cm1: f64,
     ts: &TransitionStateModel,
 ) -> Result<Vec<f64>, String> {
     match ts {
-        TransitionStateModel::TightRRHO { species } => compute_rrho_sum_of_states(grid, species),
+        TransitionStateModel::TightRRHO { species } => rrho_sum_of_states(grains, grain_width_cm1, species),
         TransitionStateModel::PhaseSpaceTheoryRRHO {
             pst_core,
             vibrational_frequencies_cm1,
             electronic_degeneracy,
         } => {
-            let d_e = grid.bin_width_wavenumber;
-            let n_ebin = grid.number_of_bins.saturating_sub(1);
+            let d_e = grain_width_cm1;
+            let n_ebin = grains.saturating_sub(1);
 
             // Start from the PST core cumulative states N(E) on the same energy grid.
             let mut w = vec![0.0; n_ebin + 1];
@@ -364,8 +195,9 @@ fn compute_transition_state_sum_of_states(
                 *x *= *electronic_degeneracy;
             }
 
-            // RRHO-style vibrational convolution: this mirrors the MESS loop:
-            //   for each frequency (as integer bins): for e>=bin: W[e] += W[e-bin]
+            // Harmonic conserved modes added to the core sum of states by direct count, for each
+            // frequency (in whole grains): W[e] += W[e - bin] for e >= bin (Beyer, Swinehart,
+            // Commun. ACM 16, 379 (1973)).
             let freq_bins: Vec<usize> = vibrational_frequencies_cm1
                 .iter()
                 .filter(|w| w.is_finite() && **w > 0.0)
@@ -378,12 +210,15 @@ fn compute_transition_state_sum_of_states(
     }
 }
 
-fn compute_rrho_sum_of_states(
-    grid: &EnergyGrid,
+/// Rovibrational sum of states of an RRHO species, including chirality g_e/sigma.
+pub(crate) fn rrho_sum_of_states(
+    grains: usize,
+    grain_width_cm1: f64,
     model: &SpeciesMicroModel,
 ) -> Result<Vec<f64>, String> {
-    let d_e = grid.bin_width_wavenumber;
-    let n_ebin = grid.number_of_bins.saturating_sub(1);
+    model.validate()?;
+    let d_e = grain_width_cm1;
+    let n_ebin = grains.saturating_sub(1);
 
     let brot = effective_rotational_constants_for_counting(&model.rotational_constants_cm1);
     let nrot = brot.len();
