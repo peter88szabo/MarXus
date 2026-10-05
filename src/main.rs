@@ -26,8 +26,6 @@ fn main() {
     M  M  M    A     A    R   R      X X      U   U         S
     M     M    A     A    R    R    X   X     UUUUU    SSSSS
 
- Molecular Statistical Physics for Kinetics and Thermochemistry
-
                        Version: 0.1
                       28. Jan. 2026
 

@@ -191,3 +191,16 @@ The Features list now says the same.
 - the thermochemistry.
 
 The status-table row "Olzmann eigenvalue analysis" was renamed to the thermal rate coefficients of the final steady state. The Features line now gives the master equation as dN/dt = R·F − J·N, with J·N = R·F as its steady state.
+
+**Notation of the master equation (Peter, 23:11: "what is RF … and also JN?").** In the README, R·F is the scalar R (total formation rate) times the vector F (the normalized nascent distribution); F is not a subscript. J·N is the matrix–vector product.
+- **Display.** The README now gives the master equation per grain, dN_i/dt = R·F_i − Σ_j J_ij·N_j, and in vector–matrix notation with explicit "·".
+- **Symbol table.** Each symbol is listed as scalar, vector or matrix, with its meaning.
+- **Elements of J.** J_ij = ω(δ_ij − P_ij) + δ_ij(Σ_r k_r(E_j) + k_c[D]) − δ_ii′·k_(w→w′)(E_j). This follows the assembly in `chemical_activation_operator.rs`: diagonal loss of all channels of grain j, and −k into the grain of the target well at the same absolute energy.
+- **Solver equations.** Every matrix–vector product in them (steady states, J⁻¹·F, the eigenpair, (S + σI)·x = u, Ĝ·f) is now written with "·". The two steady states are also given per grain.
+
+**Matrix notation (Peter, 23:13: "make proper matrix notation with bold variable … the vector can stay normal").**
+- **Typefaces.** All README math now writes matrices in bold: **J**, **P**, **K**, **I**, **S**, **D**, **J**_abs, **M**, **Λ** (`\boldsymbol\Lambda`) and Ĝ (`\hat{\mathbf G}`). Vectors (N, F, Ñ^s, ñ^th, x, u, f^(λ)) and scalars are in normal type.
+- **Products.** Products are written by juxtaposition, e.g. dN/dt = R F − **J** N; the explicit "·" was removed.
+- **Notation paragraph.** A short paragraph above the symbol table states this convention.
+- **CSE section.** The number of wells is now n_w, because N is the population vector. **M** and **Λ** = diag(Λ₁ … Λ_{n_w}) are defined there.
+- **Features line.** The plain-text master equation in Features is now in the same math notation.

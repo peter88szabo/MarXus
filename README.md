@@ -1,7 +1,5 @@
 # MarXus
 
-**Molecular Statistical Physics for Kinetics and Thermochemistry**
-
 **Author:** Peter Szabo  
 **Email:** peter88szabo@gmail.com  
 
@@ -75,7 +73,7 @@ The source contains 176 library unit tests (`cargo test`).
 
 ### Master equation: multiwell chemical activation
 
-The energy-grained master equation is dN/dt = R·F − J·N with J = ω(I − P) + K + k_c[D]·I (Pfeifle, Olzmann, Int. J. Chem. Kinet. 46, 231 (2014), eq. 2); its steady state is J·N = R·F. See "Master-equation solvers" below for the questions each solver answers.
+The energy-grained master equation is $`dN/dt = R\,F - \mathbf J N`$ with $`\mathbf J = \omega(\mathbf I - \mathbf P) + \mathbf K + k_c[\mathrm D]\,\mathbf I`$ (Pfeifle, Olzmann, Int. J. Chem. Kinet. 46, 231 (2014), eq. 2); its steady state is $`\mathbf J N = R\,F`$. See "Master-equation solvers" below for the questions each solver answers.
 
 **Network**
 - Any number of wells on a common absolute energy grid, connected by isomerization (exact detailed balance, k = W‡/(hρ) in both directions).
@@ -176,20 +174,47 @@ Solvers 1 and 2 give flux coefficients and yields; solver 3 gives phenomenologic
 
 ### The master equation
 
-The master equation for the grained populations $`\mathbf N`$ of all wells (PO14 eq. 2; O02 eq. 6; GO10 eq. 7) is
+The populations $`N_i`$ of the energy grains $`i`$ of all wells obey (PO14 eq. 2; O02 eq. 6; GO10 eq. 7), written per grain:
 
 ```math
-\frac{d\mathbf N}{dt} = R\,\mathbf F - \mathbf J\,\mathbf N,
+\frac{dN_i}{dt} = R\,F_i - \sum_j J_{ij}\,N_j .
+```
+
+The same equation in matrix notation:
+
+```math
+\frac{dN}{dt} = R\,F - \mathbf J\,N,
 \qquad
 \mathbf J = \omega\,(\mathbf I - \mathbf P) + \mathbf K + k_c[\mathrm D]\,\mathbf I .
 ```
 
-- $`\omega`$ is the collision frequency (Lennard-Jones) and $`\mathbf P`$ the matrix of collisional transition probabilities (exponential down by default). They obey detailed balance, $`P(E' \leftarrow E)\,f^0(E) = P(E \leftarrow E')\,f^0(E')`$, with $`f^0(E) = \rho(E)\,e^{-E/k_BT}`$.
-- $`\mathbf K`$ is the microcanonical reaction: $`\sum_r k_r(E)`$ on the diagonal of every well, and the isomerization couplings between wells.
-- $`k_c[\mathrm D]`$ is the pseudo-first-order bimolecular sink of a well, for example an escape channel.
-- $`R\,\mathbf F`$ is the formation of chemically activated adducts: the rate $`R`$ times the normalized nascent distribution $`\mathbf F`$.
+**Notation.** **Bold** upper-case letters are matrices; vectors and scalars are in normal type. A product is written by juxtaposition: $`\mathbf J N`$ is the matrix $`\mathbf J`$ times the vector $`N`$, and $`R\,F`$ is the scalar $`R`$ times the vector $`F`$.
 
-**Properties.** $`\mathbf J`$ has positive eigenvalues when population can leave the network (GO10, text before eq. 12). With $`\mathbf D = \mathrm{diag}\big(\sqrt{f^0}\big)`$, the matrix $`\mathbf S = \mathbf D^{-1}\mathbf J\,\mathbf D`$ is symmetric, and all solvers work with $`\mathbf S`$. The CSE literature writes the same equation as $`d|f\rangle/dt = -\hat G\,|f\rangle + \sum_\nu s_\nu\,|p^{(\nu)}\rangle`$ (G13 eq. 1), with $`\hat G = \mathbf J`$.
+| symbol | kind | meaning |
+|---|---|---|
+| $`N = (N_1, N_2, \dots)`$ | vector | population of every grain, all wells stacked |
+| $`R`$ | scalar | total formation rate of the chemically activated adducts, e.g. $`R = k_\infty [\mathrm A][\mathrm B]`$ |
+| $`F = (F_1, F_2, \dots)`$ | vector | normalized nascent distribution, $`\sum_i F_i = 1`$ |
+| $`R\,F`$ | vector | scalar $`R`$ times vector $`F`$: the formation rate into grain $`i`$ is $`R\,F_i`$ |
+| $`\mathbf J`$ | matrix (s⁻¹) | collisions, reactions and sinks; it has the elements below |
+| $`\mathbf J\,N`$ | vector | matrix–vector product, $`(\mathbf J\,N)_i = \sum_j J_{ij} N_j`$: the net rate at which population leaves grain $`i`$ |
+| $`\omega`$ | scalar (s⁻¹) | collision frequency (Lennard-Jones) |
+| $`\mathbf P`$ | matrix | collisional transition probabilities, $`P_{ij} = P(E_i \leftarrow E_j)`$ (exponential down by default) |
+| $`\mathbf K`$ | matrix (s⁻¹) | microcanonical reactions: products and isomerization |
+| $`k_c[\mathrm D]`$ | scalar (s⁻¹) | pseudo-first-order bimolecular sink of a well, e.g. an escape channel |
+| $`\mathbf I`$ | matrix | identity |
+
+**Elements of $`\mathbf J`$.** Grain $`j`$ belongs to well $`w`$, and grain $`i'`$ is the grain of well $`w'`$ at the same absolute energy:
+
+```math
+J_{ij} = \omega\,\big(\delta_{ij} - P_{ij}\big) + \delta_{ij}\,\Big(\sum_r k_r(E_j) + k_c[\mathrm D]\Big) - \delta_{i i'}\,k_{w \to w'}(E_j) .
+```
+
+The sum over $`r`$ runs over all channels of well $`w`$: products and isomerizations. The last term puts the isomerization flux into the other well.
+
+**Detailed balance of the collisions.** The probabilities obey $`P(E' \leftarrow E)\,f^0(E) = P(E \leftarrow E')\,f^0(E')`$, with $`f^0(E) = \rho(E)\,e^{-E/k_BT}`$.
+
+**Properties.** $`\mathbf J`$ has positive eigenvalues when population can leave the network (GO10, text before eq. 12). With $`\mathbf D = \mathrm{diag}\big(\sqrt{f^0}\big)`$, the matrix $`\mathbf S = \mathbf D^{-1}\,\mathbf J\,\mathbf D`$ is symmetric, and all solvers work with $`\mathbf S`$. The CSE literature writes the same equation as $`d|f\rangle/dt = -\hat{\mathbf G}\,|f\rangle + \sum_\nu s_\nu\,|p^{(\nu)}\rangle`$ (G13 eq. 1), with $`\hat{\mathbf G} = \mathbf J`$.
 
 ### Chemical activation
 
@@ -248,7 +273,7 @@ In the shift approximation this becomes $`F(E) = n_{\mathrm A}\big(E + E_R - \la
 **Equation.** Each well gets an absorbing barrier at $`E_{\mathrm{abs}} = E_{\mathrm{thr,min}} - X\,k_BT`$ (default $`X = 10`$, `--barrier-kt`). A molecule transferred below it counts as stabilized and is removed. With $`\mathbf J_{\mathrm{abs}}`$, the operator on the grains above the barriers, and $`R = 1`$:
 
 ```math
-\mathbf J_{\mathrm{abs}}\,\mathbf N^{s} = \mathbf F,
+\sum_j J^{\mathrm{abs}}_{ij}\,N^s_j = F_i \quad \big(\mathbf J_{\mathrm{abs}}\,N^{s} = F\big),
 \qquad
 \Phi_r = \sum_E k_r(E)\,N^s(E),
 \qquad
@@ -257,7 +282,7 @@ In the shift approximation this becomes $`F(E) = n_{\mathrm A}\big(E + E_R - \la
 
 ($`\Phi_{\mathrm{stab}}`$ also includes the isomerization flux that arrives below the barrier of the target well, and the part of the source formed below a barrier; `chemical_activation_operator.rs`). The yields obey $`\sum_r \Phi_r + \Phi_{\mathrm{stab}} + \Phi_{\mathrm{sink}} = 1`$, and the apparent bimolecular rate coefficients are $`k(\mathrm{A+B} \to X) = k_\infty\,\Phi_X`$ (PR03 eq. 44).
 
-**Time window.** The solution holds for $`(0.1\,\lambda_F)^{-1} < t < (10\,k_{\mathrm{uni}})^{-1}`$ (O02 p. 3618; SN84), with $`\lambda_F`$ the eigenvalue whose eigenvector has the largest weight in $`\mathbf F`$. In this window the activated population has relaxed, and the stabilized adducts have not yet reacted thermally.
+**Time window.** The solution holds for $`(0.1\,\lambda_F)^{-1} < t < (10\,k_{\mathrm{uni}})^{-1}`$ (O02 p. 3618; SN84), with $`\lambda_F`$ the eigenvalue whose eigenvector has the largest weight in $`F`$. In this window the activated population has relaxed, and the stabilized adducts have not yet reacted thermally.
 
 **What it gives for chemical activation:**
 
@@ -282,9 +307,9 @@ In the shift approximation this becomes $`F(E) = n_{\mathrm A}\big(E + E_R - \la
 **Equation.** The same $`\mathbf J`$ is used, without a barrier (GO10 eq. 8; PO14 eq. 5):
 
 ```math
-\mathbf J\,\mathbf N^{s} = R\,\mathbf F,
+\sum_j J_{ij}\,N^s_j = R\,F_i \quad \big(\mathbf J\,N^{s} = R\,F\big),
 \qquad
-\tilde{\mathbf N}^{s} = \frac{\mathbf J^{-1}\mathbf F}{\sum_i \big(\mathbf J^{-1}\mathbf F\big)_i},
+\tilde N^{s} = \frac{\mathbf J^{-1}\,F}{\sum_i \big(\mathbf J^{-1}\,F\big)_i},
 \qquad
 k^{ca}_r = \sum_E k_r(E)\,\tilde N^s(E) \quad \text{(GO10 eq. 9)},
 ```
@@ -298,7 +323,7 @@ k^{ca}_r = \sum_E k_r(E)\,\tilde N^s(E) \quad \text{(GO10 eq. 9)},
 **The thermal eigenpair of the same $`\mathbf J`$** (GO10 eq. 12 and the text after it) is part of this solver, not a method of its own. Its eigenvector is the thermal steady-state population:
 
 ```math
-\mathbf J\,\tilde{\mathbf n}^{th} = \lambda_1\,\tilde{\mathbf n}^{th},
+\mathbf J\,\tilde n^{th} = \lambda_1\,\tilde n^{th},
 \qquad
 k^{th} = \lambda_1,
 \qquad
@@ -310,7 +335,7 @@ k_{\mathrm{uni}} = \sum_r k^{th}_r + k_c[\mathrm D] .
 **How it is computed and reported:**
 
 - MarXus reports the eigenvector average $`k_{\mathrm{uni}}`$, with $`\lambda_1`$ beside it as the sum-rule check.
-- The default solver, inverse iteration, factors $`\mathbf S + \sigma\mathbf I`$ and solves $`(\mathbf S+\sigma\mathbf I)\,\mathbf x = \mathbf u`$ repeatedly. Each step is a steady-state solve with the previous distribution as the source.
+- The default solver, inverse iteration, factors $`\mathbf S + \sigma\mathbf I`$ and solves $`(\mathbf S+\sigma\mathbf I)\,x = u`$ repeatedly. Each step is a steady-state solve with the previous distribution as the source.
 - For one well with one entrance channel, the association follows by detailed balance: $`k(\mathrm{A+B}\to W) = k_{\mathrm{uni}}\;k_{\infty,\mathrm{assoc}}/k_{\infty,\mathrm{diss}}`$.
 
 **Time scale.** The solution is reached when the experimental time is distinctly longer than $`1/k_{\mathrm{uni}}`$ (O02 p. 3618). At that point "there is no more net stabilization; the stabilization reservoir is filled up, and time-independent energy distributions have been established" (GO10 p. 12295).
@@ -327,31 +352,31 @@ k_{\mathrm{uni}} = \sum_r k^{th}_r + k_c[\mathrm D] .
 **Limits:**
 
 - Without a sink, and with a single exit such as back to A + B, every molecule eventually leaves through it. In O02's words (text after eq. 13), "one trivially has … $`\Phi_2 = 1`$".
-- For deep wells at low T, $`\mathbf J\,\mathbf N = \mathbf F`$ then becomes numerically singular, for example C₂H₃ at 300–500 K. The thermal eigenpair is still obtained (shifted inverse iteration). For the stabilization, use solver 1 or 3.
+- For deep wells at low T, $`\mathbf J\,N = F`$ then becomes numerically singular, for example C₂H₃ at 300–500 K. The thermal eigenpair is still obtained (shifted inverse iteration). For the stabilization, use solver 1 or 3.
 
 ### Solver 3: chemically significant eigenvalues (CSE)
 
 **Question.** Which phenomenological rate coefficients between species reproduce the kinetics after relaxation?
 
-**Equations** (G13; MK06). All eigenpairs of $`\hat G = \mathbf J`$ are computed, $`\hat G\,f^{(\lambda)} = \Lambda_\lambda\,f^{(\lambda)}`$. For $`N`$ wells, the $`N`$ lowest eigenvalues are chemically significant and must be well separated from the relaxation eigenvalues, $`\Lambda_N \ll \Lambda_{N+1}`$ (MK06 eq. 19). With $`Q_i = \sum_{E \in i} f^0(E)`$ and $`p^{(\nu)}_\lambda = \sum_E f^{(\lambda)}(E)\,k_{\to\nu}(E)`$ (eq. 15):
+**Equations** (G13; MK06). All eigenpairs of $`\hat{\mathbf G} = \mathbf J`$ are computed, $`\hat{\mathbf G}\,f^{(\lambda)} = \Lambda_\lambda\,f^{(\lambda)}`$. For $`n_w`$ wells, the $`n_w`$ lowest eigenvalues are chemically significant and must be well separated from the relaxation eigenvalues, $`\Lambda_{n_w} \ll \Lambda_{n_w+1}`$ (MK06 eq. 19). With $`Q_i = \sum_{E \in i} f^0(E)`$ and $`p^{(\nu)}_\lambda = \sum_E f^{(\lambda)}(E)\,k_{\to\nu}(E)`$ (eq. 15), with $`\mathbf M`$ the matrix of the elements $`M_{i\lambda}`$ below and $`\boldsymbol\Lambda = \mathrm{diag}(\Lambda_1, \dots, \Lambda_{n_w})`$:
 
 ```math
 M_{i\lambda} = Q_i^{-1/2} \sum_{E\in i} f^{(\lambda)}(E) \quad \text{(eq. 25)},
 \qquad
-k_{j\to i} = -\sqrt{Q_i/Q_j}\;\big(M\Lambda M^{-1}\big)_{ij} \quad \text{(eq. 27)},
+k_{j\to i} = -\sqrt{Q_i/Q_j}\;\big(\mathbf M\boldsymbol\Lambda\mathbf M^{-1}\big)_{ij} \quad \text{(eq. 27)},
 ```
 
 ```math
-k_{i\to\nu} = Q_i^{-1/2} \sum_{\lambda \le N} \big(M^{-1}\big)_{\lambda i}\,p^{(\nu)}_\lambda \quad \text{(eq. 30)},
+k_{i\to\nu} = Q_i^{-1/2} \sum_{\lambda \le n_w} \big(\mathbf M^{-1}\big)_{\lambda i}\,p^{(\nu)}_\lambda \quad \text{(eq. 30)},
 \qquad
-k_{R\to i} = \frac{\sqrt{Q_i}}{Q_R} \sum_{\lambda \le N} M_{i\lambda}\,p^{(R)}_\lambda \quad \text{(eq. 28)},
+k_{R\to i} = \frac{\sqrt{Q_i}}{Q_R} \sum_{\lambda \le n_w} M_{i\lambda}\,p^{(R)}_\lambda \quad \text{(eq. 28)},
 ```
 
 ```math
-k_{R\to\mu} = \frac{1}{Q_R} \sum_{\lambda > N} \frac{p^{(\mu)}_\lambda\,p^{(R)}_\lambda}{\Lambda_\lambda} \quad \text{(eq. 21)}.
+k_{R\to\mu} = \frac{1}{Q_R} \sum_{\lambda > n_w} \frac{p^{(\mu)}_\lambda\,p^{(R)}_\lambda}{\Lambda_\lambda} \quad \text{(eq. 21)}.
 ```
 
-**Validity.** The rate coefficients describe the kinetics for $`t \gg 1/\Lambda_{N+1}`$, after relaxation. They exist only while the chemically significant eigenvalues stay separated from the relaxation eigenvalues. Otherwise G13 (Sec. IV) merges species. MarXus warns when $`\Lambda_N/\Lambda_{N+1} > 0.1`$; merging is not implemented.
+**Validity.** The rate coefficients describe the kinetics for $`t \gg 1/\Lambda_{n_w+1}`$, after relaxation. They exist only while the chemically significant eigenvalues stay separated from the relaxation eigenvalues. Otherwise G13 (Sec. IV) merges species. MarXus warns when $`\Lambda_{n_w}/\Lambda_{n_w+1} > 0.1`$; merging is not implemented.
 
 **What it gives for chemical activation:**
 
@@ -373,7 +398,7 @@ k_{R\to\mu} = \frac{1}{Q_R} \sum_{\lambda > N} \frac{p^{(\mu)}_\lambda\,p^{(R)}_
 | master equation | same J, same F | same J, same F | same J, same F |
 | mathematical problem | linear system on the grains above the absorbing barriers | linear system on all grains; lowest eigenpair of the same J | all eigenpairs of J |
 | stabilized adducts | removed (counted as stabilized) | stay in the well and react thermally | a chemical eigenmode per well |
-| time scale | $`(0.1\lambda_F)^{-1} < t < (10k_{\mathrm{uni}})^{-1}`$ | $`t \gg 1/k_{\mathrm{uni}}`$ | $`t \gg 1/\Lambda_{N+1}`$ |
+| time scale | $`(0.1\lambda_F)^{-1} < t < (10k_{\mathrm{uni}})^{-1}`$ | $`t \gg 1/k_{\mathrm{uni}}`$ | $`t \gg 1/\Lambda_{n_w+1}`$ |
 | output | yields Φ, $`k_\infty\Phi_X`$ | $`k^{ca}`$, yields Φ, sink yields; $`k_{\mathrm{uni}}`$, $`\lambda_1`$, $`k^{th}_r`$ | species-to-species rate coefficients |
 | kind of quantity | flux coefficient | flux coefficient; thermal rate coefficient | phenomenological rate coefficient |
 | needs | barrier distance (choice) | a sink or exit for a well-conditioned J·N = F | eigenvalue separation |
