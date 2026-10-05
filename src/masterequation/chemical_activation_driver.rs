@@ -221,7 +221,9 @@ mod tests {
 
     fn run_spec(pressures: Vec<f64>) -> ChemicalActivationRun {
         ChemicalActivationRun {
-            temperatures_kelvin: vec![300.0, 400.0],
+            // At both temperatures 10 k_BT stays below the lowest thresholds of both wells (the
+            // intermediate steady state is defined).
+            temperatures_kelvin: vec![250.0, 300.0],
             pressures_torr: pressures,
             options: ChemicalActivationOptions {
                 collision_model: CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 },
@@ -238,7 +240,7 @@ mod tests {
         let network = network_with_entrance();
         let results = run_chemical_activation(&network, &run_spec(vec![1.0, 100.0, 10000.0])).unwrap();
         let order: Vec<(f64, f64)> = results.iter().map(|r| (r.conditions.temperature_kelvin, r.conditions.pressure_torr)).collect();
-        assert_eq!(order, vec![(300.0, 1.0), (300.0, 100.0), (300.0, 10000.0), (400.0, 1.0), (400.0, 100.0), (400.0, 10000.0)]);
+        assert_eq!(order, vec![(250.0, 1.0), (250.0, 100.0), (250.0, 10000.0), (300.0, 1.0), (300.0, 100.0), (300.0, 10000.0)]);
         for r in &results {
             assert!((r.result.mass_balance - 1.0).abs() < 1e-8);
         }

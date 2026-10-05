@@ -3,7 +3,7 @@ use crate::constants::{
     PLANCK_SI, R_KCAL_PER_MOL_PER_KELVIN, RGAS_AU,
 };
 use crate::molecule::MoleculeStruct;
-use crate::tunneling::tunneling::{eckart, wigner};
+use crate::tunneling::tunneling::eckart;
 
 #[derive(Clone, Copy, Debug)]
 pub enum ReactionMolecularity {
@@ -217,7 +217,7 @@ pub fn high_pressure_tst_with_thermo(
     })
 }
 
-/// Compute Eckart tunneling correction kappa using the existing tunneling module.
+/// Canonical Eckart tunneling correction kappa(T) (`tunneling::eckart`).
 pub fn eckart_tunneling_kappa(input: EckartTunnelingInput) -> Result<f64, String> {
     if input.temperature_kelvin <= 0.0 {
         return Err("temperature_kelvin must be positive".into());
@@ -239,16 +239,34 @@ pub fn eckart_tunneling_kappa(input: EckartTunnelingInput) -> Result<f64, String
     let de = input.integration_step_kcal_mol / AU_TO_KCAL;
     let emax = input.integration_max_kcal_mol / AU_TO_KCAL;
 
-    let kappa1 = eckart(beta, omega, vf, vb, de, emax);
-    if kappa1.is_finite() && kappa1 > 0.0 && kappa1 < 1.0e4 {
-        return Ok(kappa1);
+    // Exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8), evaluated without
+    // overflow; large kappa (deep tunneling) is a physical result and is returned as it is.
+    let kappa = eckart(beta, omega, vf, vb, de, emax);
+    if !(kappa.is_finite() && kappa > 0.0) {
+        return Err(format!("Eckart tunneling correction is not a positive finite number: {kappa}"));
     }
+    Ok(kappa)
+}
 
-    // Guardrail: if Eckart is numerically unstable in this parameterization,
-    // use Wigner as a controlled near-barrier approximation.
-    let kappa_wigner = wigner(beta, omega);
-    if !kappa_wigner.is_finite() || kappa_wigner <= 0.0 {
-        return Err("Both Eckart and Wigner tunneling corrections are invalid.".into());
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deep_tunneling_keeps_the_eckart_correction() {
+        // Case1 barrier B23 (H-shift): hw = 2658.84 cm-1, barriers 19.5 and 21.3 kcal/mol, 300 K.
+        // kappa = beta exp(beta V_f) integral P(E - V_f) exp(-beta E) dE with the exact Eckart P
+        // (Miller 1979 eq. 8) is 7.39e4 (independent trapezoid evaluation on 1 cm-1); it must not be
+        // replaced by any other approximation (Wigner would give 7.8).
+        let kappa = eckart_tunneling_kappa(EckartTunnelingInput {
+            temperature_kelvin: 300.0,
+            imaginary_frequency_cm1: 2658.84,
+            forward_barrier_kcal_mol: 19.5,
+            reverse_barrier_kcal_mol: 21.3,
+            integration_step_kcal_mol: 0.002,
+            integration_max_kcal_mol: 60.0,
+        })
+        .unwrap();
+        assert!((kappa / 7.3907e4 - 1.0).abs() < 1e-2, "kappa = {kappa:e}");
     }
-    Ok(kappa_wigner)
 }

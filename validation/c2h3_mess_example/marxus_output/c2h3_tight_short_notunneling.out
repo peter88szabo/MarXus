@@ -1,0 +1,14 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight_short_notunneling.inp: grain 70.000 cm-1
+#   well W1       grains    493 (absolute -172 .. 320), channels: B1
+
+# intermediate steady state (absorbing barrier 10 k_BT below the lowest threshold)
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+1000,760,9.404057e-1,5.959427e-2,0.000000e0,1.630017e9,1.733312e9,1.000000e0,1.167421e4,1.000000000000,2.625e-16
+
+# bimolecular rate coefficients of P1 [cm3/s], intermediate steady state
+T[K],P[Torr],k_inf,k(P1->W1)
+1000,760,3.876231e-11,2.310012e-12
+
+# final steady state
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+1000,760,1.000000e0,0.000000e0,0.000000e0,2.413022e5,2.413022e5,1.000000e0,2.920727e3,1.000000000000,2.386e-12

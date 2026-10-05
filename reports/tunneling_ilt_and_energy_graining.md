@@ -269,9 +269,23 @@ Paths are relative to `Mesmer7.1-source/src`.
 - Two positive WellDepth values are required.
 - Tests: values read in cm⁻¹; other models recorded; a missing WellDepth is an error.
 
-### 6.2 Open finding (needs a decision)
+### 6.2 Wigner fallback removed (Peter: "we do not need fallback, Eckart works in general")
 
-`high_pressure_limit.rs` silently replaces the Eckart κ with **Wigner** when κ > 10⁴ or κ is non-finite. That guard existed because of the overflow-prone old formula. With the new formula, κ > 10⁴ is legitimate deep tunneling (e.g. H-shifts at low T), so the fallback gives wrong physics silently. **Proposal:** remove the cap and make a non-finite κ an error. Not yet changed.
+`high_pressure_limit::eckart_tunneling_kappa` used to replace the Eckart κ silently by **Wigner** whenever κ ≥ 10⁴ or κ was non-finite. That guard dated from the overflow-prone old routine. It is removed. The function now returns the exact-Eckart κ, or an error if κ is not a positive finite number.
+
+Size of the effect, for Case1 B23 (ħω = 2658.84 cm⁻¹, 19.5 / 21.3 kcal/mol). κ_Eckart was evaluated independently by a trapezoid on 1 cm⁻¹:
+
+| T | κ_Eckart | κ_Wigner |
+|---|---|---|
+| 200 K | 8.30e10 | 16.2 |
+| 300 K | 7.39e4 | 7.8 |
+| 500 K | 23.8 | 3.4 |
+
+At 300 K the old guard would have made the TST rate about 10⁴ times too small.
+
+The new test `deep_tunneling_keeps_the_eckart_correction` (300 K, κ = 7.39e4 within 1%) failed with the guard and passes without it.
+
+Wigner, Bell and Skodje–Truhlar (`wigner`, `bell`, `skodje_truhlar`, `skodje_truhlar_exact` in `tunneling.rs`) remain **optional canonical κ(T) models** that the user can choose; the TST routines take `tunneling_kappa` as an input. None of them is used as a substitute for another (Peter: "Wigner is just optional model or Skodje formulas or others as well").
 
 ### 6.3 Energy graining: implemented
 
@@ -380,7 +394,6 @@ This is the near-singular situation of the postponed double-precision topic. The
 
 ### 6.7 Still open
 
-- The silent **Wigner fallback** in `high_pressure_limit.rs` (§6.2). Not changed.
 - **Final steady state, double precision:** postponed by Peter.
 - **ILT and fragment convolutions are O(n²)** on the cells: about 10⁸ operations for Case1, < 1 s in release. An FFT would be needed for much larger grids.
 - **Excited electronic levels** are still ignored (ground-level degeneracy only).

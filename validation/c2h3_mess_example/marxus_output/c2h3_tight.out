@@ -1,0 +1,126 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight.inp: grain 21.000 cm-1
+#   well W1       grains   2634 (absolute -574 .. 2059), channels: B1
+
+# intermediate steady state (absorbing barrier 10 k_BT below the lowest threshold)
+# not available: T = 2000 K, p = 76 Torr: Well 'W1': the absorbing barrier 10 k_BT below the lowest threshold lies at or below the bottom of the well (threshold 13608 cm-1 = 9.8 k_BT above the well bottom). Nothing can be stabilized and the intermediate steady state is not defined at 2000 K; choose a smaller distance (kt_multiple) or the final steady state.
+# not available: T = 2000 K, p = 228 Torr: Well 'W1': the absorbing barrier 10 k_BT below the lowest threshold lies at or below the bottom of the well (threshold 13608 cm-1 = 9.8 k_BT above the well bottom). Nothing can be stabilized and the intermediate steady state is not defined at 2000 K; choose a smaller distance (kt_multiple) or the final steady state.
+# not available: T = 2000 K, p = 760 Torr: Well 'W1': the absorbing barrier 10 k_BT below the lowest threshold lies at or below the bottom of the well (threshold 13608 cm-1 = 9.8 k_BT above the well bottom). Nothing can be stabilized and the intermediate steady state is not defined at 2000 K; choose a smaller distance (kt_multiple) or the final steady state.
+# not available: T = 2000 K, p = 2280 Torr: Well 'W1': the absorbing barrier 10 k_BT below the lowest threshold lies at or below the bottom of the well (threshold 13608 cm-1 = 9.8 k_BT above the well bottom). Nothing can be stabilized and the intermediate steady state is not defined at 2000 K; choose a smaller distance (kt_multiple) or the final steady state.
+# not available: T = 2000 K, p = 7600 Torr: Well 'W1': the absorbing barrier 10 k_BT below the lowest threshold lies at or below the bottom of the well (threshold 13608 cm-1 = 9.8 k_BT above the well bottom). Nothing can be stabilized and the intermediate steady state is not defined at 2000 K; choose a smaller distance (kt_multiple) or the final steady state.
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+300,76,4.039036e-1,5.960964e-1,0.000000e0,3.077940e7,7.620481e7,1.000000e0,1.285389e4,1.000000000000,1.211e-15
+300,228,2.534650e-1,7.465350e-1,0.000000e0,4.456029e7,1.758045e8,1.000000e0,1.290546e4,1.000000000000,1.568e-15
+300,760,1.285762e-1,8.714238e-1,0.000000e0,6.255690e7,4.865358e8,1.000000e0,1.295181e4,1.000000000000,2.000e-15
+300,2280,5.934023e-2,9.406598e-1,0.000000e0,7.874568e7,1.327020e9,1.000000e0,1.298167e4,1.000000000000,2.143e-15
+300,7600,2.196627e-2,9.780337e-1,0.000000e0,9.240573e7,4.206710e9,1.000000e0,1.300075e4,1.000000000000,2.191e-15
+500,76,8.036460e-1,1.963540e-1,0.000000e0,1.035429e8,1.288414e8,1.000000e0,1.245772e4,1.000000000000,5.122e-16
+500,228,6.791158e-1,3.208842e-1,0.000000e0,1.544378e8,2.274101e8,1.000000e0,1.254723e4,1.000000000000,8.955e-16
+500,760,5.078140e-1,4.921860e-1,0.000000e0,2.405817e8,4.737595e8,1.000000e0,1.264941e4,1.000000000000,1.394e-15
+500,2280,3.438135e-1,6.561865e-1,0.000000e0,3.537758e8,1.028976e9,1.000000e0,1.274054e4,1.000000000000,1.973e-15
+500,7600,1.905576e-1,8.094424e-1,0.000000e0,5.130498e8,2.692361e9,1.000000e0,1.282898e4,1.000000000000,2.638e-15
+750,76,9.533868e-1,4.661319e-2,0.000000e0,3.280828e8,3.441235e8,1.000000e0,1.191025e4,1.000000000000,1.657e-16
+750,228,9.072802e-1,9.271982e-2,0.000000e0,4.553081e8,5.018385e8,1.000000e0,1.202260e4,1.000000000000,3.470e-16
+750,760,8.200235e-1,1.799765e-1,0.000000e0,6.791448e8,8.282016e8,1.000000e0,1.216187e4,1.000000000000,5.954e-16
+750,2280,6.996371e-1,3.003629e-1,0.000000e0,1.002981e9,1.433573e9,1.000000e0,1.230135e4,1.000000000000,1.100e-15
+750,7600,5.290855e-1,4.709145e-1,0.000000e0,1.547798e9,2.925421e9,1.000000e0,1.246168e4,1.000000000000,2.227e-15
+1000,76,9.876995e-1,1.230049e-2,0.000000e0,8.975928e8,9.087711e8,1.000000e0,1.136369e4,1.000000000000,7.382e-17
+1000,228,9.724605e-1,2.753946e-2,0.000000e0,1.151668e9,1.184283e9,1.000000e0,1.148573e4,1.000000000000,1.629e-16
+1000,760,9.379155e-1,6.208448e-2,0.000000e0,1.587112e9,1.692170e9,1.000000e0,1.164206e4,1.000000000000,2.827e-16
+1000,2280,8.791183e-1,1.208817e-1,0.000000e0,2.215028e9,2.519602e9,1.000000e0,1.180563e4,1.000000000000,5.634e-16
+1000,7600,7.721131e-1,2.278869e-1,0.000000e0,3.305616e9,4.281259e9,1.000000e0,1.200591e4,1.000000000000,9.930e-16
+1250,76,9.963943e-1,3.605657e-3,0.000000e0,2.173128e9,2.180992e9,1.000000e0,1.079237e4,1.000000000000,6.514e-17
+1250,228,9.912556e-1,8.744449e-3,0.000000e0,2.615461e9,2.638533e9,1.000000e0,1.091428e4,1.000000000000,8.372e-17
+1250,760,9.781404e-1,2.185957e-2,0.000000e0,3.346336e9,3.421120e9,1.000000e0,1.107340e4,1.000000000000,1.267e-16
+1250,2280,9.525036e-1,4.749635e-2,0.000000e0,4.371507e9,4.589491e9,1.000000e0,1.124389e4,1.000000000000,2.816e-16
+1250,7600,8.972964e-1,1.027036e-1,0.000000e0,6.131455e9,6.833255e9,1.000000e0,1.145950e4,1.000000000000,6.723e-16
+1500,76,9.989101e-1,1.089908e-3,0.000000e0,3.631996e9,3.635959e9,1.000000e0,9.480555e3,1.000000000000,4.748e-17
+1500,228,9.971787e-1,2.821270e-3,0.000000e0,4.149672e9,4.161412e9,1.000000e0,9.572894e3,1.000000000000,7.023e-17
+1500,760,9.923259e-1,7.674085e-3,0.000000e0,4.979568e9,5.018078e9,1.000000e0,9.695617e3,1.000000000000,8.912e-17
+1500,2280,9.817559e-1,1.824405e-2,0.000000e0,6.112086e9,6.225668e9,1.000000e0,9.829987e3,1.000000000000,2.222e-16
+1500,7600,9.558084e-1,4.419163e-2,0.000000e0,8.017559e9,8.388249e9,1.000000e0,1.000456e4,1.000000000000,5.750e-16
+1750,76,9.997267e-1,2.733185e-4,0.000000e0,6.256868e9,6.258578e9,1.000000e0,8.900327e3,1.000000000000,5.601e-17
+1750,228,9.992428e-1,7.572037e-4,0.000000e0,6.731681e9,6.736782e9,1.000000e0,8.951686e3,1.000000000000,5.284e-17
+1750,760,9.977477e-1,2.252334e-3,0.000000e0,7.473774e9,7.490646e9,1.000000e0,9.021037e3,1.000000000000,8.260e-17
+1750,2280,9.941023e-1,5.897694e-3,0.000000e0,8.460323e9,8.510516e9,1.000000e0,9.098396e3,1.000000000000,1.453e-16
+1750,7600,9.838433e-1,1.615669e-2,0.000000e0,1.008040e10,1.024594e10,1.000000e0,9.201214e3,1.000000000000,7.005e-16
+
+# bimolecular rate coefficients of P1 [cm3/s], intermediate steady state
+T[K],P[Torr],k_inf,k(P1->W1)
+300,76,2.560198e-13,1.526125e-13
+300,228,2.560198e-13,1.911277e-13
+300,760,2.560198e-13,2.231017e-13
+300,2280,2.560198e-13,2.408275e-13
+300,7600,2.560198e-13,2.503960e-13
+500,76,3.685501e-12,7.236627e-13
+500,228,3.685501e-12,1.182619e-12
+500,760,3.685501e-12,1.813952e-12
+500,2280,3.685501e-12,2.418376e-12
+500,7600,3.685501e-12,2.983201e-12
+750,76,1.731570e-11,8.071401e-13
+750,228,1.731570e-11,1.605509e-12
+750,760,1.731570e-11,3.116419e-12
+750,2280,1.731570e-11,5.200994e-12
+750,7600,1.731570e-11,8.154214e-12
+1000,76,4.145122e-11,5.098703e-13
+1000,228,4.145122e-11,1.141544e-12
+1000,760,4.145122e-11,2.573478e-12
+1000,2280,4.145122e-11,5.010695e-12
+1000,7600,4.145122e-11,9.446193e-12
+1250,76,7.398510e-11,2.667649e-13
+1250,228,7.398510e-11,6.469589e-13
+1250,760,7.398510e-11,1.617282e-12
+1250,2280,7.398510e-11,3.514022e-12
+1250,7600,7.398510e-11,7.598538e-12
+1500,76,1.128475e-10,1.229934e-13
+1500,228,1.128475e-10,3.183733e-13
+1500,760,1.128475e-10,8.660015e-13
+1500,2280,1.128475e-10,2.058796e-12
+1500,7600,1.128475e-10,4.986916e-12
+1750,76,1.564599e-10,4.276339e-14
+1750,228,1.564599e-10,1.184721e-13
+1750,760,1.564599e-10,3.524000e-13
+1750,2280,1.564599e-10,9.227529e-13
+1750,7600,1.564599e-10,2.527874e-12
+
+# final steady state
+# not available: T = 300 K, p = 76 Torr: Banded Cholesky: non-positive pivot -2.4751142725827966e9 in row 445; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 300 K, p = 228 Torr: relative residual 3.9231462825318335e0 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 300 K, p = 760 Torr: relative residual 3.179043024631764e2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 300 K, p = 2280 Torr: Banded Cholesky: non-positive pivot -9.865487961563913e10 in row 460; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 300 K, p = 7600 Torr: Banded Cholesky: non-positive pivot -2.7635612888791122e9 in row 460; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+# not available: T = 500 K, p = 76 Torr: relative residual 4.157350279887696e-4 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 228 Torr: relative residual 1.15471481430063e-3 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 760 Torr: relative residual 3.611667788494743e-3 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 2280 Torr: relative residual 1.102690423953365e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 500 K, p = 7600 Torr: relative residual 4.205546927148098e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 750 K, p = 2280 Torr: relative residual 1.0250544283307792e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+# not available: T = 750 K, p = 7600 Torr: relative residual 3.806052144293575e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+750,76,1.000000e0,0.000000e0,0.000000e0,2.485085e2,2.485085e2,1.000000e0,1.799733e3,0.999999999792,3.811e-10
+750,228,1.000000e0,0.000000e0,0.000000e0,2.485085e2,2.485085e2,1.000000e0,1.799733e3,1.000000000432,9.954e-10
+750,760,1.000000e0,0.000000e0,0.000000e0,2.485085e2,2.485085e2,1.000000e0,1.799733e3,0.999999999411,4.007e-9
+1000,76,1.000000e0,0.000000e0,0.000000e0,2.580431e5,2.580431e5,1.000000e0,2.934792e3,1.000000000000,3.478e-13
+1000,228,1.000000e0,0.000000e0,0.000000e0,2.580431e5,2.580431e5,1.000000e0,2.934792e3,1.000000000000,9.441e-13
+1000,760,1.000000e0,0.000000e0,0.000000e0,2.580431e5,2.580431e5,1.000000e0,2.934792e3,1.000000000000,3.183e-12
+1000,2280,1.000000e0,0.000000e0,0.000000e0,2.580431e5,2.580431e5,1.000000e0,2.934792e3,1.000000000001,9.730e-12
+1000,7600,1.000000e0,0.000000e0,0.000000e0,2.580431e5,2.580431e5,1.000000e0,2.934792e3,1.000000000009,3.633e-11
+1250,76,1.000000e0,0.000000e0,0.000000e0,1.765490e7,1.765490e7,1.000000e0,4.230820e3,1.000000000000,4.221e-15
+1250,228,1.000000e0,0.000000e0,0.000000e0,1.765490e7,1.765490e7,1.000000e0,4.230820e3,1.000000000000,1.311e-14
+1250,760,1.000000e0,0.000000e0,0.000000e0,1.765490e7,1.765490e7,1.000000e0,4.230820e3,1.000000000000,4.482e-14
+1250,2280,1.000000e0,0.000000e0,0.000000e0,1.765490e7,1.765490e7,1.000000e0,4.230820e3,1.000000000000,1.310e-13
+1250,7600,1.000000e0,0.000000e0,0.000000e0,1.765490e7,1.765490e7,1.000000e0,4.230820e3,1.000000000000,4.361e-13
+1500,76,1.000000e0,0.000000e0,0.000000e0,3.036371e8,3.036371e8,1.000000e0,5.645440e3,1.000000000000,2.375e-16
+1500,228,1.000000e0,0.000000e0,0.000000e0,3.036371e8,3.036371e8,1.000000e0,5.645440e3,1.000000000000,7.667e-16
+1500,760,1.000000e0,0.000000e0,0.000000e0,3.036371e8,3.036371e8,1.000000e0,5.645440e3,1.000000000000,2.339e-15
+1500,2280,1.000000e0,0.000000e0,0.000000e0,3.036371e8,3.036371e8,1.000000e0,5.645440e3,1.000000000000,7.529e-15
+1500,7600,1.000000e0,0.000000e0,0.000000e0,3.036371e8,3.036371e8,1.000000e0,5.645440e3,1.000000000000,2.496e-14
+1750,76,1.000000e0,0.000000e0,0.000000e0,2.350691e9,2.350691e9,1.000000e0,7.147077e3,1.000000000000,4.937e-17
+1750,228,1.000000e0,0.000000e0,0.000000e0,2.350691e9,2.350691e9,1.000000e0,7.147077e3,1.000000000000,8.408e-17
+1750,760,1.000000e0,0.000000e0,0.000000e0,2.350691e9,2.350691e9,1.000000e0,7.147077e3,1.000000000000,3.302e-16
+1750,2280,1.000000e0,0.000000e0,0.000000e0,2.350691e9,2.350691e9,1.000000e0,7.147077e3,1.000000000000,8.943e-16
+1750,7600,1.000000e0,0.000000e0,0.000000e0,2.350691e9,2.350691e9,1.000000e0,7.147077e3,1.000000000000,2.955e-15
+2000,76,1.000000e0,0.000000e0,0.000000e0,1.100154e10,1.100154e10,1.000000e0,8.712896e3,1.000000000000,5.602e-17
+2000,228,1.000000e0,0.000000e0,0.000000e0,1.100154e10,1.100154e10,1.000000e0,8.712896e3,1.000000000000,5.037e-17
+2000,760,1.000000e0,0.000000e0,0.000000e0,1.100154e10,1.100154e10,1.000000e0,8.712896e3,1.000000000000,6.890e-17
+2000,2280,1.000000e0,0.000000e0,0.000000e0,1.100154e10,1.100154e10,1.000000e0,8.712896e3,1.000000000000,1.566e-16
+2000,7600,1.000000e0,0.000000e0,0.000000e0,1.100154e10,1.100154e10,1.000000e0,8.712896e3,1.000000000000,6.049e-16

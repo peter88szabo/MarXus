@@ -222,7 +222,8 @@ mod tests {
     fn zero_pressure_yields_are_the_rrkm_branching_of_the_nascent_distribution() {
         let network = single_well_two_channels();
         let source = hot_source_in_first_well(&network, 280);
-        let low = Conditions { temperature_kelvin: 300.0, pressure_torr: 1.0e-7 };
+        // 250 K: 10 k_BT (1738 cm-1) lies below the lowest threshold (2000 cm-1).
+        let low = Conditions { temperature_kelvin: 250.0, pressure_torr: 1.0e-7 };
         let well = &network.wells[0];
         let f: Vec<f64> = {
             let total: f64 = source[0].iter().sum();

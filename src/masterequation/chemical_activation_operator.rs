@@ -141,6 +141,12 @@ pub fn assemble_operator(
         .map_err(|e| format!("Well '{}': {e}", well.name))?;
 
         let barrier = match &options.steady_state {
+            SteadyState::EigenvalueAnalysis => {
+                return Err("The eigenvalue route (rate coefficients from the eigenvalues of J) is not available \
+                            yet; use the intermediate steady state (with a smaller absorbing-barrier distance for \
+                            shallow wells) or the final steady state."
+                    .into());
+            }
             SteadyState::Final => 0,
             SteadyState::Intermediate { barrier } => match barrier {
                 AbsorbingBarrier::BelowLowestThreshold { kt_multiple } => {
@@ -154,7 +160,19 @@ pub fn assemble_operator(
                             well.name
                         )
                     })?;
-                    threshold.saturating_sub((kt_multiple * kt_cm1 / d_e).round() as usize)
+                    let distance = (kt_multiple * kt_cm1 / d_e).round() as usize;
+                    if distance >= threshold {
+                        return Err(format!(
+                            "Well '{}': the absorbing barrier {kt_multiple} k_BT below the lowest threshold lies at \
+                             or below the bottom of the well (threshold {:.0} cm-1 = {:.1} k_BT above the well \
+                             bottom). Nothing can be stabilized and the intermediate steady state is not defined \
+                             at {temperature} K; choose a smaller distance (kt_multiple) or the final steady state.",
+                            well.name,
+                            threshold as f64 * d_e,
+                            threshold as f64 * d_e / kt_cm1
+                        ));
+                    }
+                    threshold - distance
                 }
                 AbsorbingBarrier::AtGrains(grains) => {
                     if grains.len() != network.wells.len() {
@@ -481,6 +499,49 @@ pub(crate) mod tests {
             }
         }
         assert!(op.stabilization.iter().any(|s| !s.is_empty()));
+    }
+
+    #[test]
+    fn an_absorbing_barrier_below_the_well_bottom_is_an_error() {
+        // At 400 K, 10 kT = 2780 cm-1 exceeds the lowest threshold of well A (2500 cm-1 above its
+        // bottom): the barrier would lie below the well, nothing could be stabilized, and the
+        // intermediate steady state is not defined.
+        let network = two_well_network();
+        let options = ChemicalActivationOptions {
+            collision_model: CollisionModel::Stepladder,
+            steady_state: SteadyState::Intermediate { barrier: AbsorbingBarrier::default() },
+        };
+        let hot = Conditions { temperature_kelvin: 400.0, pressure_torr: 760.0 };
+        let err = assemble_operator(&network, &hot, &options).unwrap_err();
+        assert!(err.contains("'A'"), "{err}");
+    }
+
+    #[test]
+    fn the_eigenvalue_route_is_reported_as_not_available_yet() {
+        let network = two_well_network();
+        let options = ChemicalActivationOptions {
+            collision_model: CollisionModel::Stepladder,
+            steady_state: SteadyState::EigenvalueAnalysis,
+        };
+        let err = assemble_operator(&network, &conditions(), &options).unwrap_err();
+        assert!(err.contains("not available yet"), "{err}");
+    }
+
+    #[test]
+    fn a_smaller_barrier_distance_moves_the_absorbing_barrier_up() {
+        // User choice for shallow wells: 5 k_BT instead of 10 k_BT below the lowest threshold.
+        let network = two_well_network();
+        let options = ChemicalActivationOptions {
+            collision_model: CollisionModel::Stepladder,
+            steady_state: SteadyState::Intermediate { barrier: AbsorbingBarrier::BelowLowestThreshold { kt_multiple: 5.0 } },
+        };
+        let op = assemble_operator(&network, &conditions(), &options).unwrap();
+        let five_kt = (5.0 * KB_CM * 300.0 / D_E).round() as usize;
+        assert_eq!(op.wells[0].absorbing_barrier_grain, 250 - five_kt);
+        assert_eq!(op.wells[1].absorbing_barrier_grain, 310 - five_kt);
+        // At 400 K the default 10 k_BT lies below the bottom of well A, 5 k_BT does not.
+        let hot = Conditions { temperature_kelvin: 400.0, pressure_torr: 760.0 };
+        assert!(assemble_operator(&network, &hot, &options).is_ok());
     }
 
     #[test]

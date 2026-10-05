@@ -1,0 +1,112 @@
+Wells (G - ground energy, D - dissociation limit, kcal/mol):
+       W         G         D
+      W1     -34.4      4.42
+
+Bimolecular Products (G - ground energy, kcal/mol):
+       P         G
+      P1         0
+
+Well-to-Bimolecular Barriers (H/G - barrier height/well depth, kcal/mol)
+       B         H  W         G  P
+      B1      4.42 W1     -34.4 P1
+
+Bound Groups: dissociation barrier (name/ground energy, kcal/mol): wells (name/ground energy, kcal/mol):
+     B1/4.42:  W1/-34.4
+
+________________________________________________________________________________________
+
+Unimolecular Rate Units: 1/sec;  Bimolecular Rate Units: cm^3/sec
+
+______________________________________________________________________________________
+
+Species-Species Rate Tables:
+
+Temperature = 1e+03 K
+
+High Pressure Rate Coefficients:
+
+From\To         W1        P1
+W1             ***  2.41e+05
+P1        3.88e-11       ***
+
+Temperature = 1e+03 K    Pressure = 1 atm
+
+From\To         W1        P1
+W1        1.46e+04  1.46e+04
+P1        2.34e-12  2.34e-12
+
+______________________________________________________________________________________
+
+High Pressure Rate Coefficients (Temperature-Species Rate Tables):
+
+Reactant = W1
+   T(K)        W1        P1
+  1e+03       ***  2.41e+05
+
+Reactant = P1
+   T(K)        W1        P1
+  1e+03  3.88e-11       ***
+
+Capture/Escape Rate Coefficients:
+
+   T(K)        W1        P1
+  1e+03  2.41e+05  3.88e-11
+
+______________________________________________________________________________________
+
+Pressure-Species Rate Tables:
+
+Reactant = W1   Temperature = 1e+03 K
+
+   P(atm)        P1      Loss
+        1  1.46e+04  1.46e+04
+      O-O  2.41e+05  2.41e+05
+
+Reactant = P1   Temperature = 1e+03 K
+
+   P(atm)        W1      Loss
+        1  2.34e-12  2.34e-12
+      O-O  3.88e-11  3.88e-11
+
+______________________________________________________________________________________
+
+Temperature-Species Rate Tables:
+
+Reactant = W1   Pressure = 1 atm
+
+   T(K)        P1      Loss   Capture
+  1e+03  1.46e+04  1.46e+04  2.41e+05
+
+Reactant = P1   Pressure = 1 atm
+
+   T(K)        W1      Loss   Capture
+  1e+03  2.34e-12  2.34e-12  3.88e-11
+
+______________________________________________________________________________________
+
+Temperature-Pressure Rate Tables:
+
+W1->P1
+
+P\T         1e+03
+1        1.46e+04
+O-O      2.41e+05
+
+P1->W1
+
+P\T         1e+03
+1        2.34e-12
+O-O      3.88e-11
+
+W1-> 
+
+P\T         1e+03
+1        1.46e+04
+O-O      2.41e+05
+
+P1-> 
+
+P\T         1e+03
+1        2.34e-12
+O-O      3.88e-11
+

@@ -209,7 +209,9 @@ pub enum CollisionModel {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AbsorbingBarrier {
     /// `kt_multiple` k_BT below the lowest reaction threshold of each well; the literature places the
-    /// absorbing boundary about 10 k_BT below the reaction threshold (PR03; CD07 p. 125).
+    /// absorbing boundary about 10 k_BT below the reaction threshold (PR03; CD07 p. 125), the default.
+    /// For wells that are shallow compared with 10 k_BT plus their thermal width the user may choose a
+    /// smaller distance; the stabilization then depends on that choice.
     BelowLowestThreshold { kt_multiple: f64 },
     /// Explicit barrier grain for every well (grains below it are absorbing).
     AtGrains(Vec<usize>),
@@ -232,6 +234,10 @@ pub enum SteadyState {
     /// them is the stabilization; "implemented by introducing a lower absorbing barrier into the
     /// master equation" (GO10 p. 12295; O02 p. 3616).
     Intermediate { barrier: AbsorbingBarrier },
+    /// Rate coefficients from the eigenvalues and eigenvectors of J instead of a steady state (for wells
+    /// that are shallow compared with the absorbing-barrier distance plus their thermal width). Not
+    /// available yet: selecting it is reported as an error, never replaced by another method.
+    EigenvalueAnalysis,
 }
 
 /// Temperature and bath-gas pressure.

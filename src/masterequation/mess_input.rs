@@ -8,7 +8,7 @@
 //!   ModelEnergyLimit[kcal/mol], Reactant
 //! - Model -> EnergyRelaxation -> Exponential (Factor[1/cm] at 300 K, Power, ExponentCutoff)
 //! - Model -> CollisionFrequency -> LennardJones (Epsilons, Sigmas, Masses of species and bath gas)
-//! - Bimolecular (two Fragment RRHO blocks, GroundEnergy), Well (RRHO, Escape pseudo-first-order rate
+//! - Bimolecular (two Fragment blocks, RRHO or Atom with Mass[amu], GroundEnergy), Well (RRHO, Escape pseudo-first-order rate
 //!   constant), Barrier (RRHO, Core RigidRotor or PhaseSpaceTheory, presence of a Tunneling block)
 //!   - RRHO -> Geometry[angstrom] N (rotational constants via `inertia::get_brot`)
 //!   - RRHO -> Core -> SymmetryFactor
@@ -62,6 +62,8 @@ pub struct MessSpeciesRrho {
     pub vibrational_frequencies_cm1: Vec<f64>,
     pub zero_energy_cm1: f64,
     pub electronic_degeneracy_ground: f64,
+    /// Mass of an `Atom` fragment (amu); None for RRHO species (mass from the geometry).
+    pub atom_mass_amu: Option<f64>,
 }
 
 #[derive(Clone, Debug)]
@@ -216,6 +218,7 @@ fn is_block_starter(tok: &str) -> bool {
             | "LennardJones"
             | "TimeEvolution"
             | "InverseLaplaceTransform"
+            | "Atom"
     )
 }
 
@@ -386,6 +389,28 @@ fn parse_electronic_degeneracy_ground(block: &[String]) -> Result<f64, String> {
     Ok(1.0)
 }
 
+/// A Fragment of a Bimolecular block: an `Atom` (Mass[amu], ElectronicLevels) or an RRHO species.
+fn parse_fragment(block: &[String], name: &str) -> Result<MessSpeciesRrho, String> {
+    if !block.iter().any(|l| first_token(l) == Some("Atom")) {
+        return parse_rrho_species(block, name);
+    }
+    let mass_line = block
+        .iter()
+        .find(|l| first_token(l).map_or(false, |t| t.starts_with("Mass")))
+        .ok_or_else(|| format!("Atom fragment '{name}' without Mass[amu]"))?;
+    let mass = parse_f64(mass_line.split_whitespace().nth(1).ok_or_else(|| format!("Malformed line: {mass_line}"))?)?;
+    Ok(MessSpeciesRrho {
+        name: name.to_string(),
+        geometry_symbols: Vec::new(),
+        geometry_angstrom: Vec::new(),
+        symmetry_factor: 1.0,
+        vibrational_frequencies_cm1: Vec::new(),
+        zero_energy_cm1: 0.0,
+        electronic_degeneracy_ground: parse_electronic_degeneracy_ground(block)?,
+        atom_mass_amu: Some(mass),
+    })
+}
+
 fn parse_rrho_species(block: &[String], name: &str) -> Result<MessSpeciesRrho, String> {
     parse_rrho_species_impl(block, name, true)
 }
@@ -408,6 +433,7 @@ fn parse_rrho_species_impl(
     let electronic_degeneracy_ground = parse_electronic_degeneracy_ground(block)?;
 
     Ok(MessSpeciesRrho {
+        atom_mass_amu: None,
         name: name.to_string(),
         geometry_symbols: symbols,
         geometry_angstrom: coords,
@@ -682,7 +708,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         }
 
         // Species blocks
-        if line.starts_with("Well") {
+        if first_token(line) == Some("Well") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() < 2 {
                 return Err(format!("Malformed Well line: {}", line));
@@ -705,7 +731,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             continue;
         }
 
-        if line.starts_with("Bimolecular") {
+        if first_token(line) == Some("Bimolecular") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() < 2 {
                 return Err(format!("Malformed Bimolecular line: {}", line));
@@ -718,7 +744,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let mut j = 0usize;
             while j < block.len() {
                 let l = &block[j];
-                if l.starts_with("Fragment") {
+                if first_token(l) == Some("Fragment") {
                     let p: Vec<&str> = l.split_whitespace().collect();
                     if p.len() < 2 {
                         return Err(format!("Malformed Fragment line: {}", l));
@@ -739,17 +765,15 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 ));
             }
 
-            let frag_a = parse_rrho_species(&fragment_blocks[0].1, &fragment_blocks[0].0)?;
-            let frag_b = parse_rrho_species(&fragment_blocks[1].1, &fragment_blocks[1].0)?;
+            let frag_a = parse_fragment(&fragment_blocks[0].1, &fragment_blocks[0].0)?;
+            let frag_b = parse_fragment(&fragment_blocks[1].1, &fragment_blocks[1].0)?;
 
             let mut ground_energy_cm1: Option<f64> = None;
             for l in &block {
-                if l.starts_with("GroundEnergy[kcal/mol]") {
-                    let parts: Vec<&str> = l.split_whitespace().collect();
-                    ground_energy_cm1 = Some(energy_to_cm1(
-                        parse_f64(parts.last().unwrap())?,
-                        "kcal/mol",
-                    )?);
+                if first_token(l).map_or(false, |t| t.starts_with("GroundEnergy")) {
+                    let unit = unit_tag(l).ok_or_else(|| format!("Bimolecular '{name}': GroundEnergy needs a unit"))?;
+                    let value = l.split_whitespace().nth(1).ok_or_else(|| format!("Malformed line: {l}"))?;
+                    ground_energy_cm1 = Some(energy_to_cm1(parse_f64(value)?, unit)?);
                 }
             }
             let ground_energy_cm1 = ground_energy_cm1
@@ -769,7 +793,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             continue;
         }
 
-        if line.starts_with("Barrier") {
+        if first_token(line) == Some("Barrier") {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() < 4 {
                 return Err(format!("Malformed Barrier line: {}", line));
@@ -1047,6 +1071,55 @@ End
         let deck = format!("{}{}", ONE_WELL_DECK.trim_end().trim_end_matches("End"), &second[second.find("Well A0").unwrap()..]);
         let parsed = parse_mess_input(&deck).expect("should parse");
         assert_eq!(parsed.well_order, vec!["W1".to_string(), "A0".to_string()]);
+    }
+
+    #[test]
+    fn atom_fragments_and_ground_energy_in_wavenumbers_are_read() {
+        let deck = r#"
+TemperatureList[K] 1000.
+PressureList[atm] 1.
+Model
+  Bimolecular P1
+    Fragment C2H2
+      RRHO
+        Geometry[angstrom] 2
+        C 0 0 -0.6
+        C 0 0 0.6
+        Core RigidRotor
+          SymmetryFactor 2
+        End
+        Frequencies[1/cm] 1
+        2000.0
+        ZeroEnergy[1/cm] 0
+        ElectronicLevels[1/cm] 1
+          0 1
+      End
+    Fragment H
+      Atom
+        Mass[amu]    1
+        ElectronicLevels[1/cm]          1
+                0       2
+      End
+    GroundEnergy[1/cm]                  350.0
+  End
+End
+"#;
+        let parsed = parse_mess_input(deck).expect("should parse");
+        let p1 = &parsed.bimolecular["P1"];
+        assert_eq!(p1.ground_energy_cm1, 350.0);
+        let h = &p1.fragment_b;
+        assert_eq!(h.atom_mass_amu, Some(1.0));
+        assert_eq!(h.electronic_degeneracy_ground, 2.0);
+        assert!(h.vibrational_frequencies_cm1.is_empty() && h.geometry_symbols.is_empty());
+        assert_eq!(p1.fragment_a.atom_mass_amu, None);
+    }
+
+    #[test]
+    fn keywords_that_begin_like_block_names_are_not_blocks() {
+        // `WellCutoff` is a global keyword, not a `Well` block.
+        let deck = ONE_WELL_DECK.replace("PressureList[torr] 760.\n", "PressureList[torr] 760.\nWellCutoff 10\n");
+        let parsed = parse_mess_input(&deck).expect("should parse");
+        assert_eq!(parsed.well_order, vec!["W1".to_string()]);
     }
 
     #[test]

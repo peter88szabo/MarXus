@@ -40,7 +40,9 @@
 
 use std::collections::HashMap;
 
-use crate::barrierless::ilt::ilt_barrierless::{ilt_sum_of_states_association, ilt_sum_of_states_dissociation};
+use crate::barrierless::ilt::ilt_barrierless::{
+    ilt_sum_of_states_association, ilt_sum_of_states_dissociation, translational_partition_constant,
+};
 use crate::constants::{CM1_TO_KCAL, H_PLANCK_CM, KB_CM};
 use crate::tunneling::tunneling::eckart_tunneling_sum_of_states;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
@@ -92,6 +94,55 @@ pub struct MessChemicalActivationModel {
     pub collision_model: CollisionModel,
     /// Channels (well, channel) through which the `Reactant` of the deck forms the wells.
     pub entrance_channels: Vec<(usize, usize)>,
+    /// High-pressure rate coefficient of the Reactant forming the wells (None without a bimolecular
+    /// Reactant).
+    pub entrance_high_pressure_rate: Option<EntranceHighPressureRate>,
+}
+
+/// Canonical high-pressure rate coefficient of the bimolecular Reactant A + B forming the wells through
+/// all its entrance channels, from the same cell numbers of states W(E) that give k(E):
+///   k_inf(T) = sum_E W(E) exp(-(E - E_AB)/kT) dE / (h C'(mu) (kT)^(3/2) Q_A(T) Q_B(T)),
+/// the transition-state (or ILT) flux over the reactant partition function per unit volume, with
+/// C'(mu)(kT)^(3/2) the translational partition function of the relative motion
+/// (`ilt_barrierless::translational_partition_constant`) and Q_A, Q_B the internal partition functions
+/// of the fragments from their cell densities. With the yields Phi_X of the steady state, the
+/// bimolecular rate coefficients are k(A + B -> X) = k_inf Phi_X; for stabilization this is the
+/// association rate coefficient obtained "from the rate into the absorbing barrier" (Pilling, Robertson,
+/// Annu. Rev. Phys. Chem. 54, 245 (2003), eq. 44 and text).
+#[derive(Debug, Clone)]
+pub struct EntranceHighPressureRate {
+    cell_width_cm1: f64,
+    /// Sum of W over the entrance channels on the absolute cells from `first_cell`.
+    w_cells: Vec<f64>,
+    first_cell: isize,
+    /// Absolute cell of the asymptote A + B.
+    asymptote_cell: isize,
+    /// Internal densities of states of A and B on cells from their ground states (per cm-1).
+    density_a: Vec<f64>,
+    density_b: Vec<f64>,
+    reduced_mass_amu: f64,
+}
+
+impl EntranceHighPressureRate {
+    /// k_inf(T) in cm3 s-1.
+    pub fn rate_cm3_s(&self, temperature_kelvin: f64) -> f64 {
+        let kt = KB_CM * temperature_kelvin;
+        let d = self.cell_width_cm1;
+        let flux: f64 = self
+            .w_cells
+            .iter()
+            .enumerate()
+            .map(|(i, w)| w * (-((self.first_cell + i as isize - self.asymptote_cell) as f64 * d) / kt).exp())
+            .sum::<f64>()
+            * d
+            / H_PLANCK_CM;
+        let partition_function =
+            |rho: &[f64]| rho.iter().enumerate().map(|(i, r)| r * (-(i as f64 * d) / kt).exp()).sum::<f64>() * d;
+        flux / (translational_partition_constant(self.reduced_mass_amu)
+            * kt.powf(1.5)
+            * partition_function(&self.density_a)
+            * partition_function(&self.density_b))
+    }
 }
 
 /// Build the chemical-activation network of an input deck.
@@ -224,6 +275,9 @@ pub fn chemical_activation_model_from_mess(
         (grid.grain_of_cell(threshold_cell) - grids[w].first_grain).max(0) as usize
     };
 
+    let reactant = global.reactant_name.as_deref();
+    // (first cell, W on the cells) of every channel from a well to the Reactant.
+    let mut entrance_states: Vec<(isize, Vec<f64>)> = Vec::new();
     let mut channels: Vec<Vec<Channel>> = vec![Vec::new(); grids.len()];
     for barrier in &deck.barriers {
         let name = &barrier.name;
@@ -302,8 +356,8 @@ pub fn chemical_activation_model_from_mess(
                                 // rho_AB(E) = sum_E' rho_A(E') rho_B(E - E') dE on the cells.
                                 let rho_ab: Vec<f64> =
                                     (0..n).map(|i| (0..=i).map(|j| rho_a[j] * rho_b[i - j]).sum::<f64>() * cell).collect();
-                                let mass_a: f64 = mass_vector_from_symbols_amu(&bimolecular.fragment_a.geometry_symbols)?.iter().sum();
-                                let mass_b: f64 = mass_vector_from_symbols_amu(&bimolecular.fragment_b.geometry_symbols)?.iter().sum();
+                                let mass_a = species_mass_amu(&bimolecular.fragment_a)?;
+                                let mass_b = species_mass_amu(&bimolecular.fragment_b)?;
                                 let w_cells = ilt_sum_of_states_association(
                                     &ilt.high_pressure_rate,
                                     &rho_ab,
@@ -330,6 +384,9 @@ pub fn chemical_activation_model_from_mess(
                         }
                     }
                 };
+                if reactant == Some(other.as_str()) {
+                    entrance_states.push((first_cell, w_cells.clone()));
+                }
                 channels[w].push(Channel {
                     name: name.clone(),
                     destination: ChannelDestination::Products { name: other.clone() },
@@ -379,7 +436,35 @@ pub fn chemical_activation_model_from_mess(
         None => Vec::new(),
     };
 
+    // High-pressure rate coefficient of the bimolecular Reactant: the sum of W over its entrance channels
+    // and the fragment densities on the cells from the asymptote to the top.
+    let entrance_high_pressure_rate = match reactant.and_then(|r| deck.bimolecular.get(r)) {
+        Some(pair) if !entrance_states.is_empty() => {
+            let first_cell = entrance_states.iter().map(|(c, _)| *c).min().unwrap_or(0);
+            let mut w_cells = vec![0.0; (last_cell - first_cell + 1).max(0) as usize];
+            for (c, w) in &entrance_states {
+                for (i, x) in w.iter().enumerate() {
+                    w_cells[(c - first_cell) as usize + i] += x;
+                }
+            }
+            let asymptote_cell = grid.cell_of_energy(pair.ground_energy_cm1);
+            let n = cells_from(asymptote_cell, "The Reactant asymptote")?;
+            let (mass_a, mass_b) = (species_mass_amu(&pair.fragment_a)?, species_mass_amu(&pair.fragment_b)?);
+            Some(EntranceHighPressureRate {
+                cell_width_cm1: cell,
+                w_cells,
+                first_cell,
+                asymptote_cell,
+                density_a: rrho_density_of_states(n, cell, &species_model(&pair.fragment_a)?)?,
+                density_b: rrho_density_of_states(n, cell, &species_model(&pair.fragment_b)?)?,
+                reduced_mass_amu: mass_a * mass_b / (mass_a + mass_b),
+            })
+        }
+        _ => None,
+    };
+
     Ok(MessChemicalActivationModel {
+        entrance_high_pressure_rate,
         network,
         temperatures_kelvin: global.temperatures_kelvin.clone(),
         pressures_torr: global.pressures_torr.clone(),
@@ -388,10 +473,20 @@ pub fn chemical_activation_model_from_mess(
     })
 }
 
+/// Mass of a species of the deck (amu): the Atom mass or the sum of the atomic masses of its geometry.
+fn species_mass_amu(species: &MessSpeciesRrho) -> Result<f64, String> {
+    match species.atom_mass_amu {
+        Some(mass) => Ok(mass),
+        None => Ok(mass_vector_from_symbols_amu(&species.geometry_symbols)?.iter().sum()),
+    }
+}
+
 /// RRHO counting model of a species of the deck (chirality 1; the deck's SymmetryFactor and ground
 /// electronic degeneracy enter as g_e/sigma).
 fn species_model(species: &MessSpeciesRrho) -> Result<SpeciesMicroModel, String> {
-    let rotational_constants_cm1 = if species.geometry_symbols.is_empty() {
+    let rotational_constants_cm1 = if species.atom_mass_amu.is_some() {
+        Vec::new()
+    } else if species.geometry_symbols.is_empty() {
         return Err(format!("Species '{}' has no geometry for its rotational constants.", species.name));
     } else {
         rotational_constants_from_geometry_cm1(&species.geometry_symbols, &species.geometry_angstrom)?
@@ -835,6 +930,46 @@ End
             / (q_vib(&well.vibrational_frequencies_cm1) * q_rot(&b_well))
             * (-e0 / kt).exp();
         assert!((k_me / k_tst - 1.0).abs() < 5e-3, "master equation {k_me:e} vs transition-state theory {k_tst:e}");
+    }
+
+    #[test]
+    fn entrance_high_pressure_rate_reproduces_the_ilt_input() {
+        // The ILT inverts k_inf(T) = A (T/T_ref)^n exp(-E_inf/kT); the canonical average of the same cell
+        // numbers of states gives it back (test deck: A = 5e-12 cm3/s, n = 0, E_inf = 0).
+        let m = model();
+        let rate = m.entrance_high_pressure_rate.as_ref().expect("the deck has a bimolecular Reactant");
+        for t in [300.0, 500.0] {
+            let k = rate.rate_cm3_s(t);
+            assert!((k / 5.0e-12 - 1.0).abs() < 1e-2, "T = {t}: {k:e}");
+        }
+    }
+
+    #[test]
+    fn entrance_high_pressure_rate_of_a_tight_transition_state_is_transition_state_theory() {
+        // C2H3 deck: k_inf(H + C2H2 -> C2H3) = (kT/h) Q‡ exp(-(E‡ - E_asym)/kT) / (C'(mu) (kT)^(3/2) Q_C2H2 Q_H),
+        // quantum harmonic vibrations, classical rigid rotors (C2H2 linear, Q = kT/(sigma B), sigma = 2),
+        // electronic degeneracies TS 2, C2H2 1, H 2.
+        use crate::barrierless::ilt::ilt_barrierless::translational_partition_constant;
+        let deck = parse_mess_input(include_str!("../../examples/c2h3_chemical_activation.inp")).unwrap();
+        let m = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default()).unwrap();
+        let t = 1000.0;
+        let kt = KB_CM * t;
+        let q_vib = |f: &[f64]| f.iter().map(|w| 1.0 / (1.0 - (-w / kt).exp())).product::<f64>();
+        let ts = &deck.barriers[0].rrho;
+        let b_ts = rotational_constants_from_geometry_cm1(&ts.geometry_symbols, &ts.geometry_angstrom).unwrap();
+        let q_ts = 2.0 * q_vib(&ts.vibrational_frequencies_cm1) * std::f64::consts::PI.sqrt() * kt.powf(1.5)
+            / (b_ts[0] * b_ts[1] * b_ts[2]).sqrt();
+        let pair = &deck.bimolecular["P1"];
+        let c2h2 = &pair.fragment_a;
+        let b_c2h2 = rotational_constants_from_geometry_cm1(&c2h2.geometry_symbols, &c2h2.geometry_angstrom).unwrap();
+        let q_c2h2 = q_vib(&c2h2.vibrational_frequencies_cm1) * kt / (2.0 * b_c2h2[0]);
+        let q_h = 2.0;
+        let (m_c2h2, m_h) = (2.0 * 12.0 + 2.0 * 1.007_84, 1.007_84);
+        let mu = m_c2h2 * m_h / (m_c2h2 + m_h);
+        let k_tst = kt / H_PLANCK_CM * q_ts * (-(ts.zero_energy_cm1 - pair.ground_energy_cm1) / kt).exp()
+            / (translational_partition_constant(mu) * kt.powf(1.5) * q_c2h2 * q_h);
+        let k = m.entrance_high_pressure_rate.as_ref().unwrap().rate_cm3_s(t);
+        assert!((k / k_tst - 1.0).abs() < 5e-3, "{k:e} vs transition-state theory {k_tst:e}");
     }
 
     #[test]
