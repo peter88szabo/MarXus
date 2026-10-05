@@ -172,3 +172,22 @@ Peter's requests:
 - the MESS model, explicitly optional for comparison with MESS only, with its formula and the Case2 effect.
 
 The Features list now says the same.
+
+**Math rendering fix (Peter, 22:57).** The README formulas rendered with literal commas, e.g. "R , F − J , N".
+- **Cause.** Markdown (CommonMark) treats a backslash before ASCII punctuation as an escape. `\,`, `\;` and `\!` therefore became plain `,`, `;` and `!` before the math engine saw them. Commands of backslash plus letters, such as `\frac` and `\mathbf`, are not affected.
+- **Fix.** In all README math, `\,` was replaced by `\thinspace`, `\;` by `\thickspace`, and `\;\;` before equation labels by `\quad`; `\!` was removed. No backslash-punctuation is left in any math region (checked by script).
+
+**Math rendering, second fix (Peter, 23:04: "all latex formulas were ugly").**
+- **Renderer.** The README Peter saw was the pushed one (commit f91701f) on GitHub.
+- **Cause.** GitHub's `$…$` and `$$…$$` math goes through Markdown processing first. This breaks the LaTeX in two ways:
+  - backslash escapes turn `\,` into a comma;
+  - underscores become emphasis, which mangles the subscripts.
+- **Fix.** All 15 display formulas are now in GitHub's ```` ```math ```` fenced blocks, and all 97 inline formulas in GitHub's $\`…\`$ syntax. Both pass the LaTeX unprocessed to the math renderer, so the standard `\,` and `\;` were restored. A script checked that no `$` is left outside math and that no formula inside a table contains `|`.
+
+**README opening paragraph (Peter, 23:05).** It now describes MarXus as a microcanonical rate code and master-equation solver, covering:
+- k(E) from direct state counting, RRKM with exact Eckart, PST and ILT;
+- the multiwell master equation and its two methods, which answer different questions of the same equation;
+- the MESS-format input;
+- the thermochemistry.
+
+The status-table row "Olzmann eigenvalue analysis" was renamed to the thermal rate coefficients of the final steady state. The Features line now gives the master equation as dN/dt = R·F − J·N, with J·N = R·F as its steady state.
