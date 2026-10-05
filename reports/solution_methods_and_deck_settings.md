@@ -204,3 +204,8 @@ The status-table row "Olzmann eigenvalue analysis" was renamed to the thermal ra
 - **Notation paragraph.** A short paragraph above the symbol table states this convention.
 - **CSE section.** The number of wells is now n_w, because N is the population vector. **M** and **Λ** = diag(Λ₁ … Λ_{n_w}) are defined there.
 - **Features line.** The plain-text master equation in Features is now in the same math notation.
+
+**Bold matrices on GitHub (Peter, 23:15: "they are not rendered as bold in the github page"; he uses Brave).**
+- **Cause.** GitHub's Markdown API passes `\mathbf J` intact to its math renderer (checked with `gh api /markdown`). Chromium-based browsers (Brave, Chrome, Edge) implement only MathML Core, which ignores the `mathvariant` attribute that `\mathbf` and `\boldsymbol` produce, so the letters render at normal weight.
+- **Sources.** The MathJax documentation, "MathML Support": MathML-Core lacks mathvariant, which MathJax uses for `\mathbf`. The pull request luckiday/graphics-foundations#3 (github.com, 2026-09) fixed the same problem with Unicode math letters.
+- **Fix.** Every matrix is now a Unicode mathematical bold letter written directly in the LaTeX: 𝐉 𝐏 𝐊 𝐈 𝐒 𝐃 𝐌 𝐆 (U+1D400 block) and 𝚲 (U+1D6B2). No `\mathbf` or `\boldsymbol` is left.
