@@ -239,7 +239,7 @@ pub fn eckart_tunneling_kappa(input: EckartTunnelingInput) -> Result<f64, String
     let de = input.integration_step_kcal_mol / AU_TO_KCAL;
     let emax = input.integration_max_kcal_mol / AU_TO_KCAL;
 
-    let (kappa1, _kappa2) = eckart(beta, omega, vf, vb, de, emax);
+    let kappa1 = eckart(beta, omega, vf, vb, de, emax);
     if kappa1.is_finite() && kappa1 > 0.0 && kappa1 < 1.0e4 {
         return Ok(kappa1);
     }

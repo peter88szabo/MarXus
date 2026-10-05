@@ -65,6 +65,10 @@ pub enum ChannelDestination {
 pub struct Channel {
     pub name: String,
     pub destination: ChannelDestination,
+    /// Classical reaction threshold (grain of the well). With tunneling, k(E) > 0 already below it; the
+    /// absorbing barrier of the intermediate steady state refers to the classical threshold. None: the
+    /// threshold is the first grain with k > 0.
+    pub threshold_grain: Option<usize>,
     /// k(E_i) in s-1 for every grain i of the well (zero below the threshold).
     pub rate_constant_s_inv: Vec<f64>,
 }
@@ -90,9 +94,13 @@ impl Well {
         self.density_of_states.len()
     }
 
-    /// Lowest grain with a non-zero rate coefficient in any channel: the lowest reaction threshold.
+    /// Lowest reaction threshold over all channels: the explicit classical threshold of a channel, or its
+    /// first grain with k > 0.
     pub fn lowest_threshold_grain(&self) -> Option<usize> {
-        (0..self.grain_count()).find(|&i| self.channels.iter().any(|c| c.rate_constant_s_inv[i] > 0.0))
+        self.channels
+            .iter()
+            .filter_map(|c| c.threshold_grain.or_else(|| c.rate_constant_s_inv.iter().position(|k| *k > 0.0)))
+            .min()
     }
 }
 
@@ -157,6 +165,12 @@ impl ChemicalActivationNetwork {
                         channel.name,
                         channel.rate_constant_s_inv.len(),
                         n
+                    ));
+                }
+                if channel.threshold_grain.map_or(false, |t| t >= n) {
+                    return Err(format!(
+                        "Well '{}', channel '{}': threshold grain {:?} beyond the grid ({n} grains).",
+                        well.name, channel.name, channel.threshold_grain
                     ));
                 }
                 if channel.rate_constant_s_inv.iter().any(|k| !(*k >= 0.0) || !k.is_finite()) {
@@ -247,6 +261,7 @@ pub(crate) mod tests {
             channels: vec![Channel {
                 name: format!("{name}-products"),
                 destination: ChannelDestination::Products { name: "P".into() },
+                threshold_grain: None,
                 rate_constant_s_inv: (0..grains)
                     .map(|i| if i >= threshold { 1.0e6 * ((i - threshold) as f64 + 1.0) } else { 0.0 })
                     .collect(),
@@ -279,9 +294,29 @@ pub(crate) mod tests {
         well.channels.push(Channel {
             name: "A-low".into(),
             destination: ChannelDestination::Products { name: "Q".into() },
+            threshold_grain: None,
             rate_constant_s_inv: (0..300).map(|i| if i >= 180 { 1.0 } else { 0.0 }).collect(),
         });
         assert_eq!(well.lowest_threshold_grain(), Some(180));
+    }
+
+    #[test]
+    fn an_explicit_classical_threshold_replaces_the_first_open_grain() {
+        // Tunneling opens the channel at grain 200, its classical threshold is grain 250.
+        let mut well = test_well("A", 300, 0, 200);
+        well.channels[0].threshold_grain = Some(250);
+        assert_eq!(well.lowest_threshold_grain(), Some(250));
+        // A second channel without explicit threshold, open from grain 230, is lower.
+        well.channels.push(Channel {
+            name: "A-second".into(),
+            destination: ChannelDestination::Products { name: "Q".into() },
+            threshold_grain: None,
+            rate_constant_s_inv: (0..300).map(|i| if i >= 230 { 1.0 } else { 0.0 }).collect(),
+        });
+        assert_eq!(well.lowest_threshold_grain(), Some(230));
+        let mut network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![well] };
+        network.wells[0].channels[0].threshold_grain = Some(300);
+        assert!(network.validate().is_err(), "threshold beyond the grid");
     }
 
     #[test]

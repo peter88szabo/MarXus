@@ -314,6 +314,8 @@ This is O02's "R1 = R2, Φ2 = 1" limit. The pressure independence to 7 digits co
 
 ## 7. Open items (decisions or papers needed)
 
+> **Update (same day):** items 1–3 below are resolved: Eckart tunneling, the B12 ILT block, and graining on 1 cm⁻¹ cells. Details are in `tunneling_ilt_and_energy_graining.md`. The C₂H₃ numbers of §6 were also updated there (cell-based: Φ_stab −2%; k∞ now within 0.08% of canonical TST instead of +6.3%).
+
 1. **Tunneling in k(E).** 8 of the 9 barriers of the Case1 deck have `Tunneling Eckart`; these are H-shifts with imaginary frequencies up to 2659 cm⁻¹. At 300 K tunneling changes k(E) by orders of magnitude.
    - MarXus has Eckart transmission probabilities (`tunneling.rs`: `tunprop1`, `tunprop2`), but only inside a canonical κ(T) integral.
    - The microcanonical form, W‡_tun(E) = ∫ ρ‡(ε)·P_tun(E−ε) dε, is Miller, J. Am. Chem. Soc. 101, 6810 (1979) (in `papers/`). The Eckart P(E) is Johnston & Heicklen (1962) (in `papers/Tunneling/`).

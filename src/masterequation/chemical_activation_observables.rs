@@ -199,6 +199,7 @@ mod tests {
         well.channels.push(Channel {
             name: "A-second".into(),
             destination: ChannelDestination::Products { name: "Q".into() },
+            threshold_grain: None,
             rate_constant_s_inv: (0..400).map(|i| if i >= 260 { 5.0e6 * ((i - 260) as f64 + 1.0).powf(1.5) } else { 0.0 }).collect(),
         });
         ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![well] }

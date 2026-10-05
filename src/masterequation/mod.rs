@@ -8,6 +8,7 @@ pub mod chemical_activation_steady_state;
 pub mod collision_kernels;
 pub mod collisional_relaxation;
 pub mod consecutive_activation;
+pub mod energy_graining;
 pub mod high_pressure_limit;
 pub mod mess_input;
 pub mod microcanonical_builder;

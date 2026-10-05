@@ -34,7 +34,7 @@ fn main() -> Result<(), String> {
             b.right,
             b.rrho.zero_energy_cm1,
             b.inverse_laplace_transform.is_some(),
-            b.has_tunneling
+            b.tunneling.is_some()
         );
     }
     Ok(())

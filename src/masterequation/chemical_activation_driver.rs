@@ -213,6 +213,7 @@ mod tests {
         a.channels.push(crate::masterequation::chemical_activation_network::Channel {
             name: "A->reactants".into(),
             destination: ChannelDestination::Products { name: "R".into() },
+            threshold_grain: None,
             rate_constant_s_inv: (0..400).map(|i| if i >= 320 { 2.0e7 * ((i - 320) as f64 + 1.0) } else { 0.0 }).collect(),
         });
         network

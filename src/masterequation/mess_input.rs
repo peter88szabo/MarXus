@@ -18,8 +18,8 @@
 //! - MarXus extension: `InverseLaplaceTransform ... End` inside the RRHO block of a barrier
 //!   (high-pressure rate coefficient of a barrierless channel, see `IltSpecification`).
 //!
-//! Not read: excited electronic levels, tunneling parameters (only the presence of the block),
-//! hindered rotors and other model types.
+//!   - RRHO -> Tunneling Eckart (ImaginaryFrequency, two WellDepth values); other models recorded
+//! Not read: excited electronic levels, hindered rotors and other model types.
 
 use crate::constants::CM1_TO_KCAL;
 use std::collections::HashMap;
@@ -37,6 +37,8 @@ pub struct MessGlobal {
     pub pressures_torr: Vec<f64>,
     /// ExponentCutoff of the exponential-down model: transitions beyond cutoff x <dE_down> are neglected.
     pub exponent_cutoff: Option<f64>,
+    /// ExcessEnergyOverTemperature: top of the master-equation grid above the highest barrier, in kT.
+    pub excess_energy_over_temperature: Option<f64>,
     pub energy_step_over_temperature: Option<f64>,
     pub model_energy_limit_kcal_mol: Option<f64>,
 
@@ -120,8 +122,19 @@ pub struct MessBarrier {
     pub core: MessBarrierCore,
     /// ILT parameters of a barrierless channel (MarXus keyword block), if given.
     pub inverse_laplace_transform: Option<IltSpecification>,
-    /// The barrier has a `Tunneling` block.
-    pub has_tunneling: bool,
+    /// `Tunneling` block of the barrier, if given.
+    pub tunneling: Option<TunnelingSpecification>,
+}
+
+/// Tunneling model of a barrier.
+#[derive(Clone, Debug, PartialEq)]
+pub enum TunnelingSpecification {
+    /// `Tunneling Eckart`: magnitude of the imaginary frequency and the two well depths (barrier heights
+    /// seen from the two sides), the parameters of the Eckart barrier (Miller, J. Am. Chem. Soc. 101,
+    /// 6810 (1979), eq. 8).
+    Eckart { imaginary_frequency_cm1: f64, well_depths_cm1: [f64; 2] },
+    /// Any other tunneling model (not implemented; refused when the network is built).
+    Unsupported { model: String },
 }
 
 #[derive(Clone, Debug)]
@@ -474,6 +487,43 @@ fn parse_inverse_laplace_transform(block: &[String], barrier: &str) -> Result<Op
     }))
 }
 
+/// The `Tunneling <model> ... End` block of a barrier, if present.
+fn parse_tunneling(block: &[String], barrier: &str) -> Result<Option<TunnelingSpecification>, String> {
+    let Some(start) = block.iter().position(|l| first_token(l) == Some("Tunneling")) else {
+        return Ok(None);
+    };
+    let model = block[start].split_whitespace().nth(1).unwrap_or("").to_string();
+    if model != "Eckart" {
+        return Ok(Some(TunnelingSpecification::Unsupported { model }));
+    }
+    let mut frequency = None;
+    let mut depths = Vec::new();
+    for line in &block[start + 1..] {
+        let key = first_token(line).unwrap_or("");
+        if key == "End" {
+            break;
+        }
+        let value = line
+            .split_whitespace()
+            .nth(1)
+            .ok_or_else(|| format!("Barrier '{barrier}', Tunneling: no value in '{line}'"))?;
+        if key.starts_with("ImaginaryFrequency") {
+            frequency = Some(parse_f64(value)?.abs());
+        } else if key.starts_with("WellDepth") {
+            let unit = unit_tag(line).ok_or_else(|| format!("Barrier '{barrier}': WellDepth needs a unit"))?;
+            depths.push(energy_to_cm1(parse_f64(value)?, unit)?);
+        }
+    }
+    let imaginary_frequency_cm1 =
+        frequency.ok_or_else(|| format!("Barrier '{barrier}', Tunneling Eckart: missing ImaginaryFrequency."))?;
+    if depths.len() != 2 || depths.iter().any(|d| !(*d > 0.0)) {
+        return Err(format!(
+            "Barrier '{barrier}', Tunneling Eckart: two positive WellDepth values are required, got {depths:?}."
+        ));
+    }
+    Ok(Some(TunnelingSpecification::Eckart { imaginary_frequency_cm1, well_depths_cm1: [depths[0], depths[1]] }))
+}
+
 fn parse_phasespace_core(block: &[String]) -> Result<Option<MessBarrierCore>, String> {
     // Look for "Core PhaseSpaceTheory" within the barrier RRHO block.
     if !block
@@ -555,6 +605,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         temperatures_kelvin: Vec::new(),
         pressures_torr: Vec::new(),
         exponent_cutoff: None,
+        excess_energy_over_temperature: None,
         energy_step_over_temperature: None,
         model_energy_limit_kcal_mol: None,
         alpha_factor_cm1: None,
@@ -593,6 +644,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                     global.pressures_torr = parse_list(line)?.iter().map(|p| p * 1.0e5 * 760.0 / 101_325.0).collect()
                 }
                 "ExponentCutoff" => global.exponent_cutoff = Some(parse_f64(v)?),
+                "ExcessEnergyOverTemperature" => global.excess_energy_over_temperature = Some(parse_f64(v)?),
                 "EnergyStepOverTemperature" => {
                     global.energy_step_over_temperature = Some(parse_f64(v)?)
                 }
@@ -731,7 +783,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let geometry_required = matches!(core, MessBarrierCore::TightRrho);
             let rrho = parse_rrho_species_impl(&block, &name, geometry_required)?;
             let inverse_laplace_transform = parse_inverse_laplace_transform(&block, &name)?;
-            let has_tunneling = block.iter().any(|l| first_token(l) == Some("Tunneling"));
+            let tunneling = parse_tunneling(&block, &name)?;
 
             barriers.push(MessBarrier {
                 name,
@@ -740,7 +792,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 rrho,
                 core,
                 inverse_laplace_transform,
-                has_tunneling,
+                tunneling,
             });
 
             i = next;
@@ -998,6 +1050,13 @@ End
     }
 
     #[test]
+    fn excess_energy_over_temperature_is_read() {
+        let deck = ONE_WELL_DECK.replace("PressureList[torr] 760.\n", "PressureList[torr] 760.\nExcessEnergyOverTemperature 40\n");
+        let parsed = parse_mess_input(&deck).expect("should parse");
+        assert_eq!(parsed.global.excess_energy_over_temperature, Some(40.0));
+    }
+
+    #[test]
     fn exponent_cutoff_and_well_escape_rate_are_read() {
         let deck = ONE_WELL_DECK.replace("Well W1\n", "Well W1\n  Escape Constant\n    PseudoFirstOrderRateConstant[1/sec]  2.5E7\n  End\n");
         let parsed = parse_mess_input(&deck).expect("should parse");
@@ -1075,11 +1134,27 @@ End
     }
 
     #[test]
-    fn tunneling_blocks_are_detected() {
+    fn eckart_tunneling_parameters_are_read() {
         let parsed = parse_mess_input(ILT_BARRIER_DECK).expect("should parse");
-        assert!(!parsed.barriers[0].has_tunneling);
-        assert!(parsed.barriers[1].has_tunneling);
+        assert_eq!(parsed.barriers[0].tunneling, None);
+        let kcal = crate::constants::CM1_TO_KCAL;
+        assert_eq!(
+            parsed.barriers[1].tunneling,
+            Some(super::TunnelingSpecification::Eckart {
+                imaginary_frequency_cm1: 1500.0,
+                well_depths_cm1: [20.0 / kcal, 25.0 / kcal],
+            })
+        );
         assert_eq!(parsed.barriers[1].rrho.vibrational_frequencies_cm1, vec![300.0]);
+    }
+
+    #[test]
+    fn other_tunneling_models_are_recorded_as_unsupported() {
+        let deck = ILT_BARRIER_DECK.replace("Tunneling Eckart", "Tunneling Read");
+        let parsed = parse_mess_input(&deck).expect("should parse");
+        assert_eq!(parsed.barriers[1].tunneling, Some(super::TunnelingSpecification::Unsupported { model: "Read".into() }));
+        let deck = ILT_BARRIER_DECK.replace("      WellDepth[kcal/mol] 25\n", "");
+        assert!(parse_mess_input(&deck).is_err(), "an Eckart block needs two WellDepth values");
     }
 
     #[test]

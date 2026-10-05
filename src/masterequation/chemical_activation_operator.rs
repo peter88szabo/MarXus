@@ -370,6 +370,7 @@ pub(crate) mod tests {
         a.channels.push(Channel {
             name: "A->B".into(),
             destination: ChannelDestination::Well { index: 1 },
+            threshold_grain: None,
             rate_constant_s_inv: (0..400)
                 .map(|i| ts_sum_of_states(i as isize, ts) / (PLANCK_CM1_S * a.density_of_states[i]))
                 .collect(),
@@ -377,6 +378,7 @@ pub(crate) mod tests {
         b.channels.push(Channel {
             name: "B->A".into(),
             destination: ChannelDestination::Well { index: 0 },
+            threshold_grain: None,
             rate_constant_s_inv: (0..460)
                 .map(|i| ts_sum_of_states(i as isize - 60, ts) / (PLANCK_CM1_S * b.density_of_states[i]))
                 .collect(),
