@@ -115,14 +115,16 @@ impl DenseMatrix {
         out
     }
 
-    /// Similarity transform A = W * M * W^{-1} for diagonal W.
+    /// Similarity transform A = W^{-1} * M * W for diagonal W, i.e. A_ij = M_ij W_j / W_i.
+    /// For a rate matrix M[target, source] obeying detailed balance M_ij f_j = M_ji f_i,
+    /// W = sqrt(f) makes A symmetric.
     pub(crate) fn similarity_transform(&self, scale: &DiagonalScale) -> Self {
         let n = self.n;
         let mut out = DenseMatrix::zeros(n);
         for row in 0..n {
             for col in 0..n {
                 let m = self.get(row, col);
-                let a = m * (scale.diagonal[row] / scale.diagonal[col]);
+                let a = m * (scale.diagonal[col] / scale.diagonal[row]);
                 out.set(row, col, a);
             }
         }

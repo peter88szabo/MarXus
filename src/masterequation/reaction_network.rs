@@ -54,8 +54,9 @@ pub enum CollisionKernelImplementation {
     /// probability cap (implemented as an effective collision-frequency scaling).
     Spd,
 
-    /// MESS-style exponential-down kernel normalization (per-source normalization
-    /// with an explicit ΔE=0 self-weight).
+    /// Exponential-down kernel with detailed balance and exact normalization (back substitution
+    /// from the top grain; Robertson, Comprehensive Chemical Kinetics 43 (2019), eq. 4.16).
+    /// Below half the lowest reaction threshold of the well all grains share one normalization.
     Mess,
 }
 
@@ -81,14 +82,6 @@ pub struct MasterEquationSettings {
 
     /// If internal forward/backward rate is smaller than this, zero both directions (s^-1)
     pub internal_rate_threshold: f64,
-
-    /// Bath-gas constant used for number density conversion.
-    /// For SSUMES-like units you likely want RTCMMLC ~ (k_B in appropriate units),
-    /// but here we keep it as a configurable constant.
-    pub bathgas_number_density_prefactor: f64,
-
-    /// Mean relative speed prefactor (model constant), gives v̄ = prefactor * sqrt(T / μ)
-    pub mean_speed_prefactor: f64,
 
     /// If enabled, internal inter-well isomerization channels are enforced to satisfy
     /// microreversibility (detailed balance) on the aligned energy grid.

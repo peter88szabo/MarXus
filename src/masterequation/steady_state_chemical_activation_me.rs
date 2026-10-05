@@ -62,10 +62,12 @@ impl MasterEquationEngine {
         // 3) Similarity transform weights W (diagonal)
         let similarity_scale = self.build_similarity_scale(micro, &global_layout)?;
 
-        // Transform matrix A = W L W^{-1}, rhs b = W^{-1} s
+        // L[target, source] obeys detailed balance L_ij f_j = L_ji f_i with W = sqrt(f), so the
+        // symmetrized matrix is A = W^{-1} L W. With rhs b = W^{-1} s and p = W q,
+        // (-A) q = b is equivalent to -L p = s.
         let transformed_rhs = similarity_scale.inverse_apply_to_vector(&source_vector);
 
-        // We solve (-A) q = b, where A = W L W^{-1}.
+        // We solve (-A) q = b, where A = W^{-1} L W.
         // For iterative modes we apply -A via matvec without explicitly forming A.
         let symmetry_rel = {
             let n = raw_operator.size();
@@ -80,9 +82,9 @@ impl MasterEquationEngine {
             for i in 0..n {
                 for j in (i + 1)..n {
                     let aij = -raw_operator.get(i, j)
-                        * (similarity_scale.diagonal[i] / similarity_scale.diagonal[j]);
-                    let aji = -raw_operator.get(j, i)
                         * (similarity_scale.diagonal[j] / similarity_scale.diagonal[i]);
+                    let aji = -raw_operator.get(j, i)
+                        * (similarity_scale.diagonal[i] / similarity_scale.diagonal[j]);
                     norm2 += 2.0 * aij * aij;
                     let d = aij - aji;
                     diff2 += 2.0 * d * d;
@@ -108,59 +110,61 @@ impl MasterEquationEngine {
                 let negative_transformed_dense = raw_operator
                     .similarity_transform(&similarity_scale)
                     .scaled(-1.0);
-                match cholesky_solve_spd_with_diagnostics(
-                    &negative_transformed_dense,
-                    &transformed_rhs,
-                ) {
-                    Ok((x, chol)) => {
-                        diag.solve_method = LinearSolveMethod::CholeskySpd;
-                        diag.cholesky = Some(chol);
-                        x
-                    }
-                    Err(chol_err) => {
-                        // If matrix is close to symmetric, try LDLT; otherwise fall back to BiCGSTAB.
-                        let sym_tol = 1e-12;
-                        if symmetry_rel <= sym_tol {
-                            match solve_symmetric_indefinite_ldlt_bunch_kaufman(
-                                &negative_transformed_dense,
-                                &transformed_rhs,
-                            ) {
-                                Ok((x, ldlt)) => {
-                                    diag.solve_method = LinearSolveMethod::LdltSymmetricIndefinite;
-                                    diag.ldlt = Some(ldlt);
-                                    x
-                                }
-                                Err(ldlt_err) => {
-                                    let (x, bicg) = solve_bicgstab_left_jacobi_dense(
-                                        &negative_transformed_dense,
-                                        &transformed_rhs,
-                                        self.settings.krylov_tolerance,
-                                        self.settings.krylov_max_iter,
-                                    )
-                                    .map_err(|e| {
-                                        format!(
-                                            "All solvers failed.\nCholesky: {chol_err}\nLDLT: {ldlt_err}\nBiCGSTAB: {e}"
-                                        )
-                                    })?;
-                                    diag.solve_method = LinearSolveMethod::BiCgStab;
-                                    diag.bicgstab = Some(bicg);
-                                    x
-                                }
-                            }
-                        } else {
-                            let (x, bicg) = solve_bicgstab_left_jacobi_dense(
-                                &negative_transformed_dense,
-                                &transformed_rhs,
-                                self.settings.krylov_tolerance,
-                                self.settings.krylov_max_iter,
-                            )
-                            .map_err(|e| {
-                                format!("Cholesky failed: {chol_err}\nBiCGSTAB failed: {e}")
-                            })?;
-                            diag.solve_method = LinearSolveMethod::BiCgStab;
-                            diag.bicgstab = Some(bicg);
+                // Cholesky and LDLT read only one triangle, so they are valid only when the
+                // transformed matrix is symmetric (detailed balance). Otherwise go straight to
+                // the non-symmetric BiCGSTAB solver.
+                let sym_tol = 1e-10;
+                if symmetry_rel > sym_tol {
+                    let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                        &negative_transformed_dense,
+                        &transformed_rhs,
+                        self.settings.krylov_tolerance,
+                        self.settings.krylov_max_iter,
+                    )
+                    .map_err(|e| {
+                        format!(
+                            "Transformed matrix is not symmetric (relative asymmetry {symmetry_rel:e}); BiCGSTAB failed: {e}"
+                        )
+                    })?;
+                    diag.solve_method = LinearSolveMethod::BiCgStab;
+                    diag.bicgstab = Some(bicg);
+                    x
+                } else {
+                    match cholesky_solve_spd_with_diagnostics(
+                        &negative_transformed_dense,
+                        &transformed_rhs,
+                    ) {
+                        Ok((x, chol)) => {
+                            diag.solve_method = LinearSolveMethod::CholeskySpd;
+                            diag.cholesky = Some(chol);
                             x
                         }
+                        Err(chol_err) => match solve_symmetric_indefinite_ldlt_bunch_kaufman(
+                            &negative_transformed_dense,
+                            &transformed_rhs,
+                        ) {
+                            Ok((x, ldlt)) => {
+                                diag.solve_method = LinearSolveMethod::LdltSymmetricIndefinite;
+                                diag.ldlt = Some(ldlt);
+                                x
+                            }
+                            Err(ldlt_err) => {
+                                let (x, bicg) = solve_bicgstab_left_jacobi_dense(
+                                    &negative_transformed_dense,
+                                    &transformed_rhs,
+                                    self.settings.krylov_tolerance,
+                                    self.settings.krylov_max_iter,
+                                )
+                                .map_err(|e| {
+                                    format!(
+                                        "All solvers failed.\nCholesky: {chol_err}\nLDLT: {ldlt_err}\nBiCGSTAB: {e}"
+                                    )
+                                })?;
+                                diag.solve_method = LinearSolveMethod::BiCgStab;
+                                diag.bicgstab = Some(bicg);
+                                x
+                            }
+                        },
                     }
                 }
             }
@@ -194,15 +198,16 @@ impl MasterEquationEngine {
                         if x.len() != n || y.len() != n {
                             return Err("Dimension mismatch in NegativeSimilarityOp::matvec".into());
                         }
-                        // tmp = W^{-1} x
+                        // y = -A x with A = W^{-1} L W
+                        // tmp = W x
                         for i in 0..n {
-                            self.tmp[i] = x[i] / self.w.diagonal[i];
+                            self.tmp[i] = x[i] * self.w.diagonal[i];
                         }
                         // tmp2 = L tmp
                         self.l.matvec_into(&self.tmp, &mut self.tmp2)?;
-                        // y = - W tmp2
+                        // y = - W^{-1} tmp2
                         for i in 0..n {
-                            y[i] = -self.tmp2[i] * self.w.diagonal[i];
+                            y[i] = -self.tmp2[i] / self.w.diagonal[i];
                         }
                         Ok(())
                     }
@@ -448,5 +453,107 @@ impl MasterEquationEngine {
             per_well_per_channel_rates,
             total_outgoing_rate_constant: total_outgoing,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::KB_CM;
+    use crate::masterequation::microcanonical_builder::{
+        ArrayMicrocanonicalProvider, MicrocanonicalNetworkData,
+    };
+    use crate::masterequation::reaction_network::{
+        CollisionKernelImplementation, CollisionModelParams, ReactionChannel,
+    };
+
+    fn one_well_problem(
+        kernel: CollisionKernelImplementation,
+        solver: MultiwellLinearSolver,
+    ) -> (Vec<WellDefinition>, MasterEquationSettings, MicrocanonicalNetworkData) {
+        let n_grains = 80;
+        let channels = vec![ReactionChannel { name: "P".to_string(), connected_well_index: None }];
+        let well = WellDefinition {
+            well_name: "W".to_string(),
+            energy_grain_width_cm1: 20.0,
+            lowest_included_grain_index: 0,
+            one_past_highest_included_grain_index: n_grains,
+            alignment_offset_in_grains: 0,
+            nonreactive_grain_count: 0,
+            collision_params: CollisionModelParams {
+                lennard_jones_sigma_angstrom: 5.0,
+                lennard_jones_epsilon_kelvin: 300.0,
+                reduced_mass_amu: 25.0,
+                alpha_at_1000K_cm1: 300.0,
+                alpha_temperature_exponent: 0.85,
+            },
+            channels: channels.clone(),
+        };
+        let settings = MasterEquationSettings {
+            temperature_kelvin: 500.0,
+            pressure_torr: 10.0,
+            boltzmann_constant_wavenumber_per_kelvin: KB_CM,
+            collision_band_half_width: 20,
+            collision_kernel_implementation: kernel,
+            outgoing_rate_threshold: 0.0,
+            internal_rate_threshold: 0.0,
+            enforce_interwell_detailed_balance: false,
+            linear_solver: solver,
+            krylov_tolerance: 1e-12,
+            krylov_max_iter: 5000,
+            gmres_restart: 80,
+        };
+        let rho: Vec<f64> = (0..n_grains).map(|i| (1.0 + 0.05 * i as f64).powi(10)).collect();
+        let k: Vec<f64> = (0..n_grains)
+            .map(|i| if i < 40 { 0.0 } else { 1.0e7 * (i - 39) as f64 })
+            .collect();
+        let data = MicrocanonicalNetworkData {
+            rho_by_well: vec![rho],
+            k_by_well_by_channel: vec![vec![k]],
+            channels_by_well: vec![channels],
+        };
+        (vec![well], settings, data)
+    }
+
+    #[test]
+    fn steady_state_populations_solve_the_master_equation() {
+        // Whatever the internal similarity scaling and solver, the returned populations must
+        // satisfy the untransformed steady-state equation  L p + s = 0.
+        for kernel in [CollisionKernelImplementation::Spd, CollisionKernelImplementation::Mess] {
+            for solver in [
+                MultiwellLinearSolver::Direct,
+                MultiwellLinearSolver::Gmres,
+                MultiwellLinearSolver::BiCgStab,
+            ] {
+                let (wells, settings, data) = one_well_problem(kernel, solver);
+                let micro = ArrayMicrocanonicalProvider::new(&data);
+                let activation = ChemicalActivationDefinition {
+                    activated_well_index: 0,
+                    recombination_channel_index: 0,
+                };
+                let engine = MasterEquationEngine::new(wells.clone(), settings.clone());
+                let (results, _) = engine
+                    .solve_steady_state_chemical_activation_with_diagnostics(&micro, activation.clone())
+                    .unwrap();
+                let p = results.steady_state_population;
+
+                let layout = GlobalLayout::from_wells(&wells).unwrap();
+                let (l, _) = assemble_raw_operator(&wells, &settings, &micro, &layout).unwrap();
+                let s = engine.build_activation_source(&micro, &layout, &activation).unwrap();
+                let n = l.size();
+                let mut res2 = 0.0;
+                let mut s2 = 0.0;
+                for i in 0..n {
+                    let mut lp = 0.0;
+                    for j in 0..n {
+                        lp += l.get(i, j) * p[j];
+                    }
+                    res2 += (lp + s[i]).powi(2);
+                    s2 += s[i] * s[i];
+                }
+                let rel = (res2 / s2).sqrt();
+                assert!(rel < 1e-6, "{kernel:?} / {solver:?}: |L p + s| / |s| = {rel:e}");
+            }
+        }
     }
 }

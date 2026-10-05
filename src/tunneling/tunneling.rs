@@ -47,7 +47,7 @@ pub fn skodje_truhlar_exact(beta: f64, omega: f64, v0: f64) -> f64 {
     let mut res = 0.0;
 
     for n in 0..=NMAX {
-        let numerator = 1.0 - ((beta - (n + 1) as f64 * alpha).exp() * v0);
+        let numerator = 1.0 - ((beta - (n + 1) as f64 * alpha) * v0).exp();
         let denom = (n + 1) as f64 * alpha - beta;
         let dum = 1.0 / (n as f64 * alpha + beta);
         let mut alter = 1.0;
@@ -157,4 +157,43 @@ fn simpson_integrate(func: &[f64], nmin: usize, nmax: usize, step: f64) -> f64 {
     }
 
     return res;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::KB_CM;
+
+    #[test]
+    fn skodje_truhlar_exact_matches_truncated_parabolic_integral() {
+        // The series is the term-by-term integral of
+        //   kappa = beta * exp(beta*V0) * int_0^inf exp(-beta*E) P(E) dE,
+        //   P(E)  = 1 / (1 + exp(alpha*(V0 - E))),  alpha = 2*pi/omega,
+        // so it must agree with a direct quadrature of that integral
+        // (up to the truncation of the alternating series at NMAX = 100, ~0.2% here).
+        let omega = 1000.0; // cm-1, imaginary barrier frequency
+        let temp = 300.0;
+        let v0 = 3000.0; // cm-1
+        let beta = 1.0 / (KB_CM * temp);
+        let alpha = 2.0 * PI / omega;
+
+        let n = 200_000;
+        let emax = v0 + 60.0 / beta + 60.0 / alpha;
+        let h = emax / n as f64;
+        let mut sum = 0.0;
+        for i in 0..=n {
+            let e = i as f64 * h;
+            let weight = if i == 0 || i == n { 0.5 } else { 1.0 };
+            let p = 1.0 / (1.0 + (alpha * (v0 - e)).exp());
+            sum += weight * (beta * (v0 - e)).exp() * p;
+        }
+        let kappa_ref = beta * sum * h;
+
+        let kappa = skodje_truhlar_exact(beta, omega, v0);
+
+        assert!(
+            ((kappa - kappa_ref) / kappa_ref).abs() < 5.0e-3,
+            "kappa = {kappa}, direct integral = {kappa_ref}"
+        );
+    }
 }

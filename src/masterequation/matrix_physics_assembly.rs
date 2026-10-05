@@ -122,7 +122,7 @@ fn add_collision_terms_for_well(
     );
 
     let collision_frequency_s_inv =
-        compute_collision_frequency_s_inv(&well.collision_params, settings, temperature, pressure)?;
+        compute_collision_frequency_s_inv(&well.collision_params, temperature, pressure)?;
 
     let local_start = well.lowest_included_grain_index;
     let local_end_exclusive = well.one_past_highest_included_grain_index;
@@ -133,82 +133,110 @@ fn add_collision_terms_for_well(
 
     match settings.collision_kernel_implementation {
         CollisionKernelImplementation::Mess => {
-            for source_grain in local_start..local_end_exclusive {
-                let (target_min, target_max_exclusive) =
-                    band_limits(source_grain, local_start, local_end_exclusive, band);
+            // Exponential-down model with detailed balance and exact normalization
+            // (Robertson, Comprehensive Chemical Kinetics 43 (2019), eqs. 4.4, 4.7, 4.11, 4.16):
+            //   deactivating (j <= i): P(j|i) = A_i exp(-(E_i - E_j)/alpha)
+            //   activating   (j >  i): P(j|i) = A_j (rho_j/rho_i) exp(-(E_j - E_i)(1/alpha + 1/kT))
+            //   sum_j P(j|i) = 1.
+            // The normalization equations are upper triangular in A_i and are solved by back
+            // substitution from the top grain, where only deactivating collisions exist.
+            let n_local = local_end_exclusive.saturating_sub(local_start);
+            let beta = 1.0 / (boltzmann * temperature);
 
-                let rho_source = micro.density_of_states(well_index, source_grain);
-                if rho_source <= 0.0 {
+            let mut rho = vec![0.0; n_local];
+            for (idx, grain) in (local_start..local_end_exclusive).enumerate() {
+                let r = micro.density_of_states(well_index, grain);
+                if r <= 0.0 {
                     return Err(format!(
                         "Non-positive density of states at well={}, grain={}",
-                        well.well_name, source_grain
+                        well.well_name, grain
                     ));
                 }
+                rho[idx] = r;
+            }
 
-                let mut unnormalized_weights: Vec<(usize, f64)> = Vec::new();
-                for target_grain in target_min..target_max_exclusive {
-                    let delta_grains = if target_grain >= source_grain {
-                        (target_grain - source_grain) as i64
-                    } else {
-                        -((source_grain - target_grain) as i64)
-                    };
+            let deactivating = |steps: usize| (-(steps as f64) * grain_width / alpha_cm1).exp();
+            let activating = |steps: usize| {
+                (-(steps as f64) * grain_width * (1.0 / alpha_cm1 + beta)).exp()
+            };
 
-                    let step_energy_cm1 = (delta_grains.abs() as f64) * grain_width;
-                    let exponential_down = (-step_energy_cm1 / alpha_cm1).exp();
+            // For sparse low-energy states the back substitution can return non-positive
+            // coefficients (Robertson, CCK 43, p. 294). Levels below half the lowest reaction
+            // threshold E0 of the well stay at their equilibrium populations, so they all share the
+            // normalization of the grain above them; detailed balance is unaffected because the
+            // activating probabilities are built from the same coefficients. A breakdown above
+            // E0/2 (or in a well without any reactive channel) is reported as an error.
+            let threshold_idx = (0..n_local).find(|&idx| {
+                let grain = local_start + idx;
+                (0..well.channels.len())
+                    .any(|ch| micro.microcanonical_rate(well_index, ch, grain) > 0.0)
+            });
+            let cut_idx = threshold_idx.map(|t| t / 2).unwrap_or(0);
 
-                    let detailed_balance_factor = if target_grain > source_grain {
-                        let rho_target = micro.density_of_states(well_index, target_grain);
-                        if rho_target <= 0.0 {
-                            return Err(format!(
-                                "Non-positive density of states at well={}, grain={}",
-                                well.well_name, target_grain
-                            ));
-                        }
-                        let upward_energy_cm1 =
-                            ((target_grain - source_grain) as f64) * grain_width;
-                        (rho_target / rho_source)
-                            * (-upward_energy_cm1 / (boltzmann * temperature)).exp()
-                    } else {
-                        1.0
-                    };
-
-                    let weight = exponential_down * detailed_balance_factor;
-                    unnormalized_weights.push((target_grain, weight.max(0.0)));
+            let mut a_norm = vec![0.0; n_local];
+            for idx in (0..n_local).rev() {
+                if idx < cut_idx && idx + 1 < n_local {
+                    a_norm[idx] = a_norm[idx + 1];
+                    continue;
                 }
+                let grain = local_start + idx;
+                let (target_min, target_max_exclusive) =
+                    band_limits(grain, local_start, local_end_exclusive, band);
 
-                let sum_weights: f64 = unnormalized_weights.iter().map(|(_, w)| *w).sum();
-                if sum_weights <= 0.0 || !sum_weights.is_finite() {
+                let down_sum: f64 = (target_min..=grain).map(|t| deactivating(grain - t)).sum();
+                let up_sum: f64 = ((grain + 1)..target_max_exclusive)
+                    .map(|t| {
+                        let t_idx = t - local_start;
+                        a_norm[t_idx] * (rho[t_idx] / rho[idx]) * activating(t - grain)
+                    })
+                    .sum();
+
+                let remainder = 1.0 - up_sum;
+                if !(remainder > 0.0) || !down_sum.is_finite() {
                     return Err(format!(
-                        "Collision kernel normalization failed at well={}, grain={}",
-                        well.well_name, source_grain
+                        "Exponential-down normalization failed at well={}, grain={}: activating \
+                         collisions already carry a probability of {:.6}.",
+                        well.well_name, grain, up_sum
                     ));
                 }
+                a_norm[idx] = remainder / down_sum;
+            }
 
+            for idx in 0..n_local {
+                let source_grain = local_start + idx;
+                let (target_min, target_max_exclusive) =
+                    band_limits(source_grain, local_start, local_end_exclusive, band);
                 let global_source = layout.global_index_of(well_index, source_grain)?;
-                let mut offdiag_prob_sum = 0.0;
 
-                for (target_grain, weight) in unnormalized_weights {
-                    let probability = weight / sum_weights;
-                    let global_target = layout.global_index_of(well_index, target_grain)?;
-
-                    if global_target != global_source {
-                        operator.add(
-                            global_target,
-                            global_source,
-                            collision_frequency_s_inv * probability,
-                        );
-                        offdiag_prob_sum += probability;
+                let mut out_probability = 0.0;
+                for target_grain in target_min..target_max_exclusive {
+                    if target_grain == source_grain {
+                        continue;
                     }
+                    let t_idx = target_grain - local_start;
+                    let probability = if target_grain < source_grain {
+                        a_norm[idx] * deactivating(source_grain - target_grain)
+                    } else {
+                        a_norm[t_idx]
+                            * (rho[t_idx] / rho[idx])
+                            * activating(target_grain - source_grain)
+                    };
+                    let global_target = layout.global_index_of(well_index, target_grain)?;
+                    operator.add(
+                        global_target,
+                        global_source,
+                        collision_frequency_s_inv * probability,
+                    );
+                    out_probability += probability;
                 }
-
-                let p_same = (1.0 - offdiag_prob_sum).max(0.0);
                 operator.add(
                     global_source,
                     global_source,
-                    collision_frequency_s_inv * (p_same - 1.0),
+                    -collision_frequency_s_inv * out_probability,
                 );
 
-                let residual = (p_same + offdiag_prob_sum) - 1.0;
+                // Elastic (j = i) probability is A_i; the column is normalized to 1 by construction.
+                let residual = a_norm[idx] + out_probability - 1.0;
                 diag.max_column_sum_abs = diag
                     .max_column_sum_abs
                     .max((collision_frequency_s_inv * residual).abs());
@@ -491,4 +519,120 @@ fn add_interwell_couplings(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::KB_CM;
+    use crate::masterequation::microcanonical_builder::{
+        ArrayMicrocanonicalProvider, MicrocanonicalNetworkData,
+    };
+    use crate::masterequation::reaction_network::{
+        CollisionKernelImplementation, CollisionModelParams, MultiwellLinearSolver,
+        ReactionChannel,
+    };
+
+    fn one_well(
+        with_reaction: bool,
+    ) -> (Vec<WellDefinition>, MasterEquationSettings, MicrocanonicalNetworkData, Vec<f64>) {
+        let n_grains = 60;
+        let channels = if with_reaction {
+            vec![ReactionChannel { name: "P".to_string(), connected_well_index: None }]
+        } else {
+            vec![]
+        };
+        let well = WellDefinition {
+            well_name: "W".to_string(),
+            energy_grain_width_cm1: 20.0,
+            lowest_included_grain_index: 0,
+            one_past_highest_included_grain_index: n_grains,
+            alignment_offset_in_grains: 0,
+            nonreactive_grain_count: 0,
+            collision_params: CollisionModelParams {
+                lennard_jones_sigma_angstrom: 5.0,
+                lennard_jones_epsilon_kelvin: 300.0,
+                reduced_mass_amu: 25.0,
+                alpha_at_1000K_cm1: 300.0,
+                alpha_temperature_exponent: 0.85,
+            },
+            channels: channels.clone(),
+        };
+        let settings = MasterEquationSettings {
+            temperature_kelvin: 500.0,
+            pressure_torr: 10.0,
+            boltzmann_constant_wavenumber_per_kelvin: KB_CM,
+            collision_band_half_width: 20,
+            collision_kernel_implementation: CollisionKernelImplementation::Mess,
+            outgoing_rate_threshold: 0.0,
+            internal_rate_threshold: 0.0,
+            enforce_interwell_detailed_balance: false,
+            linear_solver: MultiwellLinearSolver::Direct,
+            krylov_tolerance: 1e-12,
+            krylov_max_iter: 100,
+            gmres_restart: 10,
+        };
+        let rho: Vec<f64> = (0..n_grains).map(|i| (1.0 + 0.05 * i as f64).powi(10)).collect();
+        // Reaction threshold at grain 40 (k = 0 below), so E0/2 corresponds to grain 20.
+        let k: Vec<f64> = (0..n_grains)
+            .map(|i| if i < 40 { 0.0 } else { 1.0e7 * (i - 39) as f64 })
+            .collect();
+        let data = MicrocanonicalNetworkData {
+            rho_by_well: vec![rho.clone()],
+            k_by_well_by_channel: vec![if with_reaction { vec![k] } else { vec![] }],
+            channels_by_well: vec![channels],
+        };
+        (vec![well], settings, data, rho)
+    }
+
+    #[test]
+    fn exponential_down_kernel_is_normalized_and_obeys_detailed_balance() {
+        // Robertson, Comprehensive Chemical Kinetics 43 (2019), Ch. 4, eqs. 4.4 and 4.6:
+        // every collision column must conserve population and R_ij f_j = R_ji f_i
+        // with the Boltzmann distribution f_i = rho_i exp(-E_i/kT).
+        let (wells, settings, data, rho) = one_well(true);
+        let micro = ArrayMicrocanonicalProvider::new(&data);
+        let layout = GlobalLayout::from_wells(&wells).unwrap();
+        let (r_full, _) = assemble_raw_operator(&wells, &settings, &micro, &layout).unwrap();
+        let n = rho.len();
+        let d_e = wells[0].energy_grain_width_cm1;
+        let t = settings.temperature_kelvin;
+
+        // Remove the reactive loss from the diagonal to isolate the collision operator.
+        let k_total = |i: usize| micro.microcanonical_rate(0, 0, i);
+        let r = |i: usize, j: usize| if i == j { r_full.get(i, j) + k_total(i) } else { r_full.get(i, j) };
+
+        let f: Vec<f64> =
+            (0..n).map(|i| rho[i] * (-(i as f64) * d_e / (KB_CM * t)).exp()).collect();
+        let z = r(1, 0).abs().max(r(0, 0).abs());
+        for j in 0..n {
+            let col: f64 = (0..n).map(|i| r(i, j)).sum();
+            assert!(col.abs() < 1e-9 * z, "column {j} sums to {col:e}");
+            for i in 0..n {
+                if i == j {
+                    continue;
+                }
+                let lhs = r(i, j) * f[j];
+                let rhs = r(j, i) * f[i];
+                let scale = lhs.abs().max(rhs.abs());
+                if scale > 0.0 {
+                    assert!(
+                        ((lhs - rhs) / scale).abs() < 1e-10,
+                        "detailed balance violated for ({i},{j}): {lhs:e} vs {rhs:e}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn normalization_breakdown_without_reaction_threshold_is_an_error() {
+        // Without a reactive channel there is no E0 below which the equilibrium populations
+        // may share one normalization, so a breakdown of the back substitution must be reported.
+        let (wells, settings, data, _) = one_well(false);
+        let micro = ArrayMicrocanonicalProvider::new(&data);
+        let layout = GlobalLayout::from_wells(&wells).unwrap();
+        let result = assemble_raw_operator(&wells, &settings, &micro, &layout);
+        assert!(result.is_err(), "expected a normalization error");
+    }
 }

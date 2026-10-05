@@ -113,8 +113,6 @@ pub struct MasterEquationInputSettings {
     pub collision_kernel_implementation: CollisionKernelImplementation,
     pub outgoing_rate_threshold: f64,
     pub internal_rate_threshold: f64,
-    pub bathgas_number_density_prefactor: f64,
-    pub mean_speed_prefactor: f64,
     pub enforce_interwell_detailed_balance: bool,
     pub linear_solver: MultiwellLinearSolver,
     pub krylov_tolerance: f64,
@@ -526,8 +524,16 @@ fn build_settings_from_parameters(
     };
     let outgoing_rate_threshold = parse_f64(&get("outgoing_rate_threshold")?, 0)?;
     let internal_rate_threshold = parse_f64(&get("internal_rate_threshold")?, 0)?;
-    let bathgas_number_density_prefactor = parse_f64(&get("bathgas_number_density_prefactor")?, 0)?;
-    let mean_speed_prefactor = parse_f64(&get("mean_speed_prefactor")?, 0)?;
+    for obsolete in ["bathgas_number_density_prefactor", "mean_speed_prefactor"] {
+        if raw.contains_key(obsolete) {
+            bail!(
+                "Parameter '{}' is no longer read: the bath-gas number density n = p/(k_B T) and the \
+                 mean relative speed sqrt(8 k_B T/(pi mu)) are computed from physical constants. \
+                 Remove this line from the input deck.",
+                obsolete
+            );
+        }
+    }
     let enforce_interwell_detailed_balance = raw
         .get("enforce_interwell_detailed_balance")
         .map(|s| s.trim().to_lowercase())
@@ -591,8 +597,6 @@ fn build_settings_from_parameters(
         collision_kernel_implementation,
         outgoing_rate_threshold,
         internal_rate_threshold,
-        bathgas_number_density_prefactor,
-        mean_speed_prefactor,
         enforce_interwell_detailed_balance,
         linear_solver,
         krylov_tolerance,

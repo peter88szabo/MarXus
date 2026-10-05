@@ -13,28 +13,32 @@ pub struct PstChannels {
     pub energy_offset: f64,
 }
 
-/// Convolve two state-count arrays to combine conserved and transitional modes.
-pub fn convolve_states(a: &[f64], b: &[f64], out_len: usize) -> Vec<f64> {
+/// Combine two independent groups of modes (Forst, Chem. Rev. 71, 339 (1971), eqs. 30, 33):
+///   int_0^E rho_a(x) f_b(E - x) dx,
+/// a density if f_b is a density, a sum of states if f_b is a sum of states. `rho_a` must be a
+/// density in states per cm-1; the integral is evaluated as the discrete sum times dE.
+pub fn convolve_states(rho_a: &[f64], b: &[f64], out_len: usize, d_e: f64) -> Vec<f64> {
     let mut out = vec![0.0; out_len];
     for i in 0..out_len {
         let mut sum = 0.0;
         for j in 0..=i {
-            if j < a.len() && (i - j) < b.len() {
-                sum += a[j] * b[i - j];
+            if j < rho_a.len() && (i - j) < b.len() {
+                sum += rho_a[j] * b[i - j];
             }
         }
-        out[i] = sum;
+        out[i] = sum * d_e;
     }
     out
 }
 
-/// Build PST open-channel counts by convolving conserved and transitional sums of states.
+/// Build PST open-channel counts: conserved-mode density convolved with the transitional sum of states.
 pub fn build_convolved_channels(
-    conserved: &[f64],
-    transitional: &[f64],
+    conserved_density: &[f64],
+    transitional_sum: &[f64],
     out_len: usize,
+    d_e: f64,
 ) -> Vec<f64> {
-    convolve_states(conserved, transitional, out_len)
+    convolve_states(conserved_density, transitional_sum, out_len, d_e)
 }
 
 /// Capture probability from Troe-Ushakov (2006), either step or power-law form.

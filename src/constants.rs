@@ -15,7 +15,6 @@ pub const PASCAL_TO_AU: f64 = 1.0e-13 / 2.9421912;
 
 pub const CLIGHT_AU: f64 = 137.035999074;
 pub const AMU_TO_ELECTRON_MASS: f64 = 1822.888_486_209;
-pub const AMU_TO_ELECMASS: f64 = 1836.15267343;
 pub const KB_AU_PER_K: f64 = 3.166811563e-6; // Hartree/K
 pub const HPLANCK_AU: f64 = TWO_PI;
 

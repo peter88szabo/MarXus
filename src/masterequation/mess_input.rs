@@ -190,13 +190,14 @@ fn energy_to_cm1(value: f64, unit_tag: &str) -> Result<f64, String> {
     }
 }
 
+// Keywords that open a block closed by its own `End`. `Barrier`, `Fragment` and `Species` are
+// headers without an `End`: they end with the `End` of the model block (RRHO) that follows them.
 fn is_block_starter(tok: &str) -> bool {
     matches!(
         tok,
         "Model"
             | "Bimolecular"
             | "Well"
-            | "Barrier"
             | "RRHO"
             | "Core"
             | "RigidRotor"
@@ -378,8 +379,21 @@ fn parse_electronic_degeneracy_ground(block: &[String]) -> Result<f64, String> {
 }
 
 fn parse_rrho_species(block: &[String], name: &str) -> Result<MessSpeciesRrho, String> {
-    let (symbols, coords) = parse_geometry(block, "Geometry[angstrom]")?
-        .ok_or_else(|| format!("RRHO species '{}' missing Geometry[angstrom]", name))?;
+    parse_rrho_species_impl(block, name, true)
+}
+
+// `geometry_required = false` for phase-space-theory barriers: their rotational treatment comes
+// from the two fragment geometries of the core, not from a molecular geometry.
+fn parse_rrho_species_impl(
+    block: &[String],
+    name: &str,
+    geometry_required: bool,
+) -> Result<MessSpeciesRrho, String> {
+    let (symbols, coords) = match parse_geometry(block, "Geometry[angstrom]")? {
+        Some(geometry) => geometry,
+        None if !geometry_required => (Vec::new(), Vec::new()),
+        None => return Err(format!("RRHO species '{}' missing Geometry[angstrom]", name)),
+    };
     let symmetry_factor = parse_symmetry_factor(block)?;
     let vib = parse_frequencies(block)?;
     let zero_energy_cm1 = parse_zero_energy_cm1(block)?;
@@ -628,8 +642,9 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let right = parts[3].to_string();
             let (block, next) = collect_block(&lines, i);
 
-            let rrho = parse_rrho_species(&block, &name)?;
             let core = parse_phasespace_core(&block)?.unwrap_or(MessBarrierCore::TightRrho);
+            let geometry_required = matches!(core, MessBarrierCore::TightRrho);
+            let rrho = parse_rrho_species_impl(&block, &name, geometry_required)?;
 
             barriers.push(MessBarrier {
                 name,
@@ -670,7 +685,7 @@ pub fn parse_mess_input_file(path: impl AsRef<Path>) -> Result<MessDeck, String>
 
 #[cfg(test)]
 mod tests {
-    use super::parse_mess_input;
+    use super::{parse_mess_input, MessBarrierCore};
 
     #[test]
     fn bimolecular_fragment_headers_do_not_require_end_blocks() {
@@ -776,6 +791,167 @@ End
         assert_eq!(w1.geometry_symbols.len(), 1);
         assert_eq!(w1.vibrational_frequencies_cm1.len(), 1);
     }
+
+    #[test]
+    fn consecutive_barriers_are_all_read() {
+        // In this input format a `Barrier <name> <left> <right>` header has no `End` of its own:
+        // the barrier ends with the `End` of the model block (RRHO) that follows it.
+        let deck = r#"
+TemperatureList[K] 300.
+PressureList[torr] 760.
+Model
+Well W1
+  Species
+    RRHO
+      Geometry[angstrom] 1
+      H 0 0 0
+      Core RigidRotor
+        SymmetryFactor 1.0
+      End
+      Frequencies[1/cm] 1
+      100.0
+      ZeroEnergy[1/cm] 0
+      ElectronicLevels[1/cm] 1
+        0 1
+    End
+  End
+Barrier B1 W1 P1
+  RRHO
+    Geometry[angstrom] 1
+    H 0 0 0
+    Core RigidRotor
+      SymmetryFactor 1.0
+    End
+    Frequencies[1/cm] 1
+    300.0
+    ZeroEnergy[1/cm] 1000
+    ElectronicLevels[1/cm] 1
+      0 1
+  End
+Barrier B2 W1 P2
+  RRHO
+    Geometry[angstrom] 1
+    H 0 0 0
+    Core RigidRotor
+      SymmetryFactor 1.0
+    End
+    Frequencies[1/cm] 1
+    400.0
+    ZeroEnergy[1/cm] 2000
+    ElectronicLevels[1/cm] 1
+      0 1
+  End
+End
+"#;
+
+        let parsed = parse_mess_input(deck).expect("should parse");
+        let names: Vec<&str> = parsed.barriers.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, vec!["B1", "B2"]);
+        assert_eq!(parsed.barriers[1].right, "P2");
+        assert_eq!(parsed.barriers[1].rrho.vibrational_frequencies_cm1, vec![400.0]);
+    }
+
+    #[test]
+    fn phase_space_barrier_without_molecular_geometry_parses() {
+        // A phase-space-theory barrier is described by the two fragment geometries of its core;
+        // it has no molecular Geometry[angstrom] block.
+        let deck = r#"
+TemperatureList[K] 300.
+PressureList[torr] 760.
+Model
+Barrier B0 R W1
+  RRHO
+    Stoichiometry C1O2
+    Core PhaseSpaceTheory
+      FragmentGeometry[angstrom] 1
+      C 0.0 0.0 0.0
+      FragmentGeometry[angstrom] 2
+      O 0.0 0.0 0.0
+      O 0.0 0.0 1.2
+      SymmetryFactor 2.0
+      PotentialPrefactor[au] 2.4
+      PotentialPowerExponent 6.
+    End
+    Frequencies[1/cm] 1
+    1585.0
+    ZeroEnergy[kcal/mol] 0.0
+    ElectronicLevels[1/cm] 1
+      0 3
+  End
+End
+"#;
+
+        let parsed = parse_mess_input(deck).expect("should parse");
+        assert_eq!(parsed.barriers.len(), 1);
+        assert!(parsed.barriers[0].rrho.geometry_symbols.is_empty());
+        assert!(matches!(parsed.barriers[0].core, MessBarrierCore::PhaseSpaceTheory { .. }));
+    }
+
+    const ONE_WELL_DECK: &str = r#"
+TemperatureList[K] 300.
+PressureList[torr] 760.
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm] 200.0
+      Power 0.85
+      ExponentCutoff 15
+  End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm] 417.0 33.4
+      Sigmas[angstrom] 6.5 3.9
+      Masses[amu] 149 28
+  End
+Well W1
+  Species
+    RRHO
+      Geometry[angstrom] 1
+      H 0 0 0
+      Core RigidRotor
+        SymmetryFactor 1.0
+      End
+      Frequencies[1/cm] 1
+      100.0
+      ZeroEnergy[1/cm] 0
+      ElectronicLevels[1/cm] 1
+        0 1
+    End
+  End
+End
+"#;
+
+    #[test]
+    fn energy_transfer_factor_is_the_value_at_300_kelvin() {
+        // Input format: Factor[1/cm] is <dE_down> at T0 = 300 K and
+        // <dE_down>(T) = Factor * (T/T0)^Power. At the deck temperature of 300 K the network must
+        // therefore use exactly Factor.
+        use crate::masterequation::collisional_relaxation::compute_alpha_cm1;
+        let deck = parse_mess_input(ONE_WELL_DECK).expect("should parse");
+        let network = deck.build_multiwell_network(super::MessBuildOptions::default()).unwrap();
+        let p = &network.wells[0].collision_params;
+        let alpha_300 =
+            compute_alpha_cm1(p.alpha_at_1000K_cm1, p.alpha_temperature_exponent, 300.0);
+        assert!((alpha_300 - 200.0).abs() < 1e-9, "alpha(300 K) = {alpha_300} cm-1");
+    }
+
+    #[test]
+    fn lennard_jones_parameters_combine_species_and_bath_gas() {
+        // Troe, J. Chem. Phys. 66, 4758 (1977), Sec. III:
+        //   sigma_AM = (sigma_A + sigma_M)/2,  eps_AM = sqrt(eps_A eps_M)
+        let deck = parse_mess_input(ONE_WELL_DECK).expect("should parse");
+        let network = deck.build_multiwell_network(super::MessBuildOptions::default()).unwrap();
+        let p = &network.wells[0].collision_params;
+        let sigma_ref = 0.5 * (6.5 + 3.9);
+        let eps_ref_kelvin = (417.0_f64 * 33.4).sqrt() * 1.438_776_877;
+        assert!((p.lennard_jones_sigma_angstrom - sigma_ref).abs() < 1e-12, "sigma = {}", p.lennard_jones_sigma_angstrom);
+        assert!(
+            (p.lennard_jones_epsilon_kelvin - eps_ref_kelvin).abs() < 1e-9,
+            "eps/k = {} K, expected {} K",
+            p.lennard_jones_epsilon_kelvin,
+            eps_ref_kelvin
+        );
+    }
 }
 
 impl MessDeck {
@@ -814,16 +990,31 @@ impl MessDeck {
         } else {
             0.0
         };
-        let (eps1_cm1, _eps2_cm1) = self.global.lj_epsilons_cm1.unwrap_or((0.0, 0.0));
-        let epsilon_kelvin = eps1_cm1 * 1.438_776_877;
-        let (sigma1_a, _sigma2_a) = self.global.lj_sigmas_angstrom.unwrap_or((0.0, 0.0));
+        // Lennard-Jones parameters of the species-bath gas pair (Troe, J. Chem. Phys. 66, 4758
+        // (1977), Sec. III): sigma_AM = (sigma_A + sigma_M)/2, eps_AM = sqrt(eps_A eps_M).
+        let (eps1_cm1, eps2_cm1) = self.global.lj_epsilons_cm1.unwrap_or((0.0, 0.0));
+        let epsilon_kelvin = (eps1_cm1 * eps2_cm1).sqrt() * 1.438_776_877;
+        let (sigma1_a, sigma2_a) = self.global.lj_sigmas_angstrom.unwrap_or((0.0, 0.0));
+        let sigma_a = 0.5 * (sigma1_a + sigma2_a);
+
+        // Energy transfer: in the input deck Factor[1/cm] is <dE_down> at T0 = 300 K with
+        // <dE_down>(T) = Factor * (T/T0)^Power; MarXus stores the value at 1000 K.
+        let alpha_factor_300k = self
+            .global
+            .alpha_factor_cm1
+            .ok_or("Missing EnergyRelaxation Exponential Factor[1/cm] in the input deck.")?;
+        let alpha_power = self
+            .global
+            .alpha_power
+            .ok_or("Missing EnergyRelaxation Exponential Power in the input deck.")?;
+        let alpha_at_1000k_cm1 = alpha_factor_300k * (1000.0_f64 / 300.0).powf(alpha_power);
 
         let default_collision = CollisionModelParams {
-            lennard_jones_sigma_angstrom: sigma1_a,
+            lennard_jones_sigma_angstrom: sigma_a,
             lennard_jones_epsilon_kelvin: epsilon_kelvin,
             reduced_mass_amu,
-            alpha_at_1000K_cm1: self.global.alpha_factor_cm1.unwrap_or(200.0),
-            alpha_temperature_exponent: self.global.alpha_power.unwrap_or(0.85),
+            alpha_at_1000K_cm1: alpha_at_1000k_cm1,
+            alpha_temperature_exponent: alpha_power,
         };
 
         let settings = MasterEquationSettings {
@@ -834,8 +1025,6 @@ impl MessDeck {
             collision_kernel_implementation: CollisionKernelImplementation::Mess,
             outgoing_rate_threshold: 0.0,
             internal_rate_threshold: 0.0,
-            bathgas_number_density_prefactor: 3.262e16,
-            mean_speed_prefactor: 1.0e4,
             enforce_interwell_detailed_balance: false,
             linear_solver: crate::masterequation::reaction_network::MultiwellLinearSolver::Gmres,
             krylov_tolerance: 1e-10,

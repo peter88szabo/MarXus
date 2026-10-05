@@ -67,7 +67,10 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
             }
 
             let aii = a.get(imax, imax).abs();
-            if aii >= alpha * rowmax {
+            if akk * rowmax >= alpha * colmax * colmax {
+                // 1x1 pivot at k without interchange
+                // (Bunch & Kaufman, Math. Comp. 31, 163 (1977); LAPACK dsytf2)
+            } else if aii >= alpha * rowmax {
                 // 1x1 pivot at imax: swap k <-> imax
                 a.swap_rows_cols_symmetric(k, imax);
                 rhs.swap(k, imax);
@@ -149,11 +152,18 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
         }
     }
 
+    // Inside a 2x2 pivot block (rows k, k+1) L is the identity: a(k+1, k) is the off-diagonal
+    // element of D, not of L, and must be skipped in both triangular solves.
+    let in_same_block = |row: usize, col: usize| col + 1 == row && block_size[col] == 2;
+
     // Forward solve: L y = rhs (L unit lower, stored in strict lower part of a).
     let mut y = rhs;
     for i in 0..n {
         let mut sum = y[i];
         for j in 0..i {
+            if in_same_block(i, j) {
+                continue;
+            }
             sum -= a.get(i, j) * y[j];
         }
         y[i] = sum;
@@ -187,6 +197,9 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
         let i = n - 1 - i_rev;
         let mut sum = x[i];
         for j in (i + 1)..n {
+            if in_same_block(j, i) {
+                continue;
+            }
             sum -= a.get(j, i) * x[j];
         }
         x[i] = sum;
@@ -205,4 +218,63 @@ pub(crate) fn solve_symmetric_indefinite_ldlt_bunch_kaufman(
             two_by_two_pivot_count: two_by_two,
         },
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dense(rows: &[&[f64]]) -> DenseMatrix {
+        let n = rows.len();
+        let mut a = DenseMatrix::zeros(n);
+        for i in 0..n {
+            for j in 0..n {
+                a.set(i, j, rows[i][j]);
+            }
+        }
+        a
+    }
+
+    fn assert_solves(a: &DenseMatrix, x_ref: &[f64]) {
+        let n = x_ref.len();
+        let b: Vec<f64> = (0..n).map(|i| (0..n).map(|j| a.get(i, j) * x_ref[j]).sum()).collect();
+        let (x, _) = solve_symmetric_indefinite_ldlt_bunch_kaufman(a, &b).unwrap();
+        for i in 0..n {
+            assert!((x[i] - x_ref[i]).abs() < 1e-10, "x[{i}] = {}, expected {}", x[i], x_ref[i]);
+        }
+    }
+
+    #[test]
+    fn two_by_two_pivot_block_is_solved_correctly() {
+        // Zero diagonal forces a 2x2 pivot; inside the block L is the identity.
+        assert_solves(&dense(&[&[0.0, 1.0], &[1.0, 0.0]]), &[2.0, 1.0]);
+    }
+
+    #[test]
+    fn bunch_kaufman_takes_1x1_pivot_when_akk_times_rowmax_is_large() {
+        // |a00| * rowmax = 0.5 * 4 >= alpha * colmax^2 = 0.64 * 1: 1x1 pivot without interchange
+        // (Bunch & Kaufman, Math. Comp. 31, 163 (1977)). The 2x2 block of rows/cols 0,1 is singular.
+        let a = dense(&[&[0.5, 1.0, 0.0], &[1.0, 2.0, 4.0], &[0.0, 4.0, 1.0]]);
+        assert_solves(&a, &[1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn random_symmetric_indefinite_system() {
+        let n = 8;
+        let mut seed: u64 = 12345;
+        let mut next = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            ((seed >> 11) as f64 / (1u64 << 53) as f64) - 0.5
+        };
+        let mut a = DenseMatrix::zeros(n);
+        for i in 0..n {
+            for j in 0..=i {
+                let v = next();
+                a.set(i, j, v);
+                a.set(j, i, v);
+            }
+        }
+        let x_ref: Vec<f64> = (0..n).map(|i| 1.0 + i as f64).collect();
+        assert_solves(&a, &x_ref);
+    }
 }

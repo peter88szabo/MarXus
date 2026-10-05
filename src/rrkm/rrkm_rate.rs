@@ -5,8 +5,8 @@ use crate::rrkm::sum_and_density::get_rovib_WE_or_rhoE;
 //compute the RRKM formula: k(E) = sigma * W_ts(E)/rho(E) / hplanc
 // where
 // W_ts: the sum of states at the TS
-// rho:  density of states for reactants (the complex to dissociate)
-// sigma is the symmetry number
+// rho:  density of states for reactants (the complex to dissociate), states per cm-1
+// sigma = sigma_cpx / sigma_ts is the reaction path degeneracy
 
 pub fn get_kE(
     nebin: usize,
@@ -54,7 +54,11 @@ pub fn get_kE(
         &Brot_cpx,
     );
 
-    let sigma = sigma_ts / sigma_cpx;
+    // Reaction path degeneracy alpha = sigma_cpx / sigma_ts (Forst, Theory of Unimolecular
+    // Reactions, 1973, Ch. 4, Sec. 5). This ratio is only a special case: when the transition
+    // state has several paths back to the reactant, or only one of the two has a symmetry element
+    // other than a rotation (Schlag), pass sigma_cpx = alpha and sigma_ts = 1 instead.
+    let sigma = sigma_cpx / sigma_ts;
 
     //Minimum energy (including ZPE) of the reaction as integer energy bin
     let nbin_dH0 = (dH0 / dE + 0.5) as usize; //rate is compuated from the top of the barrier
@@ -67,4 +71,23 @@ pub fn get_kE(
     }
 
     return kE;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rate_scales_with_reaction_path_degeneracy_sigma_over_sigma_ts() {
+        // Reaction path degeneracy alpha = sigma / sigma_ts (reactant over transition state),
+        // Forst, Theory of Unimolecular Reactions (1973), Ch. 4, Sec. 5.
+        let (nebin, d_e, dh0) = (1000, 10.0, 2000.0);
+        let omega_ts = [500.0, 1200.0];
+        let omega_cpx = [300.0, 900.0, 1500.0];
+        let brot = [1.0, 0.5, 0.25];
+        let k_11 = get_kE(nebin, d_e, 2, 3, &omega_ts, &omega_cpx, 3, 3, &brot, &brot, 1.0, 1.0, dh0);
+        let k_12 = get_kE(nebin, d_e, 2, 3, &omega_ts, &omega_cpx, 3, 3, &brot, &brot, 1.0, 2.0, dh0);
+        let ratio = k_12[nebin] / k_11[nebin];
+        assert!((ratio - 2.0).abs() < 1e-12, "k(sigma_cpx=2)/k(sigma_cpx=1) = {ratio}");
+    }
 }

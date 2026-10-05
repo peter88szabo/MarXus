@@ -341,15 +341,15 @@ impl OlzmannStepladderMasterEquationSolver {
             // We assemble the raw operator J in "target,row; source,col" form:
             //   J_{i+1,i} = -ω p_up(i)
             //
-            // Similarity transform A = W J W^{-1} gives:
-            //   A_{i+1,i} = J_{i+1,i} * (W_{i+1} / W_i)
+            // Similarity transform A = W^{-1} J W (W = sqrt(f)) gives:
+            //   A_{i+1,i} = J_{i+1,i} * (W_i / W_{i+1})
             //
             // With detailed balance, this is symmetric, so we only need one direction.
             if source + 1 < n && p_up > 0.0 {
                 let upper = source + 1;
                 let j_off = -omega * p_up;
                 offdiag_a[source] =
-                    j_off * (similarity_weights[upper] / similarity_weights[source]);
+                    j_off * (similarity_weights[source] / similarity_weights[upper]);
             }
         }
 
@@ -681,3 +681,59 @@ impl OlzmannStepladderMasterEquationSolver {
 }
 
 // (general numeric solvers moved to `numeric/`)
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::KB_CM;
+
+    struct SmoothMicro;
+    impl MicrocanonicalGridData for SmoothMicro {
+        fn density_of_states(&self, i: usize) -> f64 {
+            (1.0 + 0.05 * i as f64).powi(10)
+        }
+        fn microcanonical_rate_for_channel(&self, _channel: usize, i: usize) -> f64 {
+            if i < 40 { 0.0 } else { 1.0e7 * (i - 39) as f64 }
+        }
+        fn number_of_unimolecular_channels(&self) -> usize {
+            1
+        }
+    }
+
+    #[test]
+    fn stepladder_operator_is_the_symmetrized_master_equation() {
+        // Raw stepladder operator J[target, source]: J_{i+1,i} = -w p_up(i),
+        // J_{i,i+1} = -w p_down(i+1) = -w p_d, with p_up(i) = p_d f_{i+1}/f_i (detailed balance).
+        // With W = sqrt(f) the symmetrized A = W^{-1} J W has
+        //   A_{i+1,i} = A_{i,i+1} = -w p_d W_{i+1}/W_i.
+        let solver = OlzmannStepladderMasterEquationSolver {
+            energy_grid: EnergyGrid {
+                number_of_bins: 80,
+                bin_width_wavenumber: 20.0,
+                energy_origin_wavenumber: 0.0,
+            },
+            settings: OlzmannMasterEquationSettings {
+                temperature_kelvin: 500.0,
+                boltzmann_constant_wavenumber_per_kelvin: KB_CM,
+                collision_frequency_per_second: 1.0e8,
+                pseudo_first_order_capture_loss_per_second: 0.0,
+                stepladder_base_downward_probability: 0.3, // p_up + p_down < 1: no rescaling
+                collision_kernel_model: CollisionKernelModel::Stepladder,
+            },
+        };
+        let micro = SmoothMicro;
+        let w = solver.build_similarity_weights(&micro).unwrap();
+        let (_diag, offdiag) = solver.build_transformed_symmetric_tridiagonal_operator(&micro, &w).unwrap();
+        for i in 0..offdiag.len() {
+            let expected = -1.0e8 * 0.3 * w[i + 1] / w[i];
+            assert!(
+                ((offdiag[i] - expected) / expected).abs() < 1e-12,
+                "A[{},{}] = {}, expected {}",
+                i + 1,
+                i,
+                offdiag[i],
+                expected
+            );
+        }
+    }
+}

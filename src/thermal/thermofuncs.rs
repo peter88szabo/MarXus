@@ -1,6 +1,6 @@
 // thermofuncs.rs
 use crate::constants::{
-    AMU_TO_ELECMASS, AU_TO_KCAL, AU_TO_KJ, BOLTZMANN_SI, CLIGHT_SI, CM1_TO_HARTREE, CM1_TO_K,
+    AMU_TO_ELECTRON_MASS, AU_TO_KCAL, AU_TO_KJ, BOLTZMANN_SI, CLIGHT_SI, CM1_TO_HARTREE, CM1_TO_K,
     CM1_TO_KCAL, HPLANCK_AU, PASCAL_TO_AU, PI, PI_SQ, PLANCK_SI, RGAS_AU, RGAS_SI, TWO_PI,
 };
 use crate::molecule::MoleculeStruct;
@@ -93,7 +93,7 @@ impl MoleculeStruct {
     fn all_translation(&mut self, pressure: f64, temp: f64) {
         let RT = RGAS_AU * temp;
 
-        let mass = self.mass * AMU_TO_ELECMASS;
+        let mass = self.mass * AMU_TO_ELECTRON_MASS;
 
         // lambda_factor = sqrt(2π m RT / h^2), then cube it
         let mut lam = f64::sqrt(TWO_PI * mass * RT / HPLANCK_AU_SQ);
@@ -191,8 +191,8 @@ impl MoleculeStruct {
 
     // -----------------------------------------------------------------------------------------
     // Vibrations: start from an effective PF per mode.
-    // - For omega > cutoff: pure RRHO -> PF_mode = 1/(1-exp(-x))
-    // - For omega <= cutoff: Grimme qRRHO mixing affects entropy -> define F = U - TS, PF=exp(-F/RT)
+    // - Every mode: Grimme qRRHO mixing of the entropy (smoothly -> RRHO well above the cutoff),
+    //   then F = U - TS and PF = exp(-F/RT)
     // Uses your "no ZPE in thermal vib energy" convention.
     fn all_vibrations(&mut self, temp: f64, freq_cutoff: f64) {
         let RT = RGAS_AU * temp;
@@ -221,12 +221,10 @@ impl MoleculeStruct {
             // RRHO heat capacity (harmonic), in Hartree/mol/K
             let Cv_mode = RGAS_AU * x * x * ex / ((ex - 1.0) * (ex - 1.0));
 
-            // Entropy: RRHO or Grimme-mixed
-            let S_mode = if omega_cm1 > freq_cutoff {
-                Self::entropy_vib_rrho(omega_cm1, temp)
-            } else {
-                Self::grimme_entropy_qrrho(omega_cm1, freq_cutoff, temp)
-            };
+            // Entropy: Grimme qRRHO mixing (Chem. Eur. J. 18, 9955 (2012)) for EVERY mode;
+            // the damping w -> 1 makes high modes pure RRHO smoothly, and freq_cutoff = 0 gives RRHO.
+            // (A hard switch at freq_cutoff belongs to Truhlar's method and makes S jump there.)
+            let S_mode = Self::grimme_entropy_qrrho(omega_cm1, freq_cutoff, temp);
 
             // Define free energy from U and S (this is the qRRHO practice)
             let F_mode = U_mode - temp * S_mode;
@@ -468,5 +466,57 @@ mod tests {
         assert!(water.thermo.pftot.is_finite() && water.thermo.pftot > 0.0);
         assert!(water.thermo.stot.is_finite());
         assert!(water.thermo.gtot.is_finite());
+    }
+
+    #[test]
+    fn qrrho_entropy_mixes_every_mode() {
+        // Grimme, Chem. Eur. J. 18, 9955 (2012): S = w S_RRHO + (1-w) S_free-rotor for every
+        // mode, w = 1/(1+(nu0/nu)^4), mu' = mu Bav/(mu + Bav). Reference values evaluated
+        // independently from these formulas at T = 298.15 K, nu0 = 100 cm-1, Bav = 1e-44 kg m^2.
+        // Just above the cutoff the pure RRHO value would be 14.452781 (100.001) and
+        // 11.180604 (150) J/mol/K.
+        for (nu, s_ref) in [(100.001, 13.198430), (150.0, 11.028562)] {
+            let mut mol = MoleculeBuilder::new("mode".to_string(), MolType::mol)
+                .freq(vec![nu])
+                .brot(vec![1.0, 0.5, 0.25])
+                .mass(18.0)
+                .ene(0.0)
+                .build();
+            mol.eval_all_therm_func(298.15, 101_325.0, 100.0);
+            let s_vib = mol.thermo.svib * 1000.0 * AU_TO_KJ; // J/mol/K
+            assert!(
+                (s_vib - s_ref).abs() < 2.0e-3,
+                "nu = {nu}: S_vib = {s_vib:.6} J/mol/K, reference = {s_ref:.6} J/mol/K"
+            );
+        }
+    }
+
+    #[test]
+    fn translational_entropy_matches_sackur_tetrode() {
+        // Independent reference: Sackur-Tetrode equation in SI units (CODATA 2018 exact h, kB;
+        // u = 1.66053906660e-27 kg):  S = R [ ln( (2 pi m kB T / h^2)^{3/2} kB T / p ) + 5/2 ]
+        let temp = 298.15;
+        let pressure = 101_325.0;
+        let mass_amu = 18.02;
+
+        let mut water = MoleculeBuilder::new("Water".to_string(), MolType::mol)
+            .freq(vec![1626.92, 3761.93, 3876.98])
+            .brot(vec![26.513921, 14.346808, 9.309431])
+            .mass(mass_amu)
+            .ene(0.0)
+            .build();
+        water.eval_all_therm_func(temp, pressure, 100.0);
+        let s_trans_code = water.thermo.strans * 1000.0 * AU_TO_KJ; // J/mol/K
+
+        let amu_kg = 1.660_539_066_60e-27;
+        let m = mass_amu * amu_kg;
+        let lambda_inv3 = (TWO_PI * m * BOLTZMANN_SI * temp / (PLANCK_SI * PLANCK_SI)).powf(1.5);
+        let volume = BOLTZMANN_SI * temp / pressure;
+        let s_trans_ref = RGAS_SI * ((lambda_inv3 * volume).ln() + 2.5);
+
+        assert!(
+            (s_trans_code - s_trans_ref).abs() < 0.01,
+            "S_trans = {s_trans_code:.4} J/mol/K, Sackur-Tetrode = {s_trans_ref:.4} J/mol/K"
+        );
     }
 }

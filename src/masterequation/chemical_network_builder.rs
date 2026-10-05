@@ -16,8 +16,6 @@ pub fn build_master_equation_settings(
         collision_kernel_implementation: settings.collision_kernel_implementation,
         outgoing_rate_threshold: settings.outgoing_rate_threshold,
         internal_rate_threshold: settings.internal_rate_threshold,
-        bathgas_number_density_prefactor: settings.bathgas_number_density_prefactor,
-        mean_speed_prefactor: settings.mean_speed_prefactor,
         enforce_interwell_detailed_balance: settings.enforce_interwell_detailed_balance,
         linear_solver: settings.linear_solver,
         krylov_tolerance: settings.krylov_tolerance,

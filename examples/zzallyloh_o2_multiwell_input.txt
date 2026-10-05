@@ -23,8 +23,6 @@ outgoing_rate_threshold = 0.0
 internal_rate_threshold = 0.0
 
 # Legacy constants retained from the existing example deck.
-bathgas_number_density_prefactor = 3.262e16
-mean_speed_prefactor = 1.0e4
 
 # CollisionFrequency (MESS: LennardJones Epsilons[1/cm]=417.0, Sigmas[angstrom]=6.5, Masses[amu]=149 and 28).
 # Here we store a *single* LJ parameter set; epsilon is converted to Kelvin (1 cm^-1 = 1.438776877 K)
