@@ -5,7 +5,9 @@ Reads
   input/c2h3_tight.inp                       the deck (stationary points for the PES diagram)
   reference_mess_output/*.out                the stored MESS results
   marxus_output/<deck>_<method>.csv           the MarXus machine-readable tables of the four methods (run_marxus.sh,
-                                               --csv; *.out: the reports; *_tables.csv: every table of a report)
+                                               --csv; *.out: the reports; *_tables.csv: every table of a report);
+                                               <deck>_olzmann_{lapack,full}.csv: SteadyStateOlzmann with the other
+                                               eigen-solvers
   (writes also plots/yields.png: stabilization and prompt redissociation yields, MESS vs MarXus)
 and writes
   plots/pes.png                              stationary points, Eckart barrier and absorbing barriers
@@ -15,7 +17,17 @@ and writes
   plots/short_decks_1000K.png                1000 K, 1 atm, with and without tunneling
   plots/barrier_distance_sensitivity.png     association deviation for absorbing barriers 10, 5, 3 kT
                                              below the threshold (marxus_output/c2h3_tight_absorbing_barrier_*kT.csv)
-  comparison_table.csv                       all compared numbers
+  plots/four_methods_association.png         association: absorbing barrier, Olzmann (detailed balance), CSE vs MESS
+  plots/time_evolution_1atm.png              direct time integration of a pulse at 300, 1000, 2000 K
+  plots/olzmann_falloff_W1_P1.png            SteadyStateOlzmann k_uni(T, p) of the dissociation versus pressure
+  plots/olzmann_deviation.png                k_uni (and lambda_1) and the detailed-balance association vs MESS
+  plots/olzmann_vs_absorbing_barrier.png     association: Olzmann versus absorbing barriers 10, 5, 3 kT
+  plots/olzmann_sum_rule.png                 |lambda_1 - k_uni|/k_uni (inverse iteration, LAPACK) and lambda_2/k_uni
+  plots/olzmann_solvers_1000K.png            1000 K, 1 atm, with and without tunneling, the three eigen-solvers
+  comparison_table.csv                       all compared numbers (absorbing barrier, final steady state)
+  barrier_distance_sensitivity.csv           association for barrier distances 10, 5, 3 kT
+  olzmann_comparison_table.csv               SteadyStateOlzmann: k_uni, lambda_1, sum rule, lambda_2/k_uni, association
+  time_integration_decay_vs_k_uni.csv        late-time decay of the time integration against k_uni
 
 MarXus quantities:
   k_inf(P1->W1)      high-pressure association rate coefficient (column k_inf)
@@ -468,5 +480,260 @@ with open(os.path.join(HERE, "time_integration_decay_vs_k_uni.csv"), "w") as f:
         f.write(f"{t:g},{p_torr:g},{t1:.6e},{t2:.6e},{n1:.6e},{n2:.6e},{rate:.6e},{k_uni[(t, p_torr)]:.6e},"
                 f"{rate / k_uni[(t, p_torr)] - 1:.3e}\n")
 
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann: thermal rate coefficients from the lowest eigenpair of J (GO10 eq. 12) with the three
+# eigen-solvers (marxus_output/<deck>_olzmann.csv: inverse iteration, the default; <deck>_olzmann_lapack.csv:
+# LAPACK DSYEVD; <deck>_olzmann_full.csv: Householder/QL, the two 1000 K decks). k_uni(W1->P1, T, p) is the
+# eigenvector average, lambda_1 is printed beside it; k(P1->W1) = k_uni k_inf,a/k_inf,d (detailed balance). Where
+# the inverse iteration has no result the LAPACK result is used. Writes olzmann_comparison_table.csv and
+# plots/olzmann_{falloff_W1_P1,deviation,vs_absorbing_barrier,sum_rule,solvers_1000K}.png.
+# ----------------------------------------------------------------------------------------------
+TOLERANCE = 1.5e-2  # default sum-rule tolerance of the example (warning threshold)
+SOLVERS = (("inverse", "inverse iteration (banded Cholesky)", "tab:blue", "o"),
+           ("lapack", "LAPACK DSYEVD (full)", "tab:red", "s"),
+           ("full", "Householder/QL (full)", "tab:green", "^"))
+SOLVER_STEM = {"inverse": "olzmann", "lapack": "olzmann_lapack", "full": "olzmann_full"}
+
+
+def read_olzmann_eigen(path):
+    """MarXus eigenvalue-analysis output.
+
+    Returns (thermal, association, warned, unavailable):
+      thermal[(T, p_atm)]     = row of the thermal table (k_uni, lambda_1, sum_rule_deviation, ...)
+      association[(T, p_atm)] = row of the detailed-balance table
+      warned                  = set of (T, p_atm) with a sum-rule warning
+      unavailable[(T, p_atm)] = message of a condition without result (failed factorization)
+    """
+    thermal, association, warned, unavailable = {}, {}, set(), {}
+    target, header = None, None
+    for line in open(path):
+        line = line.rstrip("\n")
+        # Messages of the thermal block only: the final steady-state table before it has its own
+        # "not available" lines (J N = F singular for the deep well without a sink at 300 and 500 K).
+        m = re.match(r"# (not available|warning): T = (\S+) K, p = (\S+) Torr: (.*)", line)
+        if m and target is thermal:
+            key = (float(m.group(2)), round(float(m.group(3)) / TORR_PER_ATM, 6))
+            if m.group(1) == "warning":
+                warned.add(key)
+            else:
+                unavailable[key] = m.group(4)
+            continue
+        if line.startswith("# thermal rate coefficients of the final steady state"):
+            target, header = thermal, None
+            continue
+        if line.startswith("# bimolecular rate coefficients"):
+            target, header = association, None
+            continue
+        if line.startswith("#") or not line.strip() or target is None:
+            continue
+        if header is None:
+            header = line.split(",")
+            continue
+        row = dict(zip(header, map(float, line.split(","))))
+        target[(row["T[K]"], round(row["P[Torr]"] / TORR_PER_ATM, 6))] = row
+    return thermal, association, warned, unavailable
+
+
+def read_csv(path):
+    with open(path) as f:
+        return [{k: float(v) for k, v in r.items()} for r in csv.DictReader(f)]
+
+
+
+eig_runs = {s: read_olzmann_eigen(os.path.join(HERE, "marxus_output", f"c2h3_tight_{SOLVER_STEM[s]}.csv"))
+            for s in ("inverse", "lapack")}
+pcolors = plt.cm.plasma(np.linspace(0.0, 0.85, len(pressures)))
+eig_previous = {(r["T_K"], r["p_atm"]): r for r in read_csv(os.path.join(HERE, "comparison_table.csv"))}
+eig_sensitivity = {(r["T_K"], r["p_atm"]): r for r in read_csv(os.path.join(HERE, "barrier_distance_sensitivity.csv"))}
+
+
+def eig_best(key):
+    """(solver, thermal row, association row): inverse iteration, or LAPACK where the former has no result."""
+    for solver in ("inverse", "lapack"):
+        thermal, association, _, _ = eig_runs[solver]
+        if key in thermal:
+            return solver, thermal[key], association.get(key)
+    return None, None, None
+
+
+eig_rows = []
+for t in temperatures:
+    for p in pressures:
+        key = (t, p)
+        mess_d, mess_a = mess_p[key]
+        solver, row, arow = eig_best(key)
+        ku = row["k_uni[1/s]"] if row else math.nan
+        lam = row["lambda_1[1/s]"] if row else math.nan
+        ka = arow["k(P1->W1)"] if arow else math.nan
+        prev = eig_previous.get(key, {}).get("marxus_k_P1_W1", math.nan)
+        eig_rows.append({
+            "T_K": t, "p_atm": p, "solver": solver or "none",
+            "mess_k_W1_P1": mess_d, "marxus_k_uni": ku, "dev_k_uni_percent": 100 * (ku / mess_d - 1),
+            "marxus_lambda_1": lam, "dev_lambda_1_percent": 100 * (lam / mess_d - 1),
+            "sum_rule_deviation": row["sum_rule_deviation"] if row else math.nan,
+            "sum_rule_warning": "yes" if key in eig_runs[solver or "inverse"][2] else "no",
+            "lambda_2_over_k_uni": row["lambda_2/k_uni"] if row else math.nan,
+            "mess_k_P1_W1": mess_a, "marxus_k_P1_W1_eigen": ka, "dev_P1_W1_eigen_percent": 100 * (ka / mess_a - 1),
+            "marxus_k_P1_W1_absorbing_10kT": prev, "dev_P1_W1_absorbing_10kT_percent": 100 * (prev / mess_a - 1),
+        })
+with open(os.path.join(HERE, "olzmann_comparison_table.csv"), "w", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=list(eig_rows[0].keys()))
+    writer.writeheader()
+    for r in eig_rows:
+        writer.writerow({k: (v if isinstance(v, str) else "%.6g" % v) for k, v in r.items()})
+
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann eigen-solvers, Fall-off curves of the dissociation, k_uni
+# ----------------------------------------------------------------------------------------------
+fig, ax = plt.subplots(figsize=(7.8, 5.8))
+for t, c in zip(temperatures, colors):
+    sel = [r for r in eig_rows if r["T_K"] == t]
+    ax.plot(pressures, [mess_p[(t, q)][0] for q in pressures], "-", marker="x", ms=10, mew=2, color=c, label=f"{t:.0f} K")
+    ax.plot([r["p_atm"] for r in sel if r["solver"] == "inverse"],
+            [r["marxus_k_uni"] for r in sel if r["solver"] == "inverse"], "o", color=c, ms=5)
+    ax.plot([r["p_atm"] for r in sel if r["solver"] == "lapack"],
+            [r["marxus_k_uni"] for r in sel if r["solver"] == "lapack"], "D", color=c, ms=5)
+    ax.plot([25.0], [mess_high[t][0]], "none", marker="x", ms=10, mew=2, color=c)
+    k_inf = [eig_best((t, q))[1]["k_inf(W1:B1)[1/s]"] for q in pressures if eig_best((t, q))[1]]
+    if k_inf:
+        ax.plot([25.0], [k_inf[0]], "o", color=c, ms=5)
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_xticks([0.1, 0.3, 1, 3, 10, 25])
+ax.set_xticklabels(["0.1", "0.3", "1", "3", "10", "$\\infty$"])
+ax.set_xlabel("pressure (atm)")
+ax.set_ylabel("k(C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H) (s$^{-1}$)")
+ax.set_title("Dissociation fall-off: MESS (x, lines) vs MarXus k$_{uni}$\n"
+             "(circles: inverse iteration; diamonds: LAPACK where the Cholesky factor does not exist)", fontsize=10)
+ax.legend(fontsize=8, ncol=2, title="T")
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "olzmann_falloff_W1_P1.png"), dpi=200)
+plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann eigen-solvers, Deviations from MESS
+# ----------------------------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.9))
+for p, c in zip(pressures, pcolors):
+    sel = [r for r in eig_rows if r["p_atm"] == p and r["solver"] != "none"]
+    axes[0].plot([r["T_K"] for r in sel], [r["dev_k_uni_percent"] for r in sel], "-o", color=c, label=f"{p:g} atm")
+    lam = [(r["T_K"], r["dev_lambda_1_percent"]) for r in sel if r["sum_rule_warning"] == "yes"]
+    if lam:
+        axes[0].plot(*zip(*lam), "x", color=c, ms=8)
+    lap = [(r["T_K"], r["dev_k_uni_percent"]) for r in sel if r["solver"] == "lapack"]
+    if lap:
+        axes[0].plot(*zip(*lap), "D", color=c, ms=7, mfc="none")
+    e = [(r["T_K"], r["dev_P1_W1_eigen_percent"]) for r in sel if not math.isnan(r["dev_P1_W1_eigen_percent"])]
+    if e:
+        axes[1].plot(*zip(*e), "-o", color=c, label=f"{p:g} atm")
+axes[0].plot([], [], "D", color="k", mfc="none", label="LAPACK (no Cholesky factor)")
+axes[0].set_ylim(-10, 10)
+axes[0].text(310, -9.3, "$\\lambda_1$ at 300 K (sum-rule warning) is off scale: 10$^{9}$-10$^{10}$ %", fontsize=7)
+axes[0].set_title("dissociation C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H, k$_{uni}$")
+axes[1].set_title("association by detailed balance, k$_{uni}$ k$_{\\infty,a}$/k$_{\\infty,d}$")
+for ax in axes:
+    ax.axhspan(-5, 5, color="green", alpha=0.08)
+    ax.axhline(0, color="k", lw=0.8)
+    ax.set_xlabel("T (K)")
+    ax.set_ylabel("MarXus / MESS - 1 (%)")
+    ax.set_xlim(250, 2050)
+    ax.legend(fontsize=7)
+fig.suptitle("Eigenvalue analysis (no absorbing barrier) vs MESS (green band: $\\pm$5%)")
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "olzmann_deviation.png"), dpi=200)
+plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann eigen-solvers, Eigenvalue route versus the absorbing barrier (association)
+# ----------------------------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.9), sharey=True)
+for ax, p in zip(axes, (0.1, 10.0)):
+    for label, column, style in (("absorbing barrier 10 kT", "dev_10kT_percent", "tab:gray"),
+                                 ("absorbing barrier 5 kT", "dev_5kT_percent", "tab:orange"),
+                                 ("absorbing barrier 3 kT", "dev_3kT_percent", "tab:green")):
+        d = [(t, eig_sensitivity[(t, p)][column]) for t in temperatures
+             if (t, p) in eig_sensitivity and not math.isnan(eig_sensitivity[(t, p)][column])]
+        if d:
+            ax.plot(*zip(*d), "--o", color=style, mfc="none", label=label)
+    e = [(r["T_K"], r["dev_P1_W1_eigen_percent"]) for r in eig_rows
+         if r["p_atm"] == p and not math.isnan(r["dev_P1_W1_eigen_percent"])]
+    ax.plot(*zip(*e), "-s", color="tab:blue", lw=2, label="eigenvalue analysis (k$_{uni}$, no barrier)")
+    ax.axhspan(-5, 5, color="green", alpha=0.08)
+    ax.axhline(0, color="k", lw=0.8)
+    ax.set_title(f"k(H + C$_2$H$_2$ $\\rightarrow$ C$_2$H$_3$), {p:g} atm")
+    ax.set_xlabel("T (K)")
+    ax.legend(fontsize=8)
+axes[0].set_ylabel("MarXus / MESS - 1 (%)")
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "olzmann_vs_absorbing_barrier.png"), dpi=200)
+plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann eigen-solvers, Sum rule and separation of time scales
+# ----------------------------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.9))
+ax = axes[0]
+for solver, label, color, marker in SOLVERS[:2]:
+    thermal, _, warned, unavailable = eig_runs[solver]
+    shift = -12 if solver == "inverse" else 12
+    ok = [(t + shift, max(thermal[(t, p)]["sum_rule_deviation"], 1e-16)) for t in temperatures for p in pressures
+          if (t, p) in thermal and (t, p) not in warned]
+    bad = [(t + shift, thermal[(t, p)]["sum_rule_deviation"]) for t in temperatures for p in pressures
+           if (t, p) in thermal and (t, p) in warned]
+    fail = [t + shift for t in temperatures for p in pressures if (t, p) in unavailable]
+    ax.semilogy(*zip(*ok), marker, color=color, mfc="none", label=label)
+    if bad:
+        ax.semilogy(*zip(*bad), marker, color=color, label=f"{label}: warning")
+    if fail:
+        ax.semilogy(fail, [1e14] * len(fail), "x", color=color, ms=8, label=f"{label}: no Cholesky factor")
+ax.axhline(TOLERANCE, color="k", ls="--", lw=1)
+ax.text(1300, TOLERANCE * 3, "warning threshold 1.5e-2", fontsize=8)
+ax.set_xlabel("T (K)  (all pressures)")
+ax.set_ylabel("|$\\lambda_1$ - k$_{uni}$| / k$_{uni}$")
+ax.set_title("sum rule (GO10 eq. 12)")
+ax.legend(fontsize=7)
+ax = axes[1]
+for p, c in zip(pressures, pcolors):
+    d = [(r["T_K"], r["lambda_2_over_k_uni"]) for r in eig_rows
+         if r["p_atm"] == p and not math.isnan(r["lambda_2_over_k_uni"])]
+    if d:
+        ax.semilogy(*zip(*d), "-o", color=c, label=f"{p:g} atm")
+ax.set_xlabel("T (K)")
+ax.set_ylabel("$\\lambda_2$ / k$_{uni}$")
+ax.set_title("separation of the thermal decay from relaxation")
+ax.legend(fontsize=8)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "olzmann_sum_rule.png"), dpi=200)
+plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann eigen-solvers, 1000 K, 1 atm, with and without tunneling, all solvers
+# ----------------------------------------------------------------------------------------------
+fig, ax = plt.subplots(figsize=(8.5, 4.6))
+labels, values, bar_colors = [], [], []
+for deck, tag in (("c2h3_tight_short_notunneling", "no tunneling"), ("c2h3_tight_short", "Eckart")):
+    mh, mp = read_mess(os.path.join(HERE, "reference_mess_output", deck + ".out"))
+    for solver, label, color, _ in SOLVERS:
+        thermal, association, _, _ = read_olzmann_eigen(os.path.join(HERE, "marxus_output", f"{deck}_{SOLVER_STEM[solver]}.csv"))
+        key = (1000.0, 1.0)
+        for name, ours, mess_value in (("k$_{uni}$", thermal[key]["k_uni[1/s]"], mp[key][0]),
+                                       ("k assoc.", association[key]["k(P1->W1)"], mp[key][1])):
+            labels.append(f"{name}\n{tag}\n{solver}")
+            values.append(100 * (ours / mess_value - 1))
+            bar_colors.append(color)
+bars = ax.bar(range(len(values)), values, color=bar_colors)
+for b, v in zip(bars, values):
+    ax.text(b.get_x() + b.get_width() / 2, v + (0.03 if v >= 0 else -0.03), f"{v:+.2f}%", ha="center",
+            va="bottom" if v >= 0 else "top", fontsize=7)
+ax.axhline(0, color="k", lw=0.8)
+ax.set_xticks(range(len(values)))
+ax.set_xticklabels(labels, fontsize=6)
+ax.set_ylabel("MarXus / MESS - 1 (%)")
+ax.set_title("1000 K, 1 atm: eigenvalue analysis with the three solvers (blue inverse, red LAPACK, green QL)")
+ax.margins(y=0.2)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "olzmann_solvers_1000K.png"), dpi=200)
+plt.close(fig)
+
 print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))),
-      "and comparison_table.csv, time_integration_decay_vs_k_uni.csv")
+      "and comparison_table.csv, olzmann_comparison_table.csv, time_integration_decay_vs_k_uni.csv")

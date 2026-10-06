@@ -92,11 +92,9 @@ pub fn evaluate_observables(
         return Err("Observables: source and network have different numbers of wells.".into());
     }
 
-    // Populations on the complete grid of every well (zero in absorbed grains).
-    let mut populations: Vec<Vec<f64>> = network.wells.iter().map(|w| vec![0.0; w.grain_count()]).collect();
-    for (s, &(w, i)) in op.states.iter().enumerate() {
-        populations[w][i] = solution.population[s];
-    }
+    // Populations on the complete grid of every well (zero in absorbed grains; a low-energy reservoir is
+    // spread over its grains with their Boltzmann weights).
+    let populations = op.grain_populations(&solution.population);
     let well_population: Vec<f64> = populations.iter().map(|p| p.iter().sum()).collect();
     let total_population: f64 = well_population.iter().sum();
 
@@ -195,7 +193,10 @@ mod tests {
 
     /// Single well with two product channels opening at grains 200 and 260.
     fn single_well_two_channels() -> ChemicalActivationNetwork {
+        // rho = (1 + 0.02 i)^8: at 250 K the lowest grains form a low-energy reservoir (the exponential-down
+        // normalization fails there), below the absorbing barrier 10 k_BT under the lowest threshold (grain 26).
         let mut well = test_well("A", 400, 0, 200);
+        well.density_of_states = (0..400).map(|i| (1.0 + 0.02 * i as f64).powi(8)).collect();
         well.channels.push(Channel {
             name: "A-second".into(),
             destination: ChannelDestination::Products { name: "Q".into() },
@@ -291,6 +292,7 @@ mod tests {
         let f_total: f64 = f.iter().sum();
         let k_inf: f64 = f.iter().zip(&well.channels[0].rate_constant_s_inv).map(|(f, k)| f * k).sum::<f64>() / f_total;
         for collision_model in [CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 }, CollisionModel::Stepladder] {
+            // Equilibrium on the complete grid, also where the lowest grains form a low-energy reservoir.
             for pressure_torr in [1.0, 760.0] {
                 let options = ChemicalActivationOptions { collision_model, steady_state: SteadyState::Final };
                 let result = run(&network, &Conditions { temperature_kelvin: t, pressure_torr }, &options, &source);

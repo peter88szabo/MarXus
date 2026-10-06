@@ -477,6 +477,8 @@ fn unit_tag(line: &str) -> Option<&str> {
 ///     TimeRange[s]                        1e-12  1e2         (time integration: first and last output time)
 ///     TimesPerDecade                      4                  (time integration: output times per decade)
 ///     IntegrationTolerance                1e-6               (time integration: relative tolerance)
+///     NCores                              8                  (cores of the run: the (T, p) conditions are
+///                                                             computed in batches of up to NCores at a time)
 ///   End
 fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
     let context = |what: &str| format!("MarXus header block: {what}");
@@ -509,10 +511,18 @@ fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
             }
             "TimesPerDecade" => settings.times_per_decade = Some(parse_usize(value)?),
             "IntegrationTolerance" => settings.integration_tolerance = Some(parse_f64(value)?),
+            "NCores" => {
+                let cores = parse_usize(value).map_err(|e| context(&format!("NCores: {e}")))?;
+                if cores == 0 {
+                    return Err(context("NCores: the number of cores must be at least 1"));
+                }
+                settings.cores = Some(cores);
+            }
             _ => {
                 return Err(context(&format!(
                     "unknown keyword '{key}' (Method, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
-                     SumRuleTolerance, Integrator, InitialState, TimeRange[s], TimesPerDecade, IntegrationTolerance)"
+                     SumRuleTolerance, Integrator, InitialState, TimeRange[s], TimesPerDecade, IntegrationTolerance, \
+                     NCores)"
                 )))
             }
         }
@@ -1192,6 +1202,18 @@ SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n
             cse.global.solution.method,
             Some(SolutionMethod::ChemicallySignificantEigenvalues)
         );
+    }
+
+    #[test]
+    fn the_marxus_header_block_gives_the_number_of_cores() {
+        let deck = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  NCores 8");
+        assert_eq!(parse_mess_input(&deck).unwrap().global.solution.cores, Some(8));
+        assert_eq!(parse_mess_input(MARXUS_HEADER_DECK).unwrap().global.solution.cores, None);
+        for bad in ["NCores 0", "NCores 2.5", "NCores -1"] {
+            let deck = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", &format!("EigenSolver Lapack\n  {bad}"));
+            let err = parse_mess_input(&deck).unwrap_err();
+            assert!(err.contains("NCores"), "{bad}: {err}");
+        }
     }
 
     #[test]

@@ -6,9 +6,12 @@
 //!
 //! - Exponential down: P(t|j) ∝ exp(-(E_j - E_t)/<dE_down>) for t <= j, activating probabilities from
 //!   detailed balance, normalization by back substitution from the top grain (Robertson, Comprehensive
-//!   Chemical Kinetics 43 (2019), eqs. 4.4, 4.7, 4.11, 4.16). Where the density of states rises steeply at
-//!   low energy, all transition probabilities involving a low grain are reduced by a factor attached to
-//!   that (lower) grain, which keeps both normalization and detailed balance exact.
+//!   Chemical Kinetics 43 (2019), eqs. 4.4, 4.7, 4.11, 4.16), from the top grain down. Where the back
+//!   substitution fails (sparse states at low energy, Robertson 2019, p. 294), the failing grain and all
+//!   grains below it form a reservoir: one thermalized state in the master equation, as the reservoir
+//!   state of MESMER (manual, Sec. 14.2.1). The kernel keeps the normalization of every grain above, and
+//!   their transitions into reservoir grains; it gives no transitions out of reservoir grains (activation
+//!   from the reservoir follows by detailed balance in the operator). Their number is `reservoir_grains`.
 //! - Stepladder: steps of size dE_SL between grains i and i+n, P(i+n|i) = A/(1+A),
 //!   P(i|i+n) = 1 - P(i+n|i), A = (rho_{i+n}/rho_i) exp(-dE_SL/kT)
 //!   (Olzmann, Gebhardt, Scherzer, Int. J. Chem. Kinet. 23, 825 (1991), eqs. 13-18).
@@ -20,21 +23,13 @@ pub struct CollisionKernel {
     pub transitions: Vec<Vec<(usize, f64)>>,
     /// Elastic (no change) probability P(j|j) for each source grain.
     pub elastic: Vec<f64>,
-    /// Grains below this index carry a low-energy reduction factor (exponential down only).
-    pub low_energy_cut_grain: usize,
-    /// Exponent of the low-energy reduction factor that made the normalization possible.
-    pub reduction_exponent: f64,
     /// Stepladder step in grains (stepladder only, 0 otherwise).
     pub step_grains: usize,
+    /// Exponential down: the grains 0 .. reservoir_grains form the reservoir, because eq. 4.16 cannot be
+    /// satisfied at the highest of them; they have no transitions here (and P(j|j) = 0). 0 when eq. 4.16
+    /// holds at every grain.
+    pub reservoir_grains: usize,
 }
-
-/// Density-of-states gradient above which the low-energy reduction applies:
-/// rho(i + n_ref)/rho(i) > threshold with n_ref = floor(1.5 <dE_down>/dE) + 1.
-pub const LOW_ENERGY_RHO_GRADIENT_THRESHOLD: f64 = 3.0;
-/// Range and step of the reduction exponent m in redfac_i = max(1, (rho(i + n_ref)/rho(i))^m).
-pub const REDUCTION_EXPONENT_MIN: f64 = 1.0;
-pub const REDUCTION_EXPONENT_MAX: f64 = 3.05;
-pub const REDUCTION_EXPONENT_STEP: f64 = 0.1;
 
 /// Exponential-down kernel on a well grid with densities `rho` (states per cm-1, grain i at E = i dE),
 /// mean energy transferred in deactivating collisions `mean_down_cm1`, thermal energy `kt_cm1` and
@@ -71,73 +66,39 @@ pub fn exponential_down_kernel(
     let gamma = (-grain_width / kt_cm1).exp();
     let band = band.max(1);
 
-    // Low-energy reduction. For sparse states near the well bottom the activating probabilities of
-    // eq. 4.11 can exceed the available normalization and the back substitution of eq. 4.16 returns
-    // non-positive coefficients; Robertson (2019, p. 294) traces this to the sparsity of the states,
-    // not to numerical error. Below the grain `low_cut`, where the density of states still rises by
-    // more than LOW_ENERGY_RHO_GRADIENT_THRESHOLD over n_ref = floor(1.5 <dE_down>/dE) + 1 grains,
-    // every transition probability involving a grain i < low_cut is divided by
-    //   redfac_i = max(1, (rho_{i+n_ref}/rho_i)^m),
-    // attached to the LOWER grain of the pair in both directions, so that detailed balance remains
-    // exact. The exponent m is increased from REDUCTION_EXPONENT_MIN in steps of
-    // REDUCTION_EXPONENT_STEP until the back substitution succeeds.
-    let n_ref = (1.5 * mean_down_cm1 / grain_width) as usize + 1;
-    let mut low_cut = 0usize;
-    if n > n_ref {
-        for i in (0..n - n_ref).rev() {
-            if rho[i + n_ref] / rho[i] > LOW_ENERGY_RHO_GRADIENT_THRESHOLD {
-                low_cut = i + 1;
-                break;
-            }
-        }
+    // For sparse states near the well bottom the activating probabilities of eq. 4.11 can exceed the
+    // available normalization, and the back substitution of eq. 4.16 has no positive solution; Robertson
+    // (2019, p. 294) traces this to the sparsity of the states, not to numerical error. The back substitution
+    // runs from the top; the grains above the first failure keep their normalization (it needs the higher
+    // grains only), and the failing grain and all grains below form the reservoir (MESMER manual,
+    // Sec. 14.2.1: "a collection of grains that are represented with one grain because we assume that these
+    // grains are always thermalized").
+    let (transitions, elastic, failed) = normalize_exponential_down(rho, beta, gamma, band);
+    let reservoir_grains = failed.map_or(0, |j| j + 1);
+    if reservoir_grains >= n {
+        return Err(format!(
+            "Exponential-down normalization (Robertson 2019, eq. 4.16) fails at the top grain {}: the activating \
+             probabilities exceed 1 at every grain of the well.",
+            n - 1
+        ));
     }
-
-    let mut exponent = REDUCTION_EXPONENT_MIN;
-    loop {
-        let redfac: Vec<f64> = (0..low_cut)
-            .map(|i| (rho[i + n_ref] / rho[i]).powf(exponent).max(1.0))
-            .collect();
-        match normalize_exponential_down(rho, beta, gamma, band, low_cut, &redfac) {
-            Ok((transitions, elastic)) => {
-                return Ok(CollisionKernel {
-                    transitions,
-                    elastic,
-                    low_energy_cut_grain: low_cut,
-                    reduction_exponent: if low_cut > 0 { exponent } else { 0.0 },
-                    step_grains: 0,
-                });
-            }
-            Err(grain) => {
-                exponent += REDUCTION_EXPONENT_STEP;
-                if exponent > REDUCTION_EXPONENT_MAX {
-                    return Err(format!(
-                        "Exponential-down normalization failed at grain {grain}: the activating probabilities \
-                         exceed 1 even with the low-energy reduction exponent {REDUCTION_EXPONENT_MAX}."
-                    ));
-                }
-            }
-        }
-    }
+    Ok(CollisionKernel { transitions, elastic, step_grains: 0, reservoir_grains })
 }
 
-/// Back substitution of the normalization conditions (Robertson 2019, eq. 4.16) with the low-energy
-/// reduction factors `redfac` (grains below `low_cut`). Returns the transitions and elastic
-/// probabilities, or the grain at which the activating probabilities alone reach 1.
+/// Back substitution of the normalization conditions (Robertson 2019, eq. 4.16) from the top grain down.
+/// Returns the transitions and elastic probabilities of every grain above the first grain at which the
+/// activating probabilities alone reach 1, and that grain (None if eq. 4.16 holds everywhere); the grains
+/// from it down have no transitions.
 fn normalize_exponential_down(
     rho: &[f64],
     beta: f64,
     gamma: f64,
     band: usize,
-    low_cut: usize,
-    redfac: &[f64],
-) -> Result<(Vec<Vec<(usize, f64)>>, Vec<f64>), usize> {
+) -> (Vec<Vec<(usize, f64)>>, Vec<f64>, Option<usize>) {
     let n = rho.len();
-    // Reduction factor of grain i (1 above the low-energy cut).
-    let reduction = |i: usize| if i < low_cut { redfac[i] } else { 1.0 };
 
     // norm_j = 1/A_j of Robertson eq. 4.7. Eq. 4.16 for grain j reads
-    //   (1/norm_j) sum_{t<=j} beta^(j-t)/r_t  +  sum_{t>j} (1/norm_t)(rho_t/rho_j)(beta gamma)^(t-j)/r_j = 1,
-    // with r the reduction factor of the lower grain of each pair (r = 1 for the elastic term t = j).
+    //   (1/norm_j) sum_{t<=j} beta^(j-t)  +  sum_{t>j} (1/norm_t)(rho_t/rho_j)(beta gamma)^(t-j) = 1.
     // It is upper triangular: the activating sum needs norm_t of HIGHER grains only, so it is solved
     // from the top grain downward (the top grain has only deactivating collisions, i.e. a reflecting
     // upper boundary; Robertson 2019, p. 278).
@@ -149,23 +110,23 @@ fn normalize_exponential_down(
         let lowest_target = j.saturating_sub(band);
         let highest_target = (j + band).min(n - 1);
 
-        // Deactivating part including the elastic term (t = j): sum_{t<=j} beta^(j-t)/r_t.
+        // Deactivating part including the elastic term (t = j): sum_{t<=j} beta^(j-t).
         let mut down_sum = 1.0;
         for t in lowest_target..j {
-            down_sum += beta.powi((j - t) as i32) / reduction(t);
+            down_sum += beta.powi((j - t) as i32);
         }
 
         // Activating probabilities from detailed balance (Robertson eq. 4.11), using the already
-        // known normalization of the higher target grain t and the reduction of the lower grain j.
+        // known normalization of the higher target grain t.
         let mut up = Vec::with_capacity(highest_target.saturating_sub(j));
         let mut up_sum = 0.0;
         for t in (j + 1)..=highest_target {
-            let p = (beta * gamma).powi((t - j) as i32) * (rho[t] / rho[j]) / norm[t] / reduction(j);
+            let p = (beta * gamma).powi((t - j) as i32) * (rho[t] / rho[j]) / norm[t];
             up_sum += p;
             up.push((t, p));
         }
         if up_sum >= 1.0 {
-            return Err(j);
+            return (transitions, elastic, Some(j));
         }
 
         // Remaining probability is shared by the deactivating collisions: norm_j = down_sum/(1 - up_sum).
@@ -173,14 +134,14 @@ fn normalize_exponential_down(
 
         let mut list = Vec::with_capacity(highest_target - lowest_target);
         for t in lowest_target..j {
-            list.push((t, beta.powi((j - t) as i32) / reduction(t) / norm[j]));
+            list.push((t, beta.powi((j - t) as i32) / norm[j]));
         }
         list.extend(up);
         transitions[j] = list;
         elastic[j] = 1.0 / norm[j];
     }
 
-    Ok((transitions, elastic))
+    (transitions, elastic, None)
 }
 
 /// Stepladder kernel with step size `step_cm1` (rounded to a whole number of grains, at least one).
@@ -245,9 +206,8 @@ pub fn stepladder_kernel(
     Ok(CollisionKernel {
         transitions,
         elastic,
-        low_energy_cut_grain: 0,
-        reduction_exponent: 0.0,
         step_grains: step,
+        reservoir_grains: 0,
     })
 }
 
@@ -286,18 +246,56 @@ mod tests {
     }
 
     #[test]
-    fn exponential_down_is_normalized_and_detailed_balanced_for_sparse_low_energy_states() {
-        // Steeply rising density of states at the well bottom, where unscaled back substitution fails.
-        let d_e = 20.0;
+    fn exponential_down_lumps_the_grains_from_the_first_failure_down_into_a_reservoir() {
+        // Steeply rising density of states at the well bottom, where the back substitution of eq. 4.16 fails
+        // (at grain 18). As the reservoir state of MESMER (manual, Sec. 14.2.1): the normalization from the
+        // top is kept for every grain above the failure, and the failing grain and all grains below it form
+        // the reservoir, which the operator treats as one thermalized state. The kernel gives no transitions
+        // out of reservoir grains; the transitions of the grains above, including those into reservoir
+        // grains, are those of eq. 4.16 on the complete grid.
+        let (d_e, alpha, band) = (20.0, 166.4, 20);
         let rho: Vec<f64> = (0..60).map(|i| (1.0 + 0.05 * i as f64).powi(10)).collect();
-        let kernel = exponential_down_kernel(&rho, d_e, 166.4, KT, 20).unwrap();
-        assert!(kernel.low_energy_cut_grain > 0, "the low-energy reduction should be active");
-        for j in 0..rho.len() {
+        let n = rho.len();
+        let kernel = exponential_down_kernel(&rho, d_e, alpha, KT, band).unwrap();
+
+        // Independent: eq. 4.16 from the top grain down to the first failure.
+        let b = (-d_e / alpha).exp();
+        let g = (-d_e / KT).exp();
+        let mut a = vec![0.0; n];
+        let mut failed = None;
+        for j in (0..n).rev() {
+            let down: f64 = (j.saturating_sub(band)..=j).map(|t| b.powi((j - t) as i32)).sum();
+            let up: f64 = (j + 1..(j + band + 1).min(n)).map(|t| a[t] * rho[t] / rho[j] * (b * g).powi((t - j) as i32)).sum();
+            if up >= 1.0 {
+                failed = Some(j);
+                break;
+            }
+            a[j] = (1.0 - up) / down;
+        }
+        let first = failed.expect("eq. 4.16 fails for this density") + 1;
+        assert_eq!(first, 19);
+        assert_eq!(kernel.reservoir_grains, first);
+
+        for j in 0..first {
+            assert!(kernel.transitions[j].is_empty() && kernel.elastic[j] == 0.0, "grain {j} is in the reservoir");
+        }
+        for j in first..n {
             let total = kernel.elastic[j] + kernel.transitions[j].iter().map(|(_, p)| p).sum::<f64>();
             assert!((total - 1.0).abs() < 1e-12, "grain {j}: sum_t P(t|j) = {total}");
-            assert!(kernel.elastic[j] > 0.0);
+            for t in j.saturating_sub(band)..(j + band + 1).min(n) {
+                let expected = if t <= j { a[j] * b.powi((j - t) as i32) } else { a[t] * rho[t] / rho[j] * (b * g).powi((t - j) as i32) };
+                let got = probability(&kernel, t, j);
+                assert!(((got - expected) / expected).abs() < 1e-12, "P({t}|{j}) = {got}, expected {expected}");
+            }
         }
-        assert_detailed_balance(&kernel, &boltzmann(&rho, d_e));
+        // Detailed balance between the grains above the reservoir.
+        let f = boltzmann(&rho, d_e);
+        for j in first..n {
+            for &(t, p) in kernel.transitions[j].iter().filter(|&&(t, _)| t >= first) {
+                let (lhs, rhs) = (p * f[j], probability(&kernel, j, t) * f[t]);
+                assert!(((lhs - rhs) / lhs.max(rhs)).abs() < 1e-12, "detailed balance {j}->{t}");
+            }
+        }
     }
 
     #[test]
@@ -312,7 +310,7 @@ mod tests {
         // rho(i + n_ref)/rho(i) = exp(0.002 dE n_ref) = exp(0.64) = 1.9 < 3 (n_ref = 16): no reduction.
         let rho: Vec<f64> = (0..n).map(|i| (0.002 * i as f64 * d_e).exp()).collect();
         let kernel = exponential_down_kernel(&rho, d_e, alpha, KT, band).unwrap();
-        assert_eq!(kernel.low_energy_cut_grain, 0);
+        assert_eq!(kernel.reservoir_grains, 0);
 
         let b = (-d_e / alpha).exp();
         let g = (-d_e / KT).exp();
@@ -333,6 +331,63 @@ mod tests {
                 };
                 let got = probability(&kernel, t, j);
                 assert!(((got - expected) / expected).abs() < 1e-12, "P({t}|{j}) = {got}, expected {expected}");
+            }
+        }
+    }
+
+    // Density of states rising steeply from the well bottom (rho(i + 9)/rho(i) > 3 for the first grains),
+    // for which the back substitution of eq. 4.16 nevertheless succeeds at every grain.
+    fn steep_but_normalizable_density() -> Vec<f64> {
+        (0..120).map(|i| (1.0 + i as f64 * 38.0 / 2000.0).powi(10)).collect()
+    }
+
+    #[test]
+    fn exponential_down_uses_plain_back_substitution_wherever_it_succeeds() {
+        // No low-energy reduction where eq. 4.16 can be solved, however steep the density of states:
+        // the probabilities equal eq. 4.16 solved independently here.
+        let (d_e, alpha, band) = (38.0, 202.6, 80);
+        let rho = steep_but_normalizable_density();
+        let n = rho.len();
+        let kernel = exponential_down_kernel(&rho, d_e, alpha, KT, band).unwrap();
+        assert_eq!(kernel.reservoir_grains, 0);
+
+        let b = (-d_e / alpha).exp();
+        let g = (-d_e / KT).exp();
+        let mut a = vec![0.0; n];
+        for j in (0..n).rev() {
+            let down: f64 = (j.saturating_sub(band)..=j).map(|t| b.powi((j - t) as i32)).sum();
+            let up: f64 = (j + 1..(j + band + 1).min(n))
+                .map(|t| a[t] * rho[t] / rho[j] * (b * g).powi((t - j) as i32))
+                .sum();
+            a[j] = (1.0 - up) / down;
+        }
+        for j in 0..n {
+            for t in j.saturating_sub(band)..(j + band + 1).min(n) {
+                let expected = if t <= j {
+                    a[j] * b.powi((j - t) as i32)
+                } else {
+                    a[t] * rho[t] / rho[j] * (b * g).powi((t - j) as i32)
+                };
+                let got = probability(&kernel, t, j);
+                assert!(((got - expected) / expected).abs() < 1e-12, "P({t}|{j}) = {got}, expected {expected}");
+            }
+        }
+    }
+
+    #[test]
+    fn exponential_down_kernel_is_continuous_in_the_mean_energy_transfer() {
+        // <dE_down> = 202.6666 and 202.6668 cm-1 on 38 cm-1 grains: 1.5 <dE_down>/dE crosses 8 in between
+        // (the integer window of the low-energy reduction would change from 8 to 9 grains there).
+        // The smooth dependence changes P(t|j) by about |t - j| dE d<dE_down>/<dE_down>^2 <= 1.2e-5
+        // (|t - j| <= 80); no probability may change by more than 1e-4.
+        let (d_e, band) = (38.0, 80);
+        let rho = steep_but_normalizable_density();
+        let below = exponential_down_kernel(&rho, d_e, 202.6666, KT, band).unwrap();
+        let above = exponential_down_kernel(&rho, d_e, 202.6668, KT, band).unwrap();
+        for j in 0..rho.len() {
+            for t in j.saturating_sub(band)..(j + band + 1).min(rho.len()) {
+                let (p, q) = (probability(&below, t, j), probability(&above, t, j));
+                assert!(((p - q) / p).abs() < 1e-4, "P({t}|{j}) jumps from {p:e} to {q:e}");
             }
         }
     }

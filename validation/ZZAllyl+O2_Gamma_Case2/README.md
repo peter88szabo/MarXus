@@ -27,24 +27,31 @@ MarXus has four methods in three families, and each is run separately, with its 
 
 | quantity | MESS | SteadyStateAbsorbingBarrier | CSE | SteadyStateOlzmann (overall) | TimeIntegration (overall) |
 |---|---|---|---|---|---|
-| k(R → IEPOX + OH), cm³/s | 1.954e-13 | 1.887e-13 | 1.886e-13 | 1.943e-13 | 1.943e-13 |
-| k(R → G4), cm³/s | 1.883e-12 | 1.678e-12 | 1.913e-12 | – | – |
-| long-time IEPOX + OH, % of the net reaction | 2.47 (fate of its rate tables) | – | 2.325250 | 2.325250 | 2.325250 |
+| k(R → IEPOX + OH), cm³/s | 1.954e-13 | 1.886e-13 | 1.885e-13 | 1.943e-13 | 1.943e-13 |
+| k(R → G4), cm³/s | 1.883e-12 | 1.656e-12 | 1.866e-12 | – | – |
+| long-time IEPOX + OH, % of the net reaction | 2.47 (fate of its rate tables) | – | 2.32448 | 2.32448 | 2.32448 |
 
-- **Bimolecular-to-bimolecular R → IEPOX + OH** (chemical activation):
-  - The two prompt quantities, the absorbing barrier (k∞Φ_P5) and CSE (G13 eq. 21), agree within 0.6% at 270–330 K.
-  - Both are 2.6–3.5% below MESS's R → P5 (collisional part; see Section 4.4).
-  - The overall values (SteadyStateOlzmann, TimeIntegration) are 1–7% above the prompt ones: the thermal formation through the stabilized wells. They are identical to each other.
-- **Bimolecular-to-well R → G4** (stabilization):
-  - CSE is 1.4–1.6% above MESS at 270–300 K and 4.9–5.2% above at 310–330 K.
-  - The absorbing barrier is 6–11% lower. It counts the flux into the grains 10 kT below the lowest threshold of G4, which is a different definition of stabilization from the chemical eigenmode of CSE.
-  - R → G2: CSE +2.4 … +3.2%, absorbing barrier −2.9 … +1.7% from MESS.
-- **Step between 304 and 305 K in MarXus** (`../../reports/low_energy_reduction_temperature_step.md`).
-  - Between 300 and 310 K, R → G4 rises by 3.2% and R → G2 falls by 0.9% relative to the smooth trend, in every method. The lowest relaxation eigenvalue drops by 5.1%. MESS is smooth there.
-  - Cause: the low-energy reduction of the exponential-down kernel (`collision_kernels.rs`) measures the density-of-states gradient over n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 grains. With 38 cm⁻¹ grains, n_ref changes from 8 to 9 at 304.7 K, and a 1 K scan puts the step exactly between 304 and 305 K.
-  - The choice of the low-energy rule is open (decision needed).
-- **Long-time yield:** identical in SteadyStateOlzmann, CSE and TimeIntegration at all 21 conditions, the exact identity $`k^T J^{-1} F`$.
-- **Decomposition** (`plots/yields.png`). The IEPOX + OH prompt yield (absorbing barrier) + stabilization × thermal fate of each well (Olzmann run) equals the Olzmann total within 9·10⁻⁴ percentage points.
+All 21 conditions are in `method_comparison.csv` and `../../reports/method_comparison.md`.
+
+**Bimolecular-to-bimolecular R → IEPOX + OH** (chemical activation):
+- The two prompt quantities, the absorbing barrier (k∞Φ_P5) and CSE (G13 eq. 21), agree within 0.44%.
+- Both are below MESS's R → P5: the barrier by 2.6–3.5%, CSE by 3.0–3.6% (the collisional part; see Section 4.4).
+- The overall values (SteadyStateOlzmann, TimeIntegration) include the thermal formation through the stabilized wells, −2.6 … +3.8% from MESS's prompt R → P5. The two are identical.
+
+**Bimolecular-to-well** (stabilization), against MESS:
+- **CSE:** R → G4 −1.0 … −0.3%, R → G3 −1.2 … −0.7%, R → G2 +3.0 … +5.2%.
+- **Absorbing barrier:** R → G4 −19.0 … −9.5%, R → G2 −0.7 … +2.4%.
+  - It counts the flux into the grains 10 kT below the lowest threshold of each well, a different definition of stabilization from the chemical eigenmode of CSE.
+  - Its total stabilization is 2.8–9.2% below CSE's.
+
+**Former temperature step at 304.7 K, now removed.** With the former low-energy reduction rule of the collision kernel, all methods had a step between 304 and 305 K: R → G4 +3.2%, R → G2 −0.9%, and the lowest relaxation eigenvalue −5.1%. Its integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 changed from 8 to 9 there.
+- **The fix.** The low-energy reservoir state (MESMER) replaced it (`../../reports/low_energy_reservoir_state.md`).
+- **The check.** A 1 K scan over 300–310 K is now smooth, also where the reservoirs change by whole grains. The thermal losses of the wells follow MESS's temperature trend (G6: second differences −0.0775, −0.0698, −0.0629 against MESS's −0.0774, −0.0699, −0.0627).
+- **Reservoir sizes:** 4–10 grains (152–380 cm⁻¹) above the well bottoms.
+
+**Long-time yield.** Identical in SteadyStateOlzmann, CSE and TimeIntegration at all 21 conditions: the exact identity $`k^T J^{-1} F`$.
+
+**Decomposition** (`plots/yields.png`). The IEPOX + OH prompt yield (absorbing barrier) plus stabilization × thermal fate of each well (Olzmann run) equals the Olzmann total within 1.8·10⁻³ relative.
 
 ## Key diagnostic: two methods, the same long-time yields
 
@@ -54,19 +61,19 @@ MarXus has four methods in three families, and each is run separately, with its 
 
 | IEPOX + OH share at 300 K, 760 Torr | % of the net reaction |
 |---|---|
-| final steady state | 2.32525045 |
-| reconstructed from the CSE kinetics | 2.32525079 |
+| final steady state | 2.32448 |
+| reconstructed from the CSE kinetics | 2.32448 |
 
 **All 21 conditions.** Largest relative deviation (`cse_vs_final_steady_state.csv`, `plots/cse_vs_final_steady_state.png`):
 
 | channel | largest relative deviation |
 |---|---|
-| IEPOX + OH (P5) | 3.1·10⁻⁷ |
-| escape (G4) | 1.6·10⁻⁸ |
-| P1 | 6.1·10⁻⁷ |
-| P7 (about 10⁻⁵ of the reaction) | 1.4·10⁻⁴ |
+| IEPOX + OH (P5) | 3.6·10⁻⁷ |
+| escape (G4) | 1.9·10⁻⁸ |
+| P1 | 5.6·10⁻⁷ |
+| P7 (at most 0.008% of the reaction) | 5.3·10⁻⁴ |
 
-These deviations are at the precision of the 7 printed digits.
+P5, the escape and P1 agree to the precision of the printed digits. P7 is formed through G6, and the CSE entries on its path (R → G6 ≈ 10⁻²² cm³/s) are at the rounding level.
 
 **Why they agree.**
 - **Exact identity.** With G13 eqs. 21 and 25–30, both quantities are $`\sum_\lambda p^{(x)}_\lambda p^{(R)}_\lambda/(\Lambda_\lambda Q_R)`$ over all eigenpairs. This is the spectral form of $`k_x^T J^{-1} F`$, an identity that holds whether or not the chemical and relaxation eigenvalues are separated.
@@ -81,7 +88,7 @@ These deviations are at the precision of the 7 printed digits.
 
 ## Third method: direct time integration (2026-10-06)
 
-**Run.** The master equation integrated in time from a pulse of chemically activated G2: Rodas4 (adapted from KPP), MESS Eckart model, 21 conditions on 4 threads, 102 s (`reports/direct_time_integration.md`).
+**Run.** The master equation integrated in time from a pulse of chemically activated G2: Rodas4 (adapted from KPP), MESS Eckart model, 21 conditions on 4 cores, 111 s (`reports/direct_time_integration.md`).
 
 **Identity.**
 - At t = 100 s the yields of R, P1, P5, P7 and escape equal the final steady state at all 21 conditions, to the 7 printed digits (`time_integration_vs_final_steady_state.csv`). This is the identity $`Y(\infty) = k^T J^{-1} F`$.
@@ -286,7 +293,7 @@ For deep tunneling it is smaller than the exact Eckart factor (Section 4.1).
   - B12 +0.3%, B6P7 +0.7%;
   - B34 and B36 within ±0.2%.
 - **IEPOX + OH share of the net reaction:** MarXus is **5.1–5.9% below MESS**. With the exact Eckart it was 7–12% above.
-- **Escape share:** within 0.4%. **P1:** −4%. **P7:** −0.3 … −1.6%.
+- **Escape share:** within 0.4%. **P1:** −4.0 … −4.6%. **P7:** −0.3 … −1.6%.
 
 **Interpretation.** The tunneling model explains most of the original difference. The remaining −5.5% in the IEPOX + OH share is not a high-pressure effect: B4P5's k∞ agrees within 1.1%. P5 is formed almost entirely by chemically activated G4, before stabilization; thermal G4 forms P5 at 72 s⁻¹ against the escape at 2.5·10⁷ s⁻¹. The remainder therefore comes from the collisional part of the master equation, where the codes differ in:
 - the normalization of the exponential-down kernel (`reports/collision_kernel_detailed_balance_and_normalization.md`);
@@ -305,12 +312,16 @@ The MESS log prints neither the collision frequency nor the kernel normalization
 
 | entries | MarXus/MESS − 1 |
 |---|---|
-| **R → P5 (IEPOX + OH)** | **−2.7 … −3.5%** |
-| R → G2, G3, G4 | +1 … +6% |
-| R → P1, P7 | −1.4 … −5.0% |
-| well → well | within ±1% (G4 → G3 +1 … +2.5%) |
-| well → R and well → products | within ±6% |
+| **R → P5 (IEPOX + OH)** | **−3.6 … −3.0%** |
+| R → G2 / G3 / G4 | +3.0 … +5.2% / −1.2 … −0.7% / −1.0 … −0.3% |
+| R → P1, P7 | −5.1 … −1.5% |
+| R → escape (negative in both codes, see below) | −5.5 … −4.5% |
+| well → well (entries above the rounding level) | −0.5 … +1.3% |
+| well → R and well → products (entries above the rounding level) | −4.5 … +5.0% |
 | G4 → escape | +0.6% |
+| entries involving G6 other than G6 → P7, G6 → G3 and the loss of G6 | rounding level in both codes (10⁻²³ … 10⁻⁷), not comparable |
+
+(Re-run with the low-energy reservoir state, 2026-10-06. With the former reduction rule, R → G4 had a step at 304.7 K, +1.4 … +6.1%.)
 
 Two further observations:
 - **MESS's negative R → escape(G4) entry is reproduced** (−1.47·10⁻¹³ against −1.32·10⁻¹³ cm³/s at 270 K, 500 Torr). It belongs to the formulation (G13 eq. 21), not to MESS's numerics.

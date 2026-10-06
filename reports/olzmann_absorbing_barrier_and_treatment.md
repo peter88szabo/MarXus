@@ -110,7 +110,7 @@ Additional abbreviations:
   - Example options `--steady-state eigenvalue|all`, `--eigen-solver inverse|full|lapack`, `--sum-rule-tolerance`. *Changed (2026-10-05, evening): the thermal eigenpair is part of the final steady state, not a method of its own (GO10 eq. 12; Peter). It is computed with `--steady-state final|both`, or `SteadyState Final|Both` in the `MarXus` header block (`reports/solution_methods_and_deck_settings.md`).*
   - For one well with one entrance, the association by detailed balance, k = λ₁·k∞,assoc/k∞,diss.
 
-**Result for C₂H₃** (`validation/c2h3_mess_example_olzmann_eigen/README.md`).
+**Result for C₂H₃** (`validation/c2h3_mess_example_olzmann_eigen/README.md` (merged into `validation/c2h3_mess_example/` on 2026-10-06, its Section 4.5)).
 - **No absorbing barrier and no barrier distance are needed.** The association agrees with MESS within ±2.5% from 750 to 1750 K. The barrier route gave −13% at 1500 K and −42% at 1750 K with 10 kT.
 - **At 500–1000 K both routes agree** within 0.00–0.34%.
 - **At 300 K λ₁ is below the double-precision resolution** (off by 10⁸; warnings). k_uni from the thermal eigenvector is still correct: +4.7 … +5.7% vs MESS. The association equals the absorbing-barrier route within 0.023% at 300–1000 K (0.0007% at 300 K, 0.023% at 1000 K; corrected from "0.01%" on 2026-10-06).

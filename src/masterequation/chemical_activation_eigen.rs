@@ -186,10 +186,8 @@ pub fn thermal_rate_coefficients(
     population.iter_mut().for_each(|x| *x /= total);
 
     let n_wells = network.wells.len();
-    let mut per_well: Vec<Vec<f64>> = network.wells.iter().map(|w| vec![0.0; w.grain_count()]).collect();
-    for (s, &(w, i)) in op.states.iter().enumerate() {
-        per_well[w][i] = population[s];
-    }
+    // On the complete grid of every well (a low-energy reservoir spread over its grains).
+    let per_well = op.grain_populations(&population);
     let population_fractions: Vec<f64> = per_well.iter().map(|p| p.iter().sum()).collect();
     let kt = op.kt_cm1;
     let mut channels = Vec::new();
@@ -384,7 +382,13 @@ mod tests {
         assert!((ii.lambda_2_s_inv / full.lambda_2_s_inv - 1.0).abs() < 1e-6, "{} vs {}", ii.lambda_2_s_inv, full.lambda_2_s_inv);
         assert!(ii.lambda_2_s_inv > ii.lambda_1_s_inv);
         // J E1 = lambda_1 E1 for the population vector of the thermal eigenvector.
-        let e1: Vec<f64> = op.states.iter().map(|&(w, i)| ii.distributions[w][i] * ii.population_fractions[w]).collect();
+        let grains: Vec<Vec<f64>> = ii
+            .distributions
+            .iter()
+            .zip(&ii.population_fractions)
+            .map(|(d, x)| d.iter().map(|v| v * x).collect())
+            .collect();
+        let e1 = op.state_populations(&grains);
         let je1 = op.apply(&e1);
         let scale = je1.iter().map(|x| x.abs()).fold(0.0, f64::max);
         for (a, b) in je1.iter().zip(&e1) {
@@ -456,11 +460,13 @@ mod tests {
     }
 
     #[test]
+
+    #[test]
     fn a_violated_sum_rule_gives_a_warning_and_no_error() {
-        // A deep well (threshold 6000 cm-1, exponential down) at 200 K: lambda_1 differs from the eigenvector
-        // average by about 6e-5, below the default tolerance and above 1e-5.
+        // A deep well (threshold 6000 cm-1, exponential down) at 190 K: lambda_1 differs from the eigenvector
+        // average by about 2e-4, below the default tolerance and above 1e-5.
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 800, 0, 600)] };
-        let cold = Conditions { temperature_kelvin: 200.0, pressure_torr: 10.0 };
+        let cold = Conditions { temperature_kelvin: 190.0, pressure_torr: 10.0 };
         let op = assemble_operator(&network, &cold, &final_options(EXPONENTIAL)).unwrap();
         let quiet = thermal_rate_coefficients(&network, &op, EigenSolver::InverseIteration, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
         assert!(quiet.sum_rule_relative_deviation > 1e-5 && quiet.sum_rule_relative_deviation < DEFAULT_SUM_RULE_TOLERANCE);
@@ -472,12 +478,14 @@ mod tests {
     }
 
     #[test]
+
+    #[test]
     fn a_non_positive_lambda_1_is_a_warning_when_the_eigenvector_average_is_positive() {
-        // At 150 K the lowest eigenvalue of the full decomposition is below the double-precision resolution
+        // At 160 K the lowest eigenvalue of the full decomposition is below the double-precision resolution
         // and comes out negative; the thermal eigenvector still gives a positive loss rate, the same as the
         // shifted inverse iteration.
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 800, 0, 600)] };
-        let cold = Conditions { temperature_kelvin: 150.0, pressure_torr: 10.0 };
+        let cold = Conditions { temperature_kelvin: 160.0, pressure_torr: 10.0 };
         let op = assemble_operator(&network, &cold, &final_options(EXPONENTIAL)).unwrap();
         let th = thermal_rate_coefficients(&network, &op, EigenSolver::FullDecomposition, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
         assert!(th.lambda_1_s_inv <= 0.0);
@@ -501,11 +509,11 @@ mod tests {
 
     #[test]
     fn the_shifted_factorization_gives_k_uni_where_the_plain_cholesky_factor_does_not_exist() {
-        // At 125 K the Cholesky factor of S itself does not exist in double precision (non-positive pivot);
+        // At 130 K the Cholesky factor of S itself does not exist in double precision (non-positive pivot);
         // with the safety shift sigma = n eps max S_ii the inverse iteration finds the thermal eigenvector.
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 800, 0, 600)] };
         let options = final_options(EXPONENTIAL);
-        let cold = Conditions { temperature_kelvin: 125.0, pressure_torr: 10.0 };
+        let cold = Conditions { temperature_kelvin: 130.0, pressure_torr: 10.0 };
         let op = assemble_operator(&network, &cold, &options).unwrap();
         assert!(symmetrize(&op).band_matrix().cholesky().is_err(), "the unshifted factor exists after all");
         let th = thermal_rate_coefficients(&network, &op, EigenSolver::InverseIteration, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
@@ -548,11 +556,12 @@ mod tests {
 
     #[test]
     fn at_high_pressure_lambda_1_is_the_boltzmann_average_of_k() {
-        // Single well, collisions fast compared with reaction: the thermal distribution is Boltzmann and
-        // lambda_1 -> k_inf = sum k f / sum f.
+        // Single well, collisions fast compared with reaction: the thermal distribution is Boltzmann (also
+        // over a low-energy reservoir, which keeps its Boltzmann weight) and lambda_1 -> k_inf = sum k f / sum f.
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 400, 0, 200)] };
         let high = Conditions { temperature_kelvin: 600.0, pressure_torr: 1.0e9 };
         let op = assemble_operator(&network, &high, &final_options(EXPONENTIAL)).unwrap();
+        assert!(op.wells[0].reservoir_grains > 0);
         let th = thermal_rate_coefficients(&network, &op, EigenSolver::InverseIteration, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
         let kt = KB_CM * 600.0;
         let well = &network.wells[0];

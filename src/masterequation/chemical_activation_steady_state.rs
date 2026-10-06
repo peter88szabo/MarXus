@@ -76,8 +76,9 @@ pub fn project_source(op: &ChemicalActivationOperator, source: &[Vec<f64>]) -> R
     let mut absorbed_per_well = vec![0.0; source.len()];
     for (w, dist) in source.iter().enumerate() {
         for (i, &x) in dist.iter().enumerate() {
+            // All grains of a low-energy reservoir map to its one state, so their weights add up.
             match op.index_of[w][i] {
-                Some(s) => on_states[s] = x / total,
+                Some(s) => on_states[s] += x / total,
                 None => absorbed_per_well[w] += x / total,
             }
         }
@@ -370,6 +371,47 @@ mod tests {
         assert_eq!(projected.absorbed_per_well[1], 0.0);
         assert!((projected.on_states.iter().sum::<f64>() - 0.75).abs() < 1e-15);
         assert_eq!(projected.on_states[op.index_of[0][350].unwrap()], 0.75);
+    }
+
+    #[test]
+    fn source_on_reservoir_grains_goes_into_the_reservoir_state() {
+        // Exponential down at 300 K: the lowest grains of A form its reservoir (one state in the final
+        // steady state); grains between the reservoir and the absorbing barrier are absorbed in the
+        // intermediate steady state, and there the whole reservoir lies below the barrier.
+        let network = two_well_network();
+        let model = CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 };
+        let final_op = assemble_operator(
+            &network,
+            &conditions(),
+            &ChemicalActivationOptions { collision_model: model, steady_state: SteadyState::Final },
+        )
+        .unwrap();
+        let m = final_op.wells[0].reservoir_grains;
+        assert!(m > 2 && m < 41, "{m}");
+        let mut a = vec![0.0; 400];
+        a[0] = 3.0; // reservoir
+        a[m - 1] = 2.0; // reservoir
+        a[m + 1] = 1.0; // above the reservoir, below the absorbing barrier (grain 41)
+        a[350] = 2.0; // retained in both
+        let source = [a, vec![0.0; 460]];
+        let projected = project_source(&final_op, &source).unwrap();
+        assert_eq!(projected.absorbed_per_well, vec![0.0, 0.0]);
+        let r = final_op.index_of[0][0].unwrap();
+        assert!((projected.on_states[r] - 5.0 / 8.0).abs() < 1e-15);
+        assert!((projected.on_states.iter().sum::<f64>() - 1.0).abs() < 1e-15);
+
+        let intermediate_op = assemble_operator(
+            &network,
+            &conditions(),
+            &ChemicalActivationOptions {
+                collision_model: model,
+                steady_state: SteadyState::Intermediate { barrier: AbsorbingBarrier::default() },
+            },
+        )
+        .unwrap();
+        let projected = project_source(&intermediate_op, &source).unwrap();
+        assert!((projected.absorbed_per_well[0] - 6.0 / 8.0).abs() < 1e-15);
+        assert!((projected.on_states.iter().sum::<f64>() - 2.0 / 8.0).abs() < 1e-15);
     }
 
     #[test]

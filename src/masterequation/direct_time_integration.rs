@@ -221,12 +221,15 @@ pub fn integrate_master_equation(
         for channel in &well.channels {
             if let ChannelDestination::Products { name } = &channel.destination {
                 exits.push(format!("{}->{name}", well.name));
+                // Rate of every state of the well into the channel (a low-energy reservoir: the Boltzmann
+                // average over its grains).
                 exit_rates.push(
                     op.states
                         .iter()
                         .enumerate()
-                        .filter(|&(_, &(sw, i))| sw == w && channel.rate_constant_s_inv[i] > 0.0)
-                        .map(|(s, &(_, i))| (s, channel.rate_constant_s_inv[i]))
+                        .filter(|&(_, &(sw, _))| sw == w)
+                        .map(|(s, _)| (s, op.state_rate(s, &channel.rate_constant_s_inv)))
+                        .filter(|&(_, k)| k > 0.0)
                         .collect(),
                 );
                 exit_formation.push(0.0);

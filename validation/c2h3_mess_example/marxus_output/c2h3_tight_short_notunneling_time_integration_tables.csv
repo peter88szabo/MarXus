@@ -4,7 +4,7 @@ T[K],P[Torr],W1->P1
 
 # time integration: Populations left in the wells at the last output time (% of the formed adducts)
 T[K],P[Torr],N(W1)
-1000,760,3.841218e-124
+1000,760,3.838023e-124
 
 # time integration: Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse)
 T[K],P[Torr],

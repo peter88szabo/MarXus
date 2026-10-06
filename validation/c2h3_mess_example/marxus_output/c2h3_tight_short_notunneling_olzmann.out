@@ -10,12 +10,15 @@
                      and the thermal fates of the wells (Boltzmann distribution of one well as source)
  Solvers:            linear systems: banded Cholesky factorization of the symmetrized J, relative residual <= 1e-8
                      thermal eigenpair: InverseIteration, sum-rule tolerance 1.5e-2 (warning only)
- Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+ Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
                      BLAS threads per LAPACK call: 4
  Temperatures (K):   1000
  Pressures (torr):   760
  Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
  Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 1000 K: W1 1 grains (70 cm-1)
                      collision frequency: Lennard-Jones (per well, below)
  Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
  Source:             thermal reactant P1 through B1 (P1 -> W1)
@@ -83,7 +86,7 @@ Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_
    Temperature = 1000 K
 
   P(torr)      capture       return          net
-      760  3.87620e-11  3.87620e-11 -1.83155e-23
+      760  3.87620e-11  3.87620e-11 -1.05038e-22
 
 --- Tables by pressure (rows: temperature in K) ---
 
@@ -110,7 +113,7 @@ Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_
    Pressure = 760 torr
 
   T(K)      capture       return          net
-  1000  3.87620e-11  3.87620e-11 -1.83155e-23
+  1000  3.87620e-11  3.87620e-11 -1.05038e-22
 
 --- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
 
@@ -145,7 +148,7 @@ P\T           1000
 net
 
 P\T           1000
-760   -1.83155e-23
+760   -1.05038e-22
 
 ____________________________________________________________________________________________________
 THERMAL RATE COEFFICIENTS OF THE FINAL STEADY STATE (lowest eigenpair of J)
@@ -163,7 +166,7 @@ Thermal rate coefficients (1/s), by temperature:
    Temperature = 1000 K
 
   P(torr)        k_uni     lambda_1       W1->P1
-      760  1.43791e+04  1.43791e+04  1.43791e+04
+      760  1.43793e+04  1.43793e+04  1.43793e+04
 
 Thermal branching (% of the thermal decay k_uni), by temperature:
 
@@ -184,14 +187,14 @@ Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_
    Temperature = 1000 K
 
   P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
-      760  2.58296e-11     1.49893e+04  1.80134e-03
+      760  4.19010e-11     1.60839e+04  1.80134e-03
 
 Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by temperature:
 
    Temperature = 1000 K
 
   P(torr)       P1->W1
-      760  2.30982e-12
+      760  2.30985e-12
 
 --- Tables by pressure (rows: temperature in K) ---
 
@@ -200,7 +203,7 @@ Thermal rate coefficients (1/s), by pressure:
    Pressure = 760 torr
 
   T(K)        k_uni     lambda_1       W1->P1
-  1000  1.43791e+04  1.43791e+04  1.43791e+04
+  1000  1.43793e+04  1.43793e+04  1.43793e+04
 
 Thermal branching (% of the thermal decay k_uni), by pressure:
 
@@ -221,14 +224,14 @@ Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_
    Pressure = 760 torr
 
   T(K)     sum rule  lambda_2/k_uni  floor (1/s)
-  1000  2.58296e-11     1.49893e+04  1.80134e-03
+  1000  4.19010e-11     1.60839e+04  1.80134e-03
 
 Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by pressure:
 
    Pressure = 760 torr
 
   T(K)       P1->W1
-  1000  2.30982e-12
+  1000  2.30985e-12
 
 --- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
 
@@ -237,17 +240,17 @@ Thermal rate coefficients (1/s), temperature-pressure tables:
 k_uni
 
 P\T           1000
-760    1.43791e+04
+760    1.43793e+04
 
 lambda_1
 
 P\T           1000
-760    1.43791e+04
+760    1.43793e+04
 
 W1->P1
 
 P\T           1000
-760    1.43791e+04
+760    1.43793e+04
 
 Thermal branching (% of the thermal decay k_uni), temperature-pressure tables:
 
@@ -268,12 +271,12 @@ Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_
 sum rule
 
 P\T           1000
-760    2.58296e-11
+760    4.19010e-11
 
 lambda_2/k_uni
 
 P\T           1000
-760    1.49893e+04
+760    1.60839e+04
 
 floor (1/s)
 
@@ -285,7 +288,7 @@ Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^
 P1->W1
 
 P\T           1000
-760    2.30982e-12
+760    2.30985e-12
 
 ____________________________________________________________________________________________________
 THERMAL FATES OF THE WELLS (final steady state with the Boltzmann distribution of one well as the source)

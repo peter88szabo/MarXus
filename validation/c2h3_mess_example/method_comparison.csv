@@ -1,0 +1,734 @@
+system,check,kind,T_K,p_torr,quantity,a,value_a,b,value_b,relative_deviation,extra,lambda_1_below_floor
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,300,76,total,TimeIntegration,100.0008,100%,100,8e-06,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,300,76,loss balance,CSE,2,exact,1,1,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,300,76,net reaction,CSE,1.526167e-13,capture - return,1.526167e-13,0,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,300,76,lambda_1,lambda_1,-4.296531e-08,k_uni,5.978091e-16,71870000,1.6794659e+13,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,300,76,sum R->W,SteadyStateAbsorbingBarrier,1.526112e-13,CSE,1.526167e-13,-3.6037996e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,300,76,P1->W1,SteadyStateAbsorbingBarrier,1.526112e-13,CSE,1.526167e-13,-3.6037996e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,300,228,total,TimeIntegration,100.0012,100%,100,1.2e-05,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,300,228,loss balance,CSE,2,exact,1,1,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,300,228,net reaction,CSE,1.911253e-13,capture - return,1.911253e-13,0,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,300,228,lambda_1,lambda_1,-3.572713e-07,k_uni,7.486844e-16,4.772e+08,1.341019e+13,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,300,228,sum R->W,SteadyStateAbsorbingBarrier,1.911262e-13,CSE,1.911253e-13,4.7089527e-06,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,300,228,P1->W1,SteadyStateAbsorbingBarrier,1.911262e-13,CSE,1.911253e-13,4.7089527e-06,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,300,760,total,TimeIntegration,100.005,100%,100,5e-05,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,300,760,loss balance,CSE,2,exact,1,1,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,300,760,net reaction,CSE,2.230996e-13,capture - return,2.230996e-13,0,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,300,760,lambda_1,lambda_1,-8.100673e-07,k_uni,8.739352e-16,9.269e+08,1.1499708e+13,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,300,760,sum R->W,SteadyStateAbsorbingBarrier,2.230999e-13,CSE,2.230996e-13,1.3446909e-06,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,300,760,P1->W1,SteadyStateAbsorbingBarrier,2.230999e-13,CSE,2.230996e-13,1.3446909e-06,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,300,2280,total,TimeIntegration,99.97876,100%,100,-0.0002124,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,300,2280,loss balance,CSE,2,exact,1,1,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,300,2280,net reaction,CSE,2.40825e-13,capture - return,2.40825e-13,0,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,300,2280,lambda_1,lambda_1,7.852844e-07,k_uni,9.433715e-16,8.324e+08,1.0653279e+13,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,300,2280,sum R->W,SteadyStateAbsorbingBarrier,2.408255e-13,CSE,2.40825e-13,2.0761964e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,300,2280,P1->W1,SteadyStateAbsorbingBarrier,2.408255e-13,CSE,2.40825e-13,2.0761964e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,300,7600,total,TimeIntegration,99.98923,100%,100,-0.0001077,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,300,7600,loss balance,CSE,2,exact,1,1,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,300,7600,net reaction,CSE,2.503941e-13,capture - return,2.503941e-13,0,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,300,7600,lambda_1,lambda_1,-1.814072e-06,k_uni,9.808536e-16,1.849e+09,1.0266568e+13,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,300,7600,sum R->W,SteadyStateAbsorbingBarrier,2.503939e-13,CSE,2.503941e-13,-7.9874087e-07,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,300,7600,P1->W1,SteadyStateAbsorbingBarrier,2.503939e-13,CSE,2.503941e-13,-7.9874087e-07,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,500,76,total,TimeIntegration,99.9999,100%,100,-1e-06,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,500,76,loss balance,CSE,1.0015232,exact,1,0.001523237,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,500,76,net reaction,CSE,7.236312e-13,capture - return,7.236312e-13,0,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,500,76,lambda_1,lambda_1,6.028005e-05,k_uni,6.02387e-05,0.0006863,166.67026,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,500,76,sum R->W,SteadyStateAbsorbingBarrier,7.236572e-13,CSE,7.236312e-13,3.5929905e-05,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,500,76,P1->W1,SteadyStateAbsorbingBarrier,7.236572e-13,CSE,7.236312e-13,3.5929905e-05,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,500,228,total,TimeIntegration,99.99998,100%,100,-2e-07,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,500,228,loss balance,CSE,1.0973255,exact,1,0.09732554,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,500,228,net reaction,CSE,1.182587e-12,capture - return,1.182587e-12,0,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,500,228,lambda_1,lambda_1,9.836243e-05,k_uni,9.844447e-05,0.0008334,101.98643,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,500,228,sum R->W,SteadyStateAbsorbingBarrier,1.18261e-12,CSE,1.182587e-12,1.9448886e-05,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,500,228,P1->W1,SteadyStateAbsorbingBarrier,1.18261e-12,CSE,1.182587e-12,1.9448886e-05,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,500,760,total,TimeIntegration,99.99972,100%,100,-2.8e-06,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,500,760,loss balance,CSE,1.9916107,exact,1,0.9916107,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,500,760,net reaction,CSE,1.813921e-12,capture - return,1.813921e-12,0,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,500,760,lambda_1,lambda_1,0.0001508435,k_uni,0.0001509999,0.001036,66.49011,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,500,760,sum R->W,SteadyStateAbsorbingBarrier,1.813938e-12,CSE,1.813921e-12,9.3719627e-06,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,500,760,P1->W1,SteadyStateAbsorbingBarrier,1.813938e-12,CSE,1.813921e-12,9.3719627e-06,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,500,2280,total,TimeIntegration,100.0034,100%,100,3.4e-05,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,500,2280,loss balance,CSE,2.495555,exact,1,1.495555,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,500,2280,net reaction,CSE,2.418347e-12,capture - return,2.418347e-12,0,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,500,2280,lambda_1,lambda_1,0.0002015442,k_uni,0.0002013154,0.001137,49.921665,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,500,2280,sum R->W,SteadyStateAbsorbingBarrier,2.418357e-12,CSE,2.418347e-12,4.1350559e-06,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,500,2280,P1->W1,SteadyStateAbsorbingBarrier,2.418357e-12,CSE,2.418347e-12,4.1350559e-06,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,500,7600,total,TimeIntegration,100.0629,100%,100,0.000629,nan,yes
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,500,7600,loss balance,CSE,4.5662,exact,1,3.5662,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,500,7600,net reaction,CSE,2.983172e-12,capture - return,2.983172e-12,0,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,500,7600,lambda_1,lambda_1,0.0002351112,k_uni,0.0002483342,0.05325,40.509926,yes
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,500,7600,sum R->W,SteadyStateAbsorbingBarrier,2.983176e-12,CSE,2.983172e-12,1.3408546e-06,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,500,7600,P1->W1,SteadyStateAbsorbingBarrier,2.983176e-12,CSE,2.983172e-12,1.3408546e-06,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,750,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,750,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,750,76,k_uni,TimeIntegration,11.581739,SteadyStateOlzmann,11.58174,-7.0337367e-08,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,750,76,loss balance,CSE,1,exact,1,6.6088559e-09,3.815707e-07,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,750,76,net reaction,CSE,8.069929e-13,capture - return,8.069929e-13,0,3.815707e-07,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,750,76,lambda_1,lambda_1,11.58174,k_uni,11.58174,4.118e-09,0.00086688183,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,750,76,sum R->W,SteadyStateAbsorbingBarrier,8.071342e-13,CSE,8.069929e-13,0.00017509448,3.815707e-07,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,750,76,P1->W1,SteadyStateAbsorbingBarrier,8.071342e-13,CSE,8.069929e-13,0.00017509448,3.815707e-07,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,750,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,750,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,750,228,k_uni,TimeIntegration,23.038976,SteadyStateOlzmann,23.03898,-1.7221162e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,750,228,loss balance,CSE,1.0000013,exact,1,1.329705e-06,2.534235e-07,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,750,228,net reaction,CSE,1.60531e-12,capture - return,1.60531e-12,0,2.534235e-07,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,750,228,lambda_1,lambda_1,23.03898,k_uni,23.03898,4.794e-10,0.00043578318,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,750,228,sum R->W,SteadyStateAbsorbingBarrier,1.605497e-12,CSE,1.60531e-12,0.0001164884,2.534235e-07,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,750,228,P1->W1,SteadyStateAbsorbingBarrier,1.605497e-12,CSE,1.60531e-12,0.0001164884,2.534235e-07,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,750,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,750,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,750,760,k_uni,TimeIntegration,44.722595,SteadyStateOlzmann,44.72263,-7.7911761e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,750,760,loss balance,CSE,1.0000081,exact,1,8.053041e-06,1.478445e-07,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,750,760,net reaction,CSE,3.116185e-12,capture - return,3.116185e-12,0,1.478445e-07,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,750,760,lambda_1,lambda_1,44.72263,k_uni,44.72263,8.316e-10,0.00022449485,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,750,760,sum R->W,SteadyStateAbsorbingBarrier,3.116395e-12,CSE,3.116185e-12,6.7390094e-05,1.478445e-07,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,750,760,P1->W1,SteadyStateAbsorbingBarrier,3.116395e-12,CSE,3.116185e-12,6.7390094e-05,1.478445e-07,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,750,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,750,2280,k_uni,TimeIntegration,74.639893,SteadyStateOlzmann,74.63988,1.7783858e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,750,2280,loss balance,CSE,1.0000048,exact,1,4.776545e-06,8.237806e-08,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,750,2280,net reaction,CSE,5.200759e-12,capture - return,5.200759e-12,0,8.237806e-08,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,750,2280,lambda_1,lambda_1,74.63987,k_uni,74.63988,3.223e-08,0.00013464652,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,750,2280,sum R->W,SteadyStateAbsorbingBarrier,5.200954e-12,CSE,5.200759e-12,3.7494527e-05,8.237806e-08,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,750,2280,P1->W1,SteadyStateAbsorbingBarrier,5.200954e-12,CSE,5.200759e-12,3.7494527e-05,8.237806e-08,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,750,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,750,7600,k_uni,TimeIntegration,117.02406,SteadyStateOlzmann,117.0241,-3.8139855e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,750,7600,loss balance,CSE,1.0000299,exact,1,2.989955e-05,3.88079e-08,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,750,7600,net reaction,CSE,8.154006e-12,capture - return,8.154006e-12,0,3.88079e-08,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,750,7600,lambda_1,lambda_1,117.0241,k_uni,117.0241,3.051e-08,8.5965199e-05,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,750,7600,sum R->W,SteadyStateAbsorbingBarrier,8.15415e-12,CSE,8.154006e-12,1.7660031e-05,3.88079e-08,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,750,7600,P1->W1,SteadyStateAbsorbingBarrier,8.15415e-12,CSE,8.154006e-12,1.7660031e-05,3.88079e-08,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1000,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1000,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1000,76,k_uni,TimeIntegration,3173.4154,SteadyStateOlzmann,3173.418,-8.1937784e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1000,76,loss balance,CSE,1,exact,1,1.582676e-09,0.0001337103,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1000,76,net reaction,CSE,5.0973e-13,capture - return,5.0973e-13,0,0.0001337103,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1000,76,lambda_1,lambda_1,3173.418,k_uni,3173.418,8.729e-12,3.1637811e-06,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1000,76,sum R->W,SteadyStateAbsorbingBarrier,5.098667e-13,CSE,5.0973e-13,0.00026818119,0.0001337103,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1000,76,P1->W1,SteadyStateAbsorbingBarrier,5.098667e-13,CSE,5.0973e-13,0.00026818119,0.0001337103,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1000,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1000,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1000,228,k_uni,TimeIntegration,7105.4009,SteadyStateOlzmann,7105.402,-1.5170238e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1000,228,loss balance,CSE,1,exact,1,2.942715e-10,0.0001007813,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1000,228,net reaction,CSE,1.141327e-12,capture - return,1.141327e-12,0,0.0001007813,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1000,228,lambda_1,lambda_1,7105.402,k_uni,7105.402,1.925e-11,1.4130094e-06,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1000,228,sum R->W,SteadyStateAbsorbingBarrier,1.141536e-12,CSE,1.141327e-12,0.00018312018,0.0001007813,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1000,228,P1->W1,SteadyStateAbsorbingBarrier,1.141536e-12,CSE,1.141327e-12,0.00018312018,0.0001007813,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1000,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1000,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1000,760,k_uni,TimeIntegration,16019.202,SteadyStateOlzmann,16019.2,1.1351509e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1000,760,loss balance,CSE,1,exact,1,1.2714e-08,6.896087e-05,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1000,760,net reaction,CSE,2.573179e-12,capture - return,2.573179e-12,0,6.896087e-05,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1000,760,lambda_1,lambda_1,16019.2,k_uni,16019.2,2.38e-11,6.267479e-07,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1000,760,sum R->W,SteadyStateAbsorbingBarrier,2.573459e-12,CSE,2.573179e-12,0.00010881482,6.896087e-05,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1000,760,P1->W1,SteadyStateAbsorbingBarrier,2.573459e-12,CSE,2.573179e-12,0.00010881482,6.896087e-05,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1000,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1000,2280,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1000,2280,k_uni,TimeIntegration,31191.323,SteadyStateOlzmann,31191.34,-5.5591279e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1000,2280,loss balance,CSE,1,exact,1,1.078538e-08,4.525637e-05,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1000,2280,net reaction,CSE,5.010356e-12,capture - return,5.010356e-12,0,4.525637e-05,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1000,2280,lambda_1,lambda_1,31191.34,k_uni,31191.34,2.208e-12,3.2220482e-07,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1000,2280,sum R->W,SteadyStateAbsorbingBarrier,5.010658e-12,CSE,5.010356e-12,6.0275158e-05,4.525637e-05,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1000,2280,P1->W1,SteadyStateAbsorbingBarrier,5.010658e-12,CSE,5.010356e-12,6.0275158e-05,4.525637e-05,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1000,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1000,7600,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1000,7600,k_uni,TimeIntegration,58803.576,SteadyStateOlzmann,58803.55,4.3761526e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1000,7600,loss balance,CSE,1,exact,1,1.20246e-08,2.590873e-05,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1000,7600,net reaction,CSE,9.44587e-12,capture - return,9.44587e-12,0,2.590873e-05,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1000,7600,lambda_1,lambda_1,58803.55,k_uni,58803.55,5.069e-11,1.7090805e-07,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1000,7600,sum R->W,SteadyStateAbsorbingBarrier,9.446122e-12,CSE,9.44587e-12,2.6678326e-05,2.590873e-05,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1000,7600,P1->W1,SteadyStateAbsorbingBarrier,9.446122e-12,CSE,9.44587e-12,2.6678326e-05,2.590873e-05,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1250,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1250,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1250,76,k_uni,TimeIntegration,64471.569,SteadyStateOlzmann,64471.62,-7.8531497e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1250,76,loss balance,CSE,1,exact,1,2.304803e-10,0.002824701,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1250,76,net reaction,CSE,2.696053e-13,capture - return,2.696053e-13,0,0.002824701,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1250,76,lambda_1,lambda_1,64471.62,k_uni,64471.62,2.569e-13,1.5572743e-07,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1250,76,sum R->W,SteadyStateAbsorbingBarrier,2.668248e-13,CSE,2.696053e-13,-0.010313225,0.002824701,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1250,76,P1->W1,SteadyStateAbsorbingBarrier,2.668248e-13,CSE,2.696053e-13,-0.010313225,0.002824701,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1250,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1250,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1250,228,k_uni,TimeIntegration,156030.09,SteadyStateOlzmann,156030.1,-4.9581725e-08,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1250,228,loss balance,CSE,1,exact,1,6.8688299e-10,0.002333838,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1250,228,net reaction,CSE,6.527865e-13,capture - return,6.527865e-13,0,0.002333838,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1250,228,lambda_1,lambda_1,156030.1,k_uni,156030.1,5.698e-13,6.4346559e-08,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1250,228,sum R->W,SteadyStateAbsorbingBarrier,6.470754e-13,CSE,6.527865e-13,-0.0087488023,0.002333838,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1250,228,P1->W1,SteadyStateAbsorbingBarrier,6.470754e-13,CSE,6.527865e-13,-0.0087488023,0.002333838,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1250,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1250,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1250,760,k_uni,TimeIntegration,389145.31,SteadyStateOlzmann,389145.7,-1.0027432e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1250,760,loss balance,CSE,1,exact,1,2.469823e-09,0.001798563,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1250,760,net reaction,CSE,1.628855e-12,capture - return,1.628855e-12,0,0.001798563,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1250,760,lambda_1,lambda_1,389145.7,k_uni,389145.7,7.995e-13,2.5800105e-08,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1250,760,sum R->W,SteadyStateAbsorbingBarrier,1.617498e-12,CSE,1.628855e-12,-0.0069723824,0.001798563,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1250,760,P1->W1,SteadyStateAbsorbingBarrier,1.617498e-12,CSE,1.628855e-12,-0.0069723824,0.001798563,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1250,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1250,2280,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1250,2280,k_uni,TimeIntegration,843822.79,SteadyStateOlzmann,843825.4,-3.0890598e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1250,2280,loss balance,CSE,1,exact,1,1.329004e-09,0.00133913,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1250,2280,net reaction,CSE,3.53335e-12,capture - return,3.53335e-12,0,0.00133913,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1250,2280,lambda_1,lambda_1,843825.4,k_uni,843825.4,9.337e-13,1.1910047e-08,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1250,2280,sum R->W,SteadyStateAbsorbingBarrier,3.514354e-12,CSE,3.53335e-12,-0.0053762011,0.00133913,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1250,2280,P1->W1,SteadyStateAbsorbingBarrier,3.514354e-12,CSE,3.53335e-12,-0.0053762011,0.00133913,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1250,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1250,7600,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1250,7600,k_uni,TimeIntegration,1821026.6,SteadyStateOlzmann,1821026,3.4414476e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1250,7600,loss balance,CSE,1,exact,1,1.2045449e-09,0.000897581,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1250,7600,net reaction,CSE,7.627677e-12,capture - return,7.627677e-12,0,0.000897581,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1250,7600,lambda_1,lambda_1,1821026,k_uni,1821026,3.441e-12,5.5188668e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1250,7600,sum R->W,SteadyStateAbsorbingBarrier,7.598983e-12,CSE,7.627677e-12,-0.0037618268,0.000897581,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1250,7600,P1->W1,SteadyStateAbsorbingBarrier,7.598983e-12,CSE,7.627677e-12,-0.0037618268,0.000897581,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1500,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1500,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1500,76,k_uni,TimeIntegration,376664.33,SteadyStateOlzmann,376664.1,6.0522802e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1500,76,loss balance,CSE,1,exact,1,9.2474695e-11,0.01472478,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1500,76,net reaction,CSE,1.376528e-13,capture - return,1.376528e-13,0,0.01472478,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1500,76,lambda_1,lambda_1,376664.1,k_uni,376664.1,7.603e-14,2.6655049e-08,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1500,76,sum R->W,SteadyStateAbsorbingBarrier,1.272869e-13,CSE,1.376528e-13,-0.07530468,0.01472478,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1500,76,P1->W1,SteadyStateAbsorbingBarrier,1.272869e-13,CSE,1.376528e-13,-0.07530468,0.01472478,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1500,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1500,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1500,228,k_uni,TimeIntegration,959072.28,SteadyStateOlzmann,959072.8,-5.3850577e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1500,228,loss balance,CSE,1,exact,1,3.2160719e-11,0.01296151,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1500,228,net reaction,CSE,3.51492e-13,capture - return,3.51492e-13,0,0.01296151,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1500,228,lambda_1,lambda_1,959072.8,k_uni,959072.8,1.082e-13,1.0468444e-08,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1500,228,sum R->W,SteadyStateAbsorbingBarrier,3.279168e-13,CSE,3.51492e-13,-0.067071797,0.01296151,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1500,228,P1->W1,SteadyStateAbsorbingBarrier,3.279168e-13,CSE,3.51492e-13,-0.067071797,0.01296151,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1500,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1500,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1500,760,k_uni,TimeIntegration,2558867.9,SteadyStateOlzmann,2558870,-8.0593203e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1500,760,loss balance,CSE,1,exact,1,4.3924531e-10,0.01086936,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1500,760,net reaction,CSE,9.407639e-13,capture - return,9.407639e-13,0,0.01086936,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1500,760,lambda_1,lambda_1,2558870,k_uni,2558870,2.471e-13,3.9236069e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1500,760,sum R->W,SteadyStateAbsorbingBarrier,8.870673e-13,CSE,9.407639e-13,-0.057077658,0.01086936,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1500,760,P1->W1,SteadyStateAbsorbingBarrier,8.870673e-13,CSE,9.407639e-13,-0.057077658,0.01086936,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1500,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1500,2280,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1500,2280,k_uni,TimeIntegration,5974432.3,SteadyStateOlzmann,5974431,2.1097367e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1500,2280,loss balance,CSE,1,exact,1,3.8785419e-11,0.008880869,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1500,2280,net reaction,CSE,2.202547e-12,capture - return,2.202547e-12,0,0.008880869,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1500,2280,lambda_1,lambda_1,5974431,k_uni,5974431,1.38e-13,1.6821686e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1500,2280,sum R->W,SteadyStateAbsorbingBarrier,2.09828e-12,CSE,2.202547e-12,-0.047339285,0.008880869,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1500,2280,P1->W1,SteadyStateAbsorbingBarrier,2.09828e-12,CSE,2.202547e-12,-0.047339285,0.008880869,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1500,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1500,7600,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1500,7600,k_uni,TimeIntegration,14195342,SteadyStateOlzmann,14195350,-5.366853e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1500,7600,loss balance,CSE,1,exact,1,1.2432166e-10,0.006719571,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1500,7600,net reaction,CSE,5.247408e-12,capture - return,5.247408e-12,0,0.006719571,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1500,7600,lambda_1,lambda_1,14195350,k_uni,14195350,1.013e-13,7.0797832e-10,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1500,7600,sum R->W,SteadyStateAbsorbingBarrier,5.056042e-12,CSE,5.247408e-12,-0.036468672,0.006719571,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1500,7600,P1->W1,SteadyStateAbsorbingBarrier,5.056042e-12,CSE,5.247408e-12,-0.036468672,0.006719571,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1750,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1750,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1750,76,k_uni,TimeIntegration,1158866.4,SteadyStateOlzmann,1158867,-5.3505187e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1750,76,loss balance,CSE,1,exact,1,1.0382761e-10,0.03765977,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1750,76,net reaction,CSE,7.246509e-14,capture - return,7.246509e-14,0,0.03765977,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1750,76,lambda_1,lambda_1,1158867,k_uni,1158867,4.34e-14,8.6636344e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1750,76,sum R->W,SteadyStateAbsorbingBarrier,5.107499e-14,CSE,7.246509e-14,-0.295178,0.03765977,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1750,76,P1->W1,SteadyStateAbsorbingBarrier,5.107499e-14,CSE,7.246509e-14,-0.295178,0.03765977,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1750,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1750,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1750,228,k_uni,TimeIntegration,3046421.6,SteadyStateOlzmann,3046425,-1.1244267e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1750,228,loss balance,CSE,1,exact,1,4.9831694e-11,0.03448269,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1750,228,net reaction,CSE,1.920628e-13,capture - return,1.920628e-13,0,0.03448269,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1750,228,lambda_1,lambda_1,3046425,k_uni,3046425,6.026e-13,3.2956662e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1750,228,sum R->W,SteadyStateAbsorbingBarrier,1.394247e-13,CSE,1.920628e-13,-0.27406713,0.03448269,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1750,228,P1->W1,SteadyStateAbsorbingBarrier,1.394247e-13,CSE,1.920628e-13,-0.27406713,0.03448269,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1750,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1750,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1750,760,k_uni,TimeIntegration,8485908.3,SteadyStateOlzmann,8485910,-1.9546731e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1750,760,loss balance,CSE,1,exact,1,1.7932988e-11,0.03051894,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1750,760,net reaction,CSE,5.401634e-13,capture - return,5.401634e-13,0,0.03051894,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1750,760,lambda_1,lambda_1,8485910,k_uni,8485910,2.331e-13,1.1831377e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1750,760,sum R->W,SteadyStateAbsorbingBarrier,4.06977e-13,CSE,5.401634e-13,-0.24656687,0.03051894,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1750,760,P1->W1,SteadyStateAbsorbingBarrier,4.06977e-13,CSE,5.401634e-13,-0.24656687,0.03051894,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1750,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1750,2280,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1750,2280,k_uni,TimeIntegration,20791925,SteadyStateOlzmann,20791950,-1.2062272e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1750,2280,loss balance,CSE,1,exact,1,8.413048e-12,0.02650849,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1750,2280,net reaction,CSE,1.335451e-12,capture - return,1.335451e-12,0,0.02650849,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1750,2280,lambda_1,lambda_1,20791950,k_uni,20791950,3.583e-14,4.8336015e-10,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1750,2280,sum R->W,SteadyStateAbsorbingBarrier,1.045078e-12,CSE,1.335451e-12,-0.21743441,0.02650849,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1750,2280,P1->W1,SteadyStateAbsorbingBarrier,1.045078e-12,CSE,1.335451e-12,-0.21743441,0.02650849,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,1750,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,1750,7600,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,1750,7600,k_uni,TimeIntegration,52697062,SteadyStateOlzmann,52697040,4.1848648e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,1750,7600,loss balance,CSE,1,exact,1,2.9210412e-11,0.02179153,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,1750,7600,net reaction,CSE,3.417252e-12,capture - return,3.417252e-12,0,0.02179153,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,1750,7600,lambda_1,lambda_1,52697040,k_uni,52697040,5.903e-13,1.907128e-10,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,1750,7600,sum R->W,SteadyStateAbsorbingBarrier,2.796925e-12,CSE,3.417252e-12,-0.18152802,0.02179153,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,1750,7600,P1->W1,SteadyStateAbsorbingBarrier,2.796925e-12,CSE,3.417252e-12,-0.18152802,0.02179153,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,2000,76,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,2000,76,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,2000,76,k_uni,TimeIntegration,2516530.2,SteadyStateOlzmann,2516536,-2.3029802e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,2000,76,loss balance,CSE,1,exact,1,3.7258197e-11,0.06688897,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,2000,76,net reaction,CSE,4.009316e-14,capture - return,4.009316e-14,0,0.06688897,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,2000,76,lambda_1,lambda_1,2516536,k_uni,2516536,6.558e-13,3.9896111e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,2000,76,sum R->W,SteadyStateAbsorbingBarrier,nan,CSE,4.009316e-14,nan,0.06688897,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,2000,76,P1->W1,SteadyStateAbsorbingBarrier,nan,CSE,4.009316e-14,nan,0.06688897,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,2000,228,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,2000,228,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,2000,228,k_uni,TimeIntegration,6750364.5,SteadyStateOlzmann,6750367,-3.6727298e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,2000,228,loss balance,CSE,1,exact,1,4.8101301e-11,0.06270957,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,2000,228,net reaction,CSE,1.092644e-13,capture - return,1.092644e-13,0,0.06270957,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,2000,228,lambda_1,lambda_1,6750367,k_uni,6750367,3.482e-13,1.4873265e-09,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,2000,228,sum R->W,SteadyStateAbsorbingBarrier,nan,CSE,1.092644e-13,nan,0.06270957,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,2000,228,P1->W1,SteadyStateAbsorbingBarrier,nan,CSE,1.092644e-13,nan,0.06270957,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,2000,760,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,2000,760,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,2000,760,k_uni,TimeIntegration,19326484,SteadyStateOlzmann,19326520,-1.8486924e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,2000,760,loss balance,CSE,1,exact,1,3.8555825e-12,0.05735452,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,2000,760,net reaction,CSE,3.189174e-13,capture - return,3.189174e-13,0,0.05735452,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,2000,760,lambda_1,lambda_1,19326520,k_uni,19326520,1.397e-13,5.1949342e-10,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,2000,760,sum R->W,SteadyStateAbsorbingBarrier,nan,CSE,3.189174e-13,nan,0.05735452,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,2000,760,P1->W1,SteadyStateAbsorbingBarrier,nan,CSE,3.189174e-13,nan,0.05735452,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,2000,2280,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,2000,2280,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,2000,2280,k_uni,TimeIntegration,48846255,SteadyStateOlzmann,48846240,2.9791807e-07,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,2000,2280,loss balance,CSE,1,exact,1,8.9881436e-12,0.05174853,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,2000,2280,net reaction,CSE,8.213858e-13,capture - return,8.213858e-13,0,0.05174853,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,2000,2280,lambda_1,lambda_1,48846240,k_uni,48846240,9.602e-13,2.0574767e-10,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,2000,2280,sum R->W,SteadyStateAbsorbingBarrier,nan,CSE,8.213858e-13,nan,0.05174853,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,2000,2280,P1->W1,SteadyStateAbsorbingBarrier,nan,CSE,8.213858e-13,nan,0.05174853,no
+H + C2H2 = C2H3 (one well),I5 pulse conservation,identity,2000,7600,total,TimeIntegration,100,100%,100,0,nan,no
+H + C2H2 = C2H3 (one well),I1 pulse = final steady state,identity,2000,7600,W1->P1,TimeIntegration,100,SteadyStateOlzmann,100,0,nan,no
+H + C2H2 = C2H3 (one well),I4 pulse decay = k_uni,identity,2000,7600,k_uni,TimeIntegration,1.2913615e+08,SteadyStateOlzmann,1.291363e+08,-1.1559249e-06,nan,no
+H + C2H2 = C2H3 (one well),I6 CSE loss balance (G13 eq. 29),identity,2000,7600,loss balance,CSE,1,exact,1,1.7139623e-12,0.044853,no
+H + C2H2 = C2H3 (one well),I6 CSE capture balance (G13 eq. 22),identity,2000,7600,net reaction,CSE,2.218117e-12,capture - return,2.218117e-12,0,0.044853,no
+H + C2H2 = C2H3 (one well),I7 sum rule lambda_1 = k_uni,identity,2000,7600,lambda_1,lambda_1,1.291363e+08,k_uni,1.291363e+08,2.576e-13,7.7824748e-11,no
+H + C2H2 = C2H3 (one well),A2 total stabilization: absorbing barrier vs CSE,approximate,2000,7600,sum R->W,SteadyStateAbsorbingBarrier,nan,CSE,2.218117e-12,nan,0.044853,no
+H + C2H2 = C2H3 (one well),A2 R->W: absorbing barrier vs CSE,approximate,2000,7600,P1->W1,SteadyStateAbsorbingBarrier,nan,CSE,2.218117e-12,nan,0.044853,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,300,76,W1->P1,CSE,5.978367e-16,SteadyStateOlzmann,5.978091e-16,4.6168585e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,300,76,k_uni,inverse iteration,5.978091e-16,LAPACK,5.978367e-16,-4.6166453e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,300,76,P1->W1,CSE,1.526167e-13,SteadyStateOlzmann,1.526097e-13,4.5868644e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,300,76,P1->W1,SteadyStateAbsorbingBarrier,1.526112e-13,SteadyStateOlzmann,1.526097e-13,9.8289951e-06,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,300,76,k(P1->W1)/k(W1->P1)/K,CSE,255.28158,K (MarXus),255.28166,-2.9992674e-07,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,300,76,k(P1->W1)/k(W1->P1)/K,MESS,254.87455,K (MESS),254.87917,-1.8150635e-05,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,76,P1->W1 CSE,CSE,1.526167e-13,MESS,1.44207e-13,0.058316864,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.526097e-13,MESS,1.44207e-13,0.058268323,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.526112e-13,MESS,1.44207e-13,0.058278724,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,76,W1->P1 CSE,CSE,5.978367e-16,MESS,5.65796e-16,0.056629421,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),5.978091e-16,MESS,5.65796e-16,0.05658064,7.870456e-16,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,300,228,W1->P1,CSE,7.486844e-16,SteadyStateOlzmann,7.486844e-16,0,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,300,228,k_uni,inverse iteration,7.486844e-16,LAPACK,7.486844e-16,0,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,300,228,P1->W1,CSE,1.911253e-13,SteadyStateOlzmann,1.911253e-13,0,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,300,228,P1->W1,SteadyStateAbsorbingBarrier,1.911262e-13,SteadyStateOlzmann,1.911253e-13,4.7089527e-06,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,300,228,k(P1->W1)/k(W1->P1)/K,CSE,255.28153,K (MarXus),255.28153,0,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,300,228,k(P1->W1)/k(W1->P1)/K,MESS,254.87768,K (MESS),254.87917,-5.8648221e-06,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,228,P1->W1 CSE,CSE,1.911253e-13,MESS,1.81125e-13,0.055212146,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.911253e-13,MESS,1.81125e-13,0.055212146,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.911262e-13,MESS,1.81125e-13,0.055217115,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,228,W1->P1 CSE,CSE,7.486844e-16,MESS,7.10635e-16,0.053542817,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),7.486844e-16,MESS,7.10635e-16,0.053542817,-7.345282e-15,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,300,760,W1->P1,CSE,8.739354e-16,SteadyStateOlzmann,8.739352e-16,2.2884992e-07,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,300,760,k_uni,inverse iteration,8.739352e-16,LAPACK,8.739354e-16,-2.2884987e-07,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,300,760,P1->W1,CSE,2.230996e-13,SteadyStateOlzmann,2.230995e-13,4.482305e-07,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,300,760,P1->W1,SteadyStateAbsorbingBarrier,2.230999e-13,SteadyStateOlzmann,2.230995e-13,1.792922e-06,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,300,760,k(P1->W1)/k(W1->P1)/K,CSE,255.28157,K (MarXus),255.28151,2.1938053e-07,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,300,760,k(P1->W1)/k(W1->P1)/K,MESS,254.87848,K (MESS),254.87917,-2.708977e-06,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,760,P1->W1 CSE,CSE,2.230996e-13,MESS,2.12025e-13,0.05223252,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.230995e-13,MESS,2.12025e-13,0.052232048,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.230999e-13,MESS,2.12025e-13,0.052233935,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,760,W1->P1 CSE,CSE,8.739354e-16,MESS,8.31867e-16,0.050571065,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),8.739352e-16,MESS,8.31867e-16,0.050570824,1.251065e-14,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,300,2280,W1->P1,CSE,9.433702e-16,SteadyStateOlzmann,9.433715e-16,-1.3780361e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,300,2280,k_uni,inverse iteration,9.433715e-16,LAPACK,9.433702e-16,1.378038e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,300,2280,P1->W1,CSE,2.40825e-13,SteadyStateOlzmann,2.408254e-13,-1.6609544e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,300,2280,P1->W1,SteadyStateAbsorbingBarrier,2.408255e-13,SteadyStateOlzmann,2.408254e-13,4.1523859e-07,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,300,2280,k(P1->W1)/k(W1->P1)/K,CSE,255.28154,K (MarXus),255.28161,-2.8291864e-07,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,300,2280,k(P1->W1)/k(W1->P1)/K,MESS,254.87857,K (MESS),254.87917,-2.3537079e-06,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,2280,P1->W1 CSE,CSE,2.40825e-13,MESS,2.29301e-13,0.050257086,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.408254e-13,MESS,2.29301e-13,0.05025883,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.408255e-13,MESS,2.29301e-13,0.050259266,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,2280,W1->P1 CSE,CSE,9.433702e-16,MESS,8.99648e-16,0.04859923,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),9.433715e-16,MESS,8.99648e-16,0.048600675,-2.452307e-14,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,300,7600,W1->P1,CSE,9.808547e-16,SteadyStateOlzmann,9.808536e-16,1.1214722e-06,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,300,7600,k_uni,inverse iteration,9.808536e-16,LAPACK,9.808547e-16,-1.1214709e-06,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,300,7600,P1->W1,CSE,2.503941e-13,SteadyStateOlzmann,2.503938e-13,1.1981127e-06,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,300,7600,P1->W1,SteadyStateAbsorbingBarrier,2.503939e-13,SteadyStateOlzmann,2.503938e-13,3.9937091e-07,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,300,7600,k(P1->W1)/k(W1->P1)/K,CSE,255.28154,K (MarXus),255.28152,7.6640492e-08,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,300,7600,k(P1->W1)/k(W1->P1)/K,MESS,254.87952,K (MESS),254.87917,1.3406075e-06,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,7600,P1->W1 CSE,CSE,2.503941e-13,MESS,2.38699e-13,0.048995178,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.503938e-13,MESS,2.38699e-13,0.048993921,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.503939e-13,MESS,2.38699e-13,0.04899434,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,7600,W1->P1 CSE,CSE,9.808547e-16,MESS,9.36517e-16,0.047343188,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,300,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),9.808536e-16,MESS,9.36517e-16,0.047342013,1.010374e-13,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,500,76,W1->P1,CSE,6.02387e-05,SteadyStateOlzmann,6.02387e-05,0,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,500,76,k_uni,inverse iteration,6.02387e-05,LAPACK,6.02387e-05,0,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,500,76,P1->W1,CSE,7.236312e-13,SteadyStateOlzmann,7.236312e-13,0,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,500,76,P1->W1,SteadyStateAbsorbingBarrier,7.236572e-13,SteadyStateOlzmann,7.236312e-13,3.5929905e-05,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,500,76,k(P1->W1)/k(W1->P1)/K,CSE,1.2012729e-08,K (MarXus),1.2012729e-08,0,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,500,76,k(P1->W1)/k(W1->P1)/K,MESS,1.2000148e-08,K (MESS),1.2001153e-08,-8.3744999e-05,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,76,P1->W1 CSE,CSE,7.236312e-13,MESS,6.97403e-13,0.037608384,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),7.236312e-13,MESS,6.97403e-13,0.037608384,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,7.236572e-13,MESS,6.97403e-13,0.037645665,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,76,W1->P1 CSE,CSE,6.02387e-05,MESS,5.81162e-05,0.036521658,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),6.02387e-05,MESS,5.81162e-05,0.036521658,1.258092e-12,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,500,228,W1->P1,CSE,9.844447e-05,SteadyStateOlzmann,9.844447e-05,0,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,500,228,k_uni,inverse iteration,9.844447e-05,LAPACK,9.844447e-05,0,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,500,228,P1->W1,CSE,1.182587e-12,SteadyStateOlzmann,1.182587e-12,0,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,500,228,P1->W1,SteadyStateAbsorbingBarrier,1.18261e-12,SteadyStateOlzmann,1.182587e-12,1.9448886e-05,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,500,228,k(P1->W1)/k(W1->P1)/K,CSE,1.2012732e-08,K (MarXus),1.2012732e-08,0,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,500,228,k(P1->W1)/k(W1->P1)/K,MESS,1.2000656e-08,K (MESS),1.2001153e-08,-4.1381154e-05,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,228,P1->W1 CSE,CSE,1.182587e-12,MESS,1.14084e-12,0.036593212,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.182587e-12,MESS,1.14084e-12,0.036593212,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.18261e-12,MESS,1.14084e-12,0.036613373,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,228,W1->P1 CSE,CSE,9.844447e-05,MESS,9.50648e-05,0.035551224,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),9.844447e-05,MESS,9.50648e-05,0.035551224,6.236187e-13,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,500,760,W1->P1,CSE,0.0001509999,SteadyStateOlzmann,0.0001509999,0,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,500,760,k_uni,inverse iteration,0.0001509999,LAPACK,0.0001509999,0,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,500,760,P1->W1,CSE,1.813921e-12,SteadyStateOlzmann,1.813921e-12,0,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,500,760,P1->W1,SteadyStateAbsorbingBarrier,1.813938e-12,SteadyStateOlzmann,1.813921e-12,9.3719627e-06,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,500,760,k(P1->W1)/k(W1->P1)/K,CSE,1.201273e-08,K (MarXus),1.201273e-08,0,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,500,760,k(P1->W1)/k(W1->P1)/K,MESS,1.2001027e-08,K (MESS),1.2001153e-08,-1.0476012e-05,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,760,P1->W1 CSE,CSE,1.813921e-12,MESS,1.75233e-12,0.03514806,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.813921e-12,MESS,1.75233e-12,0.03514806,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.813938e-12,MESS,1.75233e-12,0.035157761,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,760,W1->P1 CSE,CSE,0.0001509999,MESS,0.000146015,0.034139643,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),0.0001509999,MESS,0.000146015,0.034139643,1.581125e-13,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,500,2280,W1->P1,CSE,0.0002013154,SteadyStateOlzmann,0.0002013154,0,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,500,2280,k_uni,inverse iteration,0.0002013154,LAPACK,0.0002013154,0,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,500,2280,P1->W1,CSE,2.418347e-12,SteadyStateOlzmann,2.418347e-12,0,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,500,2280,P1->W1,SteadyStateAbsorbingBarrier,2.418357e-12,SteadyStateOlzmann,2.418347e-12,4.1350559e-06,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,500,2280,k(P1->W1)/k(W1->P1)/K,CSE,1.2012727e-08,K (MarXus),1.2012727e-08,0,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,500,2280,k(P1->W1)/k(W1->P1)/K,MESS,1.2001067e-08,K (MESS),1.2001153e-08,-7.1681814e-06,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,2280,P1->W1 CSE,CSE,2.418347e-12,MESS,2.3395e-12,0.033702501,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.418347e-12,MESS,2.3395e-12,0.033702501,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.418357e-12,MESS,2.3395e-12,0.033706775,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,2280,W1->P1 CSE,CSE,0.0002013154,MESS,0.000194941,0.032699124,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),0.0002013154,MESS,0.000194941,0.032699124,-2.824002e-13,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,500,7600,W1->P1,CSE,0.0002483342,SteadyStateOlzmann,0.0002483342,0,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,500,7600,k_uni,inverse iteration,0.0002483342,LAPACK,0.0002483342,0,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,500,7600,P1->W1,CSE,2.983172e-12,SteadyStateOlzmann,2.983172e-12,0,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,500,7600,P1->W1,SteadyStateAbsorbingBarrier,2.983176e-12,SteadyStateOlzmann,2.983172e-12,1.3408546e-06,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,500,7600,k(P1->W1)/k(W1->P1)/K,CSE,1.2012731e-08,K (MarXus),1.2012731e-08,0,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,500,7600,k(P1->W1)/k(W1->P1)/K,MESS,1.2001121e-08,K (MESS),1.2001153e-08,-2.6536286e-06,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,7600,P1->W1 CSE,CSE,2.983172e-12,MESS,2.89011e-12,0.032200158,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.983172e-12,MESS,2.89011e-12,0.032200158,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.983176e-12,MESS,2.89011e-12,0.032201543,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,7600,W1->P1 CSE,CSE,0.0002483342,MESS,0.00024082,0.031202558,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,500,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),0.0002483342,MESS,0.00024082,0.031202558,-2.018145e-14,yes
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,750,76,W1->P1,CSE,11.58174,SteadyStateOlzmann,11.58174,0,3.815707e-07,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,750,76,k_uni,inverse iteration,11.58174,LAPACK,11.58174,0,3.815707e-07,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,750,76,P1->W1,CSE,8.069929e-13,SteadyStateOlzmann,8.06993e-13,-1.2391681e-07,3.815707e-07,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,750,76,P1->W1,SteadyStateAbsorbingBarrier,8.071342e-13,SteadyStateOlzmann,8.06993e-13,0.00017497054,3.815707e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,750,76,k(P1->W1)/k(W1->P1)/K,CSE,6.9678036e-14,K (MarXus),6.9678045e-14,-1.2391681e-07,3.815707e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,750,76,k(P1->W1)/k(W1->P1)/K,MESS,6.9602075e-14,K (MESS),6.9630061e-14,-0.00040191648,3.815707e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,76,P1->W1 CSE,CSE,8.069929e-13,MESS,7.95503e-13,0.014443566,3.815707e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),8.06993e-13,MESS,7.95503e-13,0.014443692,3.815707e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,8.071342e-13,MESS,7.95503e-13,0.014621189,3.815707e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,76,W1->P1 CSE,CSE,11.58174,MESS,11.4293,0.01333765,3.815707e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),11.58174,MESS,11.4293,0.01333765,3.815707e-07,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,750,228,W1->P1,CSE,23.03898,SteadyStateOlzmann,23.03898,0,2.534235e-07,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,750,228,k_uni,inverse iteration,23.03898,LAPACK,23.03898,0,2.534235e-07,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,750,228,P1->W1,CSE,1.60531e-12,SteadyStateOlzmann,1.605311e-12,-6.2293225e-07,2.534235e-07,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,750,228,P1->W1,SteadyStateAbsorbingBarrier,1.605497e-12,SteadyStateOlzmann,1.605311e-12,0.0001158654,2.534235e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,750,228,k(P1->W1)/k(W1->P1)/K,CSE,6.9677998e-14,K (MarXus),6.9678041e-14,-6.2293225e-07,2.534235e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,750,228,k(P1->W1)/k(W1->P1)/K,MESS,6.9612844e-14,K (MESS),6.9630061e-14,-0.00024726798,2.534235e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,228,P1->W1 CSE,CSE,1.60531e-12,MESS,1.58049e-12,0.015703991,2.534235e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.605311e-12,MESS,1.58049e-12,0.015704623,2.534235e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.605497e-12,MESS,1.58049e-12,0.015822308,2.534235e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,228,W1->P1 CSE,CSE,23.03898,MESS,22.704,0.014754228,2.534235e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),23.03898,MESS,22.704,0.014754228,2.534235e-07,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,750,760,W1->P1,CSE,44.72263,SteadyStateOlzmann,44.72263,0,1.478445e-07,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,750,760,k_uni,inverse iteration,44.72263,LAPACK,44.72263,0,1.478445e-07,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,750,760,P1->W1,CSE,3.116185e-12,SteadyStateOlzmann,3.116185e-12,0,1.478445e-07,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,750,760,P1->W1,SteadyStateAbsorbingBarrier,3.116395e-12,SteadyStateOlzmann,3.116185e-12,6.7390094e-05,1.478445e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,750,760,k(P1->W1)/k(W1->P1)/K,CSE,6.9678035e-14,K (MarXus),6.9678035e-14,0,1.478445e-07,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,750,760,k(P1->W1)/k(W1->P1)/K,MESS,6.9621225e-14,K (MESS),6.9630061e-14,-0.00012689397,1.478445e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,760,P1->W1 CSE,CSE,3.116185e-12,MESS,3.06442e-12,0.016892267,1.478445e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),3.116185e-12,MESS,3.06442e-12,0.016892267,1.478445e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.116395e-12,MESS,3.06442e-12,0.016960795,1.478445e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,760,W1->P1 CSE,CSE,44.72263,MESS,44.0156,0.016063169,1.478445e-07,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),44.72263,MESS,44.0156,0.016063169,1.478445e-07,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,750,2280,W1->P1,CSE,74.63988,SteadyStateOlzmann,74.63988,0,8.237806e-08,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,750,2280,k_uni,inverse iteration,74.63988,LAPACK,74.63988,0,8.237806e-08,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,750,2280,P1->W1,CSE,5.200759e-12,SteadyStateOlzmann,5.200759e-12,0,8.237806e-08,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,750,2280,P1->W1,SteadyStateAbsorbingBarrier,5.200954e-12,SteadyStateOlzmann,5.200759e-12,3.7494527e-05,8.237806e-08,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,750,2280,k(P1->W1)/k(W1->P1)/K,CSE,6.9678019e-14,K (MarXus),6.9678019e-14,0,8.237806e-08,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,750,2280,k(P1->W1)/k(W1->P1)/K,MESS,6.9625947e-14,K (MESS),6.9630061e-14,-5.9086398e-05,8.237806e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,2280,P1->W1 CSE,CSE,5.200759e-12,MESS,5.10989e-12,0.017782966,8.237806e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),5.200759e-12,MESS,5.10989e-12,0.017782966,8.237806e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.200954e-12,MESS,5.10989e-12,0.017821127,8.237806e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,2280,W1->P1 CSE,CSE,74.63988,MESS,73.3906,0.017022343,8.237806e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),74.63988,MESS,73.3906,0.017022343,8.237806e-08,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,750,7600,W1->P1,CSE,117.0241,SteadyStateOlzmann,117.0241,0,3.88079e-08,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,750,7600,k_uni,inverse iteration,117.0241,LAPACK,117.0241,0,3.88079e-08,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,750,7600,P1->W1,CSE,8.154006e-12,SteadyStateOlzmann,8.154006e-12,0,3.88079e-08,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,750,7600,P1->W1,SteadyStateAbsorbingBarrier,8.15415e-12,SteadyStateOlzmann,8.154006e-12,1.7660031e-05,3.88079e-08,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,750,7600,k(P1->W1)/k(W1->P1)/K,CSE,6.9678006e-14,K (MarXus),6.9678006e-14,0,3.88079e-08,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,750,7600,k(P1->W1)/k(W1->P1)/K,MESS,6.9628441e-14,K (MESS),6.9630061e-14,-2.3263964e-05,3.88079e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,7600,P1->W1 CSE,CSE,8.154006e-12,MESS,8.00553e-12,0.01854668,3.88079e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),8.154006e-12,MESS,8.00553e-12,0.01854668,3.88079e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,8.15415e-12,MESS,8.00553e-12,0.018564667,3.88079e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,7600,W1->P1 CSE,CSE,117.0241,MESS,114.975,0.017822135,3.88079e-08,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,750,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),117.0241,MESS,114.975,0.017822135,3.88079e-08,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1000,76,W1->P1,CSE,3173.418,SteadyStateOlzmann,3173.418,0,0.0001337103,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1000,76,k_uni,inverse iteration,3173.418,LAPACK,3173.418,0,0.0001337103,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1000,76,P1->W1,CSE,5.0973e-13,SteadyStateOlzmann,5.097643e-13,-6.7285999e-05,0.0001337103,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1000,76,P1->W1,SteadyStateAbsorbingBarrier,5.098667e-13,SteadyStateOlzmann,5.097643e-13,0.00020087715,0.0001337103,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1000,76,k(P1->W1)/k(W1->P1)/K,CSE,1.6062492e-16,K (MarXus),1.6063572e-16,-6.7285999e-05,0.0001337103,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1000,76,k(P1->W1)/k(W1->P1)/K,MESS,1.6030038e-16,K (MESS),1.6054543e-16,-0.0015263942,0.0001337103,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,76,P1->W1 CSE,CSE,5.0973e-13,MESS,5.12849e-13,-0.0060817122,0.0001337103,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),5.097643e-13,MESS,5.12849e-13,-0.0060148309,0.0001337103,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.098667e-13,MESS,5.12849e-13,-0.005815162,0.0001337103,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,76,W1->P1 CSE,CSE,3173.418,MESS,3199.3,-0.0080898947,0.0001337103,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),3173.418,MESS,3199.3,-0.0080898947,0.0001337103,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1000,228,W1->P1,CSE,7105.402,SteadyStateOlzmann,7105.402,0,0.0001007813,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1000,228,k_uni,inverse iteration,7105.402,LAPACK,7105.402,0,0.0001007813,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1000,228,P1->W1,CSE,1.141327e-12,SteadyStateOlzmann,1.141381e-12,-4.7311108e-05,0.0001007813,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1000,228,P1->W1,SteadyStateAbsorbingBarrier,1.141536e-12,SteadyStateOlzmann,1.141381e-12,0.0001358004,0.0001007813,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1000,228,k(P1->W1)/k(W1->P1)/K,CSE,1.6062807e-16,K (MarXus),1.6063567e-16,-4.7311108e-05,0.0001007813,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1000,228,k(P1->W1)/k(W1->P1)/K,MESS,1.6037148e-16,K (MESS),1.6054543e-16,-0.0010835248,0.0001007813,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,228,P1->W1 CSE,CSE,1.141327e-12,MESS,1.14507e-12,-0.0032687958,0.0001007813,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.141381e-12,MESS,1.14507e-12,-0.0032216371,0.0001007813,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.141536e-12,MESS,1.14507e-12,-0.0030862742,0.0001007813,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,228,W1->P1 CSE,CSE,7105.402,MESS,7140.11,-0.0048609895,0.0001007813,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),7105.402,MESS,7140.11,-0.0048609895,0.0001007813,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1000,760,W1->P1,CSE,16019.2,SteadyStateOlzmann,16019.2,0,6.896087e-05,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1000,760,k_uni,inverse iteration,16019.2,LAPACK,16019.2,0,6.896087e-05,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1000,760,P1->W1,CSE,2.573179e-12,SteadyStateOlzmann,2.573256e-12,-2.9923179e-05,6.896087e-05,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1000,760,P1->W1,SteadyStateAbsorbingBarrier,2.573459e-12,SteadyStateOlzmann,2.573256e-12,7.8888381e-05,6.896087e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1000,760,k(P1->W1)/k(W1->P1)/K,CSE,1.6063093e-16,K (MarXus),1.6063574e-16,-2.9923179e-05,6.896087e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1000,760,k(P1->W1)/k(W1->P1)/K,MESS,1.6043599e-16,K (MESS),1.6054543e-16,-0.00068169118,6.896087e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,760,P1->W1 CSE,CSE,2.573179e-12,MESS,2.57365e-12,-0.00018300857,6.896087e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.573256e-12,MESS,2.57365e-12,-0.00015308997,6.896087e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.573459e-12,MESS,2.57365e-12,-7.4213665e-05,6.896087e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,760,W1->P1 CSE,CSE,16019.2,MESS,16041.6,-0.0013963694,6.896087e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),16019.2,MESS,16041.6,-0.0013963694,6.896087e-05,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1000,2280,W1->P1,CSE,31191.34,SteadyStateOlzmann,31191.34,0,4.525637e-05,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1000,2280,k_uni,inverse iteration,31191.34,LAPACK,31191.34,0,4.525637e-05,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1000,2280,P1->W1,CSE,5.010356e-12,SteadyStateOlzmann,5.010444e-12,-1.7563314e-05,4.525637e-05,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1000,2280,P1->W1,SteadyStateAbsorbingBarrier,5.010658e-12,SteadyStateOlzmann,5.010444e-12,4.2710786e-05,4.525637e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1000,2280,k(P1->W1)/k(W1->P1)/K,CSE,1.6063292e-16,K (MarXus),1.6063574e-16,-1.7563314e-05,4.525637e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1000,2280,k(P1->W1)/k(W1->P1)/K,MESS,1.6048103e-16,K (MESS),1.6054543e-16,-0.00040115555,4.525637e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,2280,P1->W1 CSE,CSE,5.010356e-12,MESS,4.99762e-12,0.002548413,4.525637e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),5.010444e-12,MESS,4.99762e-12,0.0025660214,4.525637e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.010658e-12,MESS,4.99762e-12,0.0026088418,4.525637e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,2280,W1->P1 CSE,CSE,31191.34,MESS,31141.5,0.0016004367,4.525637e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),31191.34,MESS,31141.5,0.0016004367,4.525637e-05,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1000,7600,W1->P1,CSE,58803.55,SteadyStateOlzmann,58803.55,0,2.590873e-05,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1000,7600,k_uni,inverse iteration,58803.55,LAPACK,58803.55,0,2.590873e-05,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1000,7600,P1->W1,CSE,9.44587e-12,SteadyStateOlzmann,9.445951e-12,-8.5751027e-06,2.590873e-05,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1000,7600,P1->W1,SteadyStateAbsorbingBarrier,9.446122e-12,SteadyStateOlzmann,9.445951e-12,1.8102995e-05,2.590873e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1000,7600,k(P1->W1)/k(W1->P1)/K,CSE,1.6063435e-16,K (MarXus),1.6063573e-16,-8.5751027e-06,2.590873e-05,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1000,7600,k(P1->W1)/k(W1->P1)/K,MESS,1.6051383e-16,K (MESS),1.6054543e-16,-0.00019687595,2.590873e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,7600,P1->W1 CSE,CSE,9.44587e-12,MESS,9.39542e-12,0.0053696375,2.590873e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),9.445951e-12,MESS,9.39542e-12,0.0053782588,2.590873e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,9.446122e-12,MESS,9.39542e-12,0.0053964591,2.590873e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,7600,W1->P1 CSE,CSE,58803.55,MESS,58533.4,0.0046153136,2.590873e-05,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1000,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),58803.55,MESS,58533.4,0.0046153136,2.590873e-05,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1250,76,W1->P1,CSE,64471.62,SteadyStateOlzmann,64471.62,0,0.002824701,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1250,76,k_uni,inverse iteration,64471.62,LAPACK,64471.62,0,0.002824701,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1250,76,P1->W1,CSE,2.696053e-13,SteadyStateOlzmann,2.701747e-13,-0.0021075252,0.002824701,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1250,76,P1->W1,SteadyStateAbsorbingBarrier,2.668248e-13,SteadyStateOlzmann,2.701747e-13,-0.012399014,0.002824701,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1250,76,k(P1->W1)/k(W1->P1)/K,CSE,4.1817671e-18,K (MarXus),4.1905989e-18,-0.0021075252,0.002824701,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1250,76,k(P1->W1)/k(W1->P1)/K,MESS,4.1641536e-18,K (MESS),4.188531e-18,-0.0058200298,0.002824701,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,76,P1->W1 CSE,CSE,2.696053e-13,MESS,2.76586e-13,-0.025238805,0.002824701,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.701747e-13,MESS,2.76586e-13,-0.023180132,0.002824701,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.668248e-13,MESS,2.76586e-13,-0.035291736,0.002824701,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,76,W1->P1 CSE,CSE,64471.62,MESS,66420.7,-0.029344466,0.002824701,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),64471.62,MESS,66420.7,-0.029344466,0.002824701,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1250,228,W1->P1,CSE,156030.1,SteadyStateOlzmann,156030.1,0,0.002333838,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1250,228,k_uni,inverse iteration,156030.1,LAPACK,156030.1,0,0.002333838,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1250,228,P1->W1,CSE,6.527865e-13,SteadyStateOlzmann,6.538596e-13,-0.001641178,0.002333838,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1250,228,P1->W1,SteadyStateAbsorbingBarrier,6.470754e-13,SteadyStateOlzmann,6.538596e-13,-0.010375622,0.002333838,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1250,228,k(P1->W1)/k(W1->P1)/K,CSE,4.1837216e-18,K (MarXus),4.1905991e-18,-0.001641178,0.002333838,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1250,228,k(P1->W1)/k(W1->P1)/K,MESS,4.1694968e-18,K (MESS),4.188531e-18,-0.0045443613,0.002333838,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,228,P1->W1 CSE,CSE,6.527865e-13,MESS,6.67132e-13,-0.021503241,0.002333838,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),6.538596e-13,MESS,6.67132e-13,-0.019894713,0.002333838,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,6.470754e-13,MESS,6.67132e-13,-0.030063915,0.002333838,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,228,W1->P1 CSE,CSE,156030.1,MESS,160003,-0.024830159,0.002333838,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),156030.1,MESS,160003,-0.024830159,0.002333838,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1250,760,W1->P1,CSE,389145.7,SteadyStateOlzmann,389145.7,0,0.001798563,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1250,760,k_uni,inverse iteration,389145.7,LAPACK,389145.7,0,0.001798563,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1250,760,P1->W1,CSE,1.628855e-12,SteadyStateOlzmann,1.630754e-12,-0.001164492,0.001798563,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1250,760,P1->W1,SteadyStateAbsorbingBarrier,1.617498e-12,SteadyStateOlzmann,1.630754e-12,-0.0081287552,0.001798563,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1250,760,k(P1->W1)/k(W1->P1)/K,CSE,4.1857202e-18,K (MarXus),4.1906001e-18,-0.001164492,0.001798563,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1250,760,k(P1->W1)/k(W1->P1)/K,MESS,4.1749906e-18,K (MESS),4.188531e-18,-0.0032327334,0.001798563,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,760,P1->W1 CSE,CSE,1.628855e-12,MESS,1.65725e-12,-0.017133806,0.001798563,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.630754e-12,MESS,1.65725e-12,-0.015987932,0.001798563,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.617498e-12,MESS,1.65725e-12,-0.023986725,0.001798563,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,760,W1->P1 CSE,CSE,389145.7,MESS,396947,-0.019653253,0.001798563,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),389145.7,MESS,396947,-0.019653253,0.001798563,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1250,2280,W1->P1,CSE,843825.4,SteadyStateOlzmann,843825.4,0,0.00133913,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1250,2280,k_uni,inverse iteration,843825.4,LAPACK,843825.4,0,0.00133913,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1250,2280,P1->W1,CSE,3.53335e-12,SteadyStateOlzmann,3.536134e-12,-0.00078730048,0.00133913,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1250,2280,P1->W1,SteadyStateAbsorbingBarrier,3.514354e-12,SteadyStateOlzmann,3.536134e-12,-0.0061592689,0.00133913,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1250,2280,k(P1->W1)/k(W1->P1)/K,CSE,4.1872999e-18,K (MarXus),4.1905991e-18,-0.00078730048,0.00133913,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1250,2280,k(P1->W1)/k(W1->P1)/K,MESS,4.1793531e-18,K (MESS),4.188531e-18,-0.0021911953,0.00133913,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,2280,P1->W1 CSE,CSE,3.53335e-12,MESS,3.57985e-12,-0.012989371,0.00133913,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),3.536134e-12,MESS,3.57985e-12,-0.012211685,0.00133913,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.514354e-12,MESS,3.57985e-12,-0.018295739,0.00133913,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,2280,W1->P1 CSE,CSE,843825.4,MESS,856556,-0.014862543,0.00133913,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),843825.4,MESS,856556,-0.014862543,0.00133913,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1250,7600,W1->P1,CSE,1821026,SteadyStateOlzmann,1821026,0,0.000897581,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1250,7600,k_uni,inverse iteration,1821026,LAPACK,1821026,0,0.000897581,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1250,7600,P1->W1,CSE,7.627677e-12,SteadyStateOlzmann,7.631192e-12,-0.00046060956,0.000897581,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1250,7600,P1->W1,SteadyStateAbsorbingBarrier,7.598983e-12,SteadyStateOlzmann,7.631192e-12,-0.0042207037,0.000897581,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1250,7600,k(P1->W1)/k(W1->P1)/K,CSE,4.18867e-18,K (MarXus),4.1906002e-18,-0.00046060956,0.000897581,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1250,7600,k(P1->W1)/k(W1->P1)/K,MESS,4.1831357e-18,K (MESS),4.188531e-18,-0.0012881266,0.000897581,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,7600,P1->W1 CSE,CSE,7.627677e-12,MESS,7.69241e-12,-0.0084151781,0.000897581,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),7.631192e-12,MESS,7.69241e-12,-0.0079582342,0.000897581,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,7.598983e-12,MESS,7.69241e-12,-0.012145348,0.000897581,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,7600,W1->P1 CSE,CSE,1821026,MESS,1838910,-0.0097253264,0.000897581,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1250,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),1821026,MESS,1838910,-0.0097253264,0.000897581,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1500,76,W1->P1,CSE,376664.1,SteadyStateOlzmann,376664.1,0,0.01472478,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1500,76,k_uni,inverse iteration,376664.1,LAPACK,376664.1,0,0.01472478,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1500,76,P1->W1,CSE,1.376528e-13,SteadyStateOlzmann,1.399873e-13,-0.016676513,0.01472478,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1500,76,P1->W1,SteadyStateAbsorbingBarrier,1.272869e-13,SteadyStateOlzmann,1.399873e-13,-0.090725373,0.01472478,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1500,76,k(P1->W1)/k(W1->P1)/K,CSE,3.654524e-19,K (MarXus),3.7165023e-19,-0.016676513,0.01472478,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1500,76,k(P1->W1)/k(W1->P1)/K,MESS,3.6379842e-19,K (MESS),3.7148411e-19,-0.020689133,0.01472478,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,76,P1->W1 CSE,CSE,1.376528e-13,MESS,1.42036e-13,-0.030859782,0.01472478,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.399873e-13,MESS,1.42036e-13,-0.014423808,0.01472478,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.272869e-13,MESS,1.42036e-13,-0.10384058,0.01472478,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,76,W1->P1 CSE,CSE,376664.1,MESS,390425,-0.03524595,0.01472478,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),376664.1,MESS,390425,-0.03524595,0.01472478,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1500,228,W1->P1,CSE,959072.8,SteadyStateOlzmann,959072.8,0,0.01296151,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1500,228,k_uni,inverse iteration,959072.8,LAPACK,959072.8,0,0.01296151,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1500,228,P1->W1,CSE,3.51492e-13,SteadyStateOlzmann,3.564395e-13,-0.013880336,0.01296151,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1500,228,P1->W1,SteadyStateAbsorbingBarrier,3.279168e-13,SteadyStateOlzmann,3.564395e-13,-0.080021154,0.01296151,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1500,228,k(P1->W1)/k(W1->P1)/K,CSE,3.6649147e-19,K (MarXus),3.716501e-19,-0.013880336,0.01296151,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1500,228,k(P1->W1)/k(W1->P1)/K,MESS,3.6508497e-19,K (MESS),3.7148411e-19,-0.017225866,0.01296151,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,228,P1->W1 CSE,CSE,3.51492e-13,MESS,3.61655e-13,-0.028101367,0.01296151,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),3.564395e-13,MESS,3.61655e-13,-0.014421203,0.01296151,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.279168e-13,MESS,3.61655e-13,-0.093288355,0.01296151,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,228,W1->P1 CSE,CSE,959072.8,MESS,990605,-0.031831255,0.01296151,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),959072.8,MESS,990605,-0.031831255,0.01296151,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1500,760,W1->P1,CSE,2558870,SteadyStateOlzmann,2558870,0,0.01086936,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1500,760,k_uni,inverse iteration,2558870,LAPACK,2558870,0,0.01086936,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1500,760,P1->W1,CSE,9.407639e-13,SteadyStateOlzmann,9.510042e-13,-0.010767881,0.01086936,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1500,760,P1->W1,SteadyStateAbsorbingBarrier,8.870673e-13,SteadyStateOlzmann,9.510042e-13,-0.067230933,0.01086936,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1500,760,k(P1->W1)/k(W1->P1)/K,CSE,3.6764818e-19,K (MarXus),3.7165006e-19,-0.010767881,0.01086936,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1500,760,k(P1->W1)/k(W1->P1)/K,MESS,3.665186e-19,K (MESS),3.7148411e-19,-0.01336667,0.01086936,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,760,P1->W1 CSE,CSE,9.407639e-13,MESS,9.64589e-13,-0.024699743,0.01086936,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),9.510042e-13,MESS,9.64589e-13,-0.014083511,0.01086936,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,8.870673e-13,MESS,9.64589e-13,-0.080367597,0.01086936,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,760,W1->P1 CSE,CSE,2558870,MESS,2631760,-0.027696294,0.01086936,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),2558870,MESS,2631760,-0.027696294,0.01086936,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1500,2280,W1->P1,CSE,5974431,SteadyStateOlzmann,5974431,0,0.008880869,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1500,2280,k_uni,inverse iteration,5974431,LAPACK,5974431,0,0.008880869,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1500,2280,P1->W1,CSE,2.202547e-12,SteadyStateOlzmann,2.220398e-12,-0.0080395497,0.008880869,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1500,2280,P1->W1,SteadyStateAbsorbingBarrier,2.09828e-12,SteadyStateOlzmann,2.220398e-12,-0.054998248,0.008880869,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1500,2280,k(P1->W1)/k(W1->P1)/K,CSE,3.6866222e-19,K (MarXus),3.7165012e-19,-0.0080395497,0.008880869,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1500,2280,k(P1->W1)/k(W1->P1)/K,MESS,3.6777569e-19,K (MESS),3.7148411e-19,-0.0099827232,0.008880869,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,2280,P1->W1 CSE,CSE,2.202547e-12,MESS,2.25039e-12,-0.021259871,0.008880869,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.220398e-12,MESS,2.25039e-12,-0.013327468,0.008880869,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.09828e-12,MESS,2.25039e-12,-0.067592728,0.008880869,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,2280,W1->P1 CSE,CSE,5974431,MESS,6118920,-0.023613481,0.008880869,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),5974431,MESS,6118920,-0.023613481,0.008880869,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1500,7600,W1->P1,CSE,14195350,SteadyStateOlzmann,14195350,0,0.006719571,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1500,7600,k_uni,inverse iteration,14195350,LAPACK,14195350,0,0.006719571,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1500,7600,P1->W1,CSE,5.247408e-12,SteadyStateOlzmann,5.275705e-12,-0.0053636433,0.006719571,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1500,7600,P1->W1,SteadyStateAbsorbingBarrier,5.056042e-12,SteadyStateOlzmann,5.275705e-12,-0.04163671,0.006719571,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1500,7600,k(P1->W1)/k(W1->P1)/K,CSE,3.6965682e-19,K (MarXus),3.7165022e-19,-0.0053636433,0.006719571,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1500,7600,k(P1->W1)/k(W1->P1)/K,MESS,3.6901013e-19,K (MESS),3.7148411e-19,-0.0066597105,0.006719571,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,7600,P1->W1 CSE,CSE,5.247408e-12,MESS,5.33906e-12,-0.017166318,0.006719571,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),5.275705e-12,MESS,5.33906e-12,-0.011866321,0.006719571,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.056042e-12,MESS,5.33906e-12,-0.053008957,0.006719571,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,7600,W1->P1 CSE,CSE,14195350,MESS,14468600,-0.018885725,0.006719571,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1500,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),14195350,MESS,14468600,-0.018885725,0.006719571,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1750,76,W1->P1,CSE,1158867,SteadyStateOlzmann,1158867,0,0.03765977,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1750,76,k_uni,inverse iteration,1158867,LAPACK,1158867,0,0.03765977,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1750,76,P1->W1,CSE,7.246509e-14,SteadyStateOlzmann,7.713261e-14,-0.060512927,0.03765977,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1750,76,P1->W1,SteadyStateAbsorbingBarrier,5.107499e-14,SteadyStateOlzmann,7.713261e-14,-0.33782884,0.03765977,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1750,76,k(P1->W1)/k(W1->P1)/K,CSE,6.2530981e-20,K (MarXus),6.6558639e-20,-0.060512927,0.03765977,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1750,76,k(P1->W1)/k(W1->P1)/K,MESS,6.2456939e-20,K (MESS),6.6530518e-20,-0.061228731,0.03765977,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,76,P1->W1 CSE,CSE,7.246509e-14,MESS,7.42613e-14,-0.024187699,0.03765977,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),7.713261e-14,MESS,7.42613e-14,0.038664957,0.03765977,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.107499e-14,MESS,7.42613e-14,-0.31222602,0.03765977,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,76,W1->P1 CSE,CSE,1158867,MESS,1189000,-0.025343146,0.03765977,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),1158867,MESS,1189000,-0.025343146,0.03765977,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1750,228,W1->P1,CSE,3046425,SteadyStateOlzmann,3046425,0,0.03448269,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1750,228,k_uni,inverse iteration,3046425,LAPACK,3046425,0,0.03448269,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1750,228,P1->W1,CSE,1.920628e-13,SteadyStateOlzmann,2.02766e-13,-0.05278597,0.03448269,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1750,228,P1->W1,SteadyStateAbsorbingBarrier,1.394247e-13,SteadyStateOlzmann,2.02766e-13,-0.3123862,0.03448269,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1750,228,k(P1->W1)/k(W1->P1)/K,CSE,6.3045307e-20,K (MarXus),6.6558671e-20,-0.05278597,0.03448269,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1750,228,k(P1->W1)/k(W1->P1)/K,MESS,6.2980287e-20,K (MESS),6.6530518e-20,-0.053362438,0.03448269,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,228,P1->W1 CSE,CSE,1.920628e-13,MESS,1.96581e-13,-0.02298391,0.03448269,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.02766e-13,MESS,1.96581e-13,0.031462858,0.03448269,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.394247e-13,MESS,1.96581e-13,-0.2907519,0.03448269,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,228,W1->P1 CSE,CSE,3046425,MESS,3121310,-0.023991529,0.03448269,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),3046425,MESS,3121310,-0.023991529,0.03448269,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1750,760,W1->P1,CSE,8485910,SteadyStateOlzmann,8485910,0,0.03051894,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1750,760,k_uni,inverse iteration,8485910,LAPACK,8485910,0,0.03051894,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1750,760,P1->W1,CSE,5.401634e-13,SteadyStateOlzmann,5.648109e-13,-0.043638499,0.03051894,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1750,760,P1->W1,SteadyStateAbsorbingBarrier,4.06977e-13,SteadyStateOlzmann,5.648109e-13,-0.27944556,0.03051894,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1750,760,k(P1->W1)/k(W1->P1)/K,CSE,6.3654151e-20,K (MarXus),6.6558672e-20,-0.043638499,0.03051894,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1750,760,k(P1->W1)/k(W1->P1)/K,MESS,6.3599064e-20,K (MESS),6.6530518e-20,-0.044061785,0.03051894,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,760,P1->W1 CSE,CSE,5.401634e-13,MESS,5.51989e-13,-0.021423615,0.03051894,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),5.648109e-13,MESS,5.51989e-13,0.023228543,0.03051894,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,4.06977e-13,MESS,5.51989e-13,-0.26270813,0.03051894,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,760,W1->P1 CSE,CSE,8485910,MESS,8679200,-0.022270486,0.03051894,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),8485910,MESS,8679200,-0.022270486,0.03051894,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1750,2280,W1->P1,CSE,20791950,SteadyStateOlzmann,20791950,0,0.02650849,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1750,2280,k_uni,inverse iteration,20791950,LAPACK,20791950,0,0.02650849,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1750,2280,P1->W1,CSE,1.335451e-12,SteadyStateOlzmann,1.383884e-12,-0.034997876,0.02650849,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1750,2280,P1->W1,SteadyStateAbsorbingBarrier,1.045078e-12,SteadyStateOlzmann,1.383884e-12,-0.24482254,0.02650849,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1750,2280,k(P1->W1)/k(W1->P1)/K,CSE,6.4229233e-20,K (MarXus),6.6558644e-20,-0.034997876,0.02650849,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1750,2280,k(P1->W1)/k(W1->P1)/K,MESS,6.4182606e-20,K (MESS),6.6530518e-20,-0.035290745,0.02650849,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,2280,P1->W1 CSE,CSE,1.335451e-12,MESS,1.36234e-12,-0.019737364,0.02650849,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.383884e-12,MESS,1.36234e-12,0.015813967,0.02650849,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.045078e-12,MESS,1.36234e-12,-0.23288019,0.02650849,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,2280,W1->P1 CSE,CSE,20791950,MESS,21226000,-0.020448978,0.02650849,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),20791950,MESS,21226000,-0.020448978,0.02650849,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,1750,7600,W1->P1,CSE,52697040,SteadyStateOlzmann,52697040,0,0.02179153,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,1750,7600,k_uni,inverse iteration,52697040,LAPACK,52697040,0,0.02179153,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,1750,7600,P1->W1,CSE,3.417252e-12,SteadyStateOlzmann,3.507445e-12,-0.02571473,0.02179153,no
+H + C2H2 = C2H3 (one well),A2 association: absorbing barrier vs SteadyStateOlzmann,approximate,1750,7600,P1->W1,SteadyStateAbsorbingBarrier,2.796925e-12,SteadyStateOlzmann,3.507445e-12,-0.20257481,0.02179153,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,1750,7600,k(P1->W1)/k(W1->P1)/K,CSE,6.4847134e-20,K (MarXus),6.6558672e-20,-0.02571473,0.02179153,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,1750,7600,k(P1->W1)/k(W1->P1)/K,MESS,6.4808908e-20,K (MESS),6.6530518e-20,-0.025876998,0.02179153,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,7600,P1->W1 CSE,CSE,3.417252e-12,MESS,3.47832e-12,-0.017556752,0.02179153,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),3.507445e-12,MESS,3.47832e-12,0.0083732952,0.02179153,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.796925e-12,MESS,3.47832e-12,-0.19589773,0.02179153,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,7600,W1->P1 CSE,CSE,52697040,MESS,53670400,-0.018135881,0.02179153,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,1750,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),52697040,MESS,53670400,-0.018135881,0.02179153,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,2000,76,W1->P1,CSE,2516536,SteadyStateOlzmann,2516536,0,0.06688897,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,2000,76,k_uni,inverse iteration,2516536,LAPACK,2516536,0,0.06688897,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,2000,76,P1->W1,CSE,4.009316e-14,SteadyStateOlzmann,4.659017e-14,-0.13945023,0.06688897,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,2000,76,k(P1->W1)/k(W1->P1)/K,CSE,1.5931884e-20,K (MarXus),1.8513612e-20,-0.13945023,0.06688897,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,2000,76,k(P1->W1)/k(W1->P1)/K,MESS,1.5929884e-20,K (MESS),1.8506243e-20,-0.1392157,0.06688897,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,76,P1->W1 CSE,CSE,4.009316e-14,MESS,4.11582e-14,-0.025876739,0.06688897,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,76,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),4.659017e-14,MESS,4.11582e-14,0.13197783,0.06688897,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,76,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,nan,MESS,4.11582e-14,nan,0.06688897,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,76,W1->P1 CSE,CSE,2516536,MESS,2583710,-0.025999048,0.06688897,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,76,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),2516536,MESS,2583710,-0.025999048,0.06688897,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,2000,228,W1->P1,CSE,6750367,SteadyStateOlzmann,6750367,0,0.06270957,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,2000,228,k_uni,inverse iteration,6750367,LAPACK,6750367,0,0.06270957,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,2000,228,P1->W1,CSE,1.092644e-13,SteadyStateOlzmann,1.249737e-13,-0.12570085,0.06270957,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,2000,228,k(P1->W1)/k(W1->P1)/K,CSE,1.6186438e-20,K (MarXus),1.8513616e-20,-0.12570085,0.06270957,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,2000,228,k(P1->W1)/k(W1->P1)/K,MESS,1.6185863e-20,K (MESS),1.8506243e-20,-0.12538367,0.06270957,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,228,P1->W1 CSE,CSE,1.092644e-13,MESS,1.12068e-13,-0.025016954,0.06270957,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,228,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),1.249737e-13,MESS,1.12068e-13,0.11515955,0.06270957,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,228,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,nan,MESS,1.12068e-13,nan,0.06270957,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,228,W1->P1 CSE,CSE,6750367,MESS,6923820,-0.025051633,0.06270957,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,228,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),6750367,MESS,6923820,-0.025051633,0.06270957,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,2000,760,W1->P1,CSE,19326520,SteadyStateOlzmann,19326520,0,0.05735452,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,2000,760,k_uni,inverse iteration,19326520,LAPACK,19326520,0,0.05735452,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,2000,760,P1->W1,CSE,3.189174e-13,SteadyStateOlzmann,3.578037e-13,-0.10868054,0.05735452,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,2000,760,k(P1->W1)/k(W1->P1)/K,CSE,1.6501543e-20,K (MarXus),1.8513612e-20,-0.10868054,0.05735452,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,2000,760,k(P1->W1)/k(W1->P1)/K,MESS,1.6502359e-20,K (MESS),1.8506243e-20,-0.10828154,0.05735452,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,760,P1->W1 CSE,CSE,3.189174e-13,MESS,3.26717e-13,-0.023872648,0.05735452,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,760,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),3.578037e-13,MESS,3.26717e-13,0.095148707,0.05735452,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,760,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,nan,MESS,3.26717e-13,nan,0.05735452,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,760,W1->P1 CSE,CSE,19326520,MESS,19798200,-0.023824388,0.05735452,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,760,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),19326520,MESS,19798200,-0.023824388,0.05735452,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,2000,2280,W1->P1,CSE,48846240,SteadyStateOlzmann,48846240,0,0.05174853,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,2000,2280,k_uni,inverse iteration,48846240,LAPACK,48846240,0,0.05174853,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,2000,2280,P1->W1,CSE,8.213858e-13,SteadyStateOlzmann,9.043202e-13,-0.091709109,0.05174853,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,2000,2280,k(P1->W1)/k(W1->P1)/K,CSE,1.6815743e-20,K (MarXus),1.8513609e-20,-0.091709109,0.05174853,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,2000,2280,k(P1->W1)/k(W1->P1)/K,MESS,1.6817522e-20,K (MESS),1.8506243e-20,-0.091251425,0.05174853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,2280,P1->W1 CSE,CSE,8.213858e-13,MESS,8.4038e-13,-0.022601918,0.05174853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,2280,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),9.043202e-13,MESS,8.4038e-13,0.076084866,0.05174853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,2280,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,nan,MESS,8.4038e-13,nan,0.05174853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,2280,W1->P1 CSE,CSE,48846240,MESS,49970500,-0.022498474,0.05174853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,2280,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),48846240,MESS,49970500,-0.022498474,0.05174853,no
+H + C2H2 = C2H3 (one well),I3 one well: CSE k(W->P) = k_uni,identity,2000,7600,W1->P1,CSE,1.291363e+08,SteadyStateOlzmann,1.291363e+08,0,0.044853,no
+H + C2H2 = C2H3 (one well),E eigen-solvers: k_uni inverse iteration vs LAPACK,identity,2000,7600,k_uni,inverse iteration,1.291363e+08,LAPACK,1.291363e+08,0,0.044853,no
+H + C2H2 = C2H3 (one well),A2 association: CSE vs SteadyStateOlzmann (k_uni K),approximate,2000,7600,P1->W1,CSE,2.218117e-12,SteadyStateOlzmann,2.390779e-12,-0.072219975,0.044853,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: CSE,approximate,2000,7600,k(P1->W1)/k(W1->P1)/K,CSE,1.7176557e-20,K (MarXus),1.8513609e-20,-0.072219975,0.044853,no
+H + C2H2 = C2H3 (one well),A4 detailed balance of the pair: MESS,approximate,2000,7600,k(P1->W1)/k(W1->P1)/K,MESS,1.7178844e-20,K (MESS),1.8506243e-20,-0.071727135,0.044853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,7600,P1->W1 CSE,CSE,2.218117e-12,MESS,2.26546e-12,-0.020897743,0.044853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,7600,P1->W1 SteadyStateOlzmann (k_uni K),SteadyStateOlzmann (k_uni K),2.390779e-12,MESS,2.26546e-12,0.055317242,0.044853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,7600,P1->W1 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,nan,MESS,2.26546e-12,nan,0.044853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,7600,W1->P1 CSE,CSE,1.291363e+08,MESS,1.31875e+08,-0.020767393,0.044853,no
+H + C2H2 = C2H3 (one well),M vs MESS,MESS,2000,7600,W1->P1 SteadyStateOlzmann (k_uni),SteadyStateOlzmann (k_uni),1.291363e+08,MESS,1.31875e+08,-0.020767393,0.044853,no

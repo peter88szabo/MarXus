@@ -87,19 +87,25 @@ All of these come in three views: by temperature, by pressure, and temperature�
 **Identity with the final steady state.** With all eigenpairs, the long-time yields reconstructed from the CSE rate coefficients equal $`k_x^T\,𝐉^{-1} F`$ of [SteadyStateOlzmann](steady_state_olzmann.md).
 - Both are $`\sum_\lambda p^{(x)}_\lambda p^{(R)}_\lambda/(\Lambda_\lambda Q_R)`$ over all eigenpairs, independently of the separation.
 - Test `cse_long_time_yields_equal_the_final_steady_state_yields`: 10⁻⁸.
-- Case 2: IEPOX + OH at 300 K, 760 Torr is 2.32525079% from CSE against 2.32525045% from Olzmann. All 21 conditions agree to within 3·10⁻⁷, the printed precision.
+- Case 2: IEPOX + OH at 300 K, 760 Torr is 2.32448% from both. Over all 21 conditions P5, the escape and P1 agree to within 6·10⁻⁷, the printed precision. P7, at most 0.008% of the reaction, agrees to 5·10⁻⁴: it is formed through G6, whose CSE entries are at the rounding level.
 
 **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ (test, 10⁻⁸).
 
 **ZZ-allyl + O₂, four wells** (MESS Eckart model; `validation/ZZAllyl+O2_Gamma_Case2/`):
 - The species tables of MESS are reproduced to a few percent.
-- R → IEPOX + OH: −2.7 … −3.5%. R → G2: +2.1 … +3.3%. R → G4: +1.4 … +2.2% at 270–300 K and +4.9 … +6.1% at 310–330 K (all 21 conditions). The step between 304 and 305 K is in MarXus, from the low-energy reduction of the collision kernel; it affects every method (`reports/low_energy_reduction_temperature_step.md`).
-- MESS's negative R → escape entry is reproduced.
+- **Against MESS** (all 21 conditions): R → IEPOX + OH −3.6 … −3.0%; R → G2 +3.0 … +5.2%, R → G3 −1.2 … −0.7%, R → G4 −1.0 … −0.3%; R → P1 and P7 −5.1 … −1.5%; well → well −0.5 … +1.3%.
+- **Low-energy reservoir state.** These numbers are with it (`reports/low_energy_reservoir_state.md`). The former reduction rule of the collision kernel had a step at 304.7 K, R → G4 +1.4 … +6.1%.
+- **MESS's negative R → escape entry is reproduced** (−5.5 … −4.5%).
+- **Identities:** capture balance within 6·10⁻⁷, loss balance within 1.1·10⁻⁷ (`reports/method_comparison.md`).
 
 **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`, §4.4; 40 conditions, 300–2000 K):
-- **Up to 1000 K:** the association k(P1 → W1) (eq. 28) equals SteadyStateOlzmann's k_uni·K within 7·10⁻⁵.
-- **Above 1250 K the two separate.** The difference follows the separation Λ₁/Λ₂: −0.5 … −1.7% at 1500 K (Λ₁/Λ₂ ≤ 0.019), −7.6 … −15% at 2000 K (Λ₁/Λ₂ = 0.065–0.10). MESS lies between them.
-- **Deviation from MESS:** +3.2 … +5.8% at 300–500 K (tunneling model), −2.6 … +1.9% at 750–1250 K, −1.9 … −4.6% at 1500–1750 K, −4.9 … −9.1% at 2000 K.
+- **CSE's k(W1 → P1) equals SteadyStateOlzmann's k_uni** in all printed digits wherever λ₁ is resolved (750–2000 K).
+- **Up to 1000 K** the association k(P1 → W1) (eq. 28) equals k_uni·K within 0.01%.
+- **Above that, CSE's own pair departs from detailed balance** as the separation Λ₁/Λ₂ grows: −0.5 … −1.7% at 1500 K (Λ₁/Λ₂ ≤ 0.019), −7.2 … −14.0% at 2000 K (0.065–0.10). **MESS's own pair departs by the same amount** (−7.2 … −13.9% at 2000 K). This is a property of the CSE rate coefficients at poor separation, not an error.
+- **Deviation from MESS:**
+  - dissociation +4.7 … +5.7% at 300 K (tunneling model), −0.8 … +0.5% at 1000 K, −2.6 … −2.1% at 2000 K;
+  - association −3.1 … −0.8% at 1250–2000 K.
+- **Species merging** at poor separation (Georgievskii et al. 2013, Sec. IV) is planned: `reports/cse_species_merging.md`.
 
 ## 8. Code
 

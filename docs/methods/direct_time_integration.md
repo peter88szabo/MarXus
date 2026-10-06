@@ -113,12 +113,13 @@ The method has no physical restriction beyond the master equation itself. The ou
   - IEPOX + OH from chemically activated G4 by 10⁻⁸ s (0.502%);
   - escape from G4 between 10⁻¹⁰ and 10⁻⁵ s (21.1%);
   - a thermal P7 stage near 10⁻⁴ … 10⁻³ s.
-- The integrator needed 895 steps, 0 rejected, and 120 factorizations.
+- The integrator needed 851–938 steps per condition, none rejected, and 117–132 factorizations (111 s for 21 conditions on 4 cores).
 
 **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`, §4.4; 40 conditions):
-- **Late-time decay.** The decay rate of the pulse, −d ln N/dt from the last two output times with 10⁻⁸ < N < 10⁻³, equals SteadyStateOlzmann's thermal k_uni within 3·10⁻⁶. That holds at all 30 conditions that decay inside the window, 750–2000 K (`time_integration_decay_vs_k_uni.csv`). The time integration computes no eigenvector.
+- **Late-time decay.** The decay rate of the pulse, −d ln N/dt from the last two output times with 10⁻⁸ < N < 10⁻³, equals SteadyStateOlzmann's thermal k_uni within 3.1·10⁻⁶. That holds at all 30 conditions that decay inside the window, 750–2000 K (`time_integration_decay_vs_k_uni.csv`). The time integration computes no eigenvector.
+- **Conservation.** Populations + yields stay 100% in all printed digits at 750–2000 K. At 300–500 K, where λ₁ lies below the double-precision floor, the total drifts by up to 6·10⁻⁴ over 100 s (`reports/method_comparison.md`).
 - **At 300 K and 1 atm,** 12.9% redissociates within about 10⁻⁹ s. The remaining 87.1% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
-- **Integrator work:** 620–700 steps per condition and about 115–122 factorizations. The full deck took 10 min 50 s on 4 cores: the collision band reaches 716 grains at 2000 K.
+- **Integrator work:** 620–700 steps per condition and about 115–122 factorizations. The full deck took 11 min on 4 cores: the collision band reaches 716 grains at 2000 K.
 
 ## 8. Code
 

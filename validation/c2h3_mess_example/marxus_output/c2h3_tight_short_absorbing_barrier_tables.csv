@@ -8,7 +8,7 @@ T[K],P[Torr],stab(W1)
 
 # intermediate steady state: Chemical-activation rate coefficients k_ca (1/s)
 T[K],P[Torr],W1->P1
-1000,760,1.582282e9
+1000,760,1.582307e9
 
 # intermediate steady state: Bimolecular-to-well rate coefficients (stabilization): k(P1 -> W) = k_inf Phi_stab,W (cm^3/s)
 T[K],P[Torr],P1->W1

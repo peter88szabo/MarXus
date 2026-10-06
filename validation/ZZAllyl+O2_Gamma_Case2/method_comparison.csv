@@ -1,0 +1,674 @@
+system,check,kind,T_K,p_torr,quantity,a,value_a,b,value_b,relative_deviation,extra,lambda_1_below_floor
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,270,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,500,G2->R,TimeIntegration,69.86243,SteadyStateOlzmann,69.86243,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,500,G4->P5,TimeIntegration,0.6354218,SteadyStateOlzmann,0.6354218,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,500,escape(G4),TimeIntegration,29.50205,SteadyStateOlzmann,29.50205,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,500,P5,CSE,2.108404,SteadyStateOlzmann,2.108404,0,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,500,P7,CSE,0.0002136089,SteadyStateOlzmann,0.000213496,0.00052881553,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,500,escape(G4),CSE,97.89129,SteadyStateOlzmann,97.89129,0,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,270,500,k_uni,TimeIntegration,528.9284,SteadyStateOlzmann,528.9282,3.8388835e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,270,500,loss balance,CSE,1,exact,1,1.577154e-08,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,270,500,net reaction,CSE,1.1493258e-11,capture - return,1.149326e-11,-1.7873877e-07,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,270,500,lambda_1,lambda_1,528.9282,k_uni,528.9282,2.884e-09,3.8889967e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,270,500,R->P1,SteadyStateAbsorbingBarrier,1.044972e-17,CSE,1.044956e-17,1.5311649e-05,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,270,500,R->P5,SteadyStateAbsorbingBarrier,2.405952e-13,CSE,2.405736e-13,8.9785413e-05,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,270,500,sum R->W,SteadyStateAbsorbingBarrier,1.0756794e-11,CSE,1.1379063e-11,-0.054685392,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,500,R->G2,SteadyStateAbsorbingBarrier,8.194977e-12,CSE,8.271293e-12,-0.0092266106,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,500,R->G3,SteadyStateAbsorbingBarrier,8.321925e-14,CSE,8.062375e-14,0.032192747,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,500,R->G4,SteadyStateAbsorbingBarrier,2.478598e-12,CSE,3.027146e-12,-0.18120963,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,270,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,600,G2->R,TimeIntegration,68.03228,SteadyStateOlzmann,68.03228,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,600,G4->P5,TimeIntegration,0.5335525,SteadyStateOlzmann,0.5335525,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,600,escape(G4),TimeIntegration,31.43408,SteadyStateOlzmann,31.43408,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,600,P5,CSE,1.669035,SteadyStateOlzmann,1.669035,0,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,600,P7,CSE,0.0002032968,SteadyStateOlzmann,0.0002032954,6.8865306e-06,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,600,escape(G4),CSE,98.33069,SteadyStateOlzmann,98.33069,0,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,270,600,k_uni,TimeIntegration,528.93494,SteadyStateOlzmann,528.9348,2.7150735e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,270,600,loss balance,CSE,1,exact,1,3.765484e-08,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,270,600,net reaction,CSE,1.2194338e-11,capture - return,1.219434e-11,-1.7000996e-07,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,270,600,lambda_1,lambda_1,528.9348,k_uni,528.9348,3.696e-09,3.8889481e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,270,600,R->P1,SteadyStateAbsorbingBarrier,9.31427e-18,CSE,9.31413e-18,1.5030926e-05,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,270,600,R->P5,SteadyStateAbsorbingBarrier,2.018322e-13,CSE,2.018144e-13,8.8199851e-05,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,270,600,sum R->W,SteadyStateAbsorbingBarrier,1.159575e-11,CSE,1.2093587e-11,-0.041165359,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,600,R->G2,SteadyStateAbsorbingBarrier,9.123275e-12,CSE,9.195036e-12,-0.0078043196,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,600,R->G3,SteadyStateAbsorbingBarrier,7.732822e-14,CSE,7.489007e-14,0.032556386,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,600,R->G4,SteadyStateAbsorbingBarrier,2.395147e-12,CSE,2.823661e-12,-0.1517583,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,270,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,760,G2->R,TimeIntegration,65.50868,SteadyStateOlzmann,65.50868,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,760,G4->P5,TimeIntegration,0.421881,SteadyStateOlzmann,0.421881,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,270,760,escape(G4),TimeIntegration,34.06935,SteadyStateOlzmann,34.06935,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,760,P5,CSE,1.223151,SteadyStateOlzmann,1.223151,0,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,760,P7,CSE,0.000193851,SteadyStateOlzmann,0.0001938523,-6.7061366e-06,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,270,760,escape(G4),CSE,98.77659,SteadyStateOlzmann,98.77659,0,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,270,760,k_uni,TimeIntegration,528.94262,SteadyStateOlzmann,528.9425,2.2584159e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,270,760,loss balance,CSE,1,exact,1,1.432651e-08,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,270,760,net reaction,CSE,1.3161653e-11,capture - return,1.316166e-11,-5.6940071e-07,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,270,760,lambda_1,lambda_1,528.9425,k_uni,528.9425,5.316e-09,3.8888915e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,270,760,R->P5,SteadyStateAbsorbingBarrier,1.593645e-13,CSE,1.593508e-13,8.5973839e-05,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,270,760,sum R->W,SteadyStateAbsorbingBarrier,1.2708515e-11,CSE,1.307725e-11,-0.028196667,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,760,R->G2,SteadyStateAbsorbingBarrier,1.038021e-11,CSE,1.044571e-11,-0.0062705168,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,760,R->G3,SteadyStateAbsorbingBarrier,6.988208e-14,CSE,6.765894e-14,0.032858038,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,270,760,R->G4,SteadyStateAbsorbingBarrier,2.258423e-12,CSE,2.563881e-12,-0.11913891,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,280,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,500,G2->R,TimeIntegration,74.1826,SteadyStateOlzmann,74.1826,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,500,G4->P5,TimeIntegration,0.6643049,SteadyStateOlzmann,0.6643049,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,500,G6->P7,TimeIntegration,0.0001107079,SteadyStateOlzmann,0.0001107079,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,500,escape(G4),TimeIntegration,25.15295,SteadyStateOlzmann,25.15295,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,500,P1,CSE,0.0001257267,SteadyStateOlzmann,0.0001257267,0,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,500,P5,CSE,2.57309,SteadyStateOlzmann,2.57309,0,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,500,P7,CSE,0.0004288082,SteadyStateOlzmann,0.0004288112,-6.9960859e-06,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,500,escape(G4),CSE,97.42636,SteadyStateOlzmann,97.42636,0,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,280,500,k_uni,TimeIntegration,723.33075,SteadyStateOlzmann,723.3311,-4.9024945e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,280,500,loss balance,CSE,1,exact,1,2.250559e-08,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,280,500,net reaction,CSE,9.9209336e-12,capture - return,9.920934e-12,-4.390311e-08,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,280,500,lambda_1,lambda_1,723.3311,k_uni,723.3311,4.946e-09,2.8437876e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,500,R->P1,SteadyStateAbsorbingBarrier,1.241212e-17,CSE,1.241166e-17,3.7061924e-05,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,500,R->P5,SteadyStateAbsorbingBarrier,2.521199e-13,CSE,2.520678e-13,0.00020669042,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,280,500,sum R->W,SteadyStateAbsorbingBarrier,9.1984306e-12,CSE,9.7808236e-12,-0.05954437,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,500,R->G2,SteadyStateAbsorbingBarrier,6.911093e-12,CSE,7.001522e-12,-0.01291562,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,500,R->G3,SteadyStateAbsorbingBarrier,7.617358e-14,CSE,7.321956e-14,0.040344684,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,500,R->G4,SteadyStateAbsorbingBarrier,2.211164e-12,CSE,2.706082e-12,-0.18289098,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,280,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,600,G2->R,TimeIntegration,72.52832,SteadyStateOlzmann,72.52832,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,600,G4->P5,TimeIntegration,0.5634855,SteadyStateOlzmann,0.5634855,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,600,G6->P7,TimeIntegration,0.0001143258,SteadyStateOlzmann,0.0001143258,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,600,escape(G4),TimeIntegration,26.90805,SteadyStateOlzmann,26.90805,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,600,P1,CSE,0.0001063232,SteadyStateOlzmann,0.0001063232,0,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,600,P5,CSE,2.05115,SteadyStateOlzmann,2.05115,0,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,600,P7,CSE,0.0004161572,SteadyStateOlzmann,0.0004161589,-4.0849781e-06,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,600,escape(G4),CSE,97.94833,SteadyStateOlzmann,97.94833,0,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,280,600,k_uni,TimeIntegration,723.34647,SteadyStateOlzmann,723.3466,-1.7733704e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,280,600,loss balance,CSE,1,exact,1,1.480771e-08,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,280,600,net reaction,CSE,1.056257e-11,capture - return,1.056257e-11,-3.1377676e-08,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,280,600,lambda_1,lambda_1,723.3466,k_uni,723.3466,3.409e-09,2.8437266e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,600,R->P1,SteadyStateAbsorbingBarrier,1.116567e-17,CSE,1.116525e-17,3.7616713e-05,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,600,R->P5,SteadyStateAbsorbingBarrier,2.135178e-13,CSE,2.134742e-13,0.00020424014,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,280,600,sum R->W,SteadyStateAbsorbingBarrier,9.969493e-12,CSE,1.0439425e-11,-0.045015162,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,600,R->G2,SteadyStateAbsorbingBarrier,7.74303e-12,CSE,7.828663e-12,-0.010938394,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,600,R->G3,SteadyStateAbsorbingBarrier,7.120597e-14,CSE,6.84134e-14,0.04081905,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,600,R->G4,SteadyStateAbsorbingBarrier,2.155257e-12,CSE,2.542349e-12,-0.15225762,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,280,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,760,G2->R,TimeIntegration,70.22775,SteadyStateOlzmann,70.22775,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,760,G4->P5,TimeIntegration,0.4515097,SteadyStateOlzmann,0.4515097,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,760,G6->P7,TimeIntegration,0.0001204926,SteadyStateOlzmann,0.0001204926,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,280,760,escape(G4),TimeIntegration,29.32059,SteadyStateOlzmann,29.32059,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,760,P5,CSE,1.516546,SteadyStateOlzmann,1.516546,0,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,760,P7,CSE,0.0004047163,SteadyStateOlzmann,0.0004047144,4.6946686e-06,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,280,760,escape(G4),CSE,98.48296,SteadyStateOlzmann,98.48296,0,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,280,760,k_uni,TimeIntegration,723.36522,SteadyStateOlzmann,723.3652,2.7938699e-08,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,280,760,loss balance,CSE,1,exact,1,3.909354e-09,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,280,760,net reaction,CSE,1.1456126e-11,capture - return,1.145613e-11,-3.6643622e-07,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,280,760,lambda_1,lambda_1,723.3652,k_uni,723.3652,2.973e-09,2.8436535e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,760,R->P1,SteadyStateAbsorbingBarrier,9.639847e-18,CSE,9.639488e-18,3.7242642e-05,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,280,760,R->P5,SteadyStateAbsorbingBarrier,1.706839e-13,CSE,1.706498e-13,0.00019982444,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,280,760,sum R->W,SteadyStateAbsorbingBarrier,1.1001316e-11,CSE,1.1353233e-11,-0.030997072,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,760,R->G2,SteadyStateAbsorbingBarrier,8.881978e-12,CSE,8.960856e-12,-0.0088025073,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,760,R->G3,SteadyStateAbsorbingBarrier,6.485968e-14,CSE,6.229265e-14,0.041209196,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,280,760,R->G4,SteadyStateAbsorbingBarrier,2.054478e-12,CSE,2.330084e-12,-0.11828157,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,290,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,500,G2->R,TimeIntegration,78.05527,SteadyStateOlzmann,78.05527,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,500,G4->P5,TimeIntegration,0.6871857,SteadyStateOlzmann,0.6871857,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,500,G6->P7,TimeIntegration,0.0001832932,SteadyStateOlzmann,0.0001832932,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,500,escape(G4),TimeIntegration,21.25732,SteadyStateOlzmann,21.25732,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,500,P1,CSE,0.0001717599,SteadyStateOlzmann,0.0001717599,0,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,500,P5,CSE,3.131439,SteadyStateOlzmann,3.131439,0,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,500,P7,CSE,0.0008352494,SteadyStateOlzmann,0.0008352493,1.1972473e-07,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,500,escape(G4),CSE,96.86755,SteadyStateOlzmann,96.86755,0,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,290,500,k_uni,TimeIntegration,985.36474,SteadyStateOlzmann,985.3649,-1.6015347e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,290,500,loss balance,CSE,1,exact,1,3.8184449e-09,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,290,500,net reaction,CSE,8.5065729e-12,capture - return,8.506573e-12,-1.1679392e-08,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,290,500,lambda_1,lambda_1,985.3649,k_uni,985.3649,1.273e-09,2.0875515e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,500,R->P1,SteadyStateAbsorbingBarrier,1.447952e-17,CSE,1.447833e-17,8.21918e-05,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,500,R->P5,SteadyStateAbsorbingBarrier,2.610129e-13,CSE,2.609e-13,0.00043273285,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,500,R->P7,SteadyStateAbsorbingBarrier,7.77327e-18,CSE,7.772292e-18,0.00012583161,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,290,500,sum R->W,SteadyStateAbsorbingBarrier,7.8025551e-12,CSE,8.3433192e-12,-0.064814016,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,500,R->G2,SteadyStateAbsorbingBarrier,5.778167e-12,CSE,5.882518e-12,-0.017739172,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,500,R->G3,SteadyStateAbsorbingBarrier,6.926713e-14,CSE,6.598615e-14,0.049722252,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,500,R->G4,SteadyStateAbsorbingBarrier,1.955121e-12,CSE,2.394815e-12,-0.18360249,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,290,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,600,G2->R,TimeIntegration,76.58864,SteadyStateOlzmann,76.58864,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,600,G4->P5,TimeIntegration,0.588818,SteadyStateOlzmann,0.588818,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,600,G6->P7,TimeIntegration,0.0001919322,SteadyStateOlzmann,0.0001919322,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,600,escape(G4),TimeIntegration,22.82232,SteadyStateOlzmann,22.82232,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,600,P1,CSE,0.0001461867,SteadyStateOlzmann,0.0001461867,0,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,600,P5,CSE,2.515095,SteadyStateOlzmann,2.515095,0,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,600,P7,CSE,0.000819825,SteadyStateOlzmann,0.0008198252,-2.4395444e-07,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,600,escape(G4),CSE,97.48394,SteadyStateOlzmann,97.48394,0,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,290,600,k_uni,TimeIntegration,985.40026,SteadyStateOlzmann,985.4005,-2.4550639e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,290,600,loss balance,CSE,1,exact,1,1.675675e-08,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,290,600,net reaction,CSE,9.0852922e-12,capture - return,9.085293e-12,-8.8651082e-08,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,290,600,lambda_1,lambda_1,985.4005,k_uni,985.4005,2.022e-09,2.0874761e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,600,R->P1,SteadyStateAbsorbingBarrier,1.314027e-17,CSE,1.313917e-17,8.3719139e-05,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,600,R->P5,SteadyStateAbsorbingBarrier,2.230949e-13,CSE,2.229991e-13,0.00042959815,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,290,600,sum R->W,SteadyStateAbsorbingBarrier,8.5016312e-12,CSE,8.9417881e-12,-0.049224707,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,600,R->G2,SteadyStateAbsorbingBarrier,6.514442e-12,CSE,6.61402e-12,-0.015055594,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,600,R->G3,SteadyStateAbsorbingBarrier,6.512219e-14,CSE,6.200009e-14,0.050356379,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,600,R->G4,SteadyStateAbsorbingBarrier,1.922067e-12,CSE,2.265768e-12,-0.15169294,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,290,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,760,G2->R,TimeIntegration,74.53403,SteadyStateOlzmann,74.53403,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,760,G4->P5,TimeIntegration,0.4781431,SteadyStateOlzmann,0.4781431,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,760,G6->P7,TimeIntegration,0.000205342,SteadyStateOlzmann,0.000205342,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,290,760,escape(G4),TimeIntegration,24.98759,SteadyStateOlzmann,24.98759,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,760,P1,CSE,0.0001174728,SteadyStateOlzmann,0.0001174728,0,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,760,P5,CSE,1.877577,SteadyStateOlzmann,1.877577,0,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,760,P7,CSE,0.000806313,SteadyStateOlzmann,0.000806339,-3.2244503e-05,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,290,760,escape(G4),CSE,98.1215,SteadyStateOlzmann,98.1215,0,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,290,760,k_uni,TimeIntegration,985.44451,SteadyStateOlzmann,985.4447,-1.8910414e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,290,760,loss balance,CSE,1,exact,1,2.146163e-09,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,290,760,net reaction,CSE,9.8983398e-12,capture - return,9.89834e-12,-1.940954e-08,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,290,760,lambda_1,lambda_1,985.4447,k_uni,985.4447,4.542e-09,2.0873825e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,760,R->P1,SteadyStateAbsorbingBarrier,1.147671e-17,CSE,1.147574e-17,8.4526139e-05,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,290,760,R->P5,SteadyStateAbsorbingBarrier,1.804897e-13,CSE,1.804137e-13,0.00042125404,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,290,760,sum R->W,SteadyStateAbsorbingBarrier,9.4448867e-12,CSE,9.7782476e-12,-0.034092093,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,760,R->G2,SteadyStateAbsorbingBarrier,7.533072e-12,CSE,7.625704e-12,-0.012147337,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,760,R->G3,SteadyStateAbsorbingBarrier,5.97697e-14,CSE,5.687563e-14,0.050884184,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,290,760,R->G4,SteadyStateAbsorbingBarrier,1.852045e-12,CSE,2.095668e-12,-0.11625076,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,300,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,500,G2->R,TimeIntegration,81.4909,SteadyStateOlzmann,81.4909,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,500,G4->P5,TimeIntegration,0.7041102,SteadyStateOlzmann,0.7041102,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,500,G6->P7,TimeIntegration,0.0002891448,SteadyStateOlzmann,0.0002891448,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,500,escape(G4),TimeIntegration,17.80465,SteadyStateOlzmann,17.80465,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,500,P1,CSE,0.0002327592,SteadyStateOlzmann,0.0002327592,0,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,500,P5,CSE,3.80413,SteadyStateOlzmann,3.80413,0,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,500,P7,CSE,0.001562177,SteadyStateOlzmann,0.001562177,0,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,500,escape(G4),CSE,96.19407,SteadyStateOlzmann,96.19407,0,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,300,500,k_uni,TimeIntegration,1337.3179,SteadyStateOlzmann,1337.318,-6.8003331e-08,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,300,500,loss balance,CSE,1,exact,1,4.9609206e-11,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,300,500,net reaction,CSE,7.2496301e-12,capture - return,7.249629e-12,1.5733477e-07,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,300,500,lambda_1,lambda_1,1337.318,k_uni,1337.318,1.87e-09,1.5381532e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,500,R->P1,SteadyStateAbsorbingBarrier,1.661592e-17,CSE,1.66131e-17,0.00016974556,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,500,R->P5,SteadyStateAbsorbingBarrier,2.672336e-13,CSE,2.670092e-13,0.00084042048,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,500,R->P7,SteadyStateAbsorbingBarrier,8.990058e-18,CSE,8.98747e-18,0.00028795645,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,300,500,sum R->W,SteadyStateAbsorbingBarrier,6.5674777e-12,CSE,7.066375e-12,-0.070601593,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,500,R->G2,SteadyStateAbsorbingBarrier,4.790269e-12,CSE,4.90838e-12,-0.024063133,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,500,R->G3,SteadyStateAbsorbingBarrier,6.262865e-14,CSE,5.905398e-14,0.060532245,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,500,R->G4,SteadyStateAbsorbingBarrier,1.71458e-12,CSE,2.098941e-12,-0.18312139,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,300,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,600,G2->R,TimeIntegration,80.2167,SteadyStateOlzmann,80.2167,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,600,G4->P5,TimeIntegration,0.6094567,SteadyStateOlzmann,0.6094567,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,600,G6->P7,TimeIntegration,0.0003053478,SteadyStateOlzmann,0.0003053478,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,600,escape(G4),TimeIntegration,19.1735,SteadyStateOlzmann,19.1735,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,600,P1,CSE,0.0001994549,SteadyStateOlzmann,0.0001994549,0,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,600,P5,CSE,3.080662,SteadyStateOlzmann,3.080662,0,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,600,P7,CSE,0.001543469,SteadyStateOlzmann,0.001543462,4.535259e-06,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,600,escape(G4),CSE,96.9176,SteadyStateOlzmann,96.9176,0,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,300,600,k_uni,TimeIntegration,1337.3971,SteadyStateOlzmann,1337.397,5.1203951e-08,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,300,600,loss balance,CSE,1,exact,1,1.057392e-10,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,300,600,net reaction,CSE,7.7647004e-12,capture - return,7.7647e-12,4.5881218e-08,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,300,600,lambda_1,lambda_1,1337.397,k_uni,1337.397,2.928e-09,1.5380624e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,600,R->P1,SteadyStateAbsorbingBarrier,1.520556e-17,CSE,1.520291e-17,0.00017430873,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,600,R->P5,SteadyStateAbsorbingBarrier,2.304622e-13,CSE,2.302692e-13,0.00083814944,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,600,R->P7,SteadyStateAbsorbingBarrier,7.364944e-18,CSE,7.363183e-18,0.00023916287,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,300,600,sum R->W,SteadyStateAbsorbingBarrier,7.1934583e-12,CSE,7.6032467e-12,-0.053896499,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,600,R->G2,SteadyStateAbsorbingBarrier,5.43427e-12,CSE,5.54793e-12,-0.02048692,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,600,R->G3,SteadyStateAbsorbingBarrier,5.920533e-14,CSE,5.578071e-14,0.061394342,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,600,R->G4,SteadyStateAbsorbingBarrier,1.699983e-12,CSE,1.999536e-12,-0.14981126,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,300,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,760,G2->R,TimeIntegration,78.42125,SteadyStateOlzmann,78.42125,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,760,G4->P5,TimeIntegration,0.5015932,SteadyStateOlzmann,0.5015932,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,760,G6->P7,TimeIntegration,0.0003296798,SteadyStateOlzmann,0.0003296798,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,300,760,escape(G4),TimeIntegration,21.07679,SteadyStateOlzmann,21.07679,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,760,P1,CSE,0.0001616966,SteadyStateOlzmann,0.0001616966,0,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,760,P5,CSE,2.324478,SteadyStateOlzmann,2.324478,0,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,760,P7,CSE,0.001527437,SteadyStateOlzmann,0.001527798,-0.00023628778,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,300,760,escape(G4),CSE,97.67383,SteadyStateOlzmann,97.67383,0,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,300,760,k_uni,TimeIntegration,1337.4941,SteadyStateOlzmann,1337.497,-2.1426278e-06,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,300,760,loss balance,CSE,1.0000001,exact,1,1.083515e-07,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,300,760,net reaction,CSE,8.4943719e-12,capture - return,8.494371e-12,1.0459763e-07,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,300,760,lambda_1,lambda_1,1337.497,k_uni,1337.497,2.387e-09,1.5379474e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,760,R->P1,SteadyStateAbsorbingBarrier,1.342829e-17,CSE,1.342592e-17,0.00017652422,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,300,760,R->P5,SteadyStateAbsorbingBarrier,1.886332e-13,CSE,1.884777e-13,0.00082503129,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,300,760,sum R->W,SteadyStateAbsorbingBarrier,8.044628e-12,CSE,8.3587311e-12,-0.037577843,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,760,R->G2,SteadyStateAbsorbingBarrier,6.33424e-12,CSE,6.441123e-12,-0.016593846,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,760,R->G3,SteadyStateAbsorbingBarrier,5.473604e-14,CSE,5.153413e-14,0.062131834,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,300,760,R->G4,SteadyStateAbsorbingBarrier,1.655652e-12,CSE,1.866074e-12,-0.11276187,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,310,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,500,G2->R,TimeIntegration,84.5081,SteadyStateOlzmann,84.5081,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,500,G4->P5,TimeIntegration,0.715182,SteadyStateOlzmann,0.715182,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,500,G6->P7,TimeIntegration,0.0004333136,SteadyStateOlzmann,0.0004333136,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,500,escape(G4),TimeIntegration,14.77624,SteadyStateOlzmann,14.77624,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,500,P1,CSE,0.0003133223,SteadyStateOlzmann,0.0003133223,0,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,500,P5,CSE,4.616489,SteadyStateOlzmann,4.616489,0,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,500,P7,CSE,0.002797043,SteadyStateOlzmann,0.002797033,3.575217e-06,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,500,escape(G4),CSE,95.3804,SteadyStateOlzmann,95.3804,0,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,310,500,k_uni,TimeIntegration,1808.5764,SteadyStateOlzmann,1808.577,-3.2757954e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,310,500,loss balance,CSE,1,exact,1,9.3699759e-09,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,310,500,net reaction,CSE,6.144729e-12,capture - return,6.144729e-12,-7.0053209e-09,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,310,500,lambda_1,lambda_1,1808.577,k_uni,1808.577,1.087e-09,1.1373583e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,500,R->P1,SteadyStateAbsorbingBarrier,1.878405e-17,CSE,1.877792e-17,0.00032644723,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,500,R->P5,SteadyStateAbsorbingBarrier,2.708302e-13,CSE,2.704153e-13,0.0015343067,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,500,R->P7,SteadyStateAbsorbingBarrier,1.036424e-17,CSE,1.035852e-17,0.00055220244,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,310,500,sum R->W,SteadyStateAbsorbingBarrier,5.4866783e-12,CSE,5.9448584e-12,-0.07707166,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,500,R->G2,SteadyStateAbsorbingBarrier,3.938039e-12,CSE,4.069778e-12,-0.03237007,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,500,R->G3,SteadyStateAbsorbingBarrier,5.635225e-14,CSE,5.251935e-14,0.07298072,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,500,R->G4,SteadyStateAbsorbingBarrier,1.492287e-12,CSE,1.822561e-12,-0.18121424,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,310,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,600,G2->R,TimeIntegration,83.42449,SteadyStateOlzmann,83.42449,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,600,G4->P5,TimeIntegration,0.6253382,SteadyStateOlzmann,0.6253382,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,600,G6->P7,TimeIntegration,0.0004597907,SteadyStateOlzmann,0.0004597907,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,600,escape(G4),TimeIntegration,15.94967,SteadyStateOlzmann,15.94967,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,600,P1,CSE,0.0002704662,SteadyStateOlzmann,0.0002704662,0,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,600,P5,CSE,3.772663,SteadyStateOlzmann,3.772663,0,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,600,P7,CSE,0.002773917,SteadyStateOlzmann,0.002773915,7.2100263e-07,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,600,escape(G4),CSE,96.22429,SteadyStateOlzmann,96.22429,0,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,310,600,k_uni,TimeIntegration,1808.7447,SteadyStateOlzmann,1808.745,-1.5681334e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,310,600,loss balance,CSE,1,exact,1,1.9468691e-09,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,310,600,net reaction,CSE,6.5976152e-12,capture - return,6.597615e-12,2.9249488e-08,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,310,600,lambda_1,lambda_1,1808.745,k_uni,1808.745,2.012e-09,1.1372526e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,600,R->P1,SteadyStateAbsorbingBarrier,1.732654e-17,CSE,1.73207e-17,0.00033716882,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,600,R->P5,SteadyStateAbsorbingBarrier,2.35597e-13,CSE,2.352358e-13,0.0015354806,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,600,R->P7,SteadyStateAbsorbingBarrier,8.517065e-18,CSE,8.512073e-18,0.00058646114,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,310,600,sum R->W,SteadyStateAbsorbingBarrier,6.0408385e-12,CSE,6.420896e-12,-0.059190722,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,600,R->G2,SteadyStateAbsorbingBarrier,4.495114e-12,CSE,4.623065e-12,-0.02767666,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,600,R->G3,SteadyStateAbsorbingBarrier,5.35535e-14,CSE,4.985597e-14,0.074164238,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,600,R->G4,SteadyStateAbsorbingBarrier,1.492171e-12,CSE,1.747975e-12,-0.14634305,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,310,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,760,G2->R,TimeIntegration,81.89158,SteadyStateOlzmann,81.89158,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,760,G4->P5,TimeIntegration,0.5216636,SteadyStateOlzmann,0.5216636,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,760,G6->P7,TimeIntegration,0.0004989626,SteadyStateOlzmann,0.0004989626,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,310,760,escape(G4),TimeIntegration,17.58622,SteadyStateOlzmann,17.58622,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,760,P1,CSE,0.0002213878,SteadyStateOlzmann,0.0002213878,0,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,760,P5,CSE,2.880779,SteadyStateOlzmann,2.880779,0,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,760,P7,CSE,0.002755438,SteadyStateOlzmann,0.002755417,7.621351e-06,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,310,760,escape(G4),CSE,97.11624,SteadyStateOlzmann,97.11624,0,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,310,760,k_uni,TimeIntegration,1808.9615,SteadyStateOlzmann,1808.961,2.8713281e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,310,760,loss balance,CSE,1,exact,1,2.7211651e-09,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,310,760,net reaction,CSE,7.2442651e-12,capture - return,7.244265e-12,7.4564945e-09,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,310,760,lambda_1,lambda_1,1808.962,k_uni,1808.961,1.132e-09,1.1371168e-05,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,760,R->P1,SteadyStateAbsorbingBarrier,1.546366e-17,CSE,1.545834e-17,0.00034415079,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,760,R->P5,SteadyStateAbsorbingBarrier,1.950289e-13,CSE,1.947329e-13,0.0015200308,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,310,760,R->P7,SteadyStateAbsorbingBarrier,6.589323e-18,CSE,6.585379e-18,0.00059890251,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,310,760,sum R->W,SteadyStateAbsorbingBarrier,6.799818e-12,CSE,7.0950113e-12,-0.041605758,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,760,R->G2,SteadyStateAbsorbingBarrier,5.281169e-12,CSE,5.40294e-12,-0.022537915,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,760,R->G3,SteadyStateAbsorbingBarrier,4.985798e-14,CSE,4.63703e-14,0.07521366,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,310,760,R->G4,SteadyStateAbsorbingBarrier,1.468791e-12,CSE,1.645701e-12,-0.10749826,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,320,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,500,G2->R,TimeIntegration,87.13032,SteadyStateOlzmann,87.13032,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,500,G4->P5,TimeIntegration,0.7205267,SteadyStateOlzmann,0.7205267,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,500,G6->P7,TimeIntegration,0.0006172763,SteadyStateOlzmann,0.0006172763,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,500,escape(G4),TimeIntegration,12.14848,SteadyStateOlzmann,12.14848,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,500,P1,CSE,0.0004194273,SteadyStateOlzmann,0.0004194273,0,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,500,P5,CSE,5.598638,SteadyStateOlzmann,5.598638,0,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,500,P7,CSE,0.004796358,SteadyStateOlzmann,0.004796362,-8.3396541e-07,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,500,escape(G4),CSE,94.39615,SteadyStateOlzmann,94.39615,0,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,320,500,k_uni,TimeIntegration,2437.8621,SteadyStateOlzmann,2437.864,-7.8004486e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,320,500,loss balance,CSE,1,exact,1,1.0679746e-10,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,320,500,net reaction,CSE,5.1830548e-12,capture - return,5.183055e-12,-4.2009855e-08,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,320,500,lambda_1,lambda_1,2437.864,k_uni,2437.864,9.326e-10,8.4377143e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,500,R->P1,SteadyStateAbsorbingBarrier,2.094735e-17,CSE,2.093497e-17,0.00059135504,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,500,R->P5,SteadyStateAbsorbingBarrier,2.719278e-13,CSE,2.712084e-13,0.0026525727,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,500,R->P7,SteadyStateAbsorbingBarrier,1.191966e-17,CSE,1.190733e-17,0.0010354966,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,320,500,sum R->W,SteadyStateAbsorbingBarrier,4.5502413e-12,CSE,4.970085e-12,-0.084474149,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,500,R->G2,SteadyStateAbsorbingBarrier,3.209934e-12,CSE,3.355189e-12,-0.043292643,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,500,R->G3,SteadyStateAbsorbingBarrier,5.050129e-14,CSE,4.644799e-14,0.087265348,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,500,R->G4,SteadyStateAbsorbingBarrier,1.289806e-12,CSE,1.568448e-12,-0.1776546,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,320,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,600,G2->R,TimeIntegration,86.2292,SteadyStateOlzmann,86.2292,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,600,G4->P5,TimeIntegration,0.6363962,SteadyStateOlzmann,0.6363962,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,600,G6->P7,TimeIntegration,0.0006563817,SteadyStateOlzmann,0.0006563817,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,600,escape(G4),TimeIntegration,13.1337,SteadyStateOlzmann,13.1337,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,600,P1,CSE,0.0003649589,SteadyStateOlzmann,0.0003649589,0,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,600,P5,CSE,4.621344,SteadyStateOlzmann,4.621344,0,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,600,P7,CSE,0.00476647,SteadyStateOlzmann,0.004766474,-8.3919476e-07,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,600,escape(G4),CSE,95.37352,SteadyStateOlzmann,95.37352,0,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,320,600,k_uni,TimeIntegration,2438.2015,SteadyStateOlzmann,2438.204,-1.0393404e-06,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,320,600,loss balance,CSE,1,exact,1,2.207146e-09,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,320,600,net reaction,CSE,5.5768732e-12,capture - return,5.576874e-12,-1.4021584e-07,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,320,600,lambda_1,lambda_1,2438.204,k_uni,2438.204,2.205e-09,8.4365377e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,600,R->P1,SteadyStateAbsorbingBarrier,1.946766e-17,CSE,1.945573e-17,0.00061318696,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,600,R->P5,SteadyStateAbsorbingBarrier,2.385485e-13,CSE,2.379141e-13,0.0026665086,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,600,R->P7,SteadyStateAbsorbingBarrier,9.82281e-18,CSE,9.812451e-18,0.0010556995,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,320,600,sum R->W,SteadyStateAbsorbingBarrier,5.035654e-12,CSE,5.387752e-12,-0.065351558,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,600,R->G2,SteadyStateAbsorbingBarrier,3.686726e-12,CSE,3.829241e-12,-0.037217558,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,600,R->G3,SteadyStateAbsorbingBarrier,4.823701e-14,CSE,4.4299e-14,0.088896138,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,600,R->G4,SteadyStateAbsorbingBarrier,1.300691e-12,CSE,1.514212e-12,-0.1410113,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,320,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,760,G2->R,TimeIntegration,84.95222,SteadyStateOlzmann,84.95222,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,760,G4->P5,TimeIntegration,0.5381164,SteadyStateOlzmann,0.5381164,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,760,G6->P7,TimeIntegration,0.0007137472,SteadyStateOlzmann,0.0007137472,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,320,760,escape(G4),TimeIntegration,14.5089,SteadyStateOlzmann,14.5089,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,760,P1,CSE,0.0003019282,SteadyStateOlzmann,0.0003019282,0,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,760,P5,CSE,3.576052,SteadyStateOlzmann,3.576052,0,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,760,P7,CSE,0.004743228,SteadyStateOlzmann,0.004743207,4.4273843e-06,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,320,760,escape(G4),CSE,96.4189,SteadyStateOlzmann,96.4189,0,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,320,760,k_uni,TimeIntegration,2438.643,SteadyStateOlzmann,2438.645,-8.1427377e-07,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,320,760,loss balance,CSE,1,exact,1,9.1649659e-09,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,320,760,net reaction,CSE,6.1433906e-12,capture - return,6.14339e-12,1.0559369e-07,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,320,760,lambda_1,lambda_1,2438.645,k_uni,2438.645,1.262e-09,8.4350121e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,760,R->P1,SteadyStateAbsorbingBarrier,1.754984e-17,CSE,1.753876e-17,0.00063174364,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,760,R->P5,SteadyStateAbsorbingBarrier,1.996525e-13,CSE,1.991244e-13,0.0026521109,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,320,760,R->P7,SteadyStateAbsorbingBarrier,7.628145e-18,CSE,7.620024e-18,0.0010657447,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,320,760,sum R->W,SteadyStateAbsorbingBarrier,5.7050072e-12,CSE,5.982673e-12,-0.046411666,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,760,R->G2,SteadyStateAbsorbingBarrier,4.365819e-12,CSE,4.50326e-12,-0.030520334,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,760,R->G3,SteadyStateAbsorbingBarrier,4.521115e-14,CSE,4.146297e-14,0.090398252,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,320,760,R->G4,SteadyStateAbsorbingBarrier,1.293977e-12,CSE,1.43795e-12,-0.10012379,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,330,500,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,500,G2->R,TimeIntegration,89.38422,SteadyStateOlzmann,89.38422,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,500,G4->P5,TimeIntegration,0.7202937,SteadyStateOlzmann,0.7202937,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,500,G6->P7,TimeIntegration,0.0008379083,SteadyStateOlzmann,0.0008379083,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,500,escape(G4),TimeIntegration,9.894592,SteadyStateOlzmann,9.894592,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,500,P1,CSE,0.000558748,SteadyStateOlzmann,0.000558748,0,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,500,P5,CSE,6.785121,SteadyStateOlzmann,6.785121,0,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,500,P7,CSE,0.00789304,SteadyStateOlzmann,0.007893043,-3.8008155e-07,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,500,escape(G4),CSE,93.20643,SteadyStateOlzmann,93.20643,0,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,330,500,k_uni,TimeIntegration,3276.1745,SteadyStateOlzmann,3276.178,-1.0597013e-06,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,330,500,loss balance,CSE,1,exact,1,7.2270923e-10,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,330,500,net reaction,CSE,4.3535456e-12,capture - return,4.353546e-12,-9.6910461e-08,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,330,500,lambda_1,lambda_1,3276.178,k_uni,3276.178,4.941e-10,6.2786576e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,500,R->P1,SteadyStateAbsorbingBarrier,2.307139e-17,CSE,2.304826e-17,0.0010035465,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,500,R->P5,SteadyStateAbsorbingBarrier,2.707009e-13,CSE,2.695353e-13,0.0043244799,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,500,R->P7,SteadyStateAbsorbingBarrier,1.368323e-17,CSE,1.365993e-17,0.0017057188,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,330,500,sum R->W,SteadyStateAbsorbingBarrier,3.7497924e-12,CSE,4.131022e-12,-0.092284582,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,500,R->G2,SteadyStateAbsorbingBarrier,2.595756e-12,CSE,2.751935e-12,-0.056752431,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,500,R->G3,SteadyStateAbsorbingBarrier,4.504439e-14,CSE,4.087903e-14,0.10189479,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,500,R->G4,SteadyStateAbsorbingBarrier,1.108992e-12,CSE,1.338208e-12,-0.17128578,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,330,600,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,600,G2->R,TimeIntegration,88.6518,SteadyStateOlzmann,88.6518,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,600,G4->P5,TimeIntegration,0.6425707,SteadyStateOlzmann,0.6425707,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,600,G6->P7,TimeIntegration,0.0008910439,SteadyStateOlzmann,0.0008910439,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,600,escape(G4),TimeIntegration,10.70468,SteadyStateOlzmann,10.70468,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,600,P1,CSE,0.0004904242,SteadyStateOlzmann,0.0004904242,0,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,600,P5,CSE,5.662315,SteadyStateOlzmann,5.662315,0,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,600,P7,CSE,0.007851858,SteadyStateOlzmann,0.007851854,5.0943382e-07,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,600,escape(G4),CSE,94.32934,SteadyStateOlzmann,94.32934,0,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,330,600,k_uni,TimeIntegration,3276.8265,SteadyStateOlzmann,3276.83,-1.0689513e-06,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,330,600,loss balance,CSE,1,exact,1,2.323117e-09,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,330,600,net reaction,CSE,4.6925678e-12,capture - return,4.692567e-12,1.8055363e-07,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,330,600,lambda_1,lambda_1,3276.83,k_uni,3276.83,7.972e-10,6.2774083e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,600,R->P1,SteadyStateAbsorbingBarrier,2.159433e-17,CSE,2.157175e-17,0.0010467394,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,600,R->P5,SteadyStateAbsorbingBarrier,2.394155e-13,CSE,2.383749e-13,0.0043653925,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,600,R->P7,SteadyStateAbsorbingBarrier,1.130522e-17,CSE,1.128549e-17,0.0017482626,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,330,600,sum R->W,SteadyStateAbsorbingBarrier,4.1702809e-12,CSE,4.4940002e-12,-0.072033679,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,600,R->G2,SteadyStateAbsorbingBarrier,2.99959e-12,CSE,3.154543e-12,-0.049120586,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,600,R->G3,SteadyStateAbsorbingBarrier,4.323486e-14,CSE,3.915823e-14,0.1041066,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,600,R->G4,SteadyStateAbsorbingBarrier,1.127456e-12,CSE,1.300299e-12,-0.13292558,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I5 pulse conservation,identity,330,760,total,TimeIntegration,100,100%,100,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,760,G2->R,TimeIntegration,87.61461,SteadyStateOlzmann,87.61461,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,760,G4->P5,TimeIntegration,0.5506861,SteadyStateOlzmann,0.5506861,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,760,G6->P7,TimeIntegration,0.0009684782,SteadyStateOlzmann,0.0009684782,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I1 pulse = final steady state,identity,330,760,escape(G4),TimeIntegration,11.83369,SteadyStateOlzmann,11.83369,0,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,760,P1,CSE,0.0004105051,SteadyStateOlzmann,0.0004105051,0,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,760,P5,CSE,4.446255,SteadyStateOlzmann,4.446255,0,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,760,P7,CSE,0.007819546,SteadyStateOlzmann,0.007819518,3.5807834e-06,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I2 CSE long-time = final steady state,identity,330,760,escape(G4),CSE,95.54552,SteadyStateOlzmann,95.54552,0,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I4 pulse decay = k_uni,identity,330,760,k_uni,TimeIntegration,3277.6751,SteadyStateOlzmann,3277.679,-1.1899661e-06,nan,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE loss balance (G13 eq. 29),identity,330,760,loss balance,CSE,1,exact,1,1.151835e-08,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I6 CSE capture balance (G13 eq. 22),identity,330,760,net reaction,CSE,5.1837016e-12,capture - return,5.183702e-12,-8.5702094e-08,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",I7 sum rule lambda_1 = k_uni,identity,330,760,lambda_1,lambda_1,3277.679,k_uni,3277.679,1.008e-09,6.2757823e-06,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,760,R->P1,SteadyStateAbsorbingBarrier,1.965326e-17,CSE,1.963194e-17,0.0010859854,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,760,R->P5,SteadyStateAbsorbingBarrier,2.025262e-13,CSE,2.01646e-13,0.0043650754,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A1 prompt R->P: absorbing barrier vs CSE,approximate,330,760,R->P7,SteadyStateAbsorbingBarrier,8.809385e-18,CSE,8.793619e-18,0.001792891,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 total stabilization: absorbing barrier vs CSE,approximate,330,760,sum R->W,SteadyStateAbsorbingBarrier,4.7539496e-12,CSE,5.0138142e-12,-0.051829705,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,760,R->G2,SteadyStateAbsorbingBarrier,3.580023e-12,CSE,3.731667e-12,-0.040637066,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,760,R->G3,SteadyStateAbsorbingBarrier,4.078564e-14,CSE,3.686915e-14,0.10622675,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A2 R->W: absorbing barrier vs CSE,approximate,330,760,R->G4,SteadyStateAbsorbingBarrier,1.133141e-12,CSE,1.245278e-12,-0.090049772,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,500,G2->R,AbsorbingBarrier + fates,69.862787,SteadyStateOlzmann,69.86243,5.1074547e-06,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,500,G4->P5,AbsorbingBarrier + fates,0.63543643,SteadyStateOlzmann,0.6354218,2.3016303e-05,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,500,escape(G4),AbsorbingBarrier + fates,29.501685,SteadyStateOlzmann,29.50205,-1.2385104e-05,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,600,G2->R,AbsorbingBarrier + fates,68.032642,SteadyStateOlzmann,68.03228,5.3186576e-06,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,600,G4->P5,AbsorbingBarrier + fates,0.53356445,SteadyStateOlzmann,0.5335525,2.2402811e-05,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,600,escape(G4),AbsorbingBarrier + fates,31.433702,SteadyStateOlzmann,31.43408,-1.2022385e-05,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,760,G2->R,AbsorbingBarrier + fates,65.509052,SteadyStateOlzmann,65.50868,5.6800054e-06,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,760,G4->P5,AbsorbingBarrier + fates,0.4218901,SteadyStateOlzmann,0.421881,2.1570252e-05,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,270,760,escape(G4),AbsorbingBarrier + fates,34.068971,SteadyStateOlzmann,34.06935,-1.11158e-05,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,500,G2->R,AbsorbingBarrier + fates,74.183398,SteadyStateOlzmann,74.1826,1.0753981e-05,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,500,G4->P5,AbsorbingBarrier + fates,0.66434151,SteadyStateOlzmann,0.6643049,5.5103576e-05,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,500,G6->P7,AbsorbingBarrier + fates,0.00011067904,SteadyStateOlzmann,0.0001107079,-0.00026065053,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,500,escape(G4),AbsorbingBarrier + fates,25.152117,SteadyStateOlzmann,25.15295,-3.3128435e-05,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,600,G2->R,AbsorbingBarrier + fates,72.529147,SteadyStateOlzmann,72.52832,1.140243e-05,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,600,G4->P5,AbsorbingBarrier + fates,0.56351588,SteadyStateOlzmann,0.5634855,5.3911128e-05,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,600,G6->P7,AbsorbingBarrier + fates,0.00011429853,SteadyStateOlzmann,0.0001143258,-0.00023852234,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,600,escape(G4),AbsorbingBarrier + fates,26.907193,SteadyStateOlzmann,26.90805,-3.1835907e-05,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,760,G2->R,AbsorbingBarrier + fates,70.228614,SteadyStateOlzmann,70.22775,1.2303089e-05,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,760,G4->P5,AbsorbingBarrier + fates,0.45153325,SteadyStateOlzmann,0.4515097,5.2154898e-05,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,760,G6->P7,AbsorbingBarrier + fates,0.00012046736,SteadyStateOlzmann,0.0001204926,-0.00020946101,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,280,760,escape(G4),AbsorbingBarrier + fates,29.319714,SteadyStateOlzmann,29.32059,-2.987633e-05,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,500,G2->R,AbsorbingBarrier + fates,78.056856,SteadyStateOlzmann,78.05527,2.0312813e-05,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,500,G4->P5,AbsorbingBarrier + fates,0.68726386,SteadyStateOlzmann,0.6871857,0.0001137334,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,500,G6->P7,AbsorbingBarrier + fates,0.00018321559,SteadyStateOlzmann,0.0001832932,-0.00042340969,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,500,escape(G4),AbsorbingBarrier + fates,21.255663,SteadyStateOlzmann,21.25732,-7.7957304e-05,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,600,G2->R,AbsorbingBarrier + fates,76.590301,SteadyStateOlzmann,76.58864,2.1686719e-05,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,600,G4->P5,AbsorbingBarrier + fates,0.5888839,SteadyStateOlzmann,0.588818,0.0001119145,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,600,G6->P7,AbsorbingBarrier + fates,0.00019185752,SteadyStateOlzmann,0.0001919322,-0.00038907574,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,600,escape(G4),AbsorbingBarrier + fates,22.820595,SteadyStateOlzmann,22.82232,-7.5601277e-05,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,760,G2->R,AbsorbingBarrier + fates,74.535776,SteadyStateOlzmann,74.53403,2.3420094e-05,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,760,G4->P5,AbsorbingBarrier + fates,0.478195,SteadyStateOlzmann,0.4781431,0.00010855234,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,760,G6->P7,AbsorbingBarrier + fates,0.00020527152,SteadyStateOlzmann,0.000205342,-0.00034321568,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,290,760,escape(G4),AbsorbingBarrier + fates,24.985792,SteadyStateOlzmann,24.98759,-7.1938417e-05,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,500,G2->R,AbsorbingBarrier + fates,81.493737,SteadyStateOlzmann,81.4909,3.4808548e-05,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,500,G4->P5,AbsorbingBarrier + fates,0.70425955,SteadyStateOlzmann,0.7041102,0.00021210468,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,500,G6->P7,AbsorbingBarrier + fates,0.00028896094,SteadyStateOlzmann,0.0002891448,-0.00063586488,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,500,escape(G4),AbsorbingBarrier + fates,17.80167,SteadyStateOlzmann,17.80465,-0.00016737116,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,600,G2->R,AbsorbingBarrier + fates,80.219697,SteadyStateOlzmann,80.2167,3.7360437e-05,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,600,G4->P5,AbsorbingBarrier + fates,0.6095844,SteadyStateOlzmann,0.6094567,0.00020953326,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,600,G6->P7,AbsorbingBarrier + fates,0.00030516739,SteadyStateOlzmann,0.0003053478,-0.00059082153,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,600,escape(G4),AbsorbingBarrier + fates,19.170374,SteadyStateOlzmann,19.1735,-0.00016301158,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,760,G2->R,AbsorbingBarrier + fates,78.424433,SteadyStateOlzmann,78.42125,4.0583309e-05,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,760,G4->P5,AbsorbingBarrier + fates,0.50169544,SteadyStateOlzmann,0.5015932,0.00020383006,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,760,G6->P7,AbsorbingBarrier + fates,0.00032950567,SteadyStateOlzmann,0.0003296798,-0.00052818882,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,300,760,escape(G4),AbsorbingBarrier + fates,21.0735,SteadyStateOlzmann,21.07679,-0.00015607676,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,500,G2->R,AbsorbingBarrier + fates,84.512741,SteadyStateOlzmann,84.5081,5.491443e-05,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,500,G4->P5,AbsorbingBarrier + fates,0.71544455,SteadyStateOlzmann,0.715182,0.00036710865,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,500,G6->P7,AbsorbingBarrier + fates,0.0004329149,SteadyStateOlzmann,0.0004333136,-0.00092011538,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,500,escape(G4),AbsorbingBarrier + fates,14.771332,SteadyStateOlzmann,14.77624,-0.00033214777,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,600,G2->R,AbsorbingBarrier + fates,83.429462,SteadyStateOlzmann,83.42449,5.959444e-05,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,600,G4->P5,AbsorbingBarrier + fates,0.62556535,SteadyStateOlzmann,0.6253382,0.00036324721,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,600,G6->P7,AbsorbingBarrier + fates,0.00045939178,SteadyStateOlzmann,0.0004597907,-0.0008676026,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,600,escape(G4),AbsorbingBarrier + fates,15.944466,SteadyStateOlzmann,15.94967,-0.00032625803,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,760,G2->R,AbsorbingBarrier + fates,81.896915,SteadyStateOlzmann,81.89158,6.5144234e-05,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,760,G4->P5,AbsorbingBarrier + fates,0.52184819,SteadyStateOlzmann,0.5216636,0.00035384466,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,760,G6->P7,AbsorbingBarrier + fates,0.00049856828,SteadyStateOlzmann,0.0004989626,-0.00079028431,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,310,760,escape(G4),AbsorbingBarrier + fates,17.580694,SteadyStateOlzmann,17.58622,-0.00031421997,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,500,G2->R,AbsorbingBarrier + fates,87.137364,SteadyStateOlzmann,87.13032,8.0849997e-05,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,500,G4->P5,AbsorbingBarrier + fates,0.72095686,SteadyStateOlzmann,0.7205267,0.00059701371,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,500,G6->P7,AbsorbingBarrier + fates,0.00061647068,SteadyStateOlzmann,0.0006172763,-0.0013051239,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,500,escape(G4),AbsorbingBarrier + fates,12.141007,SteadyStateOlzmann,12.14848,-0.00061517843,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,600,G2->R,AbsorbingBarrier + fates,86.236792,SteadyStateOlzmann,86.2292,8.8043041e-05,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,600,G4->P5,AbsorbingBarrier + fates,0.63677268,SteadyStateOlzmann,0.6363962,0.00059158228,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,600,G6->P7,AbsorbingBarrier + fates,0.00065556061,SteadyStateOlzmann,0.0006563817,-0.0012509373,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,600,escape(G4),AbsorbingBarrier + fates,13.125727,SteadyStateOlzmann,13.1337,-0.00060704923,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,760,G2->R,AbsorbingBarrier + fates,84.960461,SteadyStateOlzmann,84.95222,9.7004594e-05,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,760,G4->P5,AbsorbingBarrier + fates,0.53842649,SteadyStateOlzmann,0.5381164,0.00057625657,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,760,G6->P7,AbsorbingBarrier + fates,0.0007129155,SteadyStateOlzmann,0.0007137472,-0.0011652628,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,320,760,escape(G4),AbsorbingBarrier + fates,14.500354,SteadyStateOlzmann,14.5089,-0.00058900989,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,500,G2->R,AbsorbingBarrier + fates,89.39414,SteadyStateOlzmann,89.38422,0.0001109835,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,500,G4->P5,AbsorbingBarrier + fates,0.72095336,SteadyStateOlzmann,0.7202937,0.00091581987,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,500,G6->P7,AbsorbingBarrier + fates,0.00083638334,SteadyStateOlzmann,0.0008379083,-0.0018199613,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,500,escape(G4),AbsorbingBarrier + fates,9.8840057,SteadyStateOlzmann,9.894592,-0.0010699058,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,600,G2->R,AbsorbingBarrier + fates,88.662583,SteadyStateOlzmann,88.6518,0.000121633,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,600,G4->P5,AbsorbingBarrier + fates,0.64315406,SteadyStateOlzmann,0.6425707,0.00090786093,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,600,G6->P7,AbsorbingBarrier + fates,0.00088946131,SteadyStateOlzmann,0.0008910439,-0.0017761123,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,600,escape(G4),AbsorbingBarrier + fates,10.693318,SteadyStateOlzmann,10.70468,-0.0010613798,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,760,G2->R,AbsorbingBarrier + fates,87.626391,SteadyStateOlzmann,87.61461,0.00013446223,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,760,G4->P5,AbsorbingBarrier + fates,0.55117256,SteadyStateOlzmann,0.5506861,0.0008833649,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,760,G6->P7,AbsorbingBarrier + fates,0.00096683871,SteadyStateOlzmann,0.0009684782,-0.0016928507,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",A3 prompt + stabilization x fate = final,approximate,330,760,escape(G4),AbsorbingBarrier + fates,11.821417,SteadyStateOlzmann,11.83369,-0.0010370896,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->P5 CSE,CSE,2.405736e-13,MESS,2.48289e-13,-0.031074272,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.405952e-13,MESS,2.48289e-13,-0.030987277,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.419356e-13,MESS,2.48289e-13,-0.025588729,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.419356e-13,MESS,2.48289e-13,-0.025588729,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->G2 CSE,CSE,8.271293e-12,MESS,8.00545e-12,0.033207752,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,8.194977e-12,MESS,8.00545e-12,0.023674747,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->G4 CSE,CSE,3.027146e-12,MESS,3.05219e-12,-0.0082052559,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.478598e-12,MESS,3.05219e-12,-0.18792801,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,500,R->G3 CSE,CSE,8.062375e-14,MESS,8.13936e-14,-0.0094583604,0.07381201,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->P5 CSE,CSE,2.018144e-13,MESS,2.08551e-13,-0.032301931,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.018322e-13,MESS,2.08551e-13,-0.03221658,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.031491e-13,MESS,2.08551e-13,-0.025902058,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.031491e-13,MESS,2.08551e-13,-0.025902058,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->G2 CSE,CSE,9.195036e-12,MESS,8.9138e-12,0.031550629,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,9.123275e-12,MESS,8.9138e-12,0.023500079,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->G4 CSE,CSE,2.823661e-12,MESS,2.8497e-12,-0.0091374531,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.395147e-12,MESS,2.8497e-12,-0.15950907,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,600,R->G3 CSE,CSE,7.489007e-14,MESS,7.5674e-14,-0.010359304,0.0615108,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->P5 CSE,CSE,1.593508e-13,MESS,1.64931e-13,-0.033833543,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.593645e-13,MESS,1.64931e-13,-0.033750477,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),1.606304e-13,MESS,1.64931e-13,-0.026075147,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),1.606304e-13,MESS,1.64931e-13,-0.026075147,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->G2 CSE,CSE,1.044571e-11,MESS,1.01453e-11,0.029610756,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.038021e-11,MESS,1.01453e-11,0.023154564,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->G4 CSE,CSE,2.563881e-12,MESS,2.59056e-12,-0.010298545,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.258423e-12,MESS,2.59056e-12,-0.1282105,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,270,760,R->G3 CSE,CSE,6.765894e-14,MESS,6.84442e-14,-0.011472996,0.04856181,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->P5 CSE,CSE,2.520678e-13,MESS,2.6038e-13,-0.031923343,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.521199e-13,MESS,2.6038e-13,-0.031723251,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.544221e-13,MESS,2.6038e-13,-0.022881558,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.544221e-13,MESS,2.6038e-13,-0.022881558,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->G2 CSE,CSE,7.001522e-12,MESS,6.75468e-12,0.036543848,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,6.911093e-12,MESS,6.75468e-12,0.023156241,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->G4 CSE,CSE,2.706082e-12,MESS,2.72774e-12,-0.0079399063,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.211164e-12,MESS,2.72774e-12,-0.18937875,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,500,R->G3 CSE,CSE,7.321956e-14,MESS,7.39256e-14,-0.0095506834,0.07825898,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->P5 CSE,CSE,2.134742e-13,MESS,2.20816e-13,-0.033248496,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.135178e-13,MESS,2.20816e-13,-0.033051047,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.158093e-13,MESS,2.20816e-13,-0.022673629,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.158093e-13,MESS,2.20816e-13,-0.022673629,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->G2 CSE,CSE,7.828663e-12,MESS,7.56574e-12,0.034751789,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,7.74303e-12,MESS,7.56574e-12,0.023433266,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->G4 CSE,CSE,2.542349e-12,MESS,2.56528e-12,-0.0089389852,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.155257e-12,MESS,2.56528e-12,-0.15983557,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,600,R->G3 CSE,CSE,6.84134e-14,MESS,6.91388e-14,-0.010491938,0.06521704,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->P5 CSE,CSE,1.706498e-13,MESS,1.7682e-13,-0.034895374,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.706839e-13,MESS,1.7682e-13,-0.034702522,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),1.729237e-13,MESS,1.7682e-13,-0.022035403,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),1.729237e-13,MESS,1.7682e-13,-0.022035403,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->G2 CSE,CSE,8.960856e-12,MESS,8.67755e-12,0.032648155,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,8.881978e-12,MESS,8.67755e-12,0.023558262,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->G4 CSE,CSE,2.330084e-12,MESS,2.35406e-12,-0.010184957,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.054478e-12,MESS,2.35406e-12,-0.12726184,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,280,760,R->G3 CSE,CSE,6.229265e-14,MESS,6.30272e-14,-0.011654492,0.05148816,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->P5 CSE,CSE,2.609e-13,MESS,2.69593e-13,-0.032244903,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.610129e-13,MESS,2.69593e-13,-0.031826123,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.646821e-13,MESS,2.69593e-13,-0.018215977,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.646821e-13,MESS,2.69593e-13,-0.018215977,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->G2 CSE,CSE,5.882518e-12,MESS,5.65723e-12,0.039823023,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.778167e-12,MESS,5.65723e-12,0.021377423,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->G4 CSE,CSE,2.394815e-12,MESS,2.41258e-12,-0.0073634864,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.955121e-12,MESS,2.41258e-12,-0.18961402,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,500,R->G3 CSE,CSE,6.598615e-14,MESS,6.66122e-14,-0.0093984285,0.0828042,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->P5 CSE,CSE,2.229991e-13,MESS,2.30764e-13,-0.033648663,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.230949e-13,MESS,2.30764e-13,-0.03323352,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.26794e-13,MESS,2.30764e-13,-0.017203723,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.26794e-13,MESS,2.30764e-13,-0.017203723,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->G2 CSE,CSE,6.61402e-12,MESS,6.37239e-12,0.037918269,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,6.514442e-12,MESS,6.37239e-12,0.022291793,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->G4 CSE,CSE,2.265768e-12,MESS,2.285e-12,-0.0084166302,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.922067e-12,MESS,2.285e-12,-0.15883282,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,600,R->G3 CSE,CSE,6.200009e-14,MESS,6.26493e-14,-0.010362606,0.06900541,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->P5 CSE,CSE,1.804137e-13,MESS,1.87035e-13,-0.035401395,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.804897e-13,MESS,1.87035e-13,-0.034995054,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),1.841656e-13,MESS,1.87035e-13,-0.015341514,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),1.841656e-13,MESS,1.87035e-13,-0.015341514,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->G2 CSE,CSE,7.625704e-12,MESS,7.36302e-12,0.035676122,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,7.533072e-12,MESS,7.36302e-12,0.023095415,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->G4 CSE,CSE,2.095668e-12,MESS,2.11628e-12,-0.009739732,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.852045e-12,MESS,2.11628e-12,-0.12485824,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,290,760,R->G3 CSE,CSE,5.687563e-14,MESS,5.75408e-14,-0.011559971,0.05447955,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->P5 CSE,CSE,2.670092e-13,MESS,2.75929e-13,-0.032326432,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.672336e-13,MESS,2.75929e-13,-0.031513179,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.726925e-13,MESS,2.75929e-13,-0.011729467,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.726925e-13,MESS,2.75929e-13,-0.011729467,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->G2 CSE,CSE,4.90838e-12,MESS,4.70511e-12,0.043201966,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,4.790269e-12,MESS,4.70511e-12,0.018099258,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->G4 CSE,CSE,2.098941e-12,MESS,2.11282e-12,-0.0065689458,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.71458e-12,MESS,2.11282e-12,-0.18848742,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,500,R->G3 CSE,CSE,5.905398e-14,MESS,5.95974e-14,-0.009118183,0.08744574,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->P5 CSE,CSE,2.302692e-13,MESS,2.38324e-13,-0.033797687,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.304622e-13,MESS,2.38324e-13,-0.032987865,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.360345e-13,MESS,2.38324e-13,-0.0096066699,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.360345e-13,MESS,2.38324e-13,-0.0096066699,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->G2 CSE,CSE,5.54793e-12,MESS,5.32845e-12,0.041190215,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.43427e-12,MESS,5.32845e-12,0.019859434,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->G4 CSE,CSE,1.999536e-12,MESS,2.015e-12,-0.0076744417,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.699983e-12,MESS,2.015e-12,-0.15633598,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,600,R->G3 CSE,CSE,5.578071e-14,MESS,5.63497e-14,-0.010097481,0.07287442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->P5 CSE,CSE,1.884777e-13,MESS,1.95445e-13,-0.035648392,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.886332e-13,MESS,1.95445e-13,-0.034852772,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),1.942604e-13,MESS,1.95445e-13,-0.0060610402,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),1.942604e-13,MESS,1.95445e-13,-0.0060610402,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->G2 CSE,CSE,6.441123e-12,MESS,6.20041e-12,0.03882211,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,6.33424e-12,MESS,6.20041e-12,0.021584057,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->G4 CSE,CSE,1.866074e-12,MESS,1.88315e-12,-0.0090677854,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.655652e-12,MESS,1.88315e-12,-0.12080716,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,300,760,R->G3 CSE,CSE,5.153413e-14,MESS,5.2124e-14,-0.011316668,0.05753492,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->P5 CSE,CSE,2.704153e-13,MESS,2.79303e-13,-0.031820997,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.708302e-13,MESS,2.79303e-13,-0.030335514,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.784551e-13,MESS,2.79303e-13,-0.0030357712,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.784551e-13,MESS,2.79303e-13,-0.0030357712,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->G2 CSE,CSE,4.069778e-12,MESS,3.88964e-12,0.046312255,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.938039e-12,MESS,3.88964e-12,0.012443054,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->G4 CSE,CSE,1.822561e-12,MESS,1.83273e-12,-0.0055485533,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.492287e-12,MESS,1.83273e-12,-0.18575731,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,500,R->G3 CSE,CSE,5.251935e-14,MESS,5.29781e-14,-0.0086592384,0.09218321,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->P5 CSE,CSE,2.352358e-13,MESS,2.43351e-13,-0.033347716,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.35597e-13,MESS,2.43351e-13,-0.03186344,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.434746e-13,MESS,2.43351e-13,0.00050790833,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.434746e-13,MESS,2.43351e-13,0.00050790833,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->G2 CSE,CSE,4.623065e-12,MESS,4.42729e-12,0.044220053,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,4.495114e-12,MESS,4.42729e-12,0.01531953,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->G4 CSE,CSE,1.747975e-12,MESS,1.75975e-12,-0.0066912914,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.492171e-12,MESS,1.75975e-12,-0.15205512,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,600,R->G3 CSE,CSE,4.985597e-14,MESS,5.03411e-14,-0.0096368574,0.07682399,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->P5 CSE,CSE,1.947329e-13,MESS,2.01852e-13,-0.03526891,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.950289e-13,MESS,2.01852e-13,-0.033802489,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.03109e-13,MESS,2.01852e-13,0.0062273349,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.03109e-13,MESS,2.01852e-13,0.0062273349,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->G2 CSE,CSE,5.40294e-12,MESS,5.18638e-12,0.041755521,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,5.281169e-12,MESS,5.18638e-12,0.018276524,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->G4 CSE,CSE,1.645701e-12,MESS,1.65919e-12,-0.0081298706,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.468791e-12,MESS,1.65919e-12,-0.11475419,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,310,760,R->G3 CSE,CSE,4.63703e-14,MESS,4.68792e-14,-0.010855561,0.06065442,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->P5 CSE,CSE,2.712084e-13,MESS,2.79891e-13,-0.031021362,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.719278e-13,MESS,2.79891e-13,-0.028451076,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.819835e-13,MESS,2.79891e-13,0.0074761246,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.819835e-13,MESS,2.79891e-13,0.0074761246,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->G2 CSE,CSE,3.355189e-12,MESS,3.19763e-12,0.049273681,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.209934e-12,MESS,3.19763e-12,0.0038478498,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->G4 CSE,CSE,1.568448e-12,MESS,1.57517e-12,-0.0042674759,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.289806e-12,MESS,1.57517e-12,-0.18116394,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,500,R->G3 CSE,CSE,4.644799e-14,MESS,4.68244e-14,-0.0080387576,0.09701856,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->P5 CSE,CSE,2.379141e-13,MESS,2.45929e-13,-0.0325903,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.385485e-13,MESS,2.45929e-13,-0.030010694,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.490584e-13,MESS,2.45929e-13,0.012724811,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.490584e-13,MESS,2.45929e-13,0.012724811,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->G2 CSE,CSE,3.829241e-12,MESS,3.65693e-12,0.047119032,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.686726e-12,MESS,3.65693e-12,0.008147818,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->G4 CSE,CSE,1.514212e-12,MESS,1.5225e-12,-0.0054436782,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.300691e-12,MESS,1.5225e-12,-0.14568736,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,600,R->G3 CSE,CSE,4.4299e-14,MESS,4.47015e-14,-0.0090041721,0.08085612,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->P5 CSE,CSE,1.991244e-13,MESS,2.06254e-13,-0.034567087,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.996525e-13,MESS,2.06254e-13,-0.032006652,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.105959e-13,MESS,2.06254e-13,0.021051228,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.105959e-13,MESS,2.06254e-13,0.021051228,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->G2 CSE,CSE,4.50326e-12,MESS,4.31105e-12,0.044585426,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,4.365819e-12,MESS,4.31105e-12,0.01270433,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->G4 CSE,CSE,1.43795e-12,MESS,1.44799e-12,-0.0069337495,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.293977e-12,MESS,1.44799e-12,-0.1063633,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,320,760,R->G3 CSE,CSE,4.146297e-14,MESS,4.18907e-14,-0.01021062,0.06383996,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->P5 CSE,CSE,2.695353e-13,MESS,2.77909e-13,-0.030131086,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.707009e-13,MESS,2.77909e-13,-0.025936907,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.833029e-13,MESS,2.77909e-13,0.019408871,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.833029e-13,MESS,2.77909e-13,0.019408871,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->G2 CSE,CSE,2.751935e-12,MESS,2.61516e-12,0.052300815,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.595756e-12,MESS,2.61516e-12,-0.0074198137,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->G4 CSE,CSE,1.338208e-12,MESS,1.34212e-12,-0.0029147915,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.108992e-12,MESS,1.34212e-12,-0.17370131,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,500,R->G3 CSE,CSE,4.087903e-14,MESS,4.1185e-14,-0.0074291611,0.1019575,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->P5 CSE,CSE,2.383749e-13,MESS,2.46187e-13,-0.031732382,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.394155e-13,MESS,2.46187e-13,-0.027505514,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.527332e-13,MESS,2.46187e-13,0.026590356,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.527332e-13,MESS,2.46187e-13,0.026590356,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->G2 CSE,CSE,3.154543e-12,MESS,3.00406e-12,0.050093207,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.99959e-12,MESS,3.00406e-12,-0.0014879863,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->G4 CSE,CSE,1.300299e-12,MESS,1.30568e-12,-0.0041212242,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.127456e-12,MESS,1.30568e-12,-0.13649899,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,600,R->G3 CSE,CSE,3.915823e-14,MESS,3.9489e-14,-0.0083762567,0.08497624,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->P5 CSE,CSE,2.01646e-13,MESS,2.08692e-13,-0.033762674,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->P5 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,2.025262e-13,MESS,2.08692e-13,-0.029544975,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->P5 SteadyStateOlzmann (overall),SteadyStateOlzmann (overall),2.165936e-13,MESS,2.08692e-13,0.037862496,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->P5 TimeIntegration (overall),TimeIntegration (overall),2.165936e-13,MESS,2.08692e-13,0.037862496,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->G2 CSE,CSE,3.731667e-12,MESS,3.56247e-12,0.047494295,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->G2 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,3.580023e-12,MESS,3.56247e-12,0.0049271994,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->G4 CSE,CSE,1.245278e-12,MESS,1.25235e-12,-0.0056469837,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->G4 SteadyStateAbsorbingBarrier,SteadyStateAbsorbingBarrier,1.133141e-12,MESS,1.25235e-12,-0.095188246,0.06709642,no
+"ZZ-allyl + O2 (Case 2, MESS Eckart model)",M vs MESS,MESS,330,760,R->G3 CSE,CSE,3.686915e-14,MESS,3.72251e-14,-0.0095620965,0.06709642,no

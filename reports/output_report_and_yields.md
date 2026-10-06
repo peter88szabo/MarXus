@@ -46,7 +46,7 @@
 | 750 K | 0.018% |
 | 1000 K | 0.023% |
 
-Above that they separate: 1.2% at 1250 K, 13% at 1500 K, 77% at 1750 K. The previously quoted "0.01%" was corrected in the README, in `validation/c2h3_mess_example_olzmann_eigen/README.md` (two places) and in `olzmann_absorbing_barrier_and_treatment.md`.
+Above that they separate: 1.2% at 1250 K, 13% at 1500 K, 77% at 1750 K. The previously quoted "0.01%" was corrected in the README, in `validation/c2h3_mess_example_olzmann_eigen/README.md` (merged into `validation/c2h3_mess_example/` on 2026-10-06, its Section 4.5) (two places) and in `olzmann_absorbing_barrier_and_treatment.md`.
 
 ## 2. Yields: definitions and code
 

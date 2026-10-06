@@ -1,6 +1,18 @@
-# Temperature step from the low-energy reduction of the exponential-down kernel
+# Low-energy treatment of the exponential-down kernel: from a temperature step to the MESMER reservoir state
 
-**Date:** 2026-10-06. **Status:** cause confirmed. Nothing is changed in the code; the choice of the low-energy rule is open and needs Peter's decision (Section 6).
+**Date:** 2026-10-06. **Status:**
+- The temperature step is found and confirmed (Sections 1–5).
+- The SSUMES-type reduction is replaced, by Peter's decisions (Sections 7, 11): first by MESS's truncation (Sections 8–10), then by **MESMER's reservoir state**, which is the current rule (Sections 11–13).
+
+**Summary of why** (each step is documented below):
+1. **SSUMES-type reduction factors.** The integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 jumps with T. That gave a step of +3% in R → G4 of ZZ-allyl + O₂ at 304.7 K, in every method.
+2. **"As MESS or MESMER".** Both use the plain normalization of eq. 4.16 from the top.
+   - It fails in the lowest grains of every well of both validation systems, so option (b), reduction only where it fails, still gave the step.
+   - MESS's answer to that failure, truncation of the well (kernel mode `down`), removed the step in Case 2.
+3. **Truncation removes states.** In a small molecule those states are thermally populated: C₂H₃ loses 2 grains at 300 K, which raised k_uni by 2.5% and broke the detailed balance of CSE's own pair by 2.4%. MESS's own reference runs never truncate (default kernel mode).
+4. **MESMER's reservoir state** (manual, Sec. 14.2.1). The failing grains are kept as one thermalized state, with their full Boltzmann weight: no step, and no lost population.
+
+**The reference document for the current rule** (physics, equations, differences from MESMER, validity, tests, results) is `reports/low_energy_reservoir_state.md`. This report records how the rule was reached.
 
 ## 1. Finding
 
@@ -96,7 +108,7 @@ The step lies exactly between 304 and 305 K; every other 1 K interval is smooth.
 - How large the effect of the reduction itself is: with it, against without it, where both exist.
 - Which of the two sides of the step (n_ref = 8 or 9) is closer to MESS cannot decide the question. R → G4 is closer with n_ref = 8, R → G2 slightly closer with n_ref = 9.
 
-## 6. Decision needed (Peter)
+## 6. Options considered
 
 The low-energy rule is a physics choice. The options found in the literature and code already reviewed:
 
@@ -109,9 +121,209 @@ A continuous variant of rule 1, e.g. an interpolated n_ref, would be a MarXus in
 
 **Diagnostic that can be added independently of the decision.** Report `low_cut`, n_ref and m per well and condition in the output (RUN SETTINGS or the network block), so that a switch is visible.
 
-## 7. References
+## 7. Decision (Peter, 2026-10-06)
+
+"Use the best rule as MESS or MESMER, or if there is nothing then do (b)."
+
+**What the two codes do** (sources read):
+- **MESMER 7.1** (`src/TMatrix.h`, `normalizeProbabilityMatrix`; `src/gWellProperties.h`, `collisionOperator`). Plain back substitution from the top grain (column sums 1), i.e. Robertson eq. 4.16, with no low-energy reduction and no check: where it fails, the coefficients come out negative. The Gaussian kernel plug-in mentions these "negative normalization coefficients".
+- **MESS 2026** (`src/libmess/mess.cc`, `MasterEquation::Well::_set_kernel`):
+  - **Kernel mode `down`.** The same plain normalization from the top. Where it fails ("cannot satisfy the constant collision frequency"), MESS truncates the well: the failing grain and all grains below are removed, and the kernel is built again (do-while loop). With `notruncation`, the failing grain's deactivating transitions are dropped instead.
+  - **Default mode.** A per-pair common factor, not normalized; rejected earlier for MarXus (`collision_kernel_detailed_balance_and_normalization.md`, Section 4).
+- **Neither code has a low-energy reduction like SSUMES.**
+
+**Option (b) alone is not enough.**
+- **Implemented first:** plain eq. 4.16 wherever it holds, the reduction only as a fallback.
+- **Result:** in Case 2 and C₂H₃ the plain normalization fails at every temperature, in the lowest 3–9 grains of every well (Case 2: 114–342 cm⁻¹ above the bottom of about 430 grains). The fallback was therefore always active, and it reduced the transitions of all grains below 82–104 (3100–4000 cm⁻¹), with its window still jumping at 304.7 K.
+
+**Peter's choice:** MESS's truncation.
+
+## 8. Implementation: MESS truncation (superseded by Section 12)
+
+- **`collision_kernels.rs`, `exponential_down_kernel`.**
+  - Eq. 4.16 is solved from the top. At the first grain j where the activating probabilities alone reach 1, grains 0..=j are removed, and eq. 4.16 is solved again from the top on the remaining grid. The grains just above the new bottom lose deactivating targets, so their normalization changes. This repeats until it holds everywhere (MESS's do-while loop).
+  - `CollisionKernel::truncated_grains` reports the number removed. The SSUMES-type reduction (n_ref, redfac, m) is removed.
+- **`chemical_activation_operator.rs`.**
+  - **States.** Truncated grains are not states (`WellCollisionData::truncated_grains`).
+  - **Absorbing barrier.** A barrier at or below the truncated grains is an error with an explanation: nothing could be stabilized.
+  - **Isomerization.** Isomerization at energies whose target grain is truncated is left out in both directions. That is what MESS does: an inner barrier spans `min(well(i1).size(), well(i2).size())` grains (`mess.cc`, around line 2737). In Case 2 this concerns the deep Eckart tunneling of B34/B36 into the lowest grains of G3.
+  - **Reporting.** `low_energy_truncations(network, T, model)` lists the truncated wells per temperature.
+- **`chemical_activation_steady_state.rs`, `project_source`.** Source weight on truncated grains is left out, and F is normalized over the existing grains. Before this change, the weight was counted as stabilized even in the final steady state, which a test exposed.
+- **Output.** RUN SETTINGS, "Collisions:", lists per temperature the wells and the number of truncated grains (and their energy above the bottom).
+- **Case 2, 1 K scan.** Truncated: 4–12 grains (152–456 cm⁻¹), for example G2 9 grains at 300 K and 10 at 308 K.
+- **Tests:**
+  - `exponential_down_truncates_the_well_below_the_grain_where_eq_4_16_fails`, against an independent implementation;
+  - `exponential_down_uses_plain_back_substitution_wherever_it_succeeds`;
+  - `exponential_down_kernel_is_continuous_in_the_mean_energy_transfer`, red with the old rule: P(0|0) jumped from 0.460 to 0.493;
+  - `low_energy_truncations_list_only_the_wells_where_eq_4_16_fails`;
+  - `truncated_grains_are_not_states_and_no_flux_reaches_them`;
+  - `an_absorbing_barrier_within_the_truncated_grains_is_an_error`;
+  - `isomerization_into_truncated_grains_is_omitted_in_both_directions`;
+  - `source_on_truncated_grains_is_left_out_of_the_normalization`.
+- **Fixtures and references adapted, with the reasons in comments:**
+  - the fixtures `two_well_network` (well A: ρ = (1 + 0.02i)⁸) and `single_well_two_channels` (same ρ), so that their absorbing barriers lie above the truncated grains;
+  - the high-pressure λ₁ reference: the Boltzmann average over the existing grains;
+  - the equilibrium-distribution reference;
+  - the temperatures of the two double-precision tests (λ₁ ≤ 0 at 120 K; no plain Cholesky factor at 130 K).
+
+## 9. Result: ZZ-allyl + O₂ Case 2 re-run with the truncation (MESS Eckart model, CSE; superseded by Section 13)
+
+**The step is gone.** The second differences of ln k(T) at 760 Torr follow MESS's smooth trend:
+- R → G4: −0.0105, −0.0099, −0.0097, −0.0093, −0.0089 at 280–320 K (MESS: −0.0107 … −0.0090). Before, the values were +0.0216 and −0.0404 at 300 and 310 K.
+- R → G2, R → G3 and R → P5 behave the same way.
+
+**CSE against MESS after the change**, all 21 conditions (`cse_comparison.csv`; before → after):
+
+| entry | before (SSUMES-type reduction) | after (MESS truncation) |
+|---|---|---|
+| R → P5 | −2.7 … −3.5% | −3.0 … −3.6% |
+| R → G2 | +2.1 … +3.3% | +3.0 … +5.2% |
+| R → G3 | +0.9 … +3.6% | −1.2 … −0.8% |
+| R → G4 | +1.4 … +6.1% (step at 304.7 K) | −1.0 … −0.3% |
+| R → escape | (rounding level) | −4.8 … −5.6% at 760 Torr |
+
+**Truncated grains** (RUN SETTINGS, 38 cm⁻¹ grains):
+
+| T (K) | G2 | G3 | G4 | G6 |
+|---|---|---|---|---|
+| 270 | 6 | 7 | 6 | 4 |
+| 300 | 9 | 9 | 8 | 8 |
+| 330 | 12 | 11 | 11 | 8 |
+
+That is 152–456 cm⁻¹ above the well bottoms.
+
+**Residual.** The thermal losses of the wells still wobble slightly, because the truncation changes by one grain at some temperatures: about ±0.4% for G6 (4, 5, 5, 8 grains at 270–300 K) and ±0.15% for G2. MESS's reference run used its default kernel mode, which does not truncate, and is smooth.
+
+## 10. Second finding: truncation removes thermally populated grains (C₂H₃)
+
+**C₂H₃ re-run with the MESS truncation** (`validation/c2h3_mess_example/`, `method_comparison.csv`, 2026-10-06):
+- **Truncated grains** (21 cm⁻¹ grains): 2 at 300 K (42 cm⁻¹), 3 at 500 K, 5 at 1000 K, 45–53 at 1500–2000 K (945–1113 cm⁻¹).
+- **Dissociation k_uni** (equal in SteadyStateOlzmann and CSE, the one-well identity): +7.3 … +8.3% from MESS at 300 K. Before it was +4.7 … +5.7%.
+- **Association:** CSE (G13 eq. 28) and the absorbing barrier stay at +4.9 … +5.8%. SteadyStateOlzmann's k_uni·K moves to +7.5 … +8.5%.
+- **CSE's own pair** k(P1 → W1)/k(W1 → P1) departs from K = k∞,a/k∞,d by −2.4% at 300 K, −2.1% at 500 K, −1.2% at 750 K and −0.6% at 1000 K. Before the truncation, CSE and Olzmann agreed to 7·10⁻⁵ there.
+
+**Reading.** The truncated grains carry part of the thermal population of a small molecule. With them removed, the thermal distribution is renormalized over fewer states, and thermal rate coefficients rise by Q_all/Q_kept.
+- In Case 2 (four large wells), the 4–12 truncated grains carry almost no population, so the effect is negligible.
+- MESS's reference runs use the default kernel mode, which never truncates. The only "truncating" lines in the Case 2 MESS log concern the states of barrier B36, not a well.
+
+**Decision needed again.** Options given to Peter: keep the truncation; MESMER's reservoir state; or back to (b).
+
+## 11. Decision (Peter, 2026-10-06): MESMER's reservoir state
+
+**Source read:** MESMER 7.1 manual, Sec. 14.2.1 "The Reservoir State Approximation", and `src/gWellProperties.h`, `constructReservoir`.
+- **What it assumes:** "This method assumes that significant portions of low energy molecular phase space are in a Boltzmann distribution throughout the course of the reaction. It is usually appropriate for grains which are more than a few kT below the lowest reaction threshold".
+- **How it works:** "the bimolecular source term represents a collection of grains that are represented with one grain because we assume that these grains are always thermalized … The reservoir state can be formulated by analogy".
+- **Equations:**
+  - Deactivation into the reservoir from grain E: k_d(E) = Σ over the reservoir grains of the normalized downward probabilities P(i|E).
+  - Activation out of it follows from detailed balance: k_a x_B = k_d x_C (eq. 14.15), with k_d = Σ_E k_d(E) f(E) (eq. 14.16).
+  - In the source: "k_a = k_d(E) * f(E) / x_r"; "upward transitions are determined as part of symmetrization".
+
+**Why it removes both problems:**
+- **No temperature step.** There is no reduction factor and no integer window: the normalization above the reservoir is the plain eq. 4.16.
+- **No lost population.** The reservoir keeps its Boltzmann weight Q_res = Σ f_i, so partition functions, thermal distributions and k_uni stay complete.
+
+### 11.1 What the reservoir state means physically, and why MarXus uses it
+
+**Why there is a problem at the bottom of a well.** The exponential-down model fixes how much energy a deactivating collision removes, P(E' ← E) ∝ exp(−(E − E')/⟨ΔE_down⟩). The activating probabilities then follow from detailed balance, P(E ← E')/P(E' ← E) = ρ(E)/ρ(E') e^{−(E − E')/kT}.
+- Near the bottom of a well the density of states is sparse and rises steeply.
+- From such a low grain, the activating probabilities into the many states above can add up to more than 1.
+- Normalization (Robertson 2019, eq. 4.16) then has no positive solution.
+- Robertson (2019, p. 294) traces this to the sparsity of the states, not to numerical error: there the exponential-down model and detailed balance cannot both hold grain by grain.
+
+**What the reservoir assumes.** Physically, the lowest part of a well is the region of thermalized molecules.
+- There collisions exchange energy many times before any molecule can react, because the reaction thresholds lie many k_BT higher.
+- So the populations of these grains stay in Boltzmann equilibrium with each other at all times. MESMER's manual: "significant portions of low energy molecular phase space are in a Boltzmann distribution throughout the course of the reaction".
+- In that region the master equation does not need the grain-to-grain detail that the exponential-down model fails to give. It only needs the total population and its exchange with the grains above.
+
+**What the reservoir state is.** These grains are represented by one state, a population N_res distributed as f_i/Q_res, with Q_res = Σ_i ρ_i e^{−E_i/kT}. It is a "stabilized, thermalized" pool at the bottom of the well:
+- **In:** molecules arrive by collisional deactivation from the grains above, with the normalized downward probabilities, which do exist there.
+- **Out:** they are activated back by detailed balance, so the equilibrium is exact.
+- **Reactions:** any process from its grains (in MarXus also the deep tunneling reactions) goes with the thermal share f_i/Q_res.
+
+**What it changes, and what not.**
+- **Above the reservoir:** every grain keeps the plain exponential-down model, exactly normalized. Chemical activation, falloff and the competition between reaction and stabilization are computed in full detail.
+- **The partition function of the well stays complete,** because the reservoir carries the full Boltzmann weight of its grains. Equilibrium constants, thermal distributions, thermal rate coefficients (k_uni) and CSE's detailed balance are therefore unaffected.
+- **Truncation was different.** It deleted these grains, which in a small molecule such as C₂H₃ carry thermal population: k_uni rose by 2.5% at 300 K.
+- **Only the internal energy-transfer detail is lost,** among the lowest grains themselves. That does not matter where the grains are thermalized anyway.
+
+**When it is valid.** MESMER's manual: "usually appropriate for grains which are more than a few kT below the lowest reaction threshold, and when the rate of collisional deactivation is faster than the rate of reaction (which is usually the case at moderate pressures)".
+- In MarXus the reservoir is only as large as the normalization requires. Its size is set by where eq. 4.16 fails, not chosen by the user as in MESMER.
+- In the validations it is far below every threshold:
+  - ZZ-allyl + O₂: 4–12 grains, 152–456 cm⁻¹ above the bottoms of wells whose thresholds lie thousands of cm⁻¹ higher;
+  - C₂H₃: at 2000 K the reservoir top is 0.8 k_BT above the bottom, against the threshold at 9.8 k_BT.
+- **Not implemented, only proposed to Peter:** a warning if a reservoir ever reaches within a few k_BT of a well's lowest threshold.
+
+**Why it is the rule in MarXus.** Where eq. 4.16 holds, MarXus uses it plainly, with no reservoir. Where it fails, the reservoir is the only treatment considered here that keeps all three:
+1. the exponential-down model exactly normalized above it;
+2. detailed balance exactly;
+3. the full thermal population.
+
+**The alternatives:**
+- MESMER without a reservoir gives negative probabilities;
+- MESS's truncation deletes thermally populated states;
+- the SSUMES-type reduction changes the kernel with a temperature-dependent integer window, which caused the step.
+
+## 12. Implementation: the reservoir state
+
+**Kernel** (`collision_kernels.rs`, `exponential_down_kernel`).
+- **Boundary.** Eq. 4.16 is solved from the top grain down. At the first grain g where the activating probabilities alone reach 1 the back substitution stops. Grains 0..=g form the reservoir (`CollisionKernel::reservoir_grains = g + 1`).
+- **Above the boundary.** Every grain keeps its normalization from the top, together with its downward transitions into reservoir grains. Its normalization needs only the higher grains, so it is exact (Σ_t P(t|j) = 1).
+- **Unlike MESS's truncation** there is no renormalization loop. The reservoir boundary is MESS's failure criterion; the treatment below it is MESMER's.
+- **The reservoir size is automatic.** In MESMER it is a user input (`me:reservoirSize`).
+
+**Operator** (`chemical_activation_operator.rs`).
+- **One state per reservoir.** A well with a reservoir has one state (w, 0) for all its reservoir grains (`index_of` maps them all to it), with the weight ln Q_res, where Q_res = Σ_{i≤g} ρ_i e^{−E_i/kT} on the absolute scale (`Reservoir { state, weights = f_i/Q_res, log_weight }`).
+- **Into the reservoir.** Collisions from a grain t above it are the summed downward probabilities ω Σ_{i≤g} P(i|t); `index_of` sends them to the reservoir state. Isomerization into a reservoir grain of another well also goes into the reservoir state.
+- **Out of the reservoir:**
+  - activation into grain t: ω Σ_{i≤g} P(i|t) f_t/Q_res (detailed balance, MESMER eqs. 14.15–14.16);
+  - reactions and isomerization: every reservoir grain i reacts with its share f_i/Q_res of the reservoir population. *This is a MarXus extension of the thermalized-reservoir assumption.* MESMER requires the reservoir to lie below the reaction thresholds. Here the deep Eckart tunneling of B34/B36 in ZZ-allyl + O₂ reaches the lowest grains, so these rates are not exactly zero.
+  - the bimolecular sink k_c[D].
+- **Detailed balance.** J stays exactly detailed balanced with the weights f_t and Q_res. For isomerization this needs ρ_a k_ab = ρ_b k_ba at every energy.
+- **Absorbing barrier** (SteadyStateAbsorbingBarrier):
+  - a barrier inside the reservoir would split a thermalized state, so it is an error, with an explanation;
+  - a barrier at or above the top of the reservoir absorbs all of it, so there is no reservoir state.
+- **Helpers:**
+  - `state_rate(s, k)`: k at the grain, or Σ k_i f_i/Q_res for a reservoir;
+  - `grain_populations(x)`: the reservoir population spread over its grains with f_i/Q_res;
+  - `state_populations(grains)`: the inverse.
+
+**Consumers** use the helpers, so every grain-resolved quantity (Σ_E k(E) N(E), distributions, ⟨E⟩) is exact:
+- the observables of the steady states and the thermal eigenpair (`grain_populations`);
+- the CSE product rates p^(ν) and the time-integration exits (`state_rate`);
+- the source projection (weights on reservoir grains add up in the reservoir state; nothing is lost).
+
+**Output.** RUN SETTINGS, "Collisions:", lists per temperature the wells with a reservoir and the number of its grains (with their energy above the bottom).
+
+**Tests.** All were written before the code. Only the kernel test was run red first. The operator and source tests compiled for the first time together with the implementation, because the field and the functions did not exist before.
+- `exponential_down_lumps_the_grains_from_the_first_failure_down_into_a_reservoir`: against an independent eq. 4.16 stopped at the first failure. It was red on the truncation code: 22 truncated vs 19 reservoir grains.
+- `low_energy_reservoirs_list_only_the_wells_where_eq_4_16_fails`.
+- `the_reservoir_is_one_thermalized_state_with_the_boltzmann_weight_of_its_grains`: the weight ln Q_res, `state_rate` as the Boltzmann average, `grain_populations`/`state_populations`, activation out of the reservoir, no absorption.
+- `an_absorbing_barrier_within_the_reservoir_is_an_error`, and a barrier at its top absorbs it.
+- `isomerization_into_reservoir_grains_feeds_the_reservoir_with_detailed_balance`.
+- `source_on_reservoir_grains_goes_into_the_reservoir_state`.
+- **Restored to the complete well** (the truncation had made them partial):
+  - the equilibrium-distribution test of the final steady state;
+  - λ₁ → canonical k∞ at high pressure;
+  - the CSE high-pressure and detailed-balance tests.
+- **Double-precision tests moved to temperatures where their regime holds with the reservoir:**
+  - sum rule between 10⁻⁵ and 1.5·10⁻²: 190 K (1.7·10⁻⁴);
+  - λ₁ < 0 from the full decomposition: 160 K;
+  - no plain Cholesky factor: still 130 K.
+
+Full suite: 229 library and 43 binary tests pass.
+
+## 13. Results with the reservoir state
+
+In `reports/low_energy_reservoir_state.md`, Section 9:
+- the 1 K scan is smooth, also where the reservoirs change by whole grains;
+- the Case 2 MESS deviations are as with the truncation, and the thermal losses are now smooth as well;
+- C₂H₃: the thermal population is complete again (CSE detailed balance 0.00% at 300–1000 K, dissociation +4.7 … +5.7% at 300 K), and the high-T results improved compared with the former reduction rule (2000 K: −2.6 … −2.1% instead of −7.8 … −4.5%).
+
+## 14. References
 
 - S. H. Robertson, Comprehensive Chemical Kinetics 43 (2019): eq. 4.16 (normalization), p. 294 (breakdown for sparse states, eqs. 4.60–4.61).
 - `reports/chemical_activation_three_approaches.md`: variant V2 (low-energy reduction factors) and the row "Low-energy treatment" of the comparison table.
 - `reports/collision_kernel_detailed_balance_and_normalization.md`: Section 5.2 (UNIMOL E₀/2 rule) and Section 8 (the open decision).
 - `validation/ZZAllyl+O2_Gamma_Case2/cse_comparison.csv`, `four_methods_comparison.csv`.
+- MESMER 7.1: manual, Sec. 14.2.1 "The Reservoir State Approximation" (eqs. 14.15–14.16); source `src/gWellProperties.h` (`constructReservoir`), `src/TMatrix.h` (`normalizeProbabilityMatrix`).
+- MESS 2026: `src/libmess/mess.cc`, `MasterEquation::Well::_set_kernel` (kernel modes; truncation in mode `down`); inner-barrier sizes around line 2737.

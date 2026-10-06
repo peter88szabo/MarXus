@@ -1,14 +1,14 @@
 # CSE: Rate coefficients from W1 (1/s)
 T[K],P[Torr],W1->P1,W1 loss
-1000,760,1.600403e4,1.600403e4
+1000,760,1.600427e4,1.600427e4
 
 # CSE: Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s)
 T[K],P[Torr],P1->W1
-1000,760,2.570762e-12
+1000,760,2.570800e-12
 
 # CSE: Capture, return and net reaction of P1 (cm^3/s)
 T[K],P[Torr],capture,return,net
-1000,760,4.145087e-11,3.888011e-11,2.570762e-12
+1000,760,4.145087e-11,3.888007e-11,2.570800e-12
 
 # CSE: Bimolecular-to-well yields (stabilization) (% of the net reaction of P1)
 T[K],P[Torr],P1->W1
@@ -32,5 +32,5 @@ T[K],P[Torr],
 
 # CSE: Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance)
 T[K],P[Torr],separation,loss balance,detailed bal.
-1000,760,7.411338e-5,5.831495e-11,0.000000e0
+1000,760,6.900876e-5,1.231884e-10,0.000000e0
 

@@ -10,7 +10,7 @@
 
 **`src/masterequation/parallel_conditions.rs`: `ConditionPool`.**
 - **A local rayon thread pool**, so there is no global state and different pool sizes can be tested in one process.
-- **Thread count:** `--threads N`, otherwise RAYON_NUM_THREADS, otherwise all logical cores (rayon's default).
+- **Thread count:** `--threads N` (now `NCores` in the deck or `--ncore N`, Section 5), otherwise RAYON_NUM_THREADS, otherwise all logical cores (rayon's default).
 - **`map_conditions(temperatures, pressures, f)`:** f(T, p) for every condition; the results come in grid order (temperatures outer, pressures inner). An indexed parallel iterator collects in order, so the output does not depend on the thread count or on the order of completion.
 
 **BLAS threads** (`numeric/lapack_interface.rs::set_blas_threads`, wrapping `openblas_set_num_threads` / `openblas_get_num_threads` of the system OpenBLAS):
@@ -70,3 +70,23 @@ All three validation directories were re-run with `--threads 4` in the run scrip
 - **The two LAPACK-based outputs changed at the rounding level,** because the BLAS thread count per call changed from 4 to 1, which changes DSYEVD's summation order:
   - **Case 2 CSE tables:** entries above 1% of their row maximum are unchanged at the printed precision; entries above 10⁻⁴ of the row maximum change by at most 4.2·10⁻⁶; entries above 10⁻⁶ by at most 2.2·10⁻⁵ (R → P7, about 10⁻¹⁸ cm³/s). Smaller entries are the documented rounding noise (10⁻⁹ … 10⁻²³) and change by large factors.
   - **C₂H₃ LAPACK eigen run:** only the λ₁ values far below the double-precision floor changed (warnings). `comparison_table.csv` is identical.
+
+## 5. Number of cores in the deck: `NCores` (2026-10-06)
+
+**Request (Peter):** "we also need in the input a ncore = 8 variable to tell the code how many processors to use for the run and batch accordingly the given ncore the T,P jobs".
+
+**Keyword.** `NCores N` in the `MarXus ... End` block of the deck header, in the CamelCase style of the other keywords there.
+- **Storage.** It goes into `SolutionSettings::cores`. It is a run setting of every method, so it is never listed as an unused setting.
+- **Command line.** `--ncore N` overrides it, like every command-line option overrides its deck keyword (`SolutionSettings::overridden_by`). The deck may also have no `NCores`. (`--ncore` replaced the earlier `--threads` on Peter's request, 2026-10-06; `--threads` no longer exists.)
+- **Errors.** 0, a non-integer or a negative number is an error that names `NCores`.
+
+**Batching.**
+- `ConditionPool::new(cores)` makes a rayon pool of N worker threads. The conditions (T, p) are computed in batches of up to N at a time, and the results are kept in grid order.
+- LAPACK calls get the cores the conditions leave free: BLAS threads = N / (conditions at a time), at least 1. Workers × BLAS threads therefore stay within N.
+- **Without `NCores` and `--ncore`:** RAYON_NUM_THREADS, otherwise all logical cores.
+
+**Report.** The `Parallel:` line of RUN SETTINGS gives the number of cores and where it came from (`NCores in the deck`, `--ncore`, or the default), then the batch size.
+
+**Tests:**
+- `mess_input::tests::the_marxus_header_block_gives_the_number_of_cores`: `NCores 8` is read; 0, 2.5 and −1 are refused.
+- `solution_method::tests::the_number_of_cores_is_a_run_setting_of_every_method`: the deck value, the command-line override, never unused for any of the four methods, and 0 refused.

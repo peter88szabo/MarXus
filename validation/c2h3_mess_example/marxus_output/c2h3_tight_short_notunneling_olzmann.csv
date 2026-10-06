@@ -4,7 +4,7 @@
 
 # final steady state
 T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
-1000,760,1.000000e0,0.000000e0,0.000000e0,2.413018e5,2.413018e5,1.000000e0,2.920727e3,1.000000000000,2.189e-12
+1000,760,1.000000e0,0.000000e0,0.000000e0,2.413018e5,2.413018e5,1.000000e0,2.920727e3,1.000000000003,2.069e-12
 
 # thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by InverseIteration; sum-rule tolerance 1.5e-2
 # k_uni = sum_j k_th(j) + k_sink: the specific rate coefficients k(E) of the product channels (and the sink)
@@ -21,8 +21,8 @@ T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fp
 #   separated from relaxation).
 # sum_rule_deviation = |lambda_1 - k_uni| / k_uni; above the tolerance a warning is listed below.
 T[K],P[Torr],k_uni[1/s],lambda_1[1/s],precision_floor[1/s],sum_rule_deviation,lambda_2/k_uni,k_th(W1:B1)[1/s],k_inf(W1:B1)[1/s],k_sink(W1)[1/s],fpop(W1)
-1000,760,1.437914e4,1.437914e4,1.801e-3,2.583e-11,1.498928e4,1.437914e4,2.413018e5,0.000000e0,1.000000e0
+1000,760,1.437933e4,1.437933e4,1.801e-3,4.190e-11,1.608390e4,1.437933e4,2.413018e5,0.000000e0,1.000000e0
 
 # bimolecular rate coefficients of P1 [cm3/s] by detailed balance from the thermal k_uni of the final steady state
 T[K],P[Torr],k_inf_assoc[cm3/s],k_inf_diss[1/s],k_uni[1/s],k(P1->W1)
-1000,760,3.876199e-11,2.413018e5,1.437914e4,2.309821e-12
+1000,760,3.876199e-11,2.413018e5,1.437933e4,2.309851e-12

@@ -72,6 +72,10 @@ pub struct SolutionSettings {
     pub times_per_decade: Option<usize>,
     /// `IntegrationTolerance` (`--integration-tolerance`): relative tolerance of the time integration.
     pub integration_tolerance: Option<f64>,
+    /// `NCores` (`--ncore`): processor cores of the run, for every method. The conditions (T, p) are
+    /// computed in batches of up to this many at a time, and each condition's LAPACK calls get the cores
+    /// left over (cores / conditions at a time). Default: RAYON_NUM_THREADS, otherwise all logical cores.
+    pub cores: Option<usize>,
 }
 
 /// Eigen-solver and sum-rule tolerance of the thermal eigenpair of SteadyStateOlzmann.
@@ -201,6 +205,7 @@ impl SolutionSettings {
             time_range_s: other.time_range_s.or(self.time_range_s),
             times_per_decade: other.times_per_decade.or(self.times_per_decade),
             integration_tolerance: other.integration_tolerance.or(self.integration_tolerance),
+            cores: other.cores.or(self.cores),
         }
     }
 
@@ -211,6 +216,9 @@ impl SolutionSettings {
         let method = self
             .method
             .ok_or_else(|| format!("No solution method given (there is no default): {METHODS}."))?;
+        if self.cores == Some(0) {
+            return Err("NCores (--ncore): the number of cores must be at least 1.".into());
+        }
         for (name, value) in [
             (ABSORBING_BARRIER, self.absorbing_barrier_kt),
             (SUM_RULE_TOLERANCE, self.sum_rule_tolerance),
@@ -483,6 +491,27 @@ mod tests {
             ..with(SolutionMethod::SteadyStateAbsorbingBarrier)
         };
         assert_eq!(barrier.resolve().unwrap().unused_settings.len(), 2);
+    }
+
+    #[test]
+    fn the_number_of_cores_is_a_run_setting_of_every_method() {
+        // NCores (deck) is overridden by --ncore (command line); it is never an unused setting, because
+        // every method runs its conditions on these cores.
+        let deck = SolutionSettings { cores: Some(8), ..with(SolutionMethod::ChemicallySignificantEigenvalues) };
+        assert_eq!(deck.overridden_by(&SolutionSettings::default()).cores, Some(8));
+        let command_line = SolutionSettings { cores: Some(2), ..Default::default() };
+        assert_eq!(deck.overridden_by(&command_line).cores, Some(2));
+        for method in [
+            SolutionMethod::SteadyStateOlzmann,
+            SolutionMethod::SteadyStateAbsorbingBarrier,
+            SolutionMethod::ChemicallySignificantEigenvalues,
+            SolutionMethod::TimeIntegration,
+        ] {
+            let settings = SolutionSettings { cores: Some(8), ..with(method) };
+            assert!(settings.resolve().unwrap().unused_settings.is_empty(), "{method:?}");
+        }
+        let zero = SolutionSettings { cores: Some(0), ..with(SolutionMethod::SteadyStateOlzmann) };
+        assert!(zero.resolve().unwrap_err().contains("NCores"));
     }
 
     #[test]

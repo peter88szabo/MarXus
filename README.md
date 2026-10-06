@@ -37,11 +37,12 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 | – [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) (intermediate steady state) | implemented, tested, validated (C₂H₃; Case 2) |
 | – [CSE](docs/methods/chemically_significant_eigenvalues.md) (phenomenological rate coefficients, Miller–Klippenstein / Georgievskii et al. 2013) | implemented, tested, validated (four-well MESS run, Case 2; C₂H₃, 300–2000 K) |
 | – [TimeIntegration](docs/methods/direct_time_integration.md) (Rosenbrock Ros2–Rodas4, adapted from KPP) | implemented, tested; reproduces the final steady state on the four-well network; late-time decay = k_uni within 3·10⁻⁶ (C₂H₃) |
-| Parallel runs over the conditions (T, p) with rayon | implemented, tested |
-| Exponential-down kernel, low-energy reduction | open decision: its integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 gives steps in T, e.g. +3% in R → G4 of Case 2 at 304.7 K (`reports/low_energy_reduction_temperature_step.md`) |
+| Parallel runs over the conditions (T, p) with rayon; cores from `NCores` (deck) or `--ncore` | implemented, tested |
+| Exponential-down kernel with the low-energy reservoir state (MESMER) where the normalization fails | implemented, tested, validated on both systems; replaces the former reduction rule, whose integer window caused a step of +3% in R → G4 of Case 2 at 304.7 K (`reports/low_energy_reservoir_state.md`) |
 | Higher precision (double-double, arbitrary-precision reference) | planned (`reports/higher_precision_decision.md`) |
+| CSE species merging at poor time-scale separation (Georgievskii et al. 2013, Sec. IV, as in MESS) | planned (`reports/cse_species_merging.md`) |
 
-The source contains 218 library unit tests (`cargo test`).
+The source contains 229 library unit tests (`cargo test`).
 
 ---
 
@@ -87,6 +88,10 @@ The energy-grained master equation is $`dN/dt = R\,F - 𝐉 N`$ with $`𝐉 = \o
 
 **Collisions**
 - **Exponential down** (default), exactly normalized (Robertson (ed.), Comprehensive Chemical Kinetics 43 (2019), eq. 4.16).
+  - **Low-energy reservoir.** Where the normalization fails at the sparse bottom of a well (Robertson 2019, p. 294), the grains from the failing one down form one thermalized reservoir state: the reservoir state of MESMER (manual, Sec. 14.2.1).
+  - **What it keeps.** It keeps their full Boltzmann weight. Collisions bring molecules into it with the normalized downward probabilities, and activation out of it follows by detailed balance. Partition functions and thermal rate coefficients therefore stay complete.
+  - **When it applies.** It forms only where the normalization requires it, and RUN SETTINGS lists it per temperature.
+  - **Documentation:** `reports/low_energy_reservoir_state.md` (physical meaning, equations, differences from MESMER's reservoir state, alternatives, validity). How the rule was reached (the temperature step of the former reduction rule, and the population that truncation removes): `reports/low_energy_reduction_temperature_step.md`.
 - Olzmann **stepladder** (Olzmann, Gebhardt, Scherzer, Int. J. Chem. Kinet. 23, 825 (1991)).
 - Both obey detailed balance exactly; Lennard-Jones collision frequencies (Troe 1977).
 
@@ -136,9 +141,9 @@ MarXus has **four solution methods in three families**: [SteadyStateOlzmann](doc
 - Exact Eckart tunneling and 1 cm⁻¹ state counting are built from the deck.
 
 **Validation**
-- `validation/c2h3_mess_example/` (intermediate steady state) and `validation/c2h3_mess_example_olzmann_eigen/` (thermal rate coefficients of the final steady state) compare H + C₂H₂ ⇌ C₂H₃ at 300–2000 K and 0.1–10 atm with the stored MESS results.
-- The thermal rate coefficients agree within ±2.5% from 750 to 1750 K. At 300–1000 K the residual offsets are the known exact vs semiclassical Eckart difference.
-- At 300–1000 K the association from the intermediate steady state (10 kT) and from the thermal rate coefficients of the final steady state agree within 0.023%. Above 1000 K they separate as the absorbing barrier loses its plateau.
+- `validation/c2h3_mess_example/` compares H + C₂H₂ ⇌ C₂H₃ at 300–2000 K and 0.1–10 atm with the stored MESS results. It covers all four methods and the three eigen-solvers, in one directory.
+- The thermal rate coefficients (k_uni) agree with MESS within −2.9 … +1.8% from 750 to 2000 K. At 300–500 K the offsets of +3 … +6% are the known exact vs semiclassical Eckart difference.
+- At 300–1000 K the associations of all four methods agree (absorbing barrier vs k_uni·K within 0.02%). Above 1000 K the absorbing barrier loses its plateau.
 - `validation/ZZAllyl+O2_Gamma_Case2/` reproduces a four-well MESS run: ZZ-allyl + O₂ with two PST channels, Eckart tunneling and an escape sink.
   - The capture rate agrees within 0.5%.
   - Every channel's k∞ agrees within 0.3–0.7% once the tunneling factor is accounted for. MarXus's exact Eckart κ is 2–23% larger than MESS's.
@@ -315,19 +320,35 @@ since all eigenvalues of $`𝐉`$ are positive. This is exactly the yield of the
 - **What it checks.** The two methods reach the same observable through independent code: a banded Cholesky solve on one side; the full eigendecomposition, $`𝐌^{-1}`$, the rate assembly and the absorbing chain on the other.
 - **Measured.**
   - The test `cse_long_time_yields_equal_the_final_steady_state_yields` holds to 10⁻⁸.
-  - ZZ-allyl + O₂ (`validation/ZZAllyl+O2_Gamma_Case2/cse_vs_final_steady_state.csv` and `plots/cse_vs_final_steady_state.png`): IEPOX + OH at 300 K and 760 Torr is 2.32525045% from the final steady state and 2.32525079% from the CSE kinetics.
-  - Over all 21 conditions the IEPOX + OH share agrees to 3.1·10⁻⁷ relative, the escape to 1.6·10⁻⁸ and P1 to 6.1·10⁻⁷. These are the precision of the 7 printed digits. P7, about 10⁻⁵ of the reaction, agrees to 1.4·10⁻⁴.
+  - ZZ-allyl + O₂ (`validation/ZZAllyl+O2_Gamma_Case2/cse_vs_final_steady_state.csv` and `plots/cse_vs_final_steady_state.png`): IEPOX + OH at 300 K and 760 Torr is 2.32448% from both the final steady state and the CSE kinetics.
+  - Over all 21 conditions the IEPOX + OH share agrees to 3.6·10⁻⁷ relative, the escape to 1.9·10⁻⁸ and P1 to 5.6·10⁻⁷: the precision of the printed digits. P7, at most 0.008% of the reaction and formed through G6, agrees to 5.3·10⁻⁴; the CSE entries on its path (R → G6 ≈ 10⁻²² cm³/s) are at the rounding level.
+- **All identities, measured on both systems:** `reports/method_comparison.md` (script `validation/method_comparison.py`; per system `method_comparison.csv` and `plots/method_*.png`).
 
 - **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ of SteadyStateOlzmann (test `a_single_well_gives_the_eigenvector_average_as_its_rate_coefficient`, to 10⁻⁸).
 - **Well separation and continuous formation.** Steady-state yields equal time-integrated single-injection yields (Vereecken et al., J. Chem. Phys. 106, 6564 (1997), Table I). The CSE R → product and R → well rate coefficients equal the fractions accumulated on the relaxation time scale (G13 p. 12153).
-- **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example*`):
-  - At 300–1000 K, SteadyStateAbsorbingBarrier (10 kT) and the thermal association of SteadyStateOlzmann agree within 0.023% (largest deviation per temperature over the five pressures: 0.0007% at 300 K, 0.004% at 500 K, 0.018% at 750 K, 0.023% at 1000 K; `comparison_table.csv`, inverse iteration). Above 1000 K they separate as the absorbing barrier loses its plateau: 1.2% at 1250 K, 13% at 1500 K, 77% at 1750 K, no barrier result at 2000 K.
-  - Above about 1500 K, SteadyStateAbsorbingBarrier fails because of the barrier distance (0.1 atm, 10 kT): −13% at 1500 K, −42% at 1750 K, no result at 2000 K.
-  - SteadyStateOlzmann stays within ±2.5% of the MESS (CSE) result from 750 to 1750 K.
+- **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`):
+  - **Identities:**
+    - CSE's k(W1 → P1) equals SteadyStateOlzmann's k_uni at every condition;
+    - the late-time decay of the time-integrated pulse equals k_uni within 3·10⁻⁶;
+    - the pulse ends in the final steady state in all printed digits.
+
+    This holds at the 30 conditions where λ₁ is above the double-precision floor.
+  - **Up to 1000 K the associations of all methods agree:** CSE (G13 eq. 28), SteadyStateOlzmann's k_uni·K, and SteadyStateAbsorbingBarrier (10 kT, within 0.02%).
+  - **Above 1000 K:**
+    - the absorbing barrier loses its plateau (0.1 atm: −10% at 1500 K, −31% at 1750 K, no result at 2000 K);
+    - CSE's association departs from k_uni·K exactly by its own departure from detailed balance, −14% at 2000 K. MESS's own pair shows the same departure, −13.9%.
+  - **Against MESS:**
+    - dissociation (CSE = k_uni): +4.7 … +5.7% at 300 K (tunneling model), −0.8 … +0.5% at 1000 K, −2.6 … −2.1% at 2000 K;
+    - CSE association: −3.1 … −0.8% at 1250–2000 K.
 - **ZZ-allyl + O₂, four wells** (`validation/ZZAllyl+O2_Gamma_Case2/`):
   - CSE reproduces the MESS species tables to a few percent.
-  - The long-time IEPOX + OH share of SteadyStateOlzmann differs from MESS's long-time fate by +7 … +12% with the exact Eckart tunneling, and by −5.1 … −5.9% with the MESS tunneling model. The escape share agrees within 0.5%.
-  - The apparent $`k(\mathrm R\to \mathrm{IEPOX+OH})`$ of SteadyStateAbsorbingBarrier is 15% above MESS's R → P5. These are different quantities: the prompt formation is assigned by the barrier in one and by the eigenvalue splitting in the other.
+  - The long-time IEPOX + OH share of SteadyStateOlzmann differs from MESS's long-time fate by +6.6 … +12.0% with the exact Eckart tunneling, and by −5.1 … −5.9% with the MESS tunneling model. The escape share agrees within 0.5%.
+  - CSE against MESS (MESS tunneling model): R → G4 −1.0 … −0.3%, R → G3 −1.2 … −0.7%, R → G2 +3.0 … +5.2%, R → P5 −3.6 … −3.0%.
+  - The prompt $`k(\mathrm R\to \mathrm{IEPOX+OH})`$ of SteadyStateAbsorbingBarrier depends on the tunneling model:
+    - exact Eckart tunneling: +14.8 … +15.7% above MESS's R → P5;
+    - MESS's Eckart model: −2.6 … −3.5% from MESS, and within 0.44% of CSE's G13 eq. 21.
+
+    The difference from MESS is therefore the tunneling model, not the definition of the quantity (`reports/method_comparison.md`).
 
 ---
 
@@ -335,7 +356,7 @@ since all eigenvalues of $`𝐉`$ are positive. This is exactly the yield of the
 
 ```
 cargo run --release --example chemical_activation_from_deck -- deck.inp REACTANT \
-    --method steady-state-olzmann --threads 4 --csv out.csv > out.report
+    --method steady-state-olzmann --ncore 4 --csv out.csv > out.report
 ```
 
 The method and its settings can be given in the deck header, in a `MarXus ... End` block (a MarXus extension of the MESS format). `Method` is required (in the deck or on the command line); the other keywords are optional. The command-line option in the second column overrides the deck:
@@ -351,6 +372,7 @@ MarXus
   TimeRange[s]                        1e-12  1e2         ! time integration: first and last output time
   TimesPerDecade                      4                  ! time integration
   IntegrationTolerance                1e-6               ! time integration: relative tolerance
+  NCores                              8                  ! cores of the run; the (T, p) conditions run in batches of up to 8
 End
 ```
 
@@ -362,7 +384,7 @@ End
 | `SumRuleTolerance` | `--sum-rule-tolerance X` | warning threshold of \|λ₁ − k_uni\|/k_uni (1.5e-2) |
 | – | `--csv FILE` | also write the machine-readable tables (CSV with titled blocks) to FILE, and every table of the report to FILE_tables.csv |
 | `Integrator`, `InitialState`, `TimeRange[s]`, `TimesPerDecade`, `IntegrationTolerance` | `--integrator`, `--initial`, `--time-range T1 T2`, `--times-per-decade`, `--integration-tolerance` | time integration: Rosenbrock method (Rodas4), pulse or continuous formation (pulse), output times (1e-12 to 1e2 s, 4 per decade), relative tolerance (1e-6) |
-| – | `--threads N` | number of threads; the conditions (T, p) are independent and computed in parallel (default: RAYON_NUM_THREADS, otherwise all cores) |
+| `NCores` | `--ncore N` | number of cores of the run, for every method; `--ncore` overrides `NCores` of the deck, and either may be given alone. The conditions (T, p) are independent and are computed in batches of up to N at a time; LAPACK calls get the cores left over (N / conditions at a time). Default: RAYON_NUM_THREADS, otherwise all logical cores. RUN SETTINGS shows the number and where it came from |
 | – | `--tunneling exact-eckart\|mess-eckart` | Eckart transmission model: exact Eckart (default); `mess-eckart` only for comparison with MESS (see Tunneling model below) |
 
 A setting that the chosen method does not use is reported as a note in the output, not refused. `SteadyState` / `--steady-state` and `both` no longer exist: the two steady-state methods are chosen by `Method`, one per run. `eigenvalue` is not a method: the thermal eigenpair belongs to SteadyStateOlzmann.
@@ -458,7 +480,7 @@ export OPENBLAS_NUM_THREADS=4
 
 ### 3. Rust crates (automatic)
 
-- `rayon` (pure Rust): the conditions (T, p) of a master-equation run are computed in parallel (`--threads N`).
+- `rayon` (pure Rust): the conditions (T, p) of a master-equation run are computed in parallel (`NCores` in the deck, `--ncore N`).
 
 `cargo build` downloads and compiles it by itself; it needs no system library.
 

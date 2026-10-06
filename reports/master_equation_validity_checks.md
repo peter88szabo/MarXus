@@ -5,7 +5,7 @@
 This report lists every check that tells whether a master-equation (ME) result can be trusted. For each check it gives:
 - what is checked and why it must hold, with the literature;
 - where MarXus enforces it: a **runtime check**, applied to every calculation, which turns a violation into an error or (sum rule, §4.1) a warning, or a **unit test** (`cargo test`, test name given);
-- what the C₂H₃ benchmark shows (`validation/c2h3_mess_example/`, `validation/c2h3_mess_example_olzmann_eigen/`).
+- what the C₂H₃ benchmark shows (`validation/c2h3_mess_example/`, `validation/c2h3_mess_example_olzmann_eigen/` (merged into `validation/c2h3_mess_example/` on 2026-10-06, its Section 4.5)).
 
 ## References
 
@@ -187,7 +187,7 @@ In the probe (stepladder, inverse iteration without shift), the deviation grows 
 - **The QL and LAPACK solvers on the same well.** At 150 K both give λ₁ < 0. At 175 K LAPACK gives λ₁ = 8.06e-7 and k_uni = 9.67e-7 s⁻¹, while inverse iteration gives 8.79e-7 and 8.80e-7 s⁻¹. **The dense solvers' eigenvector can therefore also degrade**; hence the advice to confirm with the inverse iteration.
 - **Before the check existed,** a run at 400 K and 1 Torr of an even deeper well (threshold 15000 cm⁻¹) returned λ₁ = 7.30e-9 s⁻¹ without comment, against an eigenvector average of 7.02e-9 s⁻¹ (4%). It now reports k_uni = 7.02e-9 s⁻¹ with a warning.
 
-**C₂H₃, full deck** (`validation/c2h3_mess_example_olzmann_eigen/`):
+**C₂H₃, full deck** (`validation/c2h3_mess_example_olzmann_eigen/` (merged into `validation/c2h3_mess_example/` on 2026-10-06, its Section 4.5)):
 - **≥ 1000 K:** deviation 10⁻¹⁴–10⁻¹¹ (inverse iteration).
 - **750 K:** 4·10⁻⁹–7·10⁻⁸.
 - **500 K:** 4·10⁻⁴–1.0·10⁻²; no warning.

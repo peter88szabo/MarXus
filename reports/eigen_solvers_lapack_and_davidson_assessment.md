@@ -30,7 +30,7 @@ Two conditions (300 K and 2000 K at 1 atm), release build:
 | LAPACK DSYEVD (new) | 5.0 s | 391 MB | 2.4·10⁻¹¹ |
 | in-house Householder/QL (tred2/tql2) | 238 s | 269 MB | 2.1·10⁻⁹ |
 
-Over all 40 conditions of the deck (`validation/c2h3_mess_example_olzmann_eigen/`):
+Over all 40 conditions of the deck (`validation/c2h3_mess_example_olzmann_eigen/` (merged into `validation/c2h3_mess_example/` on 2026-10-06, its Section 4.5)):
 
 | T (K) | sum-rule deviation, inverse iteration | sum-rule deviation, LAPACK |
 |---|---|---|

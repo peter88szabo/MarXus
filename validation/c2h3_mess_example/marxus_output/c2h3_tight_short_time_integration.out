@@ -9,12 +9,15 @@
                      output times 1e-12 .. 1e2 s, 4 per decade (operator of the final steady state)
  Solvers:            adaptive L-stable Rosenbrock method Rodas4 (adapted from KPP; Hairer, Wanner, Solving ODEs II, Sec. IV.7)
                      relative tolerance 1e-6, absolute 1e-14; steps of powers of two, banded Cholesky of s I + S reused
- Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+ Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
                      BLAS threads per LAPACK call: 4
  Temperatures (K):   1000
  Pressures (torr):   760
  Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
  Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 1000 K: W1 1 grains (70 cm-1)
                      collision frequency: Lennard-Jones (per well, below)
  Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
  Source:             thermal reactant P1 through B1 (P1 -> W1)
@@ -84,46 +87,46 @@ t(s)                 N(W1)       W1->P1
 3.16228e-09    6.57879e+00  9.34212e+01
 5.62341e-09    6.32304e+00  9.36770e+01
 1.00000e-08    6.22805e+00  9.37720e+01
-1.77828e-08    6.20347e+00  9.37965e+01
-3.16228e-08    6.19895e+00  9.38011e+01
-5.62341e-08    6.19637e+00  9.38036e+01
-1.00000e-07    6.19203e+00  9.38080e+01
-1.77828e-07    6.18432e+00  9.38157e+01
-3.16228e-07    6.17064e+00  9.38294e+01
-5.62341e-07    6.14638e+00  9.38536e+01
-1.00000e-06    6.10348e+00  9.38965e+01
-1.77828e-06    6.02793e+00  9.39721e+01
-3.16228e-06    5.89588e+00  9.41041e+01
-5.62341e-06    5.66817e+00  9.43318e+01
-1.00000e-05    5.28474e+00  9.47153e+01
-1.77828e-05    4.66584e+00  9.53342e+01
-3.16228e-05    3.73883e+00  9.62612e+01
-5.62341e-05    2.52159e+00  9.74784e+01
-1.00000e-04    1.25165e+00  9.87484e+01
-1.77828e-04    3.60198e-01  9.96398e+01
-3.16228e-04    3.93187e-02  9.99607e+01
-5.62341e-04    7.65590e-04  9.99992e+01
-1.00000e-03    6.95134e-07  1.00000e+02
-1.77828e-03    3.01733e-12  1.00000e+02
-3.16228e-03    4.87284e-14  1.00000e+02
-5.62341e-03    1.24578e-15  1.00000e+02
-1.00000e-02    2.47941e-17  1.00000e+02
-1.77828e-02    2.57755e-19  1.00000e+02
-3.16228e-02    2.24539e-22  1.00000e+02
-5.62341e-02    7.13328e-26  1.00000e+02
-1.00000e-01    5.09643e-30  1.00000e+02
-1.77828e-01    9.96497e-34  1.00000e+02
-3.16228e-01    6.17144e-38  1.00000e+02
-5.62341e-01    1.21803e-42  1.00000e+02
-1.00000e+00    1.01126e-49  1.00000e+02
-1.77828e+00    4.57006e-57  1.00000e+02
-3.16228e+00    1.60067e-65  1.00000e+02
-5.62341e+00    3.33640e-72  1.00000e+02
-1.00000e+01    2.13992e-79  1.00000e+02
-1.77828e+01    4.31380e-87  1.00000e+02
-3.16228e+01    1.23400e-98  1.00000e+02
-5.62341e+01   2.65285e-110  1.00000e+02
-1.00000e+02   2.72925e-126  1.00000e+02
+1.77828e-08    6.20349e+00  9.37965e+01
+3.16228e-08    6.19902e+00  9.38010e+01
+5.62341e-08    6.19646e+00  9.38035e+01
+1.00000e-07    6.19212e+00  9.38079e+01
+1.77828e-07    6.18441e+00  9.38156e+01
+3.16228e-07    6.17073e+00  9.38293e+01
+5.62341e-07    6.14647e+00  9.38535e+01
+1.00000e-06    6.10357e+00  9.38964e+01
+1.77828e-06    6.02802e+00  9.39720e+01
+3.16228e-06    5.89597e+00  9.41040e+01
+5.62341e-06    5.66825e+00  9.43318e+01
+1.00000e-05    5.28480e+00  9.47152e+01
+1.77828e-05    4.66589e+00  9.53341e+01
+3.16228e-05    3.73885e+00  9.62611e+01
+5.62341e-05    2.52160e+00  9.74784e+01
+1.00000e-04    1.25164e+00  9.87484e+01
+1.77828e-04    3.60189e-01  9.96398e+01
+3.16228e-04    3.93163e-02  9.99607e+01
+5.62341e-04    7.65499e-04  9.99992e+01
+1.00000e-03    6.94980e-07  1.00000e+02
+1.77828e-03    3.01613e-12  1.00000e+02
+3.16228e-03    4.87100e-14  1.00000e+02
+5.62341e-03    1.24531e-15  1.00000e+02
+1.00000e-02    2.47844e-17  1.00000e+02
+1.77828e-02    2.57649e-19  1.00000e+02
+3.16228e-02    2.24441e-22  1.00000e+02
+5.62341e-02    7.12998e-26  1.00000e+02
+1.00000e-01    5.09388e-30  1.00000e+02
+1.77828e-01    9.95970e-34  1.00000e+02
+3.16228e-01    6.16800e-38  1.00000e+02
+5.62341e-01    1.21732e-42  1.00000e+02
+1.00000e+00    1.01062e-49  1.00000e+02
+1.77828e+00    4.56698e-57  1.00000e+02
+3.16228e+00    1.59951e-65  1.00000e+02
+5.62341e+00    3.33390e-72  1.00000e+02
+1.00000e+01    2.13826e-79  1.00000e+02
+1.77828e+01    4.31031e-87  1.00000e+02
+3.16228e+01    1.23295e-98  1.00000e+02
+5.62341e+01   2.65047e-110  1.00000e+02
+1.00000e+02   2.72664e-126  1.00000e+02
 
 --- Tables by temperature (rows: pressure in torr) ---
 
@@ -139,7 +142,7 @@ Populations left in the wells at the last output time (% of the formed adducts),
    Temperature = 1000 K
 
   P(torr)        N(W1)
-      760 2.72925e-126
+      760 2.72664e-126
 
 Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), by temperature:
 
@@ -166,7 +169,7 @@ Populations left in the wells at the last output time (% of the formed adducts),
    Pressure = 760 torr
 
   T(K)        N(W1)
-  1000 2.72925e-126
+  1000 2.72664e-126
 
 Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), by pressure:
 
@@ -193,7 +196,7 @@ Populations left in the wells at the last output time (% of the formed adducts),
 N(W1)
 
 P\T           1000
-760   2.72925e-126
+760   2.72664e-126
 
 Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), temperature-pressure tables:
 

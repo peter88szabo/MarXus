@@ -32,7 +32,7 @@ run() {  # deck output-stem method [extra options]
     local deck="$1" stem="$2" method="$3"
     shift 3
     echo "running $stem"
-    $exe "$deck" R --threads 4 --method "$method" "$@" --csv "$o/$stem.csv" 2>/dev/null > "$o/$stem.out"
+    $exe "$deck" R --ncore 4 --method "$method" "$@" --csv "$o/$stem.csv" 2>/dev/null > "$o/$stem.out"
 }
 for method in steady-state-olzmann steady-state-absorbing-barrier cse time-integration; do
     name=${method#steady-state-}

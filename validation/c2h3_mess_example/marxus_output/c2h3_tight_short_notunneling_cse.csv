@@ -9,8 +9,8 @@
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 1000 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.4379e4; lowest relaxation eigenvalue 2.1553e8 1/s (separation 6.671e-5); relaxational projections 2.7091e-5; loss balance deviation 7.66e-11; detailed balance deviation 0.00e0; precision floor 1.801e-3 1/s
+# T = 1000 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.4379e4; lowest relaxation eigenvalue 2.3128e8 1/s (separation 6.217e-5); relaxational projections 2.7086e-5; loss balance deviation 3.60e-10; detailed balance deviation 0.00e0; precision floor 1.801e-3 1/s
 # reactant P1: capture 3.8762e-11 cm3/s, return to the reactant 3.6452e-11 cm3/s
 From\To,W1,P1
-W1,1.437914e4,1.437914e4
-P1,2.309758e-12,2.309758e-12
+W1,1.437933e4,1.437933e4
+P1,2.309789e-12,2.309789e-12

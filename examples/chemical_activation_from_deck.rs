@@ -3,7 +3,7 @@
 //!   cargo run --release --example chemical_activation_from_deck -- [deck.inp] [reactant]
 //!       [--method steady-state|cse] [--steady-state intermediate|final|both] [--barrier-kt X]
 //!       [--eigen-solver inverse|full|lapack] [--sum-rule-tolerance X] [--tunneling exact-eckart|mess-eckart]
-//!       [--csv FILE] [--threads N] [--integrator rodas4|rodas3|ros4|ros3|ros2] [--initial pulse|continuous]
+//!       [--csv FILE] [--ncore N] [--integrator rodas4|rodas3|ros4|ros3|ros2] [--initial pulse|continuous]
 //!       [--time-range T1 T2] [--times-per-decade N] [--integration-tolerance X]
 //!
 //! Two solution methods (`masterequation::solution_method`), chosen in the `MarXus ... End` block of the deck
@@ -50,8 +50,9 @@
 //! --time-range T1 T2     time integration: first and last output time in s, default 1e-12 1e2 [TimeRange[s]]
 //! --times-per-decade N   time integration: output times per decade, default 4 [TimesPerDecade]
 //! --integration-tolerance X   time integration: relative tolerance, default 1e-6 [IntegrationTolerance]
-//! --threads N            number of threads: the conditions (T, p) are computed in parallel (rayon); default
-//!                        RAYON_NUM_THREADS, otherwise all logical cores
+//! --ncore N              number of cores: the conditions (T, p) are computed in parallel (rayon), in batches of
+//!                        up to N at a time; overrides NCores of the deck; without either, RAYON_NUM_THREADS,
+//!                        otherwise all logical cores [NCores]
 //! A setting that the selected solution does not use is reported as a note, not refused.
 //!
 //! Output: a human-readable report on stdout (`report_sections.rs`, `report_tables.rs`):
@@ -88,6 +89,7 @@ use MarXus::masterequation::chemical_activation_network::{
     AbsorbingBarrier, ChannelDestination, ChemicalActivationOptions, CollisionModel, Conditions,
     SteadyState,
 };
+use MarXus::masterequation::chemical_activation_operator::low_energy_reservoirs;
 use MarXus::masterequation::chemical_activation_sources::thermal_entrance_source;
 use MarXus::masterequation::chemical_activation_steady_state::LinearSolver;
 use MarXus::masterequation::direct_time_integration::{
@@ -124,7 +126,6 @@ fn main() -> Result<(), String> {
     let mut command_line = SolutionSettings::default();
     let mut settings = MessNetworkSettings::default();
     let mut csv_path: Option<String> = None;
-    let mut threads: Option<usize> = None;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         let mut value = || args.next().ok_or(format!("{arg} needs a value"));
@@ -159,11 +160,11 @@ fn main() -> Result<(), String> {
                 command_line.integration_tolerance = Some(number(value()?)?)
             }
             "--csv" => csv_path = Some(value()?),
-            "--threads" => {
+            "--ncore" => {
                 let v = value()?;
-                threads = Some(
+                command_line.cores = Some(
                     v.parse::<usize>()
-                        .map_err(|_| format!("--threads: invalid number '{v}'"))?,
+                        .map_err(|_| format!("--ncore: invalid number '{v}'"))?,
                 );
             }
             "--tunneling" => {
@@ -172,6 +173,13 @@ fn main() -> Result<(), String> {
                     "mess-eckart" => EckartTunnelingModel::Mess,
                     other => return Err(format!("--tunneling: unknown model '{other}' (exact-eckart, mess-eckart)")),
                 }
+            }
+            other if other.starts_with("--") => {
+                return Err(format!(
+                    "unknown option '{other}' (--method, --barrier-kt, --eigen-solver, --sum-rule-tolerance, \
+                     --integrator, --initial, --time-range, --times-per-decade, --integration-tolerance, --csv, \
+                     --ncore, --tunneling)"
+                ))
             }
             _ => positional.push(arg),
         }
@@ -182,11 +190,16 @@ fn main() -> Result<(), String> {
     if let Some(reactant) = positional.get(1) {
         deck.global.reactant_name = Some(reactant.clone());
     }
-    let resolved = deck
-        .global
-        .solution
-        .overridden_by(&command_line)
-        .resolve()?;
+    let merged = deck.global.solution.overridden_by(&command_line);
+    let resolved = merged.resolve()?;
+    // Where the number of cores comes from (shown in RUN SETTINGS).
+    let cores_source = if command_line.cores.is_some() {
+        "--ncore"
+    } else if deck.global.solution.cores.is_some() {
+        "NCores in the deck"
+    } else {
+        "default: RAYON_NUM_THREADS, otherwise all logical cores"
+    };
     // One solver per run: the steady state to solve (intermediate for SteadyStateAbsorbingBarrier, final for
     // SteadyStateOlzmann, with its thermal eigenpair), the eigen-solver of CSE, or the time-integration plan.
     let (steady_state, thermal, cse, time_integration) = match resolved.solution {
@@ -229,7 +242,7 @@ fn main() -> Result<(), String> {
     // The conditions (T, p) are independent master equations, computed in parallel (`parallel_conditions.rs`).
     // OpenBLAS gets the threads that the conditions leave free, so that workers x BLAS threads stay within
     // the requested number of cores.
-    let pool = ConditionPool::new(threads)?;
+    let pool = ConditionPool::new(merged.cores)?;
     let condition_count = temperatures.len() * pressures.len();
     let concurrent = pool.threads().min(condition_count).max(1);
     let blas_threads = set_blas_threads((pool.threads() / concurrent).max(1));
@@ -396,7 +409,7 @@ fn main() -> Result<(), String> {
         "Parallel:",
         &[
             format!(
-                "{} threads (rayon) over the {condition_count} conditions (T, p); {concurrent} conditions at a time",
+                "{} cores ({cores_source}); the {condition_count} conditions (T, p) in batches of {concurrent} at a time (rayon)",
                 pool.threads()
             ),
             format!("BLAS threads per LAPACK call: {blas_threads}"),
@@ -414,15 +427,36 @@ fn main() -> Result<(), String> {
         )],
     )
     .map_err(io)?;
-    field(
-        &mut report,
-        "Collisions:",
-        &[
-            collisions,
-            "collision frequency: Lennard-Jones (per well, below)".into(),
-        ],
-    )
-    .map_err(io)?;
+    // Low-energy reservoirs: where the normalization of eq. 4.16 fails, the lowest grains of a well form one
+    // thermalized state (MESMER manual, Sec. 14.2.1; per temperature, the kernel does not depend on the pressure).
+    let mut reservoir_lines = Vec::new();
+    for &t in &temperatures {
+        let reservoirs = low_energy_reservoirs(network, t, model.collision_model)?;
+        if !reservoirs.is_empty() {
+            let wells: Vec<String> = reservoirs
+                .iter()
+                .map(|r| format!("{} {} grains ({:.0} cm-1)", r.well, r.grains, r.grains as f64 * network.grain_width_cm1))
+                .collect();
+            reservoir_lines.push(format!("  T = {t} K: {}", wells.join(", ")));
+        }
+    }
+    let mut collision_lines = vec![collisions];
+    if matches!(model.collision_model, CollisionModel::ExponentialDown { .. }) {
+        if reservoir_lines.is_empty() {
+            collision_lines.push("eq. 4.16 holds at every grain of every well (no low-energy reservoir)".into());
+        } else {
+            collision_lines.push(
+                "low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the"
+                    .into(),
+            );
+            collision_lines.push(
+                "  failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):".into(),
+            );
+            collision_lines.extend(reservoir_lines);
+        }
+    }
+    collision_lines.push("collision frequency: Lennard-Jones (per well, below)".into());
+    field(&mut report, "Collisions:", &collision_lines).map_err(io)?;
     field(&mut report, "Tunneling:", &[tunneling.to_string()]).map_err(io)?;
     field(
         &mut report,

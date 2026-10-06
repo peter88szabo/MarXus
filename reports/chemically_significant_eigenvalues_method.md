@@ -89,6 +89,7 @@ It does not extract the phenomenological rate-coefficient matrix of G13. That ma
 **All 21 conditions, significant entries:**
 - R → G2: +2.1 … +3.3%; R → G3: +0.9 … +3.6%; R → G4: +1.4 … +6.1%.
 - **R → P5: −2.7 … −3.5%**; R → P1: −1.4 … −2.3%; R → P7: −3.9 … −5.0%.
+- *Update 2026-10-06 (re-run with the low-energy reservoir state of the collision kernel, `low_energy_reservoir_state.md`):* R → P5 −3.6 … −3.0%, R → P1 −2.3 … −1.5%, R → P7 −5.1 … −3.9%, R → G2 +3.0 … +5.2%, R → G3 −1.2 … −0.7%, R → G4 −1.0 … −0.3%. The former reduction rule had given R → G4 a step at 304.7 K, +1.4 … +6.1%. All identities between the methods are in `method_comparison.md`.
 - Well → well: within ±1%, except G4 → G3, +1.0 … +2.5%.
 - Well → R: +0.2 … +6%.
 - Well → products: within −3.4 … +3.8%.

@@ -125,12 +125,13 @@ pub fn phenomenological_rate_coefficients(
         }
     }
     let mut k_into = vec![vec![0.0; n_states]; bimolecular.len()];
-    for (k, &(w, g)) in op.states.iter().enumerate() {
+    for (k, &(w, _)) in op.states.iter().enumerate() {
         let well = &network.wells[w];
         for channel in &well.channels {
             if let ChannelDestination::Products { name } = &channel.destination {
                 let nu = bimolecular.iter().position(|b| b == name).unwrap();
-                k_into[nu][k] += channel.rate_constant_s_inv[g];
+                // A low-energy reservoir reacts with the Boltzmann average over its grains.
+                k_into[nu][k] += op.state_rate(k, &channel.rate_constant_s_inv);
             }
         }
         if well.bimolecular_sink_s_inv > 0.0 {
@@ -392,6 +393,8 @@ mod tests {
     }
 
     /// Boltzmann average of k(E) over the grains of well `w` (the high-pressure rate coefficient).
+    /// Canonical average of k(E) of a channel over all grains of well w (a low-energy reservoir keeps its
+    /// Boltzmann weight).
     fn high_pressure_rate(network: &ChemicalActivationNetwork, w: usize, channel: usize, kt: f64) -> f64 {
         let well = &network.wells[w];
         let f: Vec<f64> = (0..well.grain_count())
