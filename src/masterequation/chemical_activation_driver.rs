@@ -42,7 +42,7 @@ use super::chemical_activation_network::{
 };
 use super::chemical_activation_observables::{evaluate_observables, ChemicalActivationResult};
 use super::chemical_activation_operator::{assemble_operator, WellCollisionData};
-use super::chemical_activation_sources::thermal_entrance_source;
+use super::chemical_activation_sources::{thermal_distribution, thermal_entrance_source};
 use super::chemical_activation_steady_state::{project_source, solve_steady_state, LinearSolver};
 
 /// How the intermediates are formed.
@@ -209,6 +209,63 @@ pub fn write_results_table<W: Write>(
         writeln!(out, "{}", row.join(","))?;
     }
     Ok(())
+}
+
+/// Thermal fate of the molecules thermalized in one well: the final steady state with the Boltzmann
+/// distribution of that well, rho(E) exp(-E/kT) normalized on its grains, as the source. Its yields are
+/// the probabilities that a thermalized molecule of the well ends in each product channel or sink
+/// (Y_x = k_x^T J^-1 f0_w, the final steady state of GO10 eq. 8 with this source).
+#[derive(Debug, Clone)]
+pub struct WellFateConditionResult {
+    pub conditions: Conditions,
+    /// Index of the well whose Boltzmann distribution is the source.
+    pub well: usize,
+    pub result: ChemicalActivationResult,
+}
+
+/// Thermal fates of every well at every (T, p) (temperatures outer, pressures inner, wells innermost).
+pub fn run_thermal_well_fates(
+    network: &ChemicalActivationNetwork,
+    temperatures: &[f64],
+    pressures: &[f64],
+    collision_model: CollisionModel,
+) -> Result<Vec<WellFateConditionResult>, String> {
+    let mut fates = Vec::new();
+    for &t in temperatures {
+        let kt = KB_CM * t;
+        for &p in pressures {
+            for (w, well) in network.wells.iter().enumerate() {
+                let mut source: Vec<Vec<f64>> = network
+                    .wells
+                    .iter()
+                    .map(|x| vec![0.0; x.grain_count()])
+                    .collect();
+                source[w] =
+                    thermal_distribution(&well.density_of_states, network.grain_width_cm1, kt)
+                        .map_err(|e| format!("Thermal fate of well '{}': {e}", well.name))?;
+                let run = ChemicalActivationRun {
+                    temperatures_kelvin: vec![t],
+                    pressures_torr: vec![p],
+                    options: ChemicalActivationOptions {
+                        collision_model,
+                        steady_state: SteadyState::Final,
+                    },
+                    solver: LinearSolver::BandedCholesky,
+                    source: SourceSpecification::Fixed(source),
+                    tolerance: 1e-8,
+                };
+                let result = run_chemical_activation(network, &run)
+                    .map_err(|e| format!("Thermal fate of well '{}': {e}", well.name))?
+                    .remove(0);
+                fates.push(WellFateConditionResult {
+                    conditions: result.conditions,
+                    well: w,
+                    result: result.result,
+                });
+            }
+        }
+    }
+    Ok(fates)
 }
 
 /// Thermal rate coefficients at one temperature and pressure.
@@ -614,6 +671,167 @@ mod tests {
         assert!(headers[0].starts_with("From\\To,A,B,"), "{}", headers[0]);
         assert!(text.lines().any(|l| l.starts_with("R,")), "{text}");
         assert!(text.contains("Georgievskii") && text.contains("chemical eigenvalues"), "{text}");
+    }
+
+    #[test]
+    fn thermal_fates_at_high_pressure_follow_the_high_pressure_branching() {
+        // One well with two product channels: at very high pressure the thermalized well keeps its
+        // Boltzmann distribution, so its fate splits as the Boltzmann-averaged k(E) of the channels.
+        let mut network = two_well_network();
+        network.wells.truncate(1);
+        let a = &mut network.wells[0];
+        a.bimolecular_sink_s_inv = 0.0;
+        let grains = a.grain_count();
+        let channel = |name: &str, threshold: usize, a_factor: f64| {
+            crate::masterequation::chemical_activation_network::Channel {
+                name: name.into(),
+                destination: ChannelDestination::Products { name: name.into() },
+                threshold_grain: None,
+                rate_constant_s_inv: (0..grains)
+                    .map(|i| {
+                        if i >= threshold {
+                            a_factor * ((i - threshold) as f64 + 1.0)
+                        } else {
+                            0.0
+                        }
+                    })
+                    .collect(),
+            }
+        };
+        a.channels = vec![channel("P1", 300, 1.0e7), channel("P2", 330, 5.0e7)];
+        // 1000 K: collisions dominate at 1e6-1e7 Torr (Boltzmann distribution) while J stays well conditioned
+        // in double precision; at 1e4 Torr the high-energy tail is still depleted (falloff, 1.2%).
+        let t = 1000.0;
+        let model = CollisionModel::ExponentialDown {
+            cutoff_in_mean_down: 10.0,
+        };
+        let fates = run_thermal_well_fates(&network, &[t], &[1.0e6, 1.0e7], model).unwrap();
+        assert_eq!(fates.len(), 2);
+        assert_eq!(fates[0].well, 0);
+        let yields: Vec<f64> = fates[0].result.channels.iter().map(|c| c.flux).collect();
+        assert!(
+            (yields.iter().sum::<f64>() - 1.0).abs() < 1e-10,
+            "{yields:?}"
+        );
+        let boltzmann = crate::masterequation::chemical_activation_sources::thermal_distribution(
+            &network.wells[0].density_of_states,
+            network.grain_width_cm1,
+            KB_CM * t,
+        )
+        .unwrap();
+        let k_inf: Vec<f64> = network.wells[0]
+            .channels
+            .iter()
+            .map(|c| {
+                c.rate_constant_s_inv
+                    .iter()
+                    .zip(&boltzmann)
+                    .map(|(k, f)| k * f)
+                    .sum()
+            })
+            .collect();
+        let expected = k_inf[0] / (k_inf[0] + k_inf[1]);
+        // The approach to the limit is monotonic, about tenfold closer per decade of pressure.
+        let deviation_1e7 = (fates[1].result.channels[0].flux / expected - 1.0).abs();
+        assert!(
+            deviation_1e7 < (yields[0] / expected - 1.0).abs() / 5.0,
+            "{deviation_1e7}"
+        );
+        assert!(
+            (yields[0] / expected - 1.0).abs() < 1e-3,
+            "{} vs {expected}",
+            yields[0]
+        );
+    }
+
+    #[test]
+    fn thermal_fates_are_given_for_every_well_and_condition() {
+        let network = two_well_network();
+        let fates = run_thermal_well_fates(
+            &network,
+            &[250.0, 300.0],
+            &[10.0, 760.0],
+            CollisionModel::ExponentialDown {
+                cutoff_in_mean_down: 10.0,
+            },
+        )
+        .unwrap();
+        assert_eq!(fates.len(), 2 * 2 * network.wells.len());
+        assert_eq!(
+            (
+                fates[1].conditions.temperature_kelvin,
+                fates[1].conditions.pressure_torr,
+                fates[1].well
+            ),
+            (250.0, 10.0, 1)
+        );
+        for f in &fates {
+            assert!(
+                (f.result.mass_balance - 1.0).abs() < 1e-8,
+                "{}",
+                f.result.mass_balance
+            );
+        }
+    }
+
+    #[test]
+    fn cse_long_time_yields_equal_the_final_steady_state_yields() {
+        // With all eigenpairs, the yields reconstructed from the CSE rate coefficients (R -> wells and
+        // products, then the wells' absorbing chain) equal k_x^T J^-1 F of the final steady state: both are
+        // sum_lambda p_x p_R / Lambda over every eigenpair (G13 eqs. 21, 25-30). An identity, independent of
+        // the eigenvalue separation; it checks the two code paths against each other.
+        use crate::masterequation::chemically_significant_eigenvalues::reactant_yields;
+        let network = network_with_entrance();
+        let model = CollisionModel::ExponentialDown {
+            cutoff_in_mean_down: 10.0,
+        };
+        let capture = |_t: f64| 2.0e-11;
+        for p in [10.0, 760.0] {
+            let cse = run_phenomenological_rates(
+                &network,
+                &[300.0],
+                &[p],
+                model,
+                EigenSolver::FullDecomposition,
+                Some(("R", &capture)),
+            )
+            .unwrap();
+            let yields = reactant_yields(&cse[0].rates).expect("a reactant").unwrap();
+            let mut spec = run_spec(vec![p]);
+            spec.temperatures_kelvin = vec![300.0];
+            spec.options.steady_state = SteadyState::Final;
+            let fss = run_chemical_activation(&network, &spec)
+                .unwrap()
+                .remove(0)
+                .result;
+            let back: f64 = fss.channels.iter().filter(|c| matches!(&c.destination, ChannelDestination::Products { name } if name == "R")).map(|c| c.flux).sum();
+            for (x, name) in yields.channels.iter().enumerate() {
+                let products: f64 = fss
+                    .channels
+                    .iter()
+                    .filter(|c| matches!(&c.destination, ChannelDestination::Products { name: n } if n == name))
+                    .map(|c| c.flux)
+                    .sum();
+                let sinks: f64 = fss
+                    .wells
+                    .iter()
+                    .filter(|w| *name == format!("escape({})", w.name))
+                    .map(|w| w.bimolecular_sink_yield)
+                    .sum();
+                let expected = (products + sinks) / (1.0 - back);
+                assert!(
+                    (yields.total[x] - expected).abs() < 1e-8 * expected.max(1e-12),
+                    "{name} at {p} Torr: {} vs {expected}",
+                    yields.total[x]
+                );
+                assert!((yields.direct[x] + yields.via_wells[x] - yields.total[x]).abs() < 1e-14);
+            }
+            assert!((yields.total.iter().sum::<f64>() - 1.0).abs() < 1e-10);
+            assert!((yields.prompt_branching.iter().sum::<f64>() - 1.0).abs() < 1e-10);
+            for fate in &yields.well_fates {
+                assert!((fate.iter().sum::<f64>() - 1.0).abs() < 1e-10, "{fate:?}");
+            }
+        }
     }
 
     #[test]

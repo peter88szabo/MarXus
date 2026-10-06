@@ -4,11 +4,11 @@
 Reads
   Gamma-Case2_..._12.7kcal.out              MESS rate tables (high pressure and per (T, p))
   Gamma-Case2_..._12.7kcal.log              MESS log (tunneling correction factors)
-  marxus_output/case2_tstlevel_E_*.out      MarXus (run_marxus.sh)
-  marxus_output/case2_default_EJ_steady_states.out   MarXus with the PST cores at the EJ level
+  marxus_output/case2_tstlevel_E_*.csv      MarXus machine-readable tables (run_marxus.sh, --csv)
+  marxus_output/case2_default_EJ_absorbing_barrier.csv   MarXus with the PST cores at the EJ level
   marxus_output/eckart_kappa.csv            MarXus canonical Eckart factors kappa(T): exact and MESS model
-  marxus_output/case2_tstlevel_E_mess_eckart_*.out   MarXus with the MESS Eckart tunneling model, including
-                                            the CSE species tables (case2_tstlevel_E_mess_eckart_cse.out)
+  marxus_output/case2_tstlevel_E_mess_eckart_*.csv   MarXus with the MESS Eckart tunneling model, including
+                                            the CSE species tables (case2_tstlevel_E_mess_eckart_cse.csv)
 and writes
   capture_comparison.csv          k_inf(R -> G2) of the phase-space-theory entrance
   high_pressure_comparison.csv    high-pressure rate coefficients of every channel
@@ -16,6 +16,17 @@ and writes
   apparent_rates_comparison.csv   apparent bimolecular rate coefficients k(R -> X)
   kappa_comparison.csv            tunneling factors kappa(T): MESS log vs MarXus (exact Eckart)
   cse_comparison.csv              every species-to-species rate coefficient: MESS vs the MarXus CSE method
+  cse_vs_final_steady_state.csv   diagnostic: long-time shares from the MarXus CSE rate tables vs the MarXus
+                                  final steady state (both MESS Eckart model); equal in exact arithmetic
+  plots/cse_vs_final_steady_state.png   the same diagnostic: relative deviations of every condition
+  time_integration_vs_final_steady_state.csv   long-time yields of the direct time integration (pulse, t = 100 s)
+                                  vs the final steady state (both MESS Eckart model): equal (k^T J^-1 F)
+  plots/time_evolution_300K_760torr.png   direct time integration: well populations and exit yields vs time
+  four_methods_comparison.csv, plots/four_methods_760torr.png   the four methods side by side (MESS Eckart
+                                  model): k(R -> P5), k(R -> G4), long-time IEPOX + OH yield, with MESS
+  plots/yields.png                yields in %: long-time yields of every channel (MarXus and MESS), IEPOX + OH
+                                  prompt / through the stabilized wells / together, stabilization yields of the
+                                  wells, prompt branching of R (CSE) (from marxus_output/*_tables.csv)
   plots/cse_vs_mess.png           CSE method vs MESS: reactant row at 760 Torr and deviations of all entries
   plots/pes.png                   the network
   plots/iepox_oh_yield.png        P5 (IEPOX + OH): long-time share, deviation, apparent k(R -> P5)
@@ -147,6 +158,24 @@ def read_cse(path):
     return out
 
 
+def read_tables(path):
+    """{title: list of row dicts} of a MarXus tables file (--csv FILE writes FILE_tables.csv): blocks "# title",
+    a header "T[K],P[Torr],...", one row per condition; empty fields are missing values (NaN)."""
+    blocks, title, header = {}, None, None
+    for line in open(path):
+        line = line.rstrip("\n")
+        if line.startswith("# "):
+            title, header = line[2:], None
+            blocks[title] = []
+        elif not line.strip() or title is None:
+            continue
+        elif header is None:
+            header = line.split(",")
+        else:
+            blocks[title].append({h: (float(v) if v else np.nan) for h, v in zip(header, line.split(","))})
+    return blocks
+
+
 def write_csv(name, rows):
     with open(os.path.join(HERE, name), "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -184,9 +213,18 @@ def read_marxus_kappa(path, column="kappa"):
 # Data
 # ----------------------------------------------------------------------------------------------
 mess_high, mess_p = read_mess_out(os.path.join(HERE, STEM + ".out"))
-mx_e = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_steady_states.out"))
-mx_ej = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_default_EJ_steady_states.out"))
-mx_me = read_marxus_blocks(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_steady_states.out"))
+def marxus_blocks(*stems):
+    """Blocks of the machine-readable files of several runs (one solver per run)."""
+    blocks = {}
+    for stem in stems:
+        blocks.update(read_marxus_blocks(os.path.join(HERE, "marxus_output", stem + ".csv")))
+    return blocks
+
+
+# The two steady-state solvers are separate runs: absorbing barrier (intermediate) and Olzmann (final).
+mx_e = marxus_blocks("case2_tstlevel_E_absorbing_barrier", "case2_tstlevel_E_olzmann")
+mx_ej = marxus_blocks("case2_default_EJ_absorbing_barrier")
+mx_me = marxus_blocks("case2_tstlevel_E_mess_eckart_absorbing_barrier", "case2_tstlevel_E_mess_eckart_olzmann")
 temperatures = sorted(mess_high)
 pressures = sorted({p for _, p in mess_p})
 
@@ -274,7 +312,7 @@ for b in tunneling_barriers:
 write_csv("kappa_comparison.csv", kappa_rows)
 
 # 6. CSE species tables vs MESS.
-cse = read_cse(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_cse.out"))
+cse = read_cse(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_cse.csv"))
 cse_rows = []
 for (t, p), table in sorted(cse.items()):
     for a in WELLS + ["R"]:
@@ -285,6 +323,25 @@ for (t, p), table in sorted(cse.items()):
             cse_rows.append({"T_K": t, "p_torr": p, "from": a, "to": b, "mess": m, "marxus_cse": x,
                              "dev_percent": 100 * (x / m - 1) if m != 0 else np.nan})
 write_csv("cse_comparison.csv", cse_rows)
+
+# 7. Diagnostic: the same long-time shares from two different MarXus methods (both with the MESS Eckart model).
+#    Final steady state: Y_x = k_x^T J^-1 F. CSE: R forms the wells (k_R->i) and the direct products (k_R->x),
+#    each well then ends in a product, the escape or back in R (absorption probabilities of the well chain,
+#    as for MESS above). With G13 eqs. 21 and 25-30 both are sum_lambda p_lambda^(x) p_lambda^(R) / Lambda_lambda
+#    over all eigenpairs, i.e. equal in exact arithmetic, independently of the eigenvalue separation. The
+#    deviation tests the two code paths (banded Cholesky solve vs full eigendecomposition, M^-1 and rate
+#    assembly) against each other, down to the 7 printed digits.
+diagnostic = []
+for (t, p), table in sorted(cse.items()):
+    c = mess_long_time_shares(table)
+    f = marxus_shares(final_me[(t, p)])
+    row = {"T_K": t, "p_torr": p}
+    for x in ["P5", "ESC", "P1", "P7"]:
+        row[f"final_steady_state_{x}"] = f[x]
+        row[f"cse_kinetics_{x}"] = c[x]
+        row[f"rel_dev_{x}"] = c[x] / f[x] - 1
+    diagnostic.append(row)
+write_csv("cse_vs_final_steady_state.csv", diagnostic)
 
 # ----------------------------------------------------------------------------------------------
 # Plots
@@ -325,14 +382,14 @@ colors = plt.cm.plasma(np.linspace(0.0, 0.8, len(pressures)))
 for p, c in zip(pressures, colors):
     sel = [r for r in shares if r["p_torr"] == p]
     ts = [r["T_K"] for r in sel]
-    axes[0].plot(ts, [100 * r["mess_P5"] for r in sel], "-o", color=c, mfc="none", label=f"MESS {p:g} Torr")
-    axes[0].plot(ts, [100 * r["marxus_P5"] for r in sel], "s", color=c, label=f"MarXus exact Eckart {p:g} Torr")
+    axes[0].plot(ts, [100 * r["mess_P5"] for r in sel], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS {p:g} Torr")
+    axes[0].plot(ts, [100 * r["marxus_P5"] for r in sel], "o", ms=5, color=c, label=f"MarXus exact Eckart {p:g} Torr")
     axes[0].plot(ts, [100 * r["marxus_mess_eckart_P5"] for r in sel], "^", color=c, label=f"MarXus MESS Eckart {p:g} Torr")
-    axes[1].plot(ts, [r["dev_P5_percent"] for r in sel], "-s", color=c, label=f"exact Eckart, {p:g} Torr")
+    axes[1].plot(ts, [r["dev_P5_percent"] for r in sel], "-o", ms=5, color=c, label=f"exact Eckart, {p:g} Torr")
     axes[1].plot(ts, [r["dev_mess_eckart_P5_percent"] for r in sel], "--^", color=c, label=f"MESS Eckart, {p:g} Torr")
     sel_a = [r for r in apparent if r["p_torr"] == p]
-    axes[2].plot([r["T_K"] for r in sel_a], [r["mess_P5"] for r in sel_a], "-o", color=c, mfc="none", label=f"MESS {p:g} Torr")
-    axes[2].plot([r["T_K"] for r in sel_a], [r["marxus_P5"] for r in sel_a], "s", color=c, label=f"MarXus {p:g} Torr")
+    axes[2].plot([r["T_K"] for r in sel_a], [r["mess_P5"] for r in sel_a], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS {p:g} Torr")
+    axes[2].plot([r["T_K"] for r in sel_a], [r["marxus_P5"] for r in sel_a], "o", ms=5, color=c, label=f"MarXus {p:g} Torr")
 axes[0].set_ylabel("IEPOX + OH share of the net reaction (%)")
 axes[0].set_title("long-time IEPOX + OH yield\n(MarXus: final steady state; MESS: from its rate tables)", fontsize=10)
 axes[1].axhline(0, color="k", lw=0.8)
@@ -410,8 +467,8 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 sel = [r for r in cse_rows if r["from"] == "R" and r["p_torr"] == 760.0]
 for b, c in zip(["G2", "G3", "G4", "P5", "P1", "P7"], plt.cm.tab10(np.arange(6))):
     pts = [r for r in sel if r["to"] == b]
-    axes[0].plot([r["T_K"] for r in pts], [r["mess"] for r in pts], "-o", color=c, mfc="none", label=f"MESS R->{b}")
-    axes[0].plot([r["T_K"] for r in pts], [r["marxus_cse"] for r in pts], "s", color=c, label=f"MarXus R->{b}")
+    axes[0].plot([r["T_K"] for r in pts], [r["mess"] for r in pts], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS R->{b}")
+    axes[0].plot([r["T_K"] for r in pts], [r["marxus_cse"] for r in pts], "o", ms=5, color=c, label=f"MarXus R->{b}")
 axes[0].set_yscale("log")
 axes[0].set_xlabel("T (K)")
 axes[0].set_ylabel("k(R -> X) (cm$^3$ s$^{-1}$), 760 Torr")
@@ -441,8 +498,8 @@ fig, ax = plt.subplots(figsize=(8.5, 5))
 sel = [r for r in apparent if r["p_torr"] == 760.0]
 for (x, _), c in zip(pairs, plt.cm.tab10(np.arange(len(pairs)))):
     m = [r[f"mess_{x}"] for r in sel]
-    ax.plot([r["T_K"] for r in sel], [abs(v) for v in m], "-o", color=c, mfc="none", label=f"MESS R->{x}")
-    ax.plot([r["T_K"] for r in sel], [r[f"marxus_{x}"] for r in sel], "s", color=c, label=f"MarXus R->{x}")
+    ax.plot([r["T_K"] for r in sel], [abs(v) for v in m], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS R->{x}")
+    ax.plot([r["T_K"] for r in sel], [r[f"marxus_{x}"] for r in sel], "o", ms=5, color=c, label=f"MarXus R->{x}")
 ax.set_yscale("log")
 ax.set_xlabel("T (K)")
 ax.set_ylabel("k(R -> X) (cm$^3$ s$^{-1}$)")
@@ -452,7 +509,238 @@ fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "apparent_rates_760torr.png"), dpi=200)
 plt.close(fig)
 
-print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))), "and the five CSV tables")
+# Diagnostic: CSE kinetics vs final steady state.
+fig, ax = plt.subplots(figsize=(8.5, 4.8))
+idx = np.arange(len(diagnostic))
+for x, mk, c in [("P5", "o", "C3"), ("ESC", "s", "C0"), ("P1", "^", "C2"), ("P7", "v", "C7")]:
+    ax.semilogy(idx, [max(abs(r[f"rel_dev_{x}"]), 1e-12) for r in diagnostic], mk, color=c, mfc="none",
+                label={"P5": "IEPOX + OH (P5)", "ESC": "escape (G4)", "P1": "P1", "P7": "P7 (share ~1e-5)"}[x])
+ax.axhline(5e-7, color="k", lw=0.8, ls="--")
+ax.text(len(idx) - 0.5, 6e-7, "precision of 7 printed digits", ha="right", va="bottom", fontsize=8)
+ax.set_xticks(idx)
+ax.set_xticklabels([f"{r['T_K']:.0f}/{r['p_torr']:.0f}" for r in diagnostic], rotation=90, fontsize=7)
+ax.set_xlabel("T (K) / p (Torr)")
+ax.set_ylabel("|share from CSE kinetics / share from final steady state - 1|")
+ax.set_title("Same long-time shares from two MarXus methods (MESS Eckart model)")
+ax.legend(fontsize=8)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "cse_vs_final_steady_state.png"), dpi=200)
+plt.close(fig)
+
+
+# Yields (MarXus tables files) and the MESS long-time shares.
+def tables(*stems):
+    out = {}
+    for stem in stems:
+        out.update(read_tables(os.path.join(HERE, "marxus_output", stem + "_tables.csv")))
+    return out
+
+
+tab_e = tables("case2_tstlevel_E_absorbing_barrier", "case2_tstlevel_E_olzmann")
+tab_me = tables("case2_tstlevel_E_mess_eckart_absorbing_barrier", "case2_tstlevel_E_mess_eckart_olzmann")
+tab_cse = tables("case2_tstlevel_E_mess_eckart_cse")
+tab_ti_me = tables("case2_tstlevel_E_mess_eckart_time_integration")
+
+
+def table(tables, prefix):
+    return next(rows for title, rows in tables.items() if title.startswith(prefix))
+
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+exits = [("G4->P5", "P5", "IEPOX + OH (P5)"), ("escape(G4)", "ESC", "escape (G4)"), ("G4->P1", "P1", "P1"), ("G6->P7", "P7", "P7")]
+net_e = table(tab_e, "final steady state: Yields without the return to R")
+net_me = table(tab_me, "final steady state: Yields without the return to R")
+ax = axes[0, 0]
+for (col, key, label), c in zip(exits, ["C3", "C0", "C2", "C7"]):
+    for rows, mk, extra in [(net_e, "o", "MarXus exact Eckart"), (net_me, "^", "MarXus MESS Eckart")]:
+        sel = [r for r in rows if r["P[Torr]"] == 760.0]
+        ax.semilogy([r["T[K]"] for r in sel], [r[col] for r in sel], mk, ms=6, color=c, label=f"{label}: {extra}")
+    sel = [r for r in shares if r["p_torr"] == 760.0]
+    ax.semilogy([r["T_K"] for r in sel], [100 * r[f"mess_{key}"] for r in sel], "-", marker="x", ms=10, mew=2, color=c, label=f"{label}: MESS")
+ax.set_xlabel("T (K)")
+ax.set_ylabel("long-time yield (% of the net reaction)")
+ax.set_title("Long-time yields at 760 Torr\n(MarXus: final steady state; MESS: long-time fate of its rate tables)", fontsize=11)
+ax.legend(fontsize=6, ncol=2)
+
+ax = axes[0, 1]
+# Prompt (absorbing-barrier run) + through the stabilized wells (stabilization of the absorbing-barrier run x
+# thermal fate of the well from the Olzmann run) vs all together (Olzmann run).
+prompt_rows = table(tab_e, "intermediate steady state: Yields (% of the formed adducts)")
+total_rows = table(tab_e, "final steady state: Yields (% of the formed adducts)")
+fate_rows = {w: table(tab_e, f"thermal fates: Thermal fate of the molecules thermalized in {w}") for w in WELLS}
+decomposition = []
+for k, r in enumerate(prompt_rows):
+    via = sum(r[f"stab({w})"] / 100 * fate_rows[w][k]["G4->P5"] for w in WELLS)
+    decomposition.append({"T": r["T[K]"], "p": r["P[Torr]"], "prompt": r["G4->P5"], "via": via, "total": total_rows[k]["G4->P5"]})
+for p_torr, c in zip(pressures, ["C0", "C1", "C2"]):
+    rows = [d for d in decomposition if d["p"] == p_torr]
+    ts_ = [d["T"] for d in rows]
+    ax.semilogy(ts_, [d["prompt"] for d in rows], "-o", ms=6, color=c, label=f"prompt (absorbing barrier), {p_torr:g} Torr")
+    ax.semilogy(ts_, [d["via"] for d in rows], ":^", ms=6, color=c, label=f"through the stabilized wells (thermal), {p_torr:g} Torr")
+    ax.semilogy(ts_, [d["total"] for d in rows], "--D", ms=6, mfc="none", color=c, label=f"all together (Olzmann), {p_torr:g} Torr")
+worst_sum = max(abs(d["prompt"] + d["via"] - d["total"]) for d in decomposition)
+print(f"IEPOX + OH: |prompt + through the wells - Olzmann| <= {worst_sum:.2e} percentage points")
+ax.set_xlabel("T (K)")
+ax.set_ylabel("IEPOX + OH yield (% of the formed adducts)")
+ax.set_title("IEPOX + OH (exact Eckart): prompt (absorbing barrier), through the stabilized\nwells (thermal fate from Olzmann), and all together (Olzmann)", fontsize=11)
+ax.legend(fontsize=6)
+
+ax = axes[1, 0]
+stab = table(tab_e, "intermediate steady state: Yields (% of the formed adducts)")
+for w, c in zip(WELLS, ["C0", "C1", "C2", "C3"]):
+    for p_torr, mk in zip(pressures, ["o", "s", "^"]):
+        rows = [r for r in stab if r["P[Torr]"] == p_torr]
+        ax.semilogy([r["T[K]"] for r in rows], [r[f"stab({w})"] for r in rows], "-", marker=mk, ms=5, color=c,
+                    label=f"stab({w}), {p_torr:g} Torr")
+ax.set_xlabel("T (K)")
+ax.set_ylabel("stabilization yield (% of the formed adducts)")
+ax.set_title("Bimolecular-to-well (stabilization) yields\n(steady state, absorbing barrier 10 kT)", fontsize=11)
+ax.legend(fontsize=6, ncol=2)
+
+ax = axes[1, 1]
+for prefix, ls in [("CSE: Bimolecular-to-bimolecular yields", "-o"), ("CSE: Bimolecular-to-well yields", "--s")]:
+    rows_all = table(tab_cse, prefix)
+    for name, c in zip([k for k in rows_all[0] if k.startswith("R->")], plt.cm.tab10(np.arange(10))):
+        rows = [r for r in rows_all if r["P[Torr]"] == 760.0]
+        values = [r[name] for r in rows]
+        if max(abs(v) for v in values) < 1e-8:
+            continue
+        ax.semilogy([r["T[K]"] for r in rows], [abs(v) for v in values], ls, ms=5, color=c, label=name)
+ax.set_xlabel("T (K)")
+ax.set_ylabel("|yield| (% of the net reaction of R)")
+ax.set_title("CSE at 760 Torr: bimolecular-to-bimolecular (solid, chemical activation)\nand bimolecular-to-well (dashed, stabilization) yields of R", fontsize=11)
+ax.legend(fontsize=7)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "yields.png"), dpi=200)
+plt.close(fig)
+
+
+# Direct time integration (third method): time evolution at 300 K, 760 Torr, and its long-time yields vs the
+# final steady state.
+def read_time_evolutions(path):
+    """{(T, p): list of row dicts} of the "# time evolution: T = .. K, p = .. Torr" blocks of a machine file."""
+    out, key, header = {}, None, None
+    for line in open(path):
+        line = line.rstrip("\n")
+        m = re.match(r"# time evolution: T = (\S+) K, p = (\S+) Torr", line)
+        if m:
+            key, header = (float(m.group(1)), float(m.group(2))), None
+            out[key] = []
+        elif line.startswith("#") or not line.strip() or key is None:
+            if line.startswith("#"):
+                key = None
+            continue
+        elif header is None:
+            header = line.split(",")
+        else:
+            out[key].append(dict(zip(header, map(float, line.split(",")))))
+    return out
+
+
+evolutions = read_time_evolutions(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_time_integration.csv"))
+ti_last = table(tab_ti_me, "time integration: Yields at the last output time")
+fss = table(tab_me, "final steady state: Yields (% of the formed adducts)")
+ti_rows = []
+for ra, rb in zip(ti_last, fss):
+    row = {"T_K": ra["T[K]"], "p_torr": ra["P[Torr]"]}
+    for col in ["G2->R", "G4->P1", "G4->P5", "G6->P7", "escape(G4)"]:
+        row[f"time_integration_{col}"] = ra[col]
+        row[f"final_steady_state_{col}"] = rb[col]
+        row[f"rel_dev_{col}"] = ra[col] / rb[col] - 1
+    ti_rows.append(row)
+write_csv("time_integration_vs_final_steady_state.csv", ti_rows)
+
+ev = evolutions[(300.0, 760.0)]
+fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
+ts = [r["t[s]"] for r in ev]
+for w, c in zip(WELLS, ["C0", "C1", "C2", "C3"]):
+    axes[0].loglog(ts, [100 * r[f"N({w})"] for r in ev], "-o", ms=3, color=c, label=f"N({w})")
+axes[0].set_xlabel("t (s)")
+axes[0].set_ylabel("population (% of the formed adducts)")
+axes[0].set_ylim(1e-6, 200)
+axes[0].set_title("Well populations after a pulse of chemically activated G2\n(300 K, 760 Torr; Rodas4 time integration)", fontsize=11)
+axes[0].legend(fontsize=8)
+final_300 = next(r for r in fss if r["T[K]"] == 300.0 and r["P[Torr]"] == 760.0)
+for (col, label), c in zip([("G2->R", "R (redissociation)"), ("escape(G4)", "escape (G4)"), ("G4->P5", "IEPOX + OH (P5)"),
+                            ("G6->P7", "P7"), ("G4->P1", "P1")], ["C0", "C1", "C3", "C7", "C2"]):
+    axes[1].loglog(ts, [max(100 * r[col], 1e-12) for r in ev], "-o", ms=3, color=c, label=f"{label}: time integration")
+    axes[1].axhline(final_300[col], color=c, ls="--", lw=1, label=f"{label}: final steady state")
+axes[1].set_xlabel("t (s)")
+axes[1].set_ylabel("yield accumulated (% of the formed adducts)")
+axes[1].set_ylim(1e-7, 200)
+axes[1].set_title("Exit yields vs time; dashed: final steady state (k$^T$J$^{-1}$F)", fontsize=11)
+axes[1].legend(fontsize=7, ncol=2)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "time_evolution_300K_760torr.png"), dpi=200)
+plt.close(fig)
+worst_ti = max(abs(r[f"rel_dev_{c}"]) for r in ti_rows for c in ["G2->R", "G4->P1", "G4->P5", "G6->P7", "escape(G4)"])
+print(f"time integration vs final steady state: max relative deviation {worst_ti:.2e} over {len(ti_rows)} conditions")
+
+
+# The four methods side by side (MESS Eckart model, 760 Torr): bimolecular-to-bimolecular k(R -> P5),
+# bimolecular-to-well k(R -> G2), k(R -> G4), and the long-time IEPOX + OH yield.
+bb_barrier = table(tab_me, "intermediate steady state: Bimolecular-to-bimolecular rate coefficients")
+bw_barrier = table(tab_me, "intermediate steady state: Bimolecular-to-well rate coefficients")
+bb_olzmann = table(tab_me, "final steady state: Bimolecular-to-bimolecular rate coefficients, overall")
+bb_cse = table(tab_cse, "CSE: Bimolecular-to-bimolecular rate coefficients")
+bw_cse = table(tab_cse, "CSE: Bimolecular-to-well rate coefficients")
+bb_ti = table(tab_ti_me, "time integration: Bimolecular-to-bimolecular rate coefficients, overall")
+yield_olzmann = table(tab_me, "final steady state: Bimolecular-to-bimolecular yields, overall")
+yield_cse = table(tab_cse, "CSE: Long-time yields, total")
+yield_ti = table(tab_ti_me, "time integration: Bimolecular-to-bimolecular yields, overall")
+at = lambda rows: [r for r in rows if r["P[Torr]"] == 760.0]
+fig, axes = plt.subplots(1, 3, figsize=(19, 5.5))
+ax = axes[0]
+ax.semilogy(temperatures, [mess_p[(t, 760.0)]["R"]["P5"] for t in temperatures], "-", marker="x", ms=10, mew=2, color="k", label="MESS R->P5")
+for rows, mk, c, label in [(bb_barrier, "o", "C0", "steady state, absorbing barrier (prompt)"), (bb_cse, "s", "C1", "CSE (G13 eq. 21)"),
+                           (bb_olzmann, "D", "C2", "steady state, Olzmann (overall)"), (bb_ti, "^", "C3", "time integration (overall)")]:
+    ax.semilogy([r["T[K]"] for r in at(rows)], [r["R->P5"] for r in at(rows)], mk, ms=6, mfc="none" if mk in "D^" else None, color=c, label=label)
+ax.set_xlabel("T (K)")
+ax.set_ylabel("k(R -> IEPOX + OH) (cm$^3$ s$^{-1}$)")
+ax.set_title("Bimolecular-to-bimolecular R -> P5 at 760 Torr", fontsize=11)
+ax.legend(fontsize=7)
+ax = axes[1]
+for w, c in [("G2", "C0"), ("G4", "C2")]:
+    ax.semilogy(temperatures, [mess_p[(t, 760.0)]["R"][w] for t in temperatures], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS R->{w}")
+    ax.semilogy([r["T[K]"] for r in at(bw_barrier)], [r[f"R->{w}"] for r in at(bw_barrier)], "o", ms=6, color=c, label=f"absorbing barrier R->{w}")
+    ax.semilogy([r["T[K]"] for r in at(bw_cse)], [r[f"R->{w}"] for r in at(bw_cse)], "s", ms=6, mfc="none", color=c, label=f"CSE R->{w}")
+ax.set_xlabel("T (K)")
+ax.set_ylabel("k(R -> well) (cm$^3$ s$^{-1}$)")
+ax.set_title("Bimolecular-to-well (stabilization) at 760 Torr", fontsize=11)
+ax.legend(fontsize=7)
+ax = axes[2]
+sel = [r for r in shares if r["p_torr"] == 760.0]
+ax.plot([r["T_K"] for r in sel], [100 * r["mess_P5"] for r in sel], "-", marker="x", ms=10, mew=2, color="k", label="MESS (long-time fate of its rate tables)")
+for rows, col, mk, c, label in [(yield_olzmann, "R->P5", "D", "C2", "steady state, Olzmann"), (yield_cse, "R->P5", "s", "C1", "CSE long-time yield"),
+                                (yield_ti, "R->P5", "^", "C3", "time integration, t = 100 s")]:
+    ax.plot([r["T[K]"] for r in at(rows)], [r[col] for r in at(rows)], mk, ms=7, mfc="none", color=c, label=label)
+ax.set_xlabel("T (K)")
+ax.set_ylabel("IEPOX + OH (% of the net reaction)")
+ax.set_title("Long-time IEPOX + OH yield at 760 Torr: Olzmann, CSE and\ntime integration agree exactly (k$^T$J$^{-1}$F); MESS for reference", fontsize=11)
+ax.legend(fontsize=7)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "four_methods_760torr.png"), dpi=200)
+plt.close(fig)
+four = []
+for t in temperatures:
+    for p_torr in pressures:
+        pick = lambda rows, col: next(r[col] for r in rows if r["T[K]"] == t and r["P[Torr]"] == p_torr)
+        four.append({"T_K": t, "p_torr": p_torr,
+                     "mess_R_P5": mess_p[(t, p_torr)]["R"]["P5"],
+                     "absorbing_barrier_R_P5": pick(bb_barrier, "R->P5"), "cse_R_P5": pick(bb_cse, "R->P5"),
+                     "olzmann_overall_R_P5": pick(bb_olzmann, "R->P5"), "time_integration_overall_R_P5": pick(bb_ti, "R->P5"),
+                     "mess_R_G4": mess_p[(t, p_torr)]["R"]["G4"], "absorbing_barrier_R_G4": pick(bw_barrier, "R->G4"), "cse_R_G4": pick(bw_cse, "R->G4"),
+                     "olzmann_yield_P5_percent": pick(yield_olzmann, "R->P5"), "cse_long_time_P5_percent": pick(yield_cse, "R->P5"),
+                     "time_integration_P5_percent": pick(yield_ti, "R->P5")})
+write_csv("four_methods_comparison.csv", four)
+print("written:", ", ".join(sorted(os.listdir(os.path.join(HERE, "plots")))), "and the CSV tables")
+for x in ["P5", "ESC", "P1", "P7"]:
+    worst = max(diagnostic, key=lambda r: abs(r[f"rel_dev_{x}"]))
+    print(f"CSE kinetics vs final steady state, {x}: max |rel dev| {abs(worst[f'rel_dev_{x}']):.2e} "
+          f"at {worst['T_K']:.0f} K / {worst['p_torr']:.0f} Torr")
+r300 = next(r for r in diagnostic if r["T_K"] == 300.0 and r["p_torr"] == 760.0)
+print(f"300 K 760 Torr P5: final steady state {100*r300['final_steady_state_P5']:.8f}%  "
+      f"CSE kinetics {100*r300['cse_kinetics_P5']:.8f}%")
 for r in kappa_rows:
     if r["T_K"] == 300.0:
         print(f"kappa 300 K {r['barrier']}: MESS {r['kappa_mess']:.4e} exact {r['kappa_marxus']:.4e} ({r['ratio']:.4f}) "

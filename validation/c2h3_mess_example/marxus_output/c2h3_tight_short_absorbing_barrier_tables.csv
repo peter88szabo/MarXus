@@ -1,0 +1,24 @@
+# intermediate steady state: Yields (% of the formed adducts)
+T[K],P[Torr],W1->P1,stab(W1)
+1000,760,9.379732e1,6.202678e0
+
+# intermediate steady state: Yields without the return to P1 (% of the net reaction)
+T[K],P[Torr],stab(W1)
+1000,760,1.000000e2
+
+# intermediate steady state: Chemical-activation rate coefficients k_ca (1/s)
+T[K],P[Torr],W1->P1
+1000,760,1.582282e9
+
+# intermediate steady state: Bimolecular-to-well rate coefficients (stabilization): k(P1 -> W) = k_inf Phi_stab,W (cm^3/s)
+T[K],P[Torr],P1->W1
+1000,760,2.571064e-12
+
+# intermediate steady state: Bimolecular-to-well yields (stabilization) (% of the net reaction of P1)
+T[K],P[Torr],P1->W1
+1000,760,1.000000e2
+
+# intermediate steady state: Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s)
+T[K],P[Torr],capture,return,net
+1000,760,4.145087e-11,3.887981e-11,2.571064e-12
+

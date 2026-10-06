@@ -113,7 +113,7 @@ Additional abbreviations:
 **Result for C₂H₃** (`validation/c2h3_mess_example_olzmann_eigen/README.md`).
 - **No absorbing barrier and no barrier distance are needed.** The association agrees with MESS within ±2.5% from 750 to 1750 K. The barrier route gave −13% at 1500 K and −42% at 1750 K with 10 kT.
 - **At 500–1000 K both routes agree** within 0.00–0.34%.
-- **At 300 K λ₁ is below the double-precision resolution** (off by 10⁸; warnings). k_uni from the thermal eigenvector is still correct: +4.7 … +5.7% vs MESS. The association equals the absorbing-barrier route to 0.01% at 300–1000 K.
+- **At 300 K λ₁ is below the double-precision resolution** (off by 10⁸; warnings). k_uni from the thermal eigenvector is still correct: +4.7 … +5.7% vs MESS. The association equals the absorbing-barrier route within 0.023% at 300–1000 K (0.0007% at 300 K, 0.023% at 1000 K; corrected from "0.01%" on 2026-10-06).
 - **With the shifted factorization S + σI** (Peter's go-ahead, 20:18), the inverse iteration solves all 300 K conditions. The association equals the barrier route to 0.001 percentage points.
 - **Exponential down is the default collision model** (Peter, 20:25). The stepladder on grains finer than its step splits J into O02's sub-equations (O02 p. 3616), whose eigenvalue treatment is open.
 

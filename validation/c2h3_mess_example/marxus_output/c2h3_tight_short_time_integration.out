@@ -1,0 +1,206 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight_short.inp
+ Method:             DIRECT TIME INTEGRATION of the grained populations, dN/dt = R F - J N, and of the yields of every exit
+                     initial state: pulse N(0) = F (the normalized chemical-activation source)
+                     output times 1e-12 .. 1e2 s, 4 per decade (operator of the final steady state)
+ Solvers:            adaptive L-stable Rosenbrock method Rodas4 (adapted from KPP; Hairer, Wanner, Solving ODEs II, Sec. IV.7)
+                     relative tolerance 1e-6, absolute 1e-14; steps of powers of two, banded Cholesky of s I + S reused
+ Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   1000
+ Pressures (torr):   760
+ Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant P1 through B1 (P1 -> W1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W1      493        -172 .. 320   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 3.455 A, epsilon 64.82 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B1       W1       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W1     -34.44       4.42
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B1       4.42       W1       P1   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+DIRECT TIME INTEGRATION OF THE MASTER EQUATION
+____________________________________________________________________________________________________
+
+dN/dt = R F - J N for the populations of all grains, and dY_x/dt = sum_E k_x(E) N(E) for the yield of every
+exit (product channels, escape sinks), integrated with an adaptive, L-stable Rosenbrock method from the
+initial state above: the early relaxation and the later chemistry in one integration, without a steady-state
+assumption and without a separation of chemical and relaxation modes. For a pulse the total population +
+yields stays 100%, and the yields at long times equal those of the final steady state (k_x^T J^-1 F).
+
+--- Time evolution (populations of the wells and yields of the exits, % of the formed adducts) ---
+
+Temperature = 1000 K    Pressure = 760 torr
+
+  integrator: 860 steps (857 accepted, 0 rejected), 5157 function evaluations, 124 factorizations computed
+
+t(s)                 N(W1)       W1->P1
+1.00000e-12    9.34747e+01  6.52526e+00
+1.77828e-12    8.94499e+01  1.05501e+01
+3.16228e-12    8.36540e+01  1.63460e+01
+5.62341e-12    7.59256e+01  2.40744e+01
+1.00000e-11    6.64607e+01  3.35393e+01
+1.77828e-11    5.58540e+01  4.41460e+01
+3.16228e-11    4.49776e+01  5.50224e+01
+5.62341e-11    3.47503e+01  6.52497e+01
+1.00000e-10    2.59075e+01  7.40925e+01
+1.77828e-10    1.88694e+01  8.11306e+01
+3.16228e-10    1.37267e+01  8.62733e+01
+5.62341e-10    1.03056e+01  8.96944e+01
+1.00000e-09    8.25369e+00  9.17463e+01
+1.77828e-09    7.13917e+00  9.28608e+01
+3.16228e-09    6.57879e+00  9.34212e+01
+5.62341e-09    6.32304e+00  9.36770e+01
+1.00000e-08    6.22805e+00  9.37720e+01
+1.77828e-08    6.20347e+00  9.37965e+01
+3.16228e-08    6.19895e+00  9.38011e+01
+5.62341e-08    6.19637e+00  9.38036e+01
+1.00000e-07    6.19203e+00  9.38080e+01
+1.77828e-07    6.18432e+00  9.38157e+01
+3.16228e-07    6.17064e+00  9.38294e+01
+5.62341e-07    6.14638e+00  9.38536e+01
+1.00000e-06    6.10348e+00  9.38965e+01
+1.77828e-06    6.02793e+00  9.39721e+01
+3.16228e-06    5.89588e+00  9.41041e+01
+5.62341e-06    5.66817e+00  9.43318e+01
+1.00000e-05    5.28474e+00  9.47153e+01
+1.77828e-05    4.66584e+00  9.53342e+01
+3.16228e-05    3.73883e+00  9.62612e+01
+5.62341e-05    2.52159e+00  9.74784e+01
+1.00000e-04    1.25165e+00  9.87484e+01
+1.77828e-04    3.60198e-01  9.96398e+01
+3.16228e-04    3.93187e-02  9.99607e+01
+5.62341e-04    7.65590e-04  9.99992e+01
+1.00000e-03    6.95134e-07  1.00000e+02
+1.77828e-03    3.01733e-12  1.00000e+02
+3.16228e-03    4.87284e-14  1.00000e+02
+5.62341e-03    1.24578e-15  1.00000e+02
+1.00000e-02    2.47941e-17  1.00000e+02
+1.77828e-02    2.57755e-19  1.00000e+02
+3.16228e-02    2.24539e-22  1.00000e+02
+5.62341e-02    7.13328e-26  1.00000e+02
+1.00000e-01    5.09643e-30  1.00000e+02
+1.77828e-01    9.96497e-34  1.00000e+02
+3.16228e-01    6.17144e-38  1.00000e+02
+5.62341e-01    1.21803e-42  1.00000e+02
+1.00000e+00    1.01126e-49  1.00000e+02
+1.77828e+00    4.57006e-57  1.00000e+02
+3.16228e+00    1.60067e-65  1.00000e+02
+5.62341e+00    3.33640e-72  1.00000e+02
+1.00000e+01    2.13992e-79  1.00000e+02
+1.77828e+01    4.31380e-87  1.00000e+02
+3.16228e+01    1.23400e-98  1.00000e+02
+5.62341e+01   2.65285e-110  1.00000e+02
+1.00000e+02   2.72925e-126  1.00000e+02
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Yields at the last output time (% of the formed adducts), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.00000e+02
+
+Populations left in the wells at the last output time (% of the formed adducts), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)        N(W1)
+      760 2.72925e-126
+
+Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), by temperature:
+
+   Temperature = 1000 K
+
+Total: populations + yields at the last output time (%; 100 for a pulse), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)        total
+      760  1.00000e+02
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Yields at the last output time (% of the formed adducts), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.00000e+02
+
+Populations left in the wells at the last output time (% of the formed adducts), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)        N(W1)
+  1000 2.72925e-126
+
+Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), by pressure:
+
+   Pressure = 760 torr
+
+Total: populations + yields at the last output time (%; 100 for a pulse), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)        total
+  1000  1.00000e+02
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Yields at the last output time (% of the formed adducts), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.00000e+02
+
+Populations left in the wells at the last output time (% of the formed adducts), temperature-pressure tables:
+
+N(W1)
+
+P\T           1000
+760   2.72925e-126
+
+Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse), temperature-pressure tables:
+
+Total: populations + yields at the last output time (%; 100 for a pulse), temperature-pressure tables:
+
+total
+
+P\T           1000
+760    1.00000e+02
+

@@ -255,6 +255,126 @@ pub fn phenomenological_rate_coefficients(
     })
 }
 
+/// Yields that follow from the phenomenological rate coefficients of the reactant and of the wells.
+/// "Net reaction" excludes the return to the reactant: every quantity below is a fraction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ReactantYields {
+    /// Prompt branching of the net reaction of the reactant over the wells (stabilization) and the
+    /// bimolecular channels other than the reactant (direct, chemically activated products):
+    /// k_(R->X) / sum_(X != R) k_(R->X). Order: wells, then `bimolecular` without the reactant.
+    pub prompt_branching: Vec<f64>,
+    /// Thermal fate of a molecule in each well: the probabilities to end in each bimolecular channel
+    /// (`bimolecular` order, the reactant included), from the absorbing chain of the well rate coefficients.
+    pub well_fates: Vec<Vec<f64>>,
+    /// Long-time yields as fractions of the eventual net reaction (no return to the reactant), for the
+    /// bimolecular channels other than the reactant: the direct part, the part through the wells, and
+    /// their sum. They equal k_x^T J^-1 F of the final steady state, normalized without the reactant.
+    pub direct: Vec<f64>,
+    pub via_wells: Vec<f64>,
+    pub total: Vec<f64>,
+    /// Names of the columns of `direct`, `via_wells` and `total` (the bimolecular channels without the reactant).
+    pub channels: Vec<String>,
+}
+
+/// Yields of the reactant and thermal fates of the wells from the phenomenological rate coefficients.
+/// None without a reactant.
+pub fn reactant_yields(rates: &PhenomenologicalRates) -> Option<Result<ReactantYields, String>> {
+    let reactant = rates.reactant.as_ref()?;
+    Some((|| {
+        let r_index = rates
+            .bimolecular
+            .iter()
+            .position(|b| *b == reactant.name)
+            .ok_or_else(|| {
+                format!(
+                    "Reactant yields: '{}' is not a bimolecular channel.",
+                    reactant.name
+                )
+            })?;
+        let others: Vec<usize> = (0..rates.bimolecular.len())
+            .filter(|&nu| nu != r_index)
+            .collect();
+
+        // Prompt branching of the net reaction of the reactant (wells, then the other bimolecular channels).
+        let mut prompt_branching = reactant.to_well_cm3_s.clone();
+        prompt_branching.extend(others.iter().map(|&nu| reactant.to_bimolecular_cm3_s[nu]));
+        let net: f64 = prompt_branching.iter().sum();
+        prompt_branching.iter_mut().for_each(|x| *x /= net);
+
+        // Thermal fates of the wells: absorbing chain B = (I - Q)^-1 A, with Q_ij = k_(i->j)/k_i between the
+        // wells, A_i,nu = k_(i->nu)/k_i into the bimolecular channels, k_i the sum of all rates out of well i.
+        let n = rates.wells.len();
+        let loss: Vec<f64> = (0..n)
+            .map(|i| {
+                (0..n)
+                    .filter(|&j| j != i)
+                    .map(|j| rates.well_to_well_s_inv[i][j])
+                    .sum::<f64>()
+                    + rates.well_to_bimolecular_s_inv[i].iter().sum::<f64>()
+            })
+            .collect();
+        let i_minus_q: Vec<Vec<f64>> = (0..n)
+            .map(|i| {
+                (0..n)
+                    .map(|j| {
+                        if i == j {
+                            1.0
+                        } else {
+                            -rates.well_to_well_s_inv[i][j] / loss[i]
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+        let fundamental =
+            invert_dense(&i_minus_q).map_err(|e| format!("Reactant yields, well chain: {e}"))?;
+        let well_fates: Vec<Vec<f64>> = (0..n)
+            .map(|i| {
+                (0..rates.bimolecular.len())
+                    .map(|nu| {
+                        (0..n)
+                            .map(|j| {
+                                fundamental[i][j] * rates.well_to_bimolecular_s_inv[j][nu] / loss[j]
+                            })
+                            .sum()
+                    })
+                    .collect()
+            })
+            .collect();
+
+        // Long-time yields: direct formation plus formation through the wells, normalized to the eventual net
+        // reaction (the final return to the reactant excluded).
+        let direct_raw: Vec<f64> = others
+            .iter()
+            .map(|&nu| reactant.to_bimolecular_cm3_s[nu])
+            .collect();
+        let via_raw: Vec<f64> = others
+            .iter()
+            .map(|&nu| {
+                (0..n)
+                    .map(|i| reactant.to_well_cm3_s[i] * well_fates[i][nu])
+                    .sum()
+            })
+            .collect();
+        let eventual: f64 = direct_raw.iter().chain(&via_raw).sum();
+        let direct: Vec<f64> = direct_raw.iter().map(|x| x / eventual).collect();
+        let via_wells: Vec<f64> = via_raw.iter().map(|x| x / eventual).collect();
+        let total = direct.iter().zip(&via_wells).map(|(a, b)| a + b).collect();
+        let channels = others
+            .iter()
+            .map(|&nu| rates.bimolecular[nu].clone())
+            .collect();
+        Ok(ReactantYields {
+            prompt_branching,
+            well_fates,
+            direct,
+            via_wells,
+            total,
+            channels,
+        })
+    })())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

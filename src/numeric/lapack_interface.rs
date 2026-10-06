@@ -32,6 +32,32 @@ extern "C" {
     );
 }
 
+#[cfg(feature = "openblas")]
+#[link(name = "openblas")]
+extern "C" {
+    fn openblas_set_num_threads(num_threads: c_int);
+    fn openblas_get_num_threads() -> c_int;
+}
+
+/// Number of threads that OpenBLAS uses inside one call (process-wide), e.g. 1 when the conditions of a
+/// run are already computed in parallel. Returns the number now in use; 1 without the `openblas` feature.
+pub fn set_blas_threads(threads: usize) -> usize {
+    #[cfg(feature = "openblas")]
+    {
+        // SAFETY: OpenBLAS functions without pointer arguments; the thread count is process-wide state of
+        // the library.
+        unsafe {
+            openblas_set_num_threads(threads.max(1) as c_int);
+            openblas_get_num_threads().max(1) as usize
+        }
+    }
+    #[cfg(not(feature = "openblas"))]
+    {
+        let _ = threads;
+        1
+    }
+}
+
 /// Eigenvalues (ascending) and orthonormal eigenvectors (vectors[k] belongs to values[k]) of the
 /// symmetric matrix given by its rows, by LAPACK DSYEVD. Only the lower triangle is used, as in
 /// `symmetric_eigen::symmetric_eigen`.
@@ -138,6 +164,18 @@ mod tests {
             }
         }
         a
+    }
+
+    #[cfg(feature = "openblas")]
+    #[test]
+    fn the_blas_thread_count_can_be_set_and_lapack_still_agrees() {
+        assert_eq!(set_blas_threads(1), 1);
+        let a = random_symmetric(40, 7);
+        let (lapack, _) = symmetric_eigen_lapack(&a).unwrap();
+        let (reference, _) = symmetric_eigen(&a).unwrap();
+        for (x, y) in lapack.iter().zip(&reference) {
+            assert!((x - y).abs() < 1e-10, "{x} vs {y}");
+        }
     }
 
     #[cfg(feature = "openblas")]

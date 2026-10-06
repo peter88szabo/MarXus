@@ -1,0 +1,259 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight_short.inp
+ Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
+                     (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
+ Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
+ Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   1000
+ Pressures (torr):   760
+ Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant P1 through B1 (P1 -> W1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W1      493        -172 .. 320   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 3.455 A, epsilon 64.82 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B1       W1       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W1     -34.44       4.42
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B1       4.42       W1       P1   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)
+____________________________________________________________________________________________________
+
+Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
+coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
+
+--- Species-to-species tables ---
+
+Temperature = 1000 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.60040e+04
+  lowest relaxation eigenvalue (1/s):  2.15940e+08   separation Lambda_N/Lambda_N+1: 7.41134e-05
+  P1 (cm^3/s): capture 4.14509e-11   return 3.88801e-11   net reaction 2.57076e-12
+
+From\To             W1           P1
+W1         1.60040e+04  1.60040e+04
+P1         2.57076e-12  2.57076e-12
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Rate coefficients from W1 (1/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1      W1 loss
+      760  1.60040e+04  1.60040e+04
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+      760  2.57076e-12
+
+Capture, return and net reaction of P1 (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)      capture       return          net
+      760  4.14509e-11  3.88801e-11  2.57076e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+      760  1.00000e+02
+
+Thermal fate of W1 (%), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 1000 K
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 1000 K
+
+Long-time yields, total (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 1000 K
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      760  7.41134e-05   5.83149e-11    0.00000e+00
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Rate coefficients from W1 (1/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1      W1 loss
+  1000  1.60040e+04  1.60040e+04
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+  1000  2.57076e-12
+
+Capture, return and net reaction of P1 (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)      capture       return          net
+  1000  4.14509e-11  3.88801e-11  2.57076e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+  1000  1.00000e+02
+
+Thermal fate of W1 (%), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 760 torr
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 760 torr
+
+Long-time yields, total (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 760 torr
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)   separation  loss balance  detailed bal.
+  1000  7.41134e-05   5.83149e-11    0.00000e+00
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Rate coefficients from W1 (1/s), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.60040e+04
+
+W1 loss
+
+P\T           1000
+760    1.60040e+04
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), temperature-pressure tables:
+
+P1->W1
+
+P\T           1000
+760    2.57076e-12
+
+Capture, return and net reaction of P1 (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T           1000
+760    4.14509e-11
+
+return
+
+P\T           1000
+760    3.88801e-11
+
+net
+
+P\T           1000
+760    2.57076e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->W1
+
+P\T           1000
+760    1.00000e+02
+
+Thermal fate of W1 (%), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Long-time yields, total (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
+
+separation
+
+P\T           1000
+760    7.41134e-05
+
+loss balance
+
+P\T           1000
+760    5.83149e-11
+
+detailed bal.
+
+P\T           1000
+760    0.00000e+00
+

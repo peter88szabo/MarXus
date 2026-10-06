@@ -1,0 +1,16 @@
+# time integration: Yields at the last output time (% of the formed adducts)
+T[K],P[Torr],W1->P1
+1000,760,1.000000e2
+
+# time integration: Populations left in the wells at the last output time (% of the formed adducts)
+T[K],P[Torr],N(W1)
+1000,760,3.841218e-124
+
+# time integration: Yields without the return to P1 at the last output time (% of the net reaction; final steady state for a completed pulse)
+T[K],P[Torr],
+1000,760,
+
+# time integration: Total: populations + yields at the last output time (%; 100 for a pulse)
+T[K],P[Torr],total
+1000,760,1.000000e2
+

@@ -581,7 +581,7 @@ fn species_model(species: &MessSpeciesRrho) -> Result<SpeciesMicroModel, String>
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::masterequation::chemical_activation_driver::{run_chemical_activation, ChemicalActivationRun, SourceSpecification};
     use crate::masterequation::chemical_activation_network::{AbsorbingBarrier, ChemicalActivationOptions, SteadyState};
@@ -593,7 +593,7 @@ mod tests {
 
     /// HCO + O2 (R) -> W1 (ILT association, barrierless) <-> W2 (tight) -> OH + CO2 (P, tight);
     /// W2 escapes with 1e5 s-1. Energies in kcal/mol relative to R.
-    const DECK: &str = r#"
+    pub(crate) const DECK: &str = r#"
 TemperatureList[K]            300. 500.
 PressureList[torr]            10. 760.
 EnergyStepOverTemperature     0.2

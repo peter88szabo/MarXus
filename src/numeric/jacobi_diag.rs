@@ -174,8 +174,6 @@ pub fn jacobi(
         }
     }
 
-    println!("Iterative diagonalization is done in {} steps.", iter);
-
     return (eigvec, eigval);
 }
 //==================================================================================

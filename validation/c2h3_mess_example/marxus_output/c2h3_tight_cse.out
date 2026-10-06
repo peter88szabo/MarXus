@@ -1,0 +1,1502 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight.inp
+ Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
+                     (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
+ Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
+ Parallel:           4 threads (rayon) over the 40 conditions (T, p); 4 conditions at a time
+                     BLAS threads per LAPACK call: 1
+ Temperatures (K):   300, 500, 750, 1000, 1250, 1500, 1750, 2000
+ Pressures (torr):   76, 228, 760, 2280, 7600
+ Energy grid:        grains of 21.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant P1 through B1 (P1 -> W1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W1     2634       -574 .. 2059   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 3.455 A, epsilon 64.82 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B1       W1       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W1     -34.44       4.42
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B1       4.42       W1       P1   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)
+____________________________________________________________________________________________________
+
+Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
+coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
+
+--- Species-to-species tables ---
+
+Temperature = 300 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          -5.02603e-07
+  lowest relaxation eigenvalue (1/s):  8.64182e+07   separation Lambda_N/Lambda_N+1: -5.81594e-15
+  P1 (cm^3/s): capture 2.56018e-13   return 1.03403e-13   net reaction 1.52614e-13
+  warning: chemical eigenvalue 0 = -5.02603447484868e-7 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0043480597376276e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1        -5.02603e-07  5.97827e-16
+P1         1.52614e-13  1.52614e-13
+
+Temperature = 300 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          -7.39824e-07
+  lowest relaxation eigenvalue (1/s):  2.59255e+08   separation Lambda_N/Lambda_N+1: -2.85366e-15
+  P1 (cm^3/s): capture 2.56018e-13   return 6.48923e-14   net reaction 1.91125e-13
+  warning: chemical eigenvalue 0 = -7.398241455356486e-7 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0043948749615252e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1        -7.39824e-07  7.48684e-16
+P1         1.91125e-13  1.91125e-13
+
+Temperature = 300 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          -3.12912e-05
+  lowest relaxation eigenvalue (1/s):  8.64182e+08   separation Lambda_N/Lambda_N+1: -3.62090e-14
+  P1 (cm^3/s): capture 2.56018e-13   return 3.29181e-14   net reaction 2.23099e-13
+  warning: chemical eigenvalue 0 = -3.129121938563551e-5 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0045587282451675e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1        -3.12912e-05  8.73935e-16
+P1         2.23099e-13  2.23099e-13
+
+Temperature = 300 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          3.10109e-05
+  lowest relaxation eigenvalue (1/s):  2.59255e+09   separation Lambda_N/Lambda_N+1: 1.19616e-14
+  P1 (cm^3/s): capture 2.56018e-13   return 1.51927e-14   net reaction 2.40825e-13
+  warning: chemical eigenvalue 0 = 3.101092807470113e-5 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0050268804841452e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1         3.10109e-05  9.43370e-16
+P1         2.40825e-13  2.40825e-13
+
+Temperature = 300 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          1.33974e-03
+  lowest relaxation eigenvalue (1/s):  8.64182e+09   separation Lambda_N/Lambda_N+1: 1.55030e-13
+  P1 (cm^3/s): capture 2.56018e-13   return 5.62700e-15   net reaction 2.50391e-13
+  warning: chemical eigenvalue 0 = 1.3397423912020847e-3 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0066654133205667e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1         1.33974e-03  9.80841e-16
+P1         2.50391e-13  2.50391e-13
+
+Temperature = 500 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          6.00517e-05
+  lowest relaxation eigenvalue (1/s):  4.49478e+07   separation Lambda_N/Lambda_N+1: 1.33603e-12
+  P1 (cm^3/s): capture 3.68547e-12   return 2.96184e-12   net reaction 7.23631e-13
+  warning: chemical eigenvalue 0 = 6.005165618314165e-5 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.004341389033261e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1         6.00517e-05  6.02387e-05
+P1         7.23631e-13  7.23631e-13
+
+Temperature = 500 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          9.43578e-05
+  lowest relaxation eigenvalue (1/s):  1.34843e+08   separation Lambda_N/Lambda_N+1: 6.99762e-13
+  P1 (cm^3/s): capture 3.68547e-12   return 2.50288e-12   net reaction 1.18259e-12
+  warning: chemical eigenvalue 0 = 9.43577889759863e-5 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.004374862848426e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1         9.43578e-05  9.84445e-05
+P1         1.18259e-12  1.18259e-12
+
+Temperature = 500 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.25752e-04
+  lowest relaxation eigenvalue (1/s):  4.49474e+08   separation Lambda_N/Lambda_N+1: 2.79777e-13
+  P1 (cm^3/s): capture 3.68547e-12   return 1.87155e-12   net reaction 1.81392e-12
+  warning: chemical eigenvalue 0 = 1.257521934426922e-4 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.004492021201503e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1         1.25752e-04  1.51000e-04
+P1         1.81392e-12  1.81392e-12
+
+Temperature = 500 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          -7.81897e-04
+  lowest relaxation eigenvalue (1/s):  1.34842e+09   separation Lambda_N/Lambda_N+1: -5.79863e-13
+  P1 (cm^3/s): capture 3.68547e-12   return 1.26712e-12   net reaction 2.41835e-12
+  warning: chemical eigenvalue 0 = -7.818969211832145e-4 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0048267593531513e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1        -7.81897e-04  2.01315e-04
+P1         2.41835e-12  2.41835e-12
+
+Temperature = 500 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          -6.38349e-04
+  lowest relaxation eigenvalue (1/s):  4.49471e+09   separation Lambda_N/Lambda_N+1: -1.42022e-13
+  P1 (cm^3/s): capture 3.68547e-12   return 7.02298e-13   net reaction 2.98317e-12
+  warning: chemical eigenvalue 0 = -6.383485152222825e-4 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.0059983428839209e-2 s-1: the rate coefficients of this mode are not resolved.
+
+From\To             W1           P1
+W1        -6.38349e-04  2.48334e-04
+P1         2.98317e-12  2.98317e-12
+
+Temperature = 750 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          1.15817e+01
+  lowest relaxation eigenvalue (1/s):  2.82345e+07   separation Lambda_N/Lambda_N+1: 4.10198e-07
+  P1 (cm^3/s): capture 1.73156e-11   return 1.65086e-11   net reaction 8.06993e-13
+
+From\To             W1           P1
+W1         1.15817e+01  1.15817e+01
+P1         8.06993e-13  8.06993e-13
+
+Temperature = 750 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          2.30390e+01
+  lowest relaxation eigenvalue (1/s):  8.46373e+07   separation Lambda_N/Lambda_N+1: 2.72208e-07
+  P1 (cm^3/s): capture 1.73156e-11   return 1.57102e-11   net reaction 1.60531e-12
+
+From\To             W1           P1
+W1         2.30390e+01  2.30390e+01
+P1         1.60531e-12  1.60531e-12
+
+Temperature = 750 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          4.47230e+01
+  lowest relaxation eigenvalue (1/s):  2.81887e+08   separation Lambda_N/Lambda_N+1: 1.58656e-07
+  P1 (cm^3/s): capture 1.73156e-11   return 1.41994e-11   net reaction 3.11618e-12
+
+From\To             W1           P1
+W1         4.47230e+01  4.47226e+01
+P1         3.11618e-12  3.11618e-12
+
+Temperature = 750 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          7.46407e+01
+  lowest relaxation eigenvalue (1/s):  8.45058e+08   separation Lambda_N/Lambda_N+1: 8.83262e-08
+  P1 (cm^3/s): capture 1.73156e-11   return 1.21148e-11   net reaction 5.20076e-12
+
+From\To             W1           P1
+W1         7.46407e+01  7.46399e+01
+P1         5.20076e-12  5.20076e-12
+
+Temperature = 750 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          1.17026e+02
+  lowest relaxation eigenvalue (1/s):  2.81494e+09   separation Lambda_N/Lambda_N+1: 4.15731e-08
+  P1 (cm^3/s): capture 1.73156e-11   return 9.16155e-12   net reaction 8.15401e-12
+
+From\To             W1           P1
+W1         1.17026e+02  1.17024e+02
+P1         8.15401e-12  8.15401e-12
+
+Temperature = 1000 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          3.17333e+03
+  lowest relaxation eigenvalue (1/s):  2.19923e+07   separation Lambda_N/Lambda_N+1: 1.44293e-04
+  P1 (cm^3/s): capture 4.14509e-11   return 4.09412e-11   net reaction 5.09715e-13
+
+From\To             W1           P1
+W1         3.17333e+03  3.17333e+03
+P1         5.09715e-13  5.09715e-13
+
+Temperature = 1000 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          7.10525e+03
+  lowest relaxation eigenvalue (1/s):  6.55301e+07   separation Lambda_N/Lambda_N+1: 1.08427e-04
+  P1 (cm^3/s): capture 4.14509e-11   return 4.03096e-11   net reaction 1.14130e-12
+
+From\To             W1           P1
+W1         7.10525e+03  7.10525e+03
+P1         1.14130e-12  1.14130e-12
+
+Temperature = 1000 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.60190e+04
+  lowest relaxation eigenvalue (1/s):  2.16691e+08   separation Lambda_N/Lambda_N+1: 7.39253e-05
+  P1 (cm^3/s): capture 4.14509e-11   return 3.88777e-11   net reaction 2.57314e-12
+
+From\To             W1           P1
+W1         1.60190e+04  1.60190e+04
+P1         2.57314e-12  2.57314e-12
+
+Temperature = 1000 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          3.11910e+04
+  lowest relaxation eigenvalue (1/s):  6.45154e+08   separation Lambda_N/Lambda_N+1: 4.83467e-05
+  P1 (cm^3/s): capture 4.14509e-11   return 3.64406e-11   net reaction 5.01031e-12
+
+From\To             W1           P1
+W1         3.11910e+04  3.11910e+04
+P1         5.01031e-12  5.01031e-12
+
+Temperature = 1000 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          5.88032e+04
+  lowest relaxation eigenvalue (1/s):  2.13276e+09   separation Lambda_N/Lambda_N+1: 2.75714e-05
+  P1 (cm^3/s): capture 4.14509e-11   return 3.20051e-11   net reaction 9.44582e-12
+
+From\To             W1           P1
+W1         5.88032e+04  5.88032e+04
+P1         9.44582e-12  9.44582e-12
+
+Temperature = 1250 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          6.44113e+04
+  lowest relaxation eigenvalue (1/s):  1.91941e+07   separation Lambda_N/Lambda_N+1: 3.35578e-03
+  P1 (cm^3/s): capture 7.39845e-11   return 7.37151e-11   net reaction 2.69350e-13
+
+From\To             W1           P1
+W1         6.44113e+04  6.44113e+04
+P1         2.69350e-13  2.69350e-13
+
+Temperature = 1250 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          1.55913e+05
+  lowest relaxation eigenvalue (1/s):  5.67200e+07   separation Lambda_N/Lambda_N+1: 2.74881e-03
+  P1 (cm^3/s): capture 7.39845e-11   return 7.33322e-11   net reaction 6.52289e-13
+
+From\To             W1           P1
+W1         1.55913e+05  1.55913e+05
+P1         6.52289e-13  6.52289e-13
+
+Temperature = 1250 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          3.88927e+05
+  lowest relaxation eigenvalue (1/s):  1.85560e+08   separation Lambda_N/Lambda_N+1: 2.09596e-03
+  P1 (cm^3/s): capture 7.39845e-11   return 7.23565e-11   net reaction 1.62793e-12
+
+From\To             W1           P1
+W1         3.88927e+05  3.88927e+05
+P1         1.62793e-12  1.62793e-12
+
+Temperature = 1250 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          8.43483e+05
+  lowest relaxation eigenvalue (1/s):  5.46278e+08   separation Lambda_N/Lambda_N+1: 1.54406e-03
+  P1 (cm^3/s): capture 7.39845e-11   return 7.04526e-11   net reaction 3.53191e-12
+
+From\To             W1           P1
+W1         8.43483e+05  8.43483e+05
+P1         3.53191e-12  3.53191e-12
+
+Temperature = 1250 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          1.82055e+06
+  lowest relaxation eigenvalue (1/s):  1.78103e+09   separation Lambda_N/Lambda_N+1: 1.02219e-03
+  P1 (cm^3/s): capture 7.39845e-11   return 6.63588e-11   net reaction 7.62567e-12
+
+From\To             W1           P1
+W1         1.82055e+06  1.82055e+06
+P1         7.62567e-12  7.62567e-12
+
+Temperature = 1500 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          3.74476e+05
+  lowest relaxation eigenvalue (1/s):  1.94173e+07   separation Lambda_N/Lambda_N+1: 1.92857e-02
+  P1 (cm^3/s): capture 1.12847e-10   return 1.12710e-10   net reaction 1.36803e-13
+
+From\To             W1           P1
+W1         3.74476e+05  3.74476e+05
+P1         1.36803e-13  1.36803e-13
+
+Temperature = 1500 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          9.54384e+05
+  lowest relaxation eigenvalue (1/s):  5.69530e+07   separation Lambda_N/Lambda_N+1: 1.67574e-02
+  P1 (cm^3/s): capture 1.12847e-10   return 1.12497e-10   net reaction 3.49678e-13
+
+From\To             W1           P1
+W1         9.54384e+05  9.54384e+05
+P1         3.49678e-13  3.49678e-13
+
+Temperature = 1500 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          2.54896e+06
+  lowest relaxation eigenvalue (1/s):  1.84441e+08   separation Lambda_N/Lambda_N+1: 1.38199e-02
+  P1 (cm^3/s): capture 1.12847e-10   return 1.11910e-10   net reaction 9.36949e-13
+
+From\To             W1           P1
+W1         2.54896e+06  2.54896e+06
+P1         9.36949e-13  9.36949e-13
+
+Temperature = 1500 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          5.95660e+06
+  lowest relaxation eigenvalue (1/s):  5.36825e+08   separation Lambda_N/Lambda_N+1: 1.10960e-02
+  P1 (cm^3/s): capture 1.12847e-10   return 1.10651e-10   net reaction 2.19572e-12
+
+From\To             W1           P1
+W1         5.95660e+06  5.95660e+06
+P1         2.19572e-12  2.19572e-12
+
+Temperature = 1500 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          1.41655e+07
+  lowest relaxation eigenvalue (1/s):  1.72373e+09   separation Lambda_N/Lambda_N+1: 8.21792e-03
+  P1 (cm^3/s): capture 1.12847e-10   return 1.07611e-10   net reaction 5.23603e-12
+
+From\To             W1           P1
+W1         1.41655e+07  1.41655e+07
+P1         5.23603e-12  5.23603e-12
+
+Temperature = 1750 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          1.13647e+06
+  lowest relaxation eigenvalue (1/s):  2.09930e+07   separation Lambda_N/Lambda_N+1: 5.41358e-02
+  P1 (cm^3/s): capture 1.56459e-10   return 1.56388e-10   net reaction 7.08512e-14
+
+From\To             W1           P1
+W1         1.13647e+06  1.13647e+06
+P1         7.08512e-14  7.08512e-14
+
+Temperature = 1750 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          2.99570e+06
+  lowest relaxation eigenvalue (1/s):  6.12351e+07   separation Lambda_N/Lambda_N+1: 4.89213e-02
+  P1 (cm^3/s): capture 1.56459e-10   return 1.56270e-10   net reaction 1.88413e-13
+
+From\To             W1           P1
+W1         2.99570e+06  2.99570e+06
+P1         1.88413e-13  1.88413e-13
+
+Temperature = 1750 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          8.37030e+06
+  lowest relaxation eigenvalue (1/s):  1.96854e+08   separation Lambda_N/Lambda_N+1: 4.25203e-02
+  P1 (cm^3/s): capture 1.56459e-10   return 1.55927e-10   net reaction 5.31870e-13
+
+From\To             W1           P1
+W1         8.37030e+06  8.37030e+06
+P1         5.31870e-13  5.31870e-13
+
+Temperature = 1750 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          2.05655e+07
+  lowest relaxation eigenvalue (1/s):  5.68289e+08   separation Lambda_N/Lambda_N+1: 3.61884e-02
+  P1 (cm^3/s): capture 1.56459e-10   return 1.55139e-10   net reaction 1.31928e-12
+
+From\To             W1           P1
+W1         2.05655e+07  2.05655e+07
+P1         1.31928e-12  1.31928e-12
+
+Temperature = 1750 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          5.22714e+07
+  lowest relaxation eigenvalue (1/s):  1.80475e+09   separation Lambda_N/Lambda_N+1: 2.89632e-02
+  P1 (cm^3/s): capture 1.56459e-10   return 1.53072e-10   net reaction 3.38707e-12
+
+From\To             W1           P1
+W1         5.22714e+07  5.22714e+07
+P1         3.38707e-12  3.38707e-12
+
+Temperature = 2000 K    Pressure = 76 torr
+
+  chemical eigenvalues (1/s):          2.38198e+06
+  lowest relaxation eigenvalue (1/s):  2.33588e+07   separation Lambda_N/Lambda_N+1: 1.01973e-01
+  P1 (cm^3/s): capture 2.03678e-10   return 2.03641e-10   net reaction 3.74141e-14
+  warning: the largest chemical eigenvalue 2.3819805568638435e6 s-1 is 0.102 of the lowest relaxation eigenvalue 2.335884070582855e7 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             W1           P1
+W1         2.38198e+06  2.38198e+06
+P1         3.74141e-14  3.74141e-14
+
+Temperature = 2000 K    Pressure = 228 torr
+
+  chemical eigenvalues (1/s):          6.43419e+06
+  lowest relaxation eigenvalue (1/s):  6.75993e+07   separation Lambda_N/Lambda_N+1: 9.51813e-02
+  P1 (cm^3/s): capture 2.03678e-10   return 2.03575e-10   net reaction 1.02923e-13
+
+From\To             W1           P1
+W1         6.43419e+06  6.43419e+06
+P1         1.02923e-13  1.02923e-13
+
+Temperature = 2000 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.85699e+07
+  lowest relaxation eigenvalue (1/s):  2.15215e+08   separation Lambda_N/Lambda_N+1: 8.62854e-02
+  P1 (cm^3/s): capture 2.03678e-10   return 2.03374e-10   net reaction 3.03634e-13
+
+From\To             W1           P1
+W1         1.85699e+07  1.85699e+07
+P1         3.03634e-13  3.03634e-13
+
+Temperature = 2000 K    Pressure = 2280 torr
+
+  chemical eigenvalues (1/s):          4.72819e+07
+  lowest relaxation eigenvalue (1/s):  6.15301e+08   separation Lambda_N/Lambda_N+1: 7.68435e-02
+  P1 (cm^3/s): capture 2.03678e-10   return 2.02888e-10   net reaction 7.89638e-13
+
+From\To             W1           P1
+W1         4.72819e+07  4.72819e+07
+P1         7.89638e-13  7.89638e-13
+
+Temperature = 2000 K    Pressure = 7600 torr
+
+  chemical eigenvalues (1/s):          1.25976e+08
+  lowest relaxation eigenvalue (1/s):  1.93181e+09   separation Lambda_N/Lambda_N+1: 6.52110e-02
+  P1 (cm^3/s): capture 2.03678e-10   return 2.01524e-10   net reaction 2.15385e-12
+
+From\To             W1           P1
+W1         1.25976e+08  1.25976e+08
+P1         2.15385e-12  2.15385e-12
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Rate coefficients from W1 (1/s), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)       W1->P1      W1 loss
+       76  5.97827e-16 -5.02603e-07
+      228  7.48684e-16 -7.39824e-07
+      760  8.73935e-16 -3.12912e-05
+     2280  9.43370e-16  3.10109e-05
+     7600  9.80841e-16  1.33974e-03
+
+   Temperature = 500 K
+
+  P(torr)       W1->P1      W1 loss
+       76  6.02387e-05  6.00517e-05
+      228  9.84445e-05  9.43578e-05
+      760  1.51000e-04  1.25752e-04
+     2280  2.01315e-04 -7.81897e-04
+     7600  2.48334e-04 -6.38349e-04
+
+   Temperature = 750 K
+
+  P(torr)       W1->P1      W1 loss
+       76  1.15817e+01  1.15817e+01
+      228  2.30390e+01  2.30390e+01
+      760  4.47226e+01  4.47230e+01
+     2280  7.46399e+01  7.46407e+01
+     7600  1.17024e+02  1.17026e+02
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1      W1 loss
+       76  3.17333e+03  3.17333e+03
+      228  7.10525e+03  7.10525e+03
+      760  1.60190e+04  1.60190e+04
+     2280  3.11910e+04  3.11910e+04
+     7600  5.88032e+04  5.88032e+04
+
+   Temperature = 1250 K
+
+  P(torr)       W1->P1      W1 loss
+       76  6.44113e+04  6.44113e+04
+      228  1.55913e+05  1.55913e+05
+      760  3.88927e+05  3.88927e+05
+     2280  8.43483e+05  8.43483e+05
+     7600  1.82055e+06  1.82055e+06
+
+   Temperature = 1500 K
+
+  P(torr)       W1->P1      W1 loss
+       76  3.74476e+05  3.74476e+05
+      228  9.54384e+05  9.54384e+05
+      760  2.54896e+06  2.54896e+06
+     2280  5.95660e+06  5.95660e+06
+     7600  1.41655e+07  1.41655e+07
+
+   Temperature = 1750 K
+
+  P(torr)       W1->P1      W1 loss
+       76  1.13647e+06  1.13647e+06
+      228  2.99570e+06  2.99570e+06
+      760  8.37030e+06  8.37030e+06
+     2280  2.05655e+07  2.05655e+07
+     7600  5.22714e+07  5.22714e+07
+
+   Temperature = 2000 K
+
+  P(torr)       W1->P1      W1 loss
+       76  2.38198e+06  2.38198e+06
+      228  6.43419e+06  6.43419e+06
+      760  1.85699e+07  1.85699e+07
+     2280  4.72819e+07  4.72819e+07
+     7600  1.25976e+08  1.25976e+08
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)       P1->W1
+       76  1.52614e-13
+      228  1.91125e-13
+      760  2.23099e-13
+     2280  2.40825e-13
+     7600  2.50391e-13
+
+   Temperature = 500 K
+
+  P(torr)       P1->W1
+       76  7.23631e-13
+      228  1.18259e-12
+      760  1.81392e-12
+     2280  2.41835e-12
+     7600  2.98317e-12
+
+   Temperature = 750 K
+
+  P(torr)       P1->W1
+       76  8.06993e-13
+      228  1.60531e-12
+      760  3.11618e-12
+     2280  5.20076e-12
+     7600  8.15401e-12
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+       76  5.09715e-13
+      228  1.14130e-12
+      760  2.57314e-12
+     2280  5.01031e-12
+     7600  9.44582e-12
+
+   Temperature = 1250 K
+
+  P(torr)       P1->W1
+       76  2.69350e-13
+      228  6.52289e-13
+      760  1.62793e-12
+     2280  3.53191e-12
+     7600  7.62567e-12
+
+   Temperature = 1500 K
+
+  P(torr)       P1->W1
+       76  1.36803e-13
+      228  3.49678e-13
+      760  9.36949e-13
+     2280  2.19572e-12
+     7600  5.23603e-12
+
+   Temperature = 1750 K
+
+  P(torr)       P1->W1
+       76  7.08512e-14
+      228  1.88413e-13
+      760  5.31870e-13
+     2280  1.31928e-12
+     7600  3.38707e-12
+
+   Temperature = 2000 K
+
+  P(torr)       P1->W1
+       76  3.74141e-14
+      228  1.02923e-13
+      760  3.03634e-13
+     2280  7.89638e-13
+     7600  2.15385e-12
+
+Capture, return and net reaction of P1 (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)      capture       return          net
+       76  2.56018e-13  1.03403e-13  1.52614e-13
+      228  2.56018e-13  6.48923e-14  1.91125e-13
+      760  2.56018e-13  3.29181e-14  2.23099e-13
+     2280  2.56018e-13  1.51927e-14  2.40825e-13
+     7600  2.56018e-13  5.62700e-15  2.50391e-13
+
+   Temperature = 500 K
+
+  P(torr)      capture       return          net
+       76  3.68547e-12  2.96184e-12  7.23631e-13
+      228  3.68547e-12  2.50288e-12  1.18259e-12
+      760  3.68547e-12  1.87155e-12  1.81392e-12
+     2280  3.68547e-12  1.26712e-12  2.41835e-12
+     7600  3.68547e-12  7.02298e-13  2.98317e-12
+
+   Temperature = 750 K
+
+  P(torr)      capture       return          net
+       76  1.73156e-11  1.65086e-11  8.06993e-13
+      228  1.73156e-11  1.57102e-11  1.60531e-12
+      760  1.73156e-11  1.41994e-11  3.11618e-12
+     2280  1.73156e-11  1.21148e-11  5.20076e-12
+     7600  1.73156e-11  9.16155e-12  8.15401e-12
+
+   Temperature = 1000 K
+
+  P(torr)      capture       return          net
+       76  4.14509e-11  4.09412e-11  5.09715e-13
+      228  4.14509e-11  4.03096e-11  1.14130e-12
+      760  4.14509e-11  3.88777e-11  2.57314e-12
+     2280  4.14509e-11  3.64406e-11  5.01031e-12
+     7600  4.14509e-11  3.20051e-11  9.44582e-12
+
+   Temperature = 1250 K
+
+  P(torr)      capture       return          net
+       76  7.39845e-11  7.37151e-11  2.69350e-13
+      228  7.39845e-11  7.33322e-11  6.52289e-13
+      760  7.39845e-11  7.23565e-11  1.62793e-12
+     2280  7.39845e-11  7.04526e-11  3.53191e-12
+     7600  7.39845e-11  6.63588e-11  7.62567e-12
+
+   Temperature = 1500 K
+
+  P(torr)      capture       return          net
+       76  1.12847e-10  1.12710e-10  1.36803e-13
+      228  1.12847e-10  1.12497e-10  3.49678e-13
+      760  1.12847e-10  1.11910e-10  9.36949e-13
+     2280  1.12847e-10  1.10651e-10  2.19572e-12
+     7600  1.12847e-10  1.07611e-10  5.23603e-12
+
+   Temperature = 1750 K
+
+  P(torr)      capture       return          net
+       76  1.56459e-10  1.56388e-10  7.08512e-14
+      228  1.56459e-10  1.56270e-10  1.88413e-13
+      760  1.56459e-10  1.55927e-10  5.31870e-13
+     2280  1.56459e-10  1.55139e-10  1.31928e-12
+     7600  1.56459e-10  1.53072e-10  3.38707e-12
+
+   Temperature = 2000 K
+
+  P(torr)      capture       return          net
+       76  2.03678e-10  2.03641e-10  3.74141e-14
+      228  2.03678e-10  2.03575e-10  1.02923e-13
+      760  2.03678e-10  2.03374e-10  3.03634e-13
+     2280  2.03678e-10  2.02888e-10  7.89638e-13
+     7600  2.03678e-10  2.01524e-10  2.15385e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 500 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 750 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1250 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1500 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1750 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 2000 K
+
+  P(torr)       P1->W1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+Thermal fate of W1 (%), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 500 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 750 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1250 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1500 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 1750 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+   Temperature = 2000 K
+
+  P(torr)       W1->P1
+       76  1.00000e+02
+      228  1.00000e+02
+      760  1.00000e+02
+     2280  1.00000e+02
+     7600  1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+   Temperature = 500 K
+
+   Temperature = 750 K
+
+   Temperature = 1000 K
+
+   Temperature = 1250 K
+
+   Temperature = 1500 K
+
+   Temperature = 1750 K
+
+   Temperature = 2000 K
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+   Temperature = 500 K
+
+   Temperature = 750 K
+
+   Temperature = 1000 K
+
+   Temperature = 1250 K
+
+   Temperature = 1500 K
+
+   Temperature = 1750 K
+
+   Temperature = 2000 K
+
+Long-time yields, total (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+   Temperature = 500 K
+
+   Temperature = 750 K
+
+   Temperature = 1000 K
+
+   Temperature = 1250 K
+
+   Temperature = 1500 K
+
+   Temperature = 1750 K
+
+   Temperature = 2000 K
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
+
+   Temperature = 300 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76 -5.81594e-15   1.00000e+00    0.00000e+00
+      228 -2.85366e-15   1.00000e+00    0.00000e+00
+      760 -3.62090e-14   1.00000e+00    0.00000e+00
+     2280  1.19616e-14   1.00000e+00    0.00000e+00
+     7600  1.55030e-13   1.00000e+00    0.00000e+00
+
+   Temperature = 500 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  1.33603e-12   3.11476e-03    0.00000e+00
+      228  6.99762e-13   4.33105e-02    0.00000e+00
+      760  2.79777e-13   2.00774e-01    0.00000e+00
+     2280 -5.79863e-13   1.25747e+00    0.00000e+00
+     7600 -1.42022e-13   1.38903e+00    0.00000e+00
+
+   Temperature = 750 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  4.10198e-07   2.86928e-07    0.00000e+00
+      228  2.72208e-07   3.16949e-08    0.00000e+00
+      760  1.58656e-07   7.87499e-06    0.00000e+00
+     2280  8.83262e-08   1.13361e-05    0.00000e+00
+     7600  4.15731e-08   1.57051e-05    0.00000e+00
+
+   Temperature = 1000 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  1.44293e-04   5.68159e-10    0.00000e+00
+      228  1.08427e-04   4.22790e-09    0.00000e+00
+      760  7.39253e-05   8.07139e-09    0.00000e+00
+     2280  4.83467e-05   6.84433e-08    0.00000e+00
+     7600  2.75714e-05   2.01462e-08    0.00000e+00
+
+   Temperature = 1250 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  3.35578e-03   3.91566e-10    0.00000e+00
+      228  2.74881e-03   1.30248e-09    0.00000e+00
+      760  2.09596e-03   1.78740e-09    0.00000e+00
+     2280  1.54406e-03   6.19328e-10    0.00000e+00
+     7600  1.02219e-03   1.43810e-09    0.00000e+00
+
+   Temperature = 1500 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  1.92857e-02   1.16679e-10    0.00000e+00
+      228  1.67574e-02   1.58886e-11    0.00000e+00
+      760  1.38199e-02   4.46026e-11    0.00000e+00
+     2280  1.10960e-02   1.68384e-11    0.00000e+00
+     7600  8.21792e-03   1.08430e-10    0.00000e+00
+
+   Temperature = 1750 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  5.41358e-02   5.93587e-11    0.00000e+00
+      228  4.89213e-02   7.31424e-11    0.00000e+00
+      760  4.25203e-02   1.45421e-11    0.00000e+00
+     2280  3.61884e-02   3.51752e-11    0.00000e+00
+     7600  2.89632e-02   2.30226e-11    0.00000e+00
+
+   Temperature = 2000 K
+
+  P(torr)   separation  loss balance  detailed bal.
+       76  1.01973e-01   5.22960e-11    0.00000e+00
+      228  9.51813e-02   1.50037e-10    0.00000e+00
+      760  8.62854e-02   3.49876e-11    0.00000e+00
+     2280  7.68435e-02   1.73842e-11    0.00000e+00
+     7600  6.52110e-02   1.86029e-12    0.00000e+00
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Rate coefficients from W1 (1/s), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)       W1->P1      W1 loss
+   300  5.97827e-16 -5.02603e-07
+   500  6.02387e-05  6.00517e-05
+   750  1.15817e+01  1.15817e+01
+  1000  3.17333e+03  3.17333e+03
+  1250  6.44113e+04  6.44113e+04
+  1500  3.74476e+05  3.74476e+05
+  1750  1.13647e+06  1.13647e+06
+  2000  2.38198e+06  2.38198e+06
+
+   Pressure = 228 torr
+
+  T(K)       W1->P1      W1 loss
+   300  7.48684e-16 -7.39824e-07
+   500  9.84445e-05  9.43578e-05
+   750  2.30390e+01  2.30390e+01
+  1000  7.10525e+03  7.10525e+03
+  1250  1.55913e+05  1.55913e+05
+  1500  9.54384e+05  9.54384e+05
+  1750  2.99570e+06  2.99570e+06
+  2000  6.43419e+06  6.43419e+06
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1      W1 loss
+   300  8.73935e-16 -3.12912e-05
+   500  1.51000e-04  1.25752e-04
+   750  4.47226e+01  4.47230e+01
+  1000  1.60190e+04  1.60190e+04
+  1250  3.88927e+05  3.88927e+05
+  1500  2.54896e+06  2.54896e+06
+  1750  8.37030e+06  8.37030e+06
+  2000  1.85699e+07  1.85699e+07
+
+   Pressure = 2280 torr
+
+  T(K)       W1->P1      W1 loss
+   300  9.43370e-16  3.10109e-05
+   500  2.01315e-04 -7.81897e-04
+   750  7.46399e+01  7.46407e+01
+  1000  3.11910e+04  3.11910e+04
+  1250  8.43483e+05  8.43483e+05
+  1500  5.95660e+06  5.95660e+06
+  1750  2.05655e+07  2.05655e+07
+  2000  4.72819e+07  4.72819e+07
+
+   Pressure = 7600 torr
+
+  T(K)       W1->P1      W1 loss
+   300  9.80841e-16  1.33974e-03
+   500  2.48334e-04 -6.38349e-04
+   750  1.17024e+02  1.17026e+02
+  1000  5.88032e+04  5.88032e+04
+  1250  1.82055e+06  1.82055e+06
+  1500  1.41655e+07  1.41655e+07
+  1750  5.22714e+07  5.22714e+07
+  2000  1.25976e+08  1.25976e+08
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)       P1->W1
+   300  1.52614e-13
+   500  7.23631e-13
+   750  8.06993e-13
+  1000  5.09715e-13
+  1250  2.69350e-13
+  1500  1.36803e-13
+  1750  7.08512e-14
+  2000  3.74141e-14
+
+   Pressure = 228 torr
+
+  T(K)       P1->W1
+   300  1.91125e-13
+   500  1.18259e-12
+   750  1.60531e-12
+  1000  1.14130e-12
+  1250  6.52289e-13
+  1500  3.49678e-13
+  1750  1.88413e-13
+  2000  1.02923e-13
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+   300  2.23099e-13
+   500  1.81392e-12
+   750  3.11618e-12
+  1000  2.57314e-12
+  1250  1.62793e-12
+  1500  9.36949e-13
+  1750  5.31870e-13
+  2000  3.03634e-13
+
+   Pressure = 2280 torr
+
+  T(K)       P1->W1
+   300  2.40825e-13
+   500  2.41835e-12
+   750  5.20076e-12
+  1000  5.01031e-12
+  1250  3.53191e-12
+  1500  2.19572e-12
+  1750  1.31928e-12
+  2000  7.89638e-13
+
+   Pressure = 7600 torr
+
+  T(K)       P1->W1
+   300  2.50391e-13
+   500  2.98317e-12
+   750  8.15401e-12
+  1000  9.44582e-12
+  1250  7.62567e-12
+  1500  5.23603e-12
+  1750  3.38707e-12
+  2000  2.15385e-12
+
+Capture, return and net reaction of P1 (cm^3/s), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)      capture       return          net
+   300  2.56018e-13  1.03403e-13  1.52614e-13
+   500  3.68547e-12  2.96184e-12  7.23631e-13
+   750  1.73156e-11  1.65086e-11  8.06993e-13
+  1000  4.14509e-11  4.09412e-11  5.09715e-13
+  1250  7.39845e-11  7.37151e-11  2.69350e-13
+  1500  1.12847e-10  1.12710e-10  1.36803e-13
+  1750  1.56459e-10  1.56388e-10  7.08512e-14
+  2000  2.03678e-10  2.03641e-10  3.74141e-14
+
+   Pressure = 228 torr
+
+  T(K)      capture       return          net
+   300  2.56018e-13  6.48923e-14  1.91125e-13
+   500  3.68547e-12  2.50288e-12  1.18259e-12
+   750  1.73156e-11  1.57102e-11  1.60531e-12
+  1000  4.14509e-11  4.03096e-11  1.14130e-12
+  1250  7.39845e-11  7.33322e-11  6.52289e-13
+  1500  1.12847e-10  1.12497e-10  3.49678e-13
+  1750  1.56459e-10  1.56270e-10  1.88413e-13
+  2000  2.03678e-10  2.03575e-10  1.02923e-13
+
+   Pressure = 760 torr
+
+  T(K)      capture       return          net
+   300  2.56018e-13  3.29181e-14  2.23099e-13
+   500  3.68547e-12  1.87155e-12  1.81392e-12
+   750  1.73156e-11  1.41994e-11  3.11618e-12
+  1000  4.14509e-11  3.88777e-11  2.57314e-12
+  1250  7.39845e-11  7.23565e-11  1.62793e-12
+  1500  1.12847e-10  1.11910e-10  9.36949e-13
+  1750  1.56459e-10  1.55927e-10  5.31870e-13
+  2000  2.03678e-10  2.03374e-10  3.03634e-13
+
+   Pressure = 2280 torr
+
+  T(K)      capture       return          net
+   300  2.56018e-13  1.51927e-14  2.40825e-13
+   500  3.68547e-12  1.26712e-12  2.41835e-12
+   750  1.73156e-11  1.21148e-11  5.20076e-12
+  1000  4.14509e-11  3.64406e-11  5.01031e-12
+  1250  7.39845e-11  7.04526e-11  3.53191e-12
+  1500  1.12847e-10  1.10651e-10  2.19572e-12
+  1750  1.56459e-10  1.55139e-10  1.31928e-12
+  2000  2.03678e-10  2.02888e-10  7.89638e-13
+
+   Pressure = 7600 torr
+
+  T(K)      capture       return          net
+   300  2.56018e-13  5.62700e-15  2.50391e-13
+   500  3.68547e-12  7.02298e-13  2.98317e-12
+   750  1.73156e-11  9.16155e-12  8.15401e-12
+  1000  4.14509e-11  3.20051e-11  9.44582e-12
+  1250  7.39845e-11  6.63588e-11  7.62567e-12
+  1500  1.12847e-10  1.07611e-10  5.23603e-12
+  1750  1.56459e-10  1.53072e-10  3.38707e-12
+  2000  2.03678e-10  2.01524e-10  2.15385e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)       P1->W1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 228 torr
+
+  T(K)       P1->W1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 2280 torr
+
+  T(K)       P1->W1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7600 torr
+
+  T(K)       P1->W1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+Thermal fate of W1 (%), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)       W1->P1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 228 torr
+
+  T(K)       W1->P1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 2280 torr
+
+  T(K)       W1->P1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7600 torr
+
+  T(K)       W1->P1
+   300  1.00000e+02
+   500  1.00000e+02
+   750  1.00000e+02
+  1000  1.00000e+02
+  1250  1.00000e+02
+  1500  1.00000e+02
+  1750  1.00000e+02
+  2000  1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 76 torr
+
+   Pressure = 228 torr
+
+   Pressure = 760 torr
+
+   Pressure = 2280 torr
+
+   Pressure = 7600 torr
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 76 torr
+
+   Pressure = 228 torr
+
+   Pressure = 760 torr
+
+   Pressure = 2280 torr
+
+   Pressure = 7600 torr
+
+Long-time yields, total (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 76 torr
+
+   Pressure = 228 torr
+
+   Pressure = 760 torr
+
+   Pressure = 2280 torr
+
+   Pressure = 7600 torr
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
+
+   Pressure = 76 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   300 -5.81594e-15   1.00000e+00    0.00000e+00
+   500  1.33603e-12   3.11476e-03    0.00000e+00
+   750  4.10198e-07   2.86928e-07    0.00000e+00
+  1000  1.44293e-04   5.68159e-10    0.00000e+00
+  1250  3.35578e-03   3.91566e-10    0.00000e+00
+  1500  1.92857e-02   1.16679e-10    0.00000e+00
+  1750  5.41358e-02   5.93587e-11    0.00000e+00
+  2000  1.01973e-01   5.22960e-11    0.00000e+00
+
+   Pressure = 228 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   300 -2.85366e-15   1.00000e+00    0.00000e+00
+   500  6.99762e-13   4.33105e-02    0.00000e+00
+   750  2.72208e-07   3.16949e-08    0.00000e+00
+  1000  1.08427e-04   4.22790e-09    0.00000e+00
+  1250  2.74881e-03   1.30248e-09    0.00000e+00
+  1500  1.67574e-02   1.58886e-11    0.00000e+00
+  1750  4.89213e-02   7.31424e-11    0.00000e+00
+  2000  9.51813e-02   1.50037e-10    0.00000e+00
+
+   Pressure = 760 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   300 -3.62090e-14   1.00000e+00    0.00000e+00
+   500  2.79777e-13   2.00774e-01    0.00000e+00
+   750  1.58656e-07   7.87499e-06    0.00000e+00
+  1000  7.39253e-05   8.07139e-09    0.00000e+00
+  1250  2.09596e-03   1.78740e-09    0.00000e+00
+  1500  1.38199e-02   4.46026e-11    0.00000e+00
+  1750  4.25203e-02   1.45421e-11    0.00000e+00
+  2000  8.62854e-02   3.49876e-11    0.00000e+00
+
+   Pressure = 2280 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   300  1.19616e-14   1.00000e+00    0.00000e+00
+   500 -5.79863e-13   1.25747e+00    0.00000e+00
+   750  8.83262e-08   1.13361e-05    0.00000e+00
+  1000  4.83467e-05   6.84433e-08    0.00000e+00
+  1250  1.54406e-03   6.19328e-10    0.00000e+00
+  1500  1.10960e-02   1.68384e-11    0.00000e+00
+  1750  3.61884e-02   3.51752e-11    0.00000e+00
+  2000  7.68435e-02   1.73842e-11    0.00000e+00
+
+   Pressure = 7600 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   300  1.55030e-13   1.00000e+00    0.00000e+00
+   500 -1.42022e-13   1.38903e+00    0.00000e+00
+   750  4.15731e-08   1.57051e-05    0.00000e+00
+  1000  2.75714e-05   2.01462e-08    0.00000e+00
+  1250  1.02219e-03   1.43810e-09    0.00000e+00
+  1500  8.21792e-03   1.08430e-10    0.00000e+00
+  1750  2.89632e-02   2.30226e-11    0.00000e+00
+  2000  6.52110e-02   1.86029e-12    0.00000e+00
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Rate coefficients from W1 (1/s), temperature-pressure tables:
+
+W1->P1
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      5.97827e-16  6.02387e-05  1.15817e+01  3.17333e+03  6.44113e+04  3.74476e+05  1.13647e+06  2.38198e+06
+228     7.48684e-16  9.84445e-05  2.30390e+01  7.10525e+03  1.55913e+05  9.54384e+05  2.99570e+06  6.43419e+06
+760     8.73935e-16  1.51000e-04  4.47226e+01  1.60190e+04  3.88927e+05  2.54896e+06  8.37030e+06  1.85699e+07
+2280    9.43370e-16  2.01315e-04  7.46399e+01  3.11910e+04  8.43483e+05  5.95660e+06  2.05655e+07  4.72819e+07
+7600    9.80841e-16  2.48334e-04  1.17024e+02  5.88032e+04  1.82055e+06  1.41655e+07  5.22714e+07  1.25976e+08
+
+W1 loss
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76     -5.02603e-07  6.00517e-05  1.15817e+01  3.17333e+03  6.44113e+04  3.74476e+05  1.13647e+06  2.38198e+06
+228    -7.39824e-07  9.43578e-05  2.30390e+01  7.10525e+03  1.55913e+05  9.54384e+05  2.99570e+06  6.43419e+06
+760    -3.12912e-05  1.25752e-04  4.47230e+01  1.60190e+04  3.88927e+05  2.54896e+06  8.37030e+06  1.85699e+07
+2280    3.10109e-05 -7.81897e-04  7.46407e+01  3.11910e+04  8.43483e+05  5.95660e+06  2.05655e+07  4.72819e+07
+7600    1.33974e-03 -6.38349e-04  1.17026e+02  5.88032e+04  1.82055e+06  1.41655e+07  5.22714e+07  1.25976e+08
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), temperature-pressure tables:
+
+P1->W1
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.52614e-13  7.23631e-13  8.06993e-13  5.09715e-13  2.69350e-13  1.36803e-13  7.08512e-14  3.74141e-14
+228     1.91125e-13  1.18259e-12  1.60531e-12  1.14130e-12  6.52289e-13  3.49678e-13  1.88413e-13  1.02923e-13
+760     2.23099e-13  1.81392e-12  3.11618e-12  2.57314e-12  1.62793e-12  9.36949e-13  5.31870e-13  3.03634e-13
+2280    2.40825e-13  2.41835e-12  5.20076e-12  5.01031e-12  3.53191e-12  2.19572e-12  1.31928e-12  7.89638e-13
+7600    2.50391e-13  2.98317e-12  8.15401e-12  9.44582e-12  7.62567e-12  5.23603e-12  3.38707e-12  2.15385e-12
+
+Capture, return and net reaction of P1 (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      2.56018e-13  3.68547e-12  1.73156e-11  4.14509e-11  7.39845e-11  1.12847e-10  1.56459e-10  2.03678e-10
+228     2.56018e-13  3.68547e-12  1.73156e-11  4.14509e-11  7.39845e-11  1.12847e-10  1.56459e-10  2.03678e-10
+760     2.56018e-13  3.68547e-12  1.73156e-11  4.14509e-11  7.39845e-11  1.12847e-10  1.56459e-10  2.03678e-10
+2280    2.56018e-13  3.68547e-12  1.73156e-11  4.14509e-11  7.39845e-11  1.12847e-10  1.56459e-10  2.03678e-10
+7600    2.56018e-13  3.68547e-12  1.73156e-11  4.14509e-11  7.39845e-11  1.12847e-10  1.56459e-10  2.03678e-10
+
+return
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.03403e-13  2.96184e-12  1.65086e-11  4.09412e-11  7.37151e-11  1.12710e-10  1.56388e-10  2.03641e-10
+228     6.48923e-14  2.50288e-12  1.57102e-11  4.03096e-11  7.33322e-11  1.12497e-10  1.56270e-10  2.03575e-10
+760     3.29181e-14  1.87155e-12  1.41994e-11  3.88777e-11  7.23565e-11  1.11910e-10  1.55927e-10  2.03374e-10
+2280    1.51927e-14  1.26712e-12  1.21148e-11  3.64406e-11  7.04526e-11  1.10651e-10  1.55139e-10  2.02888e-10
+7600    5.62700e-15  7.02298e-13  9.16155e-12  3.20051e-11  6.63588e-11  1.07611e-10  1.53072e-10  2.01524e-10
+
+net
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.52614e-13  7.23631e-13  8.06993e-13  5.09715e-13  2.69350e-13  1.36803e-13  7.08512e-14  3.74141e-14
+228     1.91125e-13  1.18259e-12  1.60531e-12  1.14130e-12  6.52289e-13  3.49678e-13  1.88413e-13  1.02923e-13
+760     2.23099e-13  1.81392e-12  3.11618e-12  2.57314e-12  1.62793e-12  9.36949e-13  5.31870e-13  3.03634e-13
+2280    2.40825e-13  2.41835e-12  5.20076e-12  5.01031e-12  3.53191e-12  2.19572e-12  1.31928e-12  7.89638e-13
+7600    2.50391e-13  2.98317e-12  8.15401e-12  9.44582e-12  7.62567e-12  5.23603e-12  3.38707e-12  2.15385e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->W1
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+228     1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+760     1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+2280    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+7600    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Thermal fate of W1 (%), temperature-pressure tables:
+
+W1->P1
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+228     1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+760     1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+2280    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+7600    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Long-time yields, total (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
+
+separation
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76     -5.81594e-15  1.33603e-12  4.10198e-07  1.44293e-04  3.35578e-03  1.92857e-02  5.41358e-02  1.01973e-01
+228    -2.85366e-15  6.99762e-13  2.72208e-07  1.08427e-04  2.74881e-03  1.67574e-02  4.89213e-02  9.51813e-02
+760    -3.62090e-14  2.79777e-13  1.58656e-07  7.39253e-05  2.09596e-03  1.38199e-02  4.25203e-02  8.62854e-02
+2280    1.19616e-14 -5.79863e-13  8.83262e-08  4.83467e-05  1.54406e-03  1.10960e-02  3.61884e-02  7.68435e-02
+7600    1.55030e-13 -1.42022e-13  4.15731e-08  2.75714e-05  1.02219e-03  8.21792e-03  2.89632e-02  6.52110e-02
+
+loss balance
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      1.00000e+00  3.11476e-03  2.86928e-07  5.68159e-10  3.91566e-10  1.16679e-10  5.93587e-11  5.22960e-11
+228     1.00000e+00  4.33105e-02  3.16949e-08  4.22790e-09  1.30248e-09  1.58886e-11  7.31424e-11  1.50037e-10
+760     1.00000e+00  2.00774e-01  7.87499e-06  8.07139e-09  1.78740e-09  4.46026e-11  1.45421e-11  3.49876e-11
+2280    1.00000e+00  1.25747e+00  1.13361e-05  6.84433e-08  6.19328e-10  1.68384e-11  3.51752e-11  1.73842e-11
+7600    1.00000e+00  1.38903e+00  1.57051e-05  2.01462e-08  1.43810e-09  1.08430e-10  2.30226e-11  1.86029e-12
+
+detailed bal.
+
+P\T             300          500          750         1000         1250         1500         1750         2000
+76      0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+228     0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+760     0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+2280    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+7600    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+

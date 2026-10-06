@@ -209,3 +209,57 @@ The status-table row "Olzmann eigenvalue analysis" was renamed to the thermal ra
 - **Cause.** GitHub's Markdown API passes `\mathbf J` intact to its math renderer (checked with `gh api /markdown`). Chromium-based browsers (Brave, Chrome, Edge) implement only MathML Core, which ignores the `mathvariant` attribute that `\mathbf` and `\boldsymbol` produce, so the letters render at normal weight.
 - **Sources.** The MathJax documentation, "MathML Support": MathML-Core lacks mathvariant, which MathJax uses for `\mathbf`. The pull request luckiday/graphics-foundations#3 (github.com, 2026-09) fixed the same problem with Unicode math letters.
 - **Fix.** Every matrix is now a Unicode mathematical bold letter written directly in the LaTeX: 𝐉 𝐏 𝐊 𝐈 𝐒 𝐃 𝐌 𝐆 (U+1D400 block) and 𝚲 (U+1D6B2). No `\mathbf` or `\boldsymbol` is left.
+
+## 10. Four methods in three families, one per run (2026-10-06)
+
+**Peter's corrections:**
+- "why … are there in the case2_tstlevel_E_mess_eckart_steady_states.out two different runs? the Olzmann and the absorbing barrier are two different versions of the steady state method, so why … are they in the same file";
+- "they belong to the same family of solvers (steady state) but they are different ways of solution, so they should have been treated accordingly";
+- "this way we have 4 in total: CSE, Steady-state-Olzmann, Steady-state-AbsorbingBarrier, and the Direct-Time-Integration";
+- "there are three different families of solvers while we have in practice 4 methods (from which 2 is steady state)";
+- "if we chose steady state we have to tell which version to use, and we do not run unnecessarily both steady state methods".
+
+**My error.** The former default `--steady-state both` ran both steady-state solvers in one run and wrote them into one file.
+
+**Now** (`solution_method.rs`):
+- `SolutionMethod {SteadyStateOlzmann, SteadyStateAbsorbingBarrier, ChemicallySignificantEigenvalues, TimeIntegration}`.
+- `Solution {SteadyStateOlzmann(ThermalEigenSettings), SteadyStateAbsorbingBarrier {absorbing_barrier_kt}, ChemicallySignificantEigenvalues {eigen_solver}, TimeIntegration(plan)}`.
+- `Method` / `--method` is **required**; there is no default method. Its values are `SteadyStateOlzmann` (`steady-state-olzmann`), `SteadyStateAbsorbingBarrier` (`steady-state-absorbing-barrier`), `CSE` (`cse`) and `TimeIntegration` (`time-integration`).
+- **Removed:** `SteadyState` / `--steady-state` and the value `both`. They are refused with the message `STEADY_STATE_KEYWORD_REPLACED`, which names the two methods. `Method SteadyState` alone is refused for the same reason, and `Method Eigenvalue` refers to SteadyStateOlzmann.
+- **Unused settings are noted, not refused:**
+  - the barrier distance applies only to SteadyStateAbsorbingBarrier;
+  - the eigen-solver to SteadyStateOlzmann and CSE;
+  - the sum rule to SteadyStateOlzmann;
+  - the time-integration settings to TimeIntegration.
+
+**Program** (`chemical_activation_from_deck`):
+- One solver per run.
+- SteadyStateOlzmann includes its thermal eigenpair and the thermal fates of the wells.
+- The combined section "chemical activation and thermal, separately and together" was removed from the program, because it needs both steady-state solvers. The prompt + through-the-wells decomposition is now computed in the validation scripts from the two runs (`validation/ZZAllyl+O2_Gamma_Case2/compare_with_mess.py`, `plots/yields.png`). The library function `report_sections::chemical_activation_and_thermal_groups` remains, with its test.
+
+**Bimolecular rates of the reactant, named explicitly** (Peter: "I explicitly asked you to put reactant to bimolecular channel rates too … R-->P5 is a chemical activation route … and also R-->G4 or other R--> other thermal stabilization routes").
+
+Every method now reports these groups:
+- **SteadyStateAbsorbingBarrier:**
+  - "Bimolecular-to-bimolecular rate coefficients (chemical activation)": k(R → P) = k∞Φ_P, with products summed over their channels, and R → escape(W);
+  - "Bimolecular-to-well rate coefficients (stabilization)": k(R → W) = k∞Φ_stab,W;
+  - their yields (% of the net reaction of R);
+  - "Capture, return and net reaction of R".
+- **SteadyStateOlzmann:** "Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal reaction of the stabilized adducts)" with yields, and the capture/return/net group. There is no bimolecular-to-well group, because there is no net stabilization.
+- **CSE:** bimolecular-to-bimolecular (G13 eq. 21) and bimolecular-to-well (G13 eq. 28) rate coefficients, with yields (the prompt branching split in two), and capture/return/net.
+- **TimeIntegration:** overall bimolecular-to-bimolecular rate coefficients k∞Y_P and yields at the last output time.
+
+**Tests (TDD, each seen failing first):**
+- `solution_method`: 10 tests, rewritten;
+- `mess_input`: the `SteadyState` keyword is refused and names the two methods;
+- `report_sections`: the groups of all four methods (names, k(R → A) = k∞Φ_stab(A), bimolecular-to-bimolecular + bimolecular-to-well yields = 100%).
+
+Full suite: 218 library tests and 43 binary tests.
+
+**Documentation:**
+- one document per method in `docs/methods/` (`steady_state_olzmann.md`, `steady_state_absorbing_barrier.md`, `chemically_significant_eigenvalues.md`, `direct_time_integration.md`), linked from the README;
+- the README presents four methods in three families.
+
+**Validation:** every system is run with all four methods (`run_marxus.sh` of `validation/ZZAllyl+O2_Gamma_Case2/` and `validation/c2h3_mess_example/`), each method into its own files.
+
+**Incident.** `cargo fmt` was run once and reformatted 44 files. It was repaired with `git checkout` for 34 untouched files, and a 3-way `git merge-file` that re-applied my edits onto the committed, unformatted versions of the 10 edited files. Rule saved: never run cargo fmt in MarXus.

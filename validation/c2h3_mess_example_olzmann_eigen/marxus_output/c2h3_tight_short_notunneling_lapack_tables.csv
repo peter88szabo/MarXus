@@ -1,0 +1,40 @@
+# final steady state: Yields (% of the formed adducts)
+T[K],P[Torr],W1->P1
+1000,760,1.000000e2
+
+# final steady state: Yields without the return to P1 (% of the net reaction)
+T[K],P[Torr],
+1000,760,
+
+# final steady state: Chemical-activation rate coefficients k_ca (1/s)
+T[K],P[Torr],W1->P1
+1000,760,2.413018e5
+
+# final steady state: Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s)
+T[K],P[Torr],capture,return,net
+1000,760,3.876199e-11,3.876199e-11,-1.831546e-23
+
+# thermal rate coefficients: Thermal rate coefficients (1/s)
+T[K],P[Torr],k_uni,lambda_1,W1->P1
+1000,760,1.437914e4,1.437914e4,1.437914e4
+
+# thermal rate coefficients: Thermal branching (% of the thermal decay k_uni)
+T[K],P[Torr],W1->P1
+1000,760,1.000000e2
+
+# thermal rate coefficients: High-pressure rate coefficients k_inf (1/s)
+T[K],P[Torr],W1->P1
+1000,760,2.413018e5
+
+# thermal rate coefficients: Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii)
+T[K],P[Torr],sum rule,lambda_2/k_uni,floor (1/s)
+1000,760,7.658266e-11,1.498928e4,1.801336e-3
+
+# thermal rate coefficients: Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s)
+T[K],P[Torr],P1->W1
+1000,760,2.309821e-12
+
+# thermal fates: Thermal fate of the molecules thermalized in W1 (%)
+T[K],P[Torr],W1->P1
+1000,760,1.000000e2
+

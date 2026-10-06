@@ -1,0 +1,207 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight_short.inp
+ Method:             STEADY STATE, ABSORBING BARRIER (intermediate steady state; steady-state family)
+                     J N = F with a lower absorbing barrier 10 k_BT below the lowest threshold of each well
+                     (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), eqs. 7, 8 and Sec. 3.2; Olzmann, PCCP 4, 3614 (2002))
+ Solvers:            linear systems: banded Cholesky factorization of the symmetrized J, relative residual <= 1e-8
+ Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   1000
+ Pressures (torr):   760
+ Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant P1 through B1 (P1 -> W1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W1      493        -172 .. 320   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 3.455 A, epsilon 64.82 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B1       W1       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W1     -34.44       4.42
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B1       4.42       W1       P1   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+INTERMEDIATE STEADY STATE (absorbing barrier below the lowest threshold of each well)
+____________________________________________________________________________________________________
+
+J N = F with a lower absorbing barrier: the fate of the nascent, chemically activated adducts on their first
+collisional descent (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), Sec. 3.2; Olzmann, PCCP 4, 3614 (2002)).
+A molecule transferred below the barrier counts as stabilized. Bimolecular rate coefficients k(R -> X) = k_inf Phi_X
+(Pilling, Robertson, Annu. Rev. Phys. Chem. 54, 245 (2003), eq. 44).
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Yields (% of the formed adducts), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1     stab(W1)
+      760  9.37973e+01  6.20268e+00
+
+Yields without the return to P1 (% of the net reaction), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)     stab(W1)
+      760  1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.58228e+09
+
+Bimolecular-to-well rate coefficients (stabilization): k(P1 -> W) = k_inf Phi_stab,W (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+      760  2.57106e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+      760  1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)      capture       return          net
+      760  4.14509e-11  3.88798e-11  2.57106e-12
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Yields (% of the formed adducts), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1     stab(W1)
+  1000  9.37973e+01  6.20268e+00
+
+Yields without the return to P1 (% of the net reaction), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)     stab(W1)
+  1000  1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.58228e+09
+
+Bimolecular-to-well rate coefficients (stabilization): k(P1 -> W) = k_inf Phi_stab,W (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+  1000  2.57106e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+  1000  1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)      capture       return          net
+  1000  4.14509e-11  3.88798e-11  2.57106e-12
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Yields (% of the formed adducts), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    9.37973e+01
+
+stab(W1)
+
+P\T           1000
+760    6.20268e+00
+
+Yields without the return to P1 (% of the net reaction), temperature-pressure tables:
+
+stab(W1)
+
+P\T           1000
+760    1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.58228e+09
+
+Bimolecular-to-well rate coefficients (stabilization): k(P1 -> W) = k_inf Phi_stab,W (cm^3/s), temperature-pressure tables:
+
+P1->W1
+
+P\T           1000
+760    2.57106e-12
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->W1
+
+P\T           1000
+760    1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T           1000
+760    4.14509e-11
+
+return
+
+P\T           1000
+760    3.88798e-11
+
+net
+
+P\T           1000
+760    2.57106e-12
+

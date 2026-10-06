@@ -13,7 +13,12 @@
 **Reference.** The MESS example set ("Examples_From_Argon"), case `c2h3`: one well and one tight transition state, with and without Eckart tunneling. It is the model of Miller & Klippenstein (2004), H + C₂H₂ (+M) ⇌ C₂H₃ (+M); the PDF `miller2004.pdf` is in the original example directory.
 
 
-> **Update (2026-10-05, evening): two solution methods.** MarXus has two solution methods: the steady state, in the intermediate and final versions, and CSE. The thermal rate coefficients (lowest eigenpair of J, GO10 eq. 12) are part of the final steady state. The default runs of `run_marxus.sh` (`both`) therefore now also write them after the final steady-state table. After the re-run, `comparison_table.csv` and `barrier_distance_sensitivity.csv` are byte-identical. The default runs (`both`) now also contain the thermal rate coefficients of the final steady state. `plot_comparison.py` recognizes that block: without it, the parser failed with a ValueError on the new table header. See `../../reports/solution_methods_and_deck_settings.md`.
+> **Update (2026-10-06): four methods in three families.** `run_marxus.sh` runs every deck with each of the four methods, one run each:
+> - steady state: SteadyStateOlzmann and SteadyStateAbsorbingBarrier;
+> - CSE;
+> - TimeIntegration.
+>
+> After the re-run, `comparison_table.csv` and `barrier_distance_sensitivity.csv` are byte-identical to the committed ones. The four-method results are in §4.4.
 
 ## 1. Contents of this directory
 
@@ -23,10 +28,11 @@
 | `input/c2h3_tight_short.inp` | 1000 K, 1 atm, Eckart tunneling |
 | `input/c2h3_tight_short_notunneling.inp` | 1000 K, 1 atm, no tunneling |
 | `reference_mess_output/*.out` | stored MESS results for the same decks (unchanged copies) |
-| `marxus_output/*.out` | MarXus results, from `run_marxus.sh`; `c2h3_tight_barrier_{5,3}kT.out` are the barrier-distance runs |
+| `marxus_output/<deck>_<method>.{out,csv,_tables.csv}` | MarXus results of the four methods, one run each (`run_marxus.sh`): `olzmann`, `absorbing_barrier`, `cse`, `time_integration`; `c2h3_tight_absorbing_barrier_{5,3}kT.*` are the barrier-distance runs |
 | `run_marxus.sh` | builds the MarXus example program and runs the three decks with reactant P1 |
-| `plot_comparison.py` | reads all outputs, writes the figures and `comparison_table.csv` |
+| `plot_comparison.py` | reads all outputs, writes the figures, `comparison_table.csv` and `time_integration_decay_vs_k_uni.csv` |
 | `comparison_table.csv` | every compared number of the full deck |
+| `time_integration_decay_vs_k_uni.csv` | late-time decay rate of the pulse (TimeIntegration) against the thermal k_uni (SteadyStateOlzmann), 750–2000 K |
 | `barrier_distance_sensitivity.csv` | association for barrier distances 10, 5 and 3 kT, all conditions |
 | `plots/*.png` | the figures below |
 
@@ -34,7 +40,7 @@ The decks are byte-identical copies of `MESS_kinetics/Examples_From_Argon/exampl
 
 To reproduce:
 
-    ./run_marxus.sh                                                       # about 1.5 min
+    ./run_marxus.sh                                                       # about 12.5 min on 4 cores, 11 min of it the time integration of the full deck
     source ~/.venvs/science/bin/activate && python3 plot_comparison.py
 
 ## 2. System and settings
@@ -53,7 +59,7 @@ To reproduce:
 | Energy grid | 0.1 kT per temperature (EnergyStepOverTemperature 0.1). States are counted on 1 cm⁻¹, splined, and evaluated at the grid nodes. | States and all convolutions are on 1 cm⁻¹ cells. Grains are 0.1 kT(T_min) wide: 70 cm⁻¹ for the 1000 K decks, 21 cm⁻¹ for the full deck at all T. Grain values are cell averages. |
 | Grid top | highest barrier + 30 kT (ExcessEnergyOverTemperature) | the same, taken at the highest temperature of the deck |
 | Tunneling | semiclassical P = 1/(1+e^(−S)), S = WKB action of the Eckart potential | **exact Eckart** transmission (Miller 1979 eq. 8), convolved with the TS states (Miller eq. 9) |
-| Rate coefficients | eigenvalue / chemically-significant-eigenvalue analysis | steady state (two rows below) |
+| Rate coefficients | eigenvalue / chemically-significant-eigenvalue analysis | the two steady states (rows below); CSE and time integration in §4.4 |
 | k∞ of the association | from partition functions | canonical sum of the cell numbers of states W(E) e^(−E/kT) over the reactant partition functions (tested against TST to within 0.5%) |
 
 How MarXus obtains the rate coefficients:
@@ -107,7 +113,7 @@ The MESS values without tunneling are printed with three digits only.
 | 2000 | 2.0230e-10 | — | — | 1.0932e+10 | 1.1002e+10 | +0.6% |
 
 **Why some MarXus values are missing.**
-- **Dissociation at 300 and 500 K.** The final steady state of the 34 kcal/mol well without a sink is numerically singular in double precision (the lines marked "not available" in `marxus_output/c2h3_tight.out`). This is the postponed double-precision topic.
+- **Dissociation at 300 and 500 K.** The final steady state of the 34 kcal/mol well without a sink is numerically singular in double precision (the lines marked "not available" in `marxus_output/c2h3_tight_olzmann.out`). This is the postponed double-precision topic.
 - **Association at 2000 K.** The example program prints k∞ only next to an intermediate steady state, and that steady state is not defined at 2000 K (§5.3).
 
 **Both directions deviate by the same amount**, as detailed balance requires: both codes use the same equilibrium constant. The deviation grows from +0.6% at 2000 K to +4.8% at 300 K. This is the exact Eckart transmission (MarXus) against the semiclassical one (MESS); see §5.2.
@@ -163,6 +169,54 @@ Association: k∞(T) Φ_stab, from the intermediate steady state. Dissociation: 
 | 2000 | 3 | 8.4038e-13 | — | — | 4.9970e+07 | — | — |
 | 2000 | 10 | 2.2655e-12 | — | — | 1.3188e+08 | — | — |
 
+### 4.4 The four methods (2026-10-06)
+
+![four methods](plots/four_methods_association.png)
+
+**Association k(H + C₂H₂ → C₂H₃).** Deviation from MESS, all 40 conditions (`marxus_output/c2h3_tight_<method>.*`):
+
+| T (K) | SteadyStateAbsorbingBarrier, k∞Φ_stab | CSE, G13 eq. 28 | SteadyStateOlzmann, k_uni·K (detailed balance) |
+|---|---|---|---|
+| 300–500 | +3.2 … +5.8% | +3.2 … +5.8% | +3.2 … +5.8% |
+| 750–1250 | −3.6 … +1.9% | −2.6 … +1.9% | −2.4 … +1.9% |
+| 1500 | −6.6 … −13.4% | −1.9 … −3.7% | −1.4 … −2.0% |
+| 1750 | −27 … −42% | −2.6 … −4.6% | 0.0 … +1.9% |
+| 2000 | not defined (§5.3) | −4.9 … −9.1% | +2.9 … +7.1% |
+
+- **Up to 1000 K the three methods give the same association.**
+  - CSE and Olzmann agree to within 7·10⁻⁵, the one-well identity.
+  - The +3 … +6% at 300–500 K is the tunneling model (§5.2).
+  - At 300–500 K the final steady state itself is singular in double precision, but the thermal eigenpair exists, so the association by detailed balance is available.
+- **Above 1250 K, CSE and Olzmann separate.** The difference follows CSE's separation diagnostic Λ₁/Λ₂ (MK06 eq. 19 requires Λ₁ ≪ Λ₂), and MESS lies between the two:
+
+  | T (K) | Λ₁/Λ₂ (76 … 7600 Torr) | CSE/Olzmann − 1 |
+  |---|---|---|
+  | 1000 | 1.4·10⁻⁴ … 2.8·10⁻⁵ | −7·10⁻⁵ … −9·10⁻⁶ |
+  | 1250 | 3.4·10⁻³ … 1.0·10⁻³ | −0.2 … −0.05% |
+  | 1500 | 1.9·10⁻² … 8.2·10⁻³ | −1.7 … −0.5% |
+  | 1750 | 5.4·10⁻² … 2.9·10⁻² | −6.3 … −2.6% |
+  | 2000 | 0.10 … 0.065 | −15 … −7.6% |
+
+- **The absorbing barrier fails at high T** (§5.3), while CSE and Olzmann need no barrier and give the association up to 2000 K.
+
+**TimeIntegration** (pulse of chemically activated C₂H₃, Rodas4, 10⁻¹² … 10² s):
+
+![time evolution](plots/time_evolution_1atm.png)
+
+- **Late-time decay = thermal k_uni.**
+  - Once only the thermal eigenmode is left, N(t) decays at the rate k_uni of SteadyStateOlzmann.
+  - The decay rate from the last two output times with 10⁻⁸ < N < 10⁻³ agrees with k_uni within 3·10⁻⁶. That holds at all 30 conditions that decay inside the window (750–2000 K; `time_integration_decay_vs_k_uni.csv`).
+  - The time integration computes no eigenvector, so this is an independent check of the thermal eigenpair.
+- **Time scales at 1 atm.**
+  - 300 K: 12.9% redissociates within 10⁻⁹ s, and 87.1% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
+  - 1000 K: the stabilized C₂H₃ decomposes thermally near 10⁻⁴ s; at 100 s, 100% is back as H + C₂H₂.
+  - 2000 K: the same by 10⁻⁷ s.
+- **Integrator work** per condition: 620–700 steps, almost none rejected, about 115–122 factorizations. The full deck took 10 min 50 s on 4 cores, because the collision band reaches 716 grains at 2000 K.
+
+**Yields** (`plots/yields.png`; MESS as k/k∞): the stabilization of C₂H₃ and the prompt redissociation to H + C₂H₂, in % of the formed adducts, against pressure.
+
+![yields](plots/yields.png)
+
 ## 5. Interpretation
 
 ### 5.1 750–1250 K: agreement
@@ -201,13 +255,13 @@ At 2000 K MarXus now refuses the intermediate steady state with an explanatory e
 
 - **(b) The user chooses the absorbing-barrier distance.** The default stays 10 kT below the lowest threshold (Pilling & Robertson 2003; Carstensen & Dean 2007). The library accepts any distance (`AbsorbingBarrier::BelowLowestThreshold { kt_multiple }`) or explicit grains (`AtGrains`). The example program takes `--barrier-kt X`. If the barrier would lie below the well bottom, the error message suggests a smaller distance.
 - **Eigenvalue route.** It is an optional choice, `SteadyState::EigenvalueAnalysis` (`--steady-state eigenvalue`), but **it is not available yet**. Selecting it is reported as "not available yet" and is never replaced by another method. MarXus currently has no eigenvalue analysis of J; there is only a general Jacobi diagonalizer in `numeric/jacobi_diag.rs`.
-  - *Superseded (2026-10-05, evening).* The eigenvalue analysis now exists, as the thermal rate coefficients of the final steady state (lowest eigenpair of its J, GO10 eq. 12), and is not a separate method. See `../c2h3_mess_example_olzmann_eigen/` and the main README: two methods, steady state (`--steady-state intermediate|final|both`) and CSE (`--method cse`).
+  - *Superseded (2026-10-06).* The eigenvalue analysis exists, as the thermal rate coefficients of SteadyStateOlzmann (lowest eigenpair of its J, GO10 eq. 12); it is not a method of its own. MarXus has four methods in three families: SteadyStateOlzmann, SteadyStateAbsorbingBarrier, CSE and TimeIntegration (`--method`; main README and `../../docs/methods/`). See §4.4 and `../c2h3_mess_example_olzmann_eigen/`.
 
 ### 5.5 Sensitivity to the absorbing-barrier distance
 
 ![barrier distance](plots/barrier_distance_sensitivity.png)
 
-`run_marxus.sh` also runs the full deck with the barrier 5 and 3 kT below the threshold (`marxus_output/c2h3_tight_barrier_5kT.out`, `..._3kT.out`). All 40 conditions are in `barrier_distance_sensitivity.csv`.
+`run_marxus.sh` also runs the full deck with the barrier 5 and 3 kT below the threshold (`marxus_output/c2h3_tight_absorbing_barrier_5kT.out`, `..._3kT.out`). All 40 conditions are in `barrier_distance_sensitivity.csv`.
 
 The 1 atm rows (MarXus k(P1→W1) relative to MESS):
 
@@ -228,12 +282,13 @@ The 1 atm rows (MarXus k(P1→W1) relative to MESS):
 
 At 1000–1250 K, 3 kT overshoots slightly (+2%). The distance should therefore be chosen per condition: as large as the well allows while staying above its thermal distribution, and checked for a plateau by varying it.
 
-At 2000 K (well depth 9.8 kT) even 3 kT remains 10% low. That is the regime of the eigenvalue route, which is not available yet.
+At 2000 K (well depth 9.8 kT) even 3 kT remains 10% low. There the methods without a barrier apply: SteadyStateOlzmann (+2.9 … +7.1%) and CSE (−4.9 … −9.1%; eigenvalue separation only 0.065–0.10), §4.4.
 
 ### 5.6 Still open
 
 - **Final steady state of deep wells without a sink at low T** (double precision): postponed by Peter.
-- **Eigenvalue route:** to be implemented later.
+- **Eigenvalue route:** done (2026-10-06), as SteadyStateOlzmann's thermal eigenpair and CSE (§4.4).
+- **Low-energy rule of the collision kernel:** its integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 gives steps in T (`../../reports/low_energy_reduction_temperature_step.md`); on this deck's 250 K grid the steps are not visible as such. Decision needed.
 
 ## 6. Code changes made for this validation (MarXus, uncommitted)
 
@@ -247,7 +302,7 @@ At 2000 K (well depth 9.8 kT) even 3 kT remains 10% low. That is the regime of t
   - bimolecular rate coefficients k(R→X) = k∞ Φ_X;
   - every (T, p) is solved separately; a condition without a valid steady state is reported as "not available";
   - `--barrier-kt X` sets the absorbing-barrier distance;
-  - `--steady-state intermediate|final|eigenvalue|both` selects the solution. *(Now `--method steady-state|cse` and `--steady-state intermediate|final|both`, or the `MarXus` block of the deck header; see the main README.)*
+  - `--steady-state intermediate|final|eigenvalue|both` selects the solution. *(Now `--method steady-state-olzmann|steady-state-absorbing-barrier|cse|time-integration`, one method per run, or the `MarXus` block of the deck header; see the main README.)*
 - **`SteadyState::EigenvalueAnalysis`**: a selectable option that is reported as not available yet.
 - **Absorbing barrier below the well bottom.** Now an error instead of a silent clamp.
 

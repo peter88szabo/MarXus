@@ -1,0 +1,28 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight_short.inp: grain 70.000 cm-1
+# solution method: SteadyStateOlzmann: final steady state, thermal eigenpair by InverseIteration (sum-rule tolerance 1.5e-2)
+#   well W1       grains    493 (absolute -172 .. 320), channels: B1
+
+# final steady state
+T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
+1000,760,1.000000e0,0.000000e0,0.000000e0,2.580407e5,2.580407e5,1.000000e0,2.920727e3,1.000000000001,2.068e-12
+
+# thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by InverseIteration; sum-rule tolerance 1.5e-2
+# k_uni = sum_j k_th(j) + k_sink: the specific rate coefficients k(E) of the product channels (and the sink)
+#   averaged over the normalized thermal eigenvector of J, the eigenvector of the lowest eigenvalue lambda_1,
+#   "analogous to eqn (9) but with Ns = Ns_th being the normalized eigenvector associated with the lowest
+#   eigenvalue lambda_1" (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12).
+# lambda_1 = lowest eigenvalue of J (same paper, eq. 12). The column sums of J are the loss rates, so
+#   lambda_1 = k_uni exactly; numerically lambda_1 carries an absolute error of order eps*||J|| and is lost when
+#   it lies many orders of magnitude below the collision frequency (deep wells, low T), while the eigenvector,
+#   and with it k_uni, is much less sensitive. k_uni is therefore the reported rate coefficient.
+# precision_floor = eps*max(S_ii), S the symmetrized J: the order of the absolute rounding error of lambda_1.
+#   A lambda_1 near or below it, even a negative one, is rounding noise below the double-precision floor; this
+#   is not a merging of eigenvalues, which would show as a small lambda_2/k_uni (thermal decay no longer
+#   separated from relaxation).
+# sum_rule_deviation = |lambda_1 - k_uni| / k_uni; above the tolerance a warning is listed below.
+T[K],P[Torr],k_uni[1/s],lambda_1[1/s],precision_floor[1/s],sum_rule_deviation,lambda_2/k_uni,k_th(W1:B1)[1/s],k_inf(W1:B1)[1/s],k_sink(W1)[1/s],fpop(W1)
+1000,760,1.600403e4,1.600403e4,1.810e-3,3.107e-12,1.349284e4,1.600403e4,2.580407e5,0.000000e0,1.000000e0
+
+# bimolecular rate coefficients of P1 [cm3/s] by detailed balance from the thermal k_uni of the final steady state
+T[K],P[Torr],k_inf_assoc[cm3/s],k_inf_diss[1/s],k_uni[1/s],k(P1->W1)
+1000,760,4.145087e-11,2.580407e5,1.600403e4,2.570839e-12

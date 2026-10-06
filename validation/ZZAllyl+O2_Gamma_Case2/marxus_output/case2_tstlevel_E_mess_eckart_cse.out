@@ -1,312 +1,2752 @@
-# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/ZZAllyl+O2_Gamma_Case2/marxus_input/case2_tstlevel_E.inp: grain 38.000 cm-1
-# solution method: chemically significant eigenvalues (MK06; G13), all eigenpairs by FullDecompositionLapack
-#   well G2       grains    407 (absolute 0 .. 406), channels: B23, B24, B12
-#   well G3       grains    429 (absolute -22 .. 406), channels: B23, B34, B36
-#   well G4       grains    435 (absolute -28 .. 406), channels: B24, B34, B4P1, B4P5
-#   well G6       grains    438 (absolute -31 .. 406), channels: B36, B6P7
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/ZZAllyl+O2_Gamma_Case2/marxus_input/case2_tstlevel_E.inp
+ Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
+                     (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
+ Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
+ Parallel:           4 threads (rayon) over the 21 conditions (T, p); 4 conditions at a time
+                     BLAS threads per LAPACK call: 1
+ Temperatures (K):   270, 280, 290, 300, 310, 320, 330
+ Pressures (torr):   500, 600, 760
+ Energy grid:        grains of 38.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          MESS semiclassical Eckart model (option for comparison with MESS)
+ Source:             thermal reactant R through B12 (R -> G2)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
 
-# CSE analysis (FullDecompositionLapack)
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        G2      407           0 .. 406   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 5.200 A, epsilon 169.80 K, reduced mass 23.571 amu
+        G3      429         -22 .. 406   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 5.200 A, epsilon 169.80 K, reduced mass 23.571 amu
+        G4      435         -28 .. 406   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 5.200 A, epsilon 169.80 K, reduced mass 23.571 amu; escape (bimolecular sink) 2.50000e+07 1/s
+        G6      438         -31 .. 406   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 5.200 A, epsilon 169.80 K, reduced mass 23.571 amu
 
-# T = 270 K, p = 500 Torr: chemical eigenvalues [1/s]: 5.2892e2, 3.6911e4, 1.0491e6, 2.5004e7; lowest relaxation eigenvalue 2.4002e8 1/s (separation 1.042e-1); relaxational projections 1.2654e-10, 3.9282e-5, 5.7976e-5, 2.1986e-7; loss balance deviation 1.69e-8; detailed balance deviation 1.71e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.6582e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.500350841670476e7 s-1 is 0.104 of the lowest relaxation eigenvalue 2.4001778003484765e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.049205e6,3.644899e4,1.010343e6,1.174410e-6,2.251359e3,1.077172e-3,1.620276e2,1.610209e-3,7.758098e-10
-G3,3.114684e2,5.397542e2,2.280373e2,6.554897e-5,1.932333e-1,4.538701e-7,2.838580e-2,2.689521e-2,0.000000e0
-G4,3.212617e3,8.509506e1,2.500337e7,1.634952e-9,2.716408e0,2.328509e-4,7.248564e1,5.108471e-6,2.500000e7
-G6,3.415878e-9,2.237695e-5,1.807697e-9,3.691086e4,2.323569e-11,-2.064784e-15,5.740522e-12,3.691086e4,-3.706394e-22
-R,8.206987e-12,8.244690e-14,3.110295e-12,2.909718e-23,1.149286e-11,1.044976e-17,2.406050e-13,5.733443e-18,-1.474923e-13
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+       B23       G2       G3   rigid transition state, Eckart tunneling
+       B24       G2       G4   rigid transition state, Eckart tunneling
+       B12       G2        R   barrierless, phase space theory (E); entrance of the reactant (source)
+       B23       G3       G2   rigid transition state, Eckart tunneling
+       B34       G3       G4   rigid transition state, Eckart tunneling
+       B36       G3       G6   rigid transition state, Eckart tunneling
+       B24       G4       G2   rigid transition state, Eckart tunneling
+       B34       G4       G3   rigid transition state, Eckart tunneling
+      B4P1       G4       P1   rigid transition state, Eckart tunneling
+      B4P5       G4       P5   rigid transition state, Eckart tunneling
+       B36       G6       G3   rigid transition state, Eckart tunneling
+      B6P7       G6       P7   barrierless, phase space theory (E)
 
-# T = 270 K, p = 600 Torr: chemical eigenvalues [1/s]: 5.2893e2, 4.1231e4, 1.0516e6, 2.5004e7; lowest relaxation eigenvalue 2.8802e8 1/s (separation 8.681e-2); relaxational projections 9.3133e-11, 3.5957e-5, 4.1524e-5, 1.5052e-7; loss balance deviation 2.59e-9; detailed balance deviation 1.30e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.5881e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.051728e6,3.650865e4,1.012570e6,-2.094586e-6,2.505943e3,1.033340e-3,1.432610e2,1.402142e-3,1.861944e-9
-G3,3.119794e2,5.397708e2,2.275612e2,8.006541e-5,1.794958e-1,4.055216e-7,2.372715e-2,2.688820e-2,-6.443335e-13
-G4,3.221132e3,8.488096e1,2.500338e7,8.637332e-8,2.530562e0,2.471518e-4,7.298285e1,3.889417e-6,2.500000e7
-G6,-6.151117e-9,2.733281e-5,8.017980e-8,4.123117e4,2.873226e-9,2.822578e-13,5.825758e-9,4.123117e4,-1.372033e-22
-R,9.135185e-12,7.658380e-14,2.897425e-12,3.590065e-21,1.219393e-11,9.314308e-18,2.018402e-13,4.642814e-18,-1.171222e-13
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Energetics (kcal/mol, relative to R):
 
-# T = 270 K, p = 760 Torr: chemical eigenvalues [1/s]: 5.2894e2, 4.7447e4, 1.0544e6, 2.5004e7; lowest relaxation eigenvalue 3.6482e8 1/s (separation 6.854e-2); relaxational projections 6.3051e-11, 3.1926e-5, 2.6943e-5, 9.2587e-8; loss balance deviation 9.83e-9; detailed balance deviation 3.75e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.4914e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.054516e6,3.657276e4,1.014972e6,1.391115e-6,2.850601e3,9.650429e-4,1.211326e2,1.185467e-3,-9.309718e-10
-G3,3.125284e2,5.397885e2,2.270522e2,1.043066e-4,1.621528e-1,3.478273e-7,1.878811e-2,2.687229e-2,-3.081595e-13
-G4,3.230002e3,8.466007e1,2.500339e7,2.275605e-9,2.294508e0,2.649571e-4,7.354838e1,3.005642e-6,2.500000e7
-G6,4.043442e-9,3.560873e-5,2.166100e-9,4.744675e4,-9.350795e-12,3.698221e-14,4.756243e-11,4.744675e4,-6.814905e-22
-R,1.039176e-11,6.918253e-14,2.627077e-12,-1.163047e-23,1.316124e-11,7.944880e-18,1.593705e-13,3.521389e-18,-8.616143e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        G2     -16.30      -4.60
+        G3     -18.70      -1.43
+        G4     -19.40      -4.60
+        G6     -19.70      -4.70
 
-# T = 280 K, p = 500 Torr: chemical eigenvalues [1/s]: 7.2332e2, 8.1918e4, 1.2881e6, 2.5005e7; lowest relaxation eigenvalue 2.3054e8 1/s (separation 1.085e-1); relaxational projections 2.8192e-10, 9.9122e-5, 1.0261e-4, 4.7537e-7; loss balance deviation 1.48e-8; detailed balance deviation 2.91e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.8379e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5005425345179647e7 s-1 is 0.108 of the lowest relaxation eigenvalue 2.305400405161192e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.288338e6,4.329341e4,1.238783e6,4.439303e-6,5.859500e3,3.365239e-3,4.018207e2,4.470099e-3,-1.853997e-9
-G3,4.389559e2,7.380918e2,2.983213e2,1.418744e-4,6.401683e-1,1.877768e-6,9.069704e-2,8.353513e-2,2.083565e-13
-G4,4.851069e3,1.156891e2,2.500517e7,-6.749170e-8,9.207645e0,8.876368e-4,1.959985e2,1.827401e-5,2.500000e7
-G6,1.689469e-8,5.301729e-5,-6.713978e-8,8.191849e4,-4.266221e-9,-4.864641e-14,-8.151119e-10,8.191849e4,-3.559122e-22
-R,6.943311e-12,7.483948e-14,2.781505e-12,-1.333550e-21,9.920287e-12,1.241205e-17,2.521167e-13,6.694190e-18,-1.315050e-13
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Bimolecular (G - ground energy):
+      Name          G
+         R       0.00
+        P1      -5.40
+        P7     -14.86
+        P5     -27.40
 
-# T = 280 K, p = 600 Torr: chemical eigenvalues [1/s]: 7.2334e2, 9.1905e4, 1.2925e6, 2.5005e7; lowest relaxation eigenvalue 2.7665e8 1/s (separation 9.039e-2); relaxational projections 2.1224e-10, 9.1211e-5, 7.4537e-5, 3.2764e-7; loss balance deviation 3.32e-9; detailed balance deviation 1.17e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.7737e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.292763e6,4.338886e4,1.242456e6,2.504589e-6,6.560433e3,3.256391e-3,3.577734e2,3.918245e-3,2.118854e-9
-G3,4.399269e2,7.381227e2,2.974377e2,1.744850e-4,5.981717e-1,1.692902e-6,7.627833e-2,8.353075e-2,-2.239832e-12
-G4,4.868431e3,1.152746e2,2.500519e7,4.550610e-9,8.639018e0,9.487635e-4,1.977919e2,1.500889e-5,2.500000e7
-G6,9.440583e-9,6.520534e-5,4.975471e-9,9.190485e4,-5.725109e-11,2.039332e-14,5.801682e-11,9.190485e4,-7.220198e-22
-R,7.774111e-12,6.992750e-14,2.609624e-12,-1.776914e-23,1.056190e-11,1.116560e-17,2.135149e-13,5.443761e-18,-1.052979e-13
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+       B23       0.04       G2       G3   rigid transition state, Eckart tunneling
+       B24      -4.60       G2       G4   rigid transition state, Eckart tunneling
+       B34       0.40       G3       G4   rigid transition state, Eckart tunneling
+       B36      -1.43       G3       G6   rigid transition state, Eckart tunneling
+      B4P1       1.60       G4       P1   rigid transition state, Eckart tunneling
+      B4P5      -3.60       G4       P5   rigid transition state, Eckart tunneling
+       B12       0.00        R       G2   barrierless, phase space theory (E)
+      B6P7      -4.70       G6       P7   barrierless, phase space theory (E)
 
-# T = 280 K, p = 760 Torr: chemical eigenvalues [1/s]: 7.2336e2, 1.0637e5, 1.2975e6, 2.5005e7; lowest relaxation eigenvalue 3.5041e8 1/s (separation 7.136e-2); relaxational projections 1.4844e-10, 8.1558e-5, 4.9336e-5, 2.0320e-7; loss balance deviation 1.75e-10; detailed balance deviation 7.37e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.6844e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.297767e6,4.349221e4,1.246450e6,2.784707e-6,7.519841e3,3.074402e-3,3.051338e2,3.284818e-3,-2.383711e-9
-G3,4.409777e2,7.381557e2,2.964889e2,2.288999e-4,5.446251e-1,1.468759e-6,6.084810e-2,8.350703e-2,1.041783e-12
-G4,4.886655e3,1.148454e2,2.500521e7,5.377660e-9,7.906135e0,1.025966e-3,1.998545e2,1.174433e-5,2.500000e7
-G6,1.049201e-8,8.554312e-5,5.607219e-9,1.063701e5,-2.239678e-9,-6.835839e-15,5.295223e-11,1.063701e5,-3.498876e-22
-R,8.911234e-12,6.366544e-14,2.388134e-12,-7.001436e-22,1.145543e-11,9.639789e-18,1.706813e-13,4.152843e-18,-7.829989e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
 
-# T = 290 K, p = 500 Torr: chemical eigenvalues [1/s]: 9.8535e2, 1.6829e5, 1.5829e6, 2.5008e7; lowest relaxation eigenvalue 2.2200e8 1/s (separation 1.127e-1); relaxational projections 6.2597e-10, 2.3122e-4, 1.8105e-4, 1.0062e-6; loss balance deviation 4.74e-10; detailed balance deviation 2.09e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 3.0011e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5008358801221523e7 s-1 is 0.113 of the lowest relaxation eigenvalue 2.219980117086332e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.583366e6,5.141752e4,1.517024e6,4.334772e-6,1.399334e4,9.601290e-3,9.310123e2,1.154798e-2,2.967171e-9
-G3,6.116303e2,1.005244e3,3.911810e2,2.857284e-4,1.923733e0,7.021720e-6,2.685528e-1,2.404375e-1,1.166922e-12
-G4,7.209413e3,1.571652e2,2.500789e7,8.981652e-9,2.814989e1,3.049968e-3,4.971800e2,6.164876e-5,2.500000e7
-G6,2.082431e-8,1.161941e-4,1.153884e-8,1.682927e5,-1.279044e-9,7.226862e-14,1.951570e-10,1.682927e5,-3.809353e-22
-R,5.830223e-12,6.741145e-14,2.462442e-12,-1.097970e-22,8.505595e-12,1.447905e-17,2.609725e-13,7.773183e-18,-1.154760e-13
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+____________________________________________________________________________________________________
+PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)
+____________________________________________________________________________________________________
 
-# T = 290 K, p = 600 Torr: chemical eigenvalues [1/s]: 9.8539e2, 1.8959e5, 1.5907e6, 2.5008e7; lowest relaxation eigenvalue 2.6639e8 1/s (separation 9.388e-2); relaxational projections 4.8214e-10, 2.1382e-4, 1.3387e-4, 7.0001e-7; loss balance deviation 4.25e-9; detailed balance deviation 1.49e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.9433e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.591137e6,5.156807e4,1.522979e6,4.693603e-6,1.575536e4,9.370585e-3,8.348297e2,1.015005e-2,-6.847318e-10
-G3,6.134287e2,1.005300e3,3.895959e2,3.534429e-4,1.807634e0,6.386523e-6,2.274126e-1,2.404697e-1,-4.862176e-14
-G4,7.243693e3,1.563929e2,2.500793e7,1.018327e-8,2.659655e1,3.283352e-3,5.030826e2,5.080495e-5,2.500000e7
-G6,2.252728e-8,1.437403e-4,1.215579e-8,1.895931e5,1.154932e-9,-2.156827e-14,1.092371e-10,1.895931e5,1.480412e-22
-R,6.564669e-12,6.334006e-14,2.326415e-12,9.966662e-23,9.084263e-12,1.313982e-17,2.230602e-13,6.346059e-18,-9.324124e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
+coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
 
-# T = 290 K, p = 760 Torr: chemical eigenvalues [1/s]: 9.8544e2, 2.2065e5, 1.5997e6, 2.5008e7; lowest relaxation eigenvalue 3.3743e8 1/s (separation 7.411e-2); relaxational projections 3.4814e-10, 1.9247e-4, 9.0831e-5, 4.3920e-7; loss balance deviation 1.72e-9; detailed balance deviation 1.01e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.8620e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.600162e6,5.173256e4,1.529519e6,5.196329e-6,1.819236e4,8.942807e-3,7.182731e2,8.539295e-3,2.510683e-9
-G3,6.153928e2,1.005361e3,3.878859e2,4.658908e-4,1.658174e0,5.603896e-6,1.829329e-1,2.404621e-1,-1.166922e-12
-G4,7.280014e3,1.555900e2,2.500797e7,1.152817e-8,2.456277e1,3.582290e-3,5.099496e2,3.997647e-5,2.500000e7
-G6,2.492398e-8,1.894864e-4,1.301985e-8,2.206457e5,-1.367945e-9,8.420849e-14,2.399978e-10,2.206457e5,1.966060e-21
-R,7.580399e-12,5.809980e-14,2.148373e-12,-1.174935e-22,9.897260e-12,1.147631e-17,1.804617e-13,4.866632e-18,-7.008990e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+--- Species-to-species tables ---
 
-# T = 300 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.3373e3, 3.2251e5, 1.9467e6, 2.5013e7; lowest relaxation eigenvalue 2.1433e8 1/s (separation 1.167e-1); relaxational projections 1.3687e-9, 5.0207e-4, 3.1759e-4, 2.0929e-6; loss balance deviation 7.49e-10; detailed balance deviation 2.51e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.1480e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5012875755410325e7 s-1 is 0.117 of the lowest relaxation eigenvalue 2.1432908684871158e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.947562e6,6.102242e4,1.853591e6,7.650506e-6,3.092254e4,2.522524e-2,2.025201e3,2.794308e-2,4.037706e-10
-G3,8.429857e2,1.363762e3,5.140948e2,5.396477e-4,5.294047e0,2.395823e-5,7.407490e-1,6.460820e-1,1.946586e-12
-G4,1.054895e4,2.134040e2,2.501203e7,1.850053e-8,7.836858e1,9.535609e-3,1.187274e3,1.912668e-4,2.500000e7
-G6,4.601626e-8,2.374759e-4,2.631010e-8,3.225062e5,1.270061e-9,-9.592349e-14,3.207839e-10,3.225062e5,-1.432773e-22
-R,4.861731e-12,6.029562e-14,2.158834e-12,3.331787e-23,7.248242e-12,1.661432e-17,2.671117e-13,8.988817e-18,-9.975620e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Temperature = 270 K    Pressure = 500 torr
 
-# T = 300 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.3374e3, 3.6476e5, 1.9603e6, 2.5013e7; lowest relaxation eigenvalue 2.5719e8 1/s (separation 9.725e-2); relaxational projections 1.0758e-9, 4.6649e-4, 2.3967e-4, 1.4738e-6; loss balance deviation 4.14e-9; detailed balance deviation 1.92e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.0965e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.961143e6,6.125580e4,1.863056e6,8.353806e-6,3.500230e4,2.482723e-2,1.828868e3,2.461258e-2,-2.422624e-9
-G3,8.462279e2,1.363862e3,5.113541e2,6.714723e-4,5.001027e0,2.197895e-5,6.319488e-1,6.462794e-1,1.112335e-12
-G4,1.061439e4,2.120223e2,2.501211e7,2.116771e-8,7.455323e1,1.033979e-2,1.205113e3,1.590538e-4,2.500000e7
-G6,5.018472e-8,2.955319e-4,2.792283e-8,3.647632e5,5.347769e-9,-6.999045e-14,3.463460e-10,3.647632e5,-6.948948e-22
-R,5.503591e-12,5.695444e-14,2.053538e-12,1.385652e-22,7.763225e-12,1.520405e-17,2.303566e-13,7.364024e-18,-8.123787e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+  chemical eigenvalues (1/s):          5.28924e+02  3.69109e+04  1.04908e+06  2.50035e+07
+  lowest relaxation eigenvalue (1/s):  2.40018e+08   separation Lambda_N/Lambda_N+1: 1.04174e-01
+  R (cm^3/s): capture 3.80748e-11   return 2.65820e-11   net reaction 1.14929e-11
+  warning: the largest chemical eigenvalue 2.500350841670948e7 s-1 is 0.104 of the lowest relaxation eigenvalue 2.4001778003483087e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
 
-# T = 300 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.3375e3, 4.2674e5, 1.9765e6, 2.5013e7; lowest relaxation eigenvalue 3.2577e8 1/s (separation 7.678e-2); relaxational projections 7.9841e-10, 4.2256e-4, 1.6726e-4, 9.3893e-7; loss balance deviation 2.06e-9; detailed balance deviation 1.03e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.0236e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.977368e6,6.151351e4,1.873566e6,9.572025e-6,4.070062e4,2.394773e-2,1.587491e3,2.083541e-2,-4.037706e-10
-G3,8.498063e2,1.363970e3,5.083826e2,8.975996e-4,4.620280e0,1.950033e-5,5.130214e-1,6.464070e-1,-1.483113e-12
-G4,1.068448e4,2.105792e2,2.501219e7,2.822715e-8,6.947038e1,1.138416e-2,1.226110e3,1.248903e-4,2.500000e7
-G6,5.748798e-8,3.951327e-4,3.355279e-8,4.267424e5,3.530664e-8,-7.823000e-13,-1.064742e-10,4.267424e5,2.758087e-22
-R,6.400029e-12,5.261421e-14,1.913337e-12,9.120180e-22,8.492803e-12,1.342692e-17,1.885474e-13,5.673484e-18,-6.174338e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.04921e+06  3.64490e+04  1.01034e+06  1.17418e-06  2.25136e+03  1.07717e-03  1.62028e+02  1.60936e-03  1.55162e-10
+G3         3.11468e+02  5.39754e+02  2.28037e+02  6.55490e-05  1.93233e-01  4.53870e-07  2.83858e-02  2.68952e-02  7.56392e-13
+G4         3.21262e+03  8.50951e+01  2.50034e+07  1.75399e-09  2.71641e+00  2.32851e-04  7.24856e+01  4.96452e-06  2.50000e+07
+G6         3.41515e-09  2.23770e-05  1.82849e-09  3.69109e+04  5.07584e-11 -5.37204e-16  1.08411e-11  3.69109e+04  8.66810e-22
+R          8.20699e-12  8.24469e-14  3.11029e-12  6.34864e-23  1.14929e-11  1.04498e-17  2.40605e-13  5.73341e-18 -1.47492e-13
 
-# T = 310 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.8085e3, 5.7470e5, 2.3862e6, 2.5020e7; lowest relaxation eigenvalue 1.9612e8 1/s (separation 1.276e-1); relaxational projections 3.1941e-9, 1.0709e-3, 6.2698e-4, 4.9217e-6; loss balance deviation 9.82e-9; detailed balance deviation 2.94e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2797e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5019806909454543e7 s-1 is 0.128 of the lowest relaxation eigenvalue 1.9611525803987417e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.387701e6,7.211053e4,2.248628e6,1.318452e-5,6.280755e4,6.117635e-2,4.154389e3,6.405460e-2,-1.086943e-9
-G3,1.146171e3,1.843215e3,6.796872e2,9.510460e-4,1.378015e1,7.563777e-5,1.945066e0,1.631272e0,1.873750e-12
-G4,1.512770e4,2.910288e2,2.501830e7,3.679256e-8,2.071458e2,2.735257e-2,2.677975e3,5.644140e-4,2.500000e7
-G6,9.764418e-8,4.503618e-4,5.817454e-8,5.747034e5,-4.642801e-8,1.126920e-13,1.458571e-9,5.747034e5,2.233806e-21
-R,3.971647e-12,5.489062e-14,1.938803e-12,-3.875884e-22,6.137852e-12,1.878515e-17,2.709260e-13,1.036698e-17,-9.844456e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Temperature = 270 K    Pressure = 600 torr
 
-# T = 310 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.8087e3, 6.5280e5, 2.4108e6, 2.5020e7; lowest relaxation eigenvalue 2.3533e8 1/s (separation 1.063e-1); relaxational projections 2.5308e-9, 9.9829e-4, 4.8249e-4, 3.5159e-6; loss balance deviation 8.79e-10; detailed balance deviation 2.08e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2345e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5020001555156022e7 s-1 is 0.106 of the lowest relaxation eigenvalue 2.353317982449104e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.412249e6,7.249052e4,2.264375e6,1.449147e-5,7.159868e4,6.081618e-2,3.784701e3,5.664641e-2,7.246289e-10
-G3,1.152259e3,1.843402e3,6.747528e2,1.190147e-3,1.308669e1,6.994588e-5,1.670944e0,1.632056e0,3.569048e-12
-G4,1.525882e4,2.884293e2,2.501847e7,4.406613e-8,1.981991e2,2.987542e-2,2.727761e3,4.687364e-4,2.500000e7
-G6,1.071885e-7,5.637755e-4,6.210996e-8,6.527986e5,-1.738901e-8,-2.814458e-13,1.169361e-9,6.527986e5,1.954580e-21
-R,4.528209e-12,5.212313e-14,1.854790e-12,-1.446299e-22,6.590218e-12,1.732751e-17,2.356767e-13,8.519364e-18,-8.060652e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+  chemical eigenvalues (1/s):          5.28931e+02  4.12312e+04  1.05160e+06  2.50035e+07
+  lowest relaxation eigenvalue (1/s):  2.88020e+08   separation Lambda_N/Lambda_N+1: 8.68119e-02
+  R (cm^3/s): capture 3.80748e-11   return 2.58809e-11   net reaction 1.21939e-11
 
-# T = 310 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.8089e3, 7.6806e5, 2.4408e6, 2.5020e7; lowest relaxation eigenvalue 2.9808e8 1/s (separation 8.394e-2); relaxational projections 1.8987e-9, 9.0827e-4, 3.4526e-4, 2.2793e-6; loss balance deviation 2.59e-8; detailed balance deviation 8.85e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.1699e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.442340e6,7.291587e4,2.282105e6,1.803770e-5,8.399828e4,5.938900e-2,3.320357e3,4.813569e-2,-4.347774e-9
-G3,1.159069e3,1.843605e3,6.693579e2,1.640481e-3,1.217479e1,6.270459e-5,1.368242e0,1.632737e0,-8.922620e-14
-G4,1.540091e4,2.856971e2,2.501866e7,7.782514e-8,1.860954e2,3.319655e-2,2.787072e3,3.705069e-4,2.500000e7
-G6,1.336148e-7,7.774861e-4,9.528740e-8,7.680634e5,-2.455909e-8,-1.433177e-12,1.167708e-9,7.680634e5,8.591561e-23
-R,5.313140e-12,4.848541e-14,1.741234e-12,-2.047146e-22,7.236287e-12,1.546446e-17,1.950903e-13,6.591002e-18,-6.168551e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.05173e+06  3.65087e+04  1.01257e+06  1.25185e-06  2.50594e+03  1.03334e-03  1.43261e+02  1.40545e-03  4.18937e-09
+G3         3.11979e+02  5.39771e+02  2.27561e+02  8.00634e-05  1.79496e-01  4.05522e-07  2.37272e-02  2.68882e-02 -5.60290e-13
+G4         3.22113e+03  8.48810e+01  2.50034e+07  1.86186e-09  2.53056e+00  2.47152e-04  7.29828e+01  4.07178e-06  2.50000e+07
+G6         3.63936e-09  2.73321e-05  1.87979e-09  4.12312e+04  1.39397e-09 -1.85037e-17  6.85716e-12  4.12312e+04  2.67022e-22
+R          9.13519e-12  7.65838e-14  2.89742e-12  1.74182e-21  1.21939e-11  9.31431e-18  2.01840e-13  4.64273e-18 -1.17122e-13
 
-# T = 320 K, p = 500 Torr: chemical eigenvalues [1/s]: 2.4378e3, 9.7507e5, 2.9342e6, 2.5031e7; lowest relaxation eigenvalue 1.8899e8 1/s (separation 1.324e-1); relaxational projections 6.4969e-9, 2.0591e-3, 1.0701e-3, 9.9320e-6; loss balance deviation 4.17e-9; detailed balance deviation 3.46e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3961e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.503067313747077e7 s-1 is 0.132 of the lowest relaxation eigenvalue 1.8899474072612026e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.936774e6,8.517149e4,2.722267e6,2.119002e-5,1.212686e5,1.391502e-1,8.066091e3,1.384886e-1,-3.924887e-9
-G3,1.544510e3,2.482701e3,8.970091e2,1.607169e-3,3.256890e1,2.200605e-4,4.719474e0,3.892093e0,2.495268e-12
-G4,2.142374e4,3.950385e2,2.502803e7,6.595050e-8,4.899666e2,7.251115e-2,5.724616e3,1.522554e-3,2.500000e7
-G6,1.899422e-7,8.141626e-4,1.175843e-7,9.750659e5,2.777204e-8,2.160619e-13,3.921054e-9,9.750659e5,-2.002854e-21
-R,3.267919e-12,4.848805e-14,1.669085e-12,8.236484e-23,5.174818e-12,2.094535e-17,2.718336e-13,1.191968e-17,-8.254059e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Temperature = 270 K    Pressure = 760 torr
 
-# T = 320 K, p = 600 Torr: chemical eigenvalues [1/s]: 2.4381e3, 1.1116e6, 2.9755e6, 2.5031e7; lowest relaxation eigenvalue 2.2679e8 1/s (separation 1.104e-1); relaxational projections 5.2045e-9, 1.9280e-3, 8.4109e-4, 7.2140e-6; loss balance deviation 8.56e-10; detailed balance deviation 2.44e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3568e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.503107016659015e7 s-1 is 0.110 of the lowest relaxation eigenvalue 2.2678521638525787e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.978139e6,8.573644e4,2.746094e6,2.339700e-5,1.389082e5,1.394609e-1,7.400252e3,1.226855e-1,2.616591e-9
-G3,1.554863e3,2.483021e3,8.890974e2,2.019462e-3,3.107656e1,2.051417e-4,4.087780e0,3.894685e0,1.634831e-12
-G4,2.165686e4,3.907504e2,2.502837e7,8.148377e-8,4.719123e2,7.978011e-2,5.853783e3,1.270321e-3,2.500000e7
-G6,2.094340e-7,1.023716e-3,1.256336e-7,1.111605e6,-1.658643e-8,3.132919e-12,5.788827e-9,1.111605e6,3.433465e-22
-R,3.744122e-12,4.626016e-14,1.607246e-12,-4.677194e-23,5.567935e-12,1.946561e-17,2.384603e-13,9.822799e-18,-6.818380e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+  chemical eigenvalues (1/s):          5.28940e+02  4.74467e+04  1.05439e+06  2.50035e+07
+  lowest relaxation eigenvalue (1/s):  3.64822e+08   separation Lambda_N/Lambda_N+1: 6.85361e-02
+  R (cm^3/s): capture 3.80748e-11   return 2.49136e-11   net reaction 1.31612e-11
 
-# T = 320 K, p = 760 Torr: chemical eigenvalues [1/s]: 2.4386e3, 1.3142e6, 3.0275e6, 2.5032e7; lowest relaxation eigenvalue 2.8725e8 1/s (separation 8.714e-2); relaxational projections 3.9612e-9, 1.7644e-3, 6.1914e-4, 4.7762e-6; loss balance deviation 1.08e-8; detailed balance deviation 1.40e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3002e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.030197e6,8.637656e4,2.773260e6,2.704407e-5,1.640100e5,1.376109e-1,6.550249e3,1.044604e-1,9.158069e-9
-G3,1.566586e3,2.483369e3,8.804048e2,2.733186e-3,2.909650e1,1.858401e-4,3.381832e0,3.897164e0,2.495268e-12
-G4,2.191266e4,3.862214e2,2.502876e7,1.092612e-7,4.469315e2,8.947553e-2,6.009462e3,1.011484e-3,2.500000e7
-G6,2.421543e-7,1.386687e-3,1.482463e-7,1.314241e6,-1.347813e-7,2.654853e-12,6.099986e-9,1.314241e6,3.676668e-21
-R,4.421695e-12,4.330584e-14,1.521807e-12,-3.909004e-22,6.133632e-12,1.754780e-17,1.995738e-13,7.627763e-18,-5.277526e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.05452e+06  3.65728e+04  1.01497e+06  1.39115e-06  2.85060e+03  9.65043e-04  1.21133e+02  1.19332e-03 -2.63775e-09
+G3         3.12528e+02  5.39789e+02  2.27052e+02  1.04307e-04  1.62153e-01  3.47827e-07  1.87881e-02  2.68722e-02  0.00000e+00
+G4         3.23000e+03  8.46601e+01  2.50034e+07  2.32836e-09  2.29451e+00  2.64957e-04  7.35484e+01  2.88419e-06  2.50000e+07
+G6         4.04394e-09  3.56087e-05  2.16548e-09  4.74467e+04 -8.72740e-11  3.87870e-14  5.34415e-11  4.74467e+04 -3.69448e-22
+R          1.03918e-11  6.91825e-14  2.62708e-12 -1.08994e-22  1.31612e-11  7.94488e-18  1.59370e-13  3.52133e-18 -8.61614e-14
 
-# T = 330 K, p = 500 Torr: chemical eigenvalues [1/s]: 3.2760e3, 1.5721e6, 3.6072e6, 2.5048e7; lowest relaxation eigenvalue 1.8254e8 1/s (separation 1.372e-1); relaxational projections 1.2743e-8, 3.7372e-3, 1.7877e-3, 1.9784e-5; loss balance deviation 3.39e-9; detailed balance deviation 3.93e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4988e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5047657561137155e7 s-1 is 0.137 of the lowest relaxation eigenvalue 1.8254254833073428e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.611687e6,1.002456e5,3.275551e6,3.280548e-5,2.210011e5,2.971393e-1,1.488833e4,2.851220e-1,-1.306560e-8
-G3,2.057888e3,3.333377e3,1.183757e3,2.596341e-3,7.209486e1,5.974393e-4,1.081554e1,8.818981e0,-1.330074e-12
-G4,2.984941e4,5.350124e2,2.504310e7,1.120841e-7,1.078952e3,1.788177e-1,1.163282e4,3.857347e-3,2.500000e7
-G6,3.493835e-7,1.397655e-3,2.246446e-7,1.572066e6,2.917899e-8,3.322493e-12,1.243402e-8,1.572066e6,-7.059989e-21
-R,2.674643e-12,4.261897e-14,1.424287e-12,3.390557e-23,4.344052e-12,2.306251e-17,2.702764e-13,1.367649e-17,-6.781014e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+Temperature = 280 K    Pressure = 500 torr
 
-# T = 330 K, p = 600 Torr: chemical eigenvalues [1/s]: 3.2767e3, 1.7983e6, 3.6751e6, 2.5048e7; lowest relaxation eigenvalue 2.1904e8 1/s (separation 1.144e-1); relaxational projections 1.0264e-8, 3.5140e-3, 1.4347e-3, 1.4640e-5; loss balance deviation 6.87e-9; detailed balance deviation 2.66e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4649e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.5048455072200194e7 s-1 is 0.114 of the lowest relaxation eigenvalue 2.190399660120241e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.679719e6,1.010647e5,3.310621e6,3.664135e-5,2.542784e5,3.001651e-1,1.375415e4,2.529746e-1,-5.938908e-9
-G3,2.074934e3,3.333917e3,1.171609e3,3.282047e-3,6.909590e1,5.612371e-4,9.447199e0,8.826663e0,1.330074e-12
-G4,3.024850e4,5.282621e2,2.504377e7,1.489168e-7,1.045964e3,1.981840e-1,1.194579e4,3.233194e-3,2.500000e7
-G6,3.899084e-7,1.769138e-3,2.467061e-7,1.798346e6,-1.020092e-7,5.377760e-13,9.737301e-9,1.798346e6,1.943641e-21
-R,3.078462e-12,4.083927e-14,1.380347e-12,-1.076496e-22,4.682180e-12,2.158549e-17,2.390296e-13,1.129931e-17,-5.653000e-14
-# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
-#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
-#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+  chemical eigenvalues (1/s):          7.23325e+02  8.19185e+04  1.28810e+06  2.50054e+07
+  lowest relaxation eigenvalue (1/s):  2.30540e+08   separation Lambda_N/Lambda_N+1: 1.08465e-01
+  R (cm^3/s): capture 3.82990e-11   return 2.83787e-11   net reaction 9.92029e-12
+  warning: the largest chemical eigenvalue 2.500542534518531e7 s-1 is 0.108 of the lowest relaxation eigenvalue 2.3054004051610956e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
 
-# T = 330 K, p = 760 Torr: chemical eigenvalues [1/s]: 3.2776e3, 2.1359e6, 3.7627e6, 2.5049e7; lowest relaxation eigenvalue 2.7744e8 1/s (separation 9.029e-2); relaxational projections 7.8665e-9, 3.2344e-3, 1.0854e-3, 9.9255e-6; loss balance deviation 1.31e-7; detailed balance deviation 1.99e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4159e-11 cm3/s
-From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.767436e6,1.020043e5,3.351119e6,2.925226e-5,3.020298e5,2.992048e-1,1.228164e4,2.157684e-1,0.000000e0
-G3,2.094477e3,3.334503e3,1.158205e3,3.975714e-3,6.508269e1,5.135829e-4,7.899094e0,8.834351e0,-1.995111e-12
-G4,3.069212e4,5.211007e2,2.504454e7,1.449701e-7,9.990350e2,2.243469e-1,1.232738e4,2.591283e-3,2.500000e7
-G6,3.040617e-7,2.143066e-3,2.202272e-7,2.135897e6,5.770350e-8,5.243720e-13,7.422228e-9,2.135897e6,4.787644e-21
-R,3.657848e-12,3.845943e-14,1.317984e-12,6.452754e-23,5.172239e-12,1.964471e-17,2.021925e-13,8.804438e-18,-4.427297e-14
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.28834e+06  4.32934e+04  1.23878e+06  2.32759e-06  5.85950e+03  3.36524e-03  4.01821e+02  4.47004e-03  5.29713e-10
+G3         4.38956e+02  7.38092e+02  2.98321e+02  1.41876e-04  6.40168e-01  1.87777e-06  9.06970e-02  8.35351e-02  1.19805e-12
+G4         4.85107e+03  1.15689e+02  2.50052e+07  4.07360e-09  9.20764e+00  8.87637e-04  1.95998e+02  1.83381e-05  2.50000e+07
+G6         8.77929e-09  5.30178e-05  4.73809e-09  8.19185e+04  6.42474e-10  1.43227e-14  6.47625e-11  8.19185e+04  1.02047e-21
+R          6.94331e-12  7.48395e-14  2.78151e-12  2.01014e-22  9.92029e-12  1.24121e-17  2.52117e-13  6.69398e-18 -1.31505e-13
+
+Temperature = 280 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          7.23341e+02  9.19048e+04  1.29252e+06  2.50054e+07
+  lowest relaxation eigenvalue (1/s):  2.76646e+08   separation Lambda_N/Lambda_N+1: 9.03880e-02
+  R (cm^3/s): capture 3.82990e-11   return 2.77371e-11   net reaction 1.05619e-11
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.29276e+06  4.33889e+04  1.24246e+06  2.50393e-06  6.56043e+03  3.25639e-03  3.57773e+02  3.91762e-03  7.94570e-10
+G3         4.39927e+02  7.38123e+02  2.97438e+02  1.74485e-04  5.98172e-01  1.69290e-06  7.62783e-02  8.35308e-02 -1.56267e-13
+G4         4.86843e+03  1.15275e+02  2.50052e+07  4.56660e-09  8.63902e+00  9.48764e-04  1.97792e+02  1.50391e-05  2.50000e+07
+G6         9.43802e-09  6.52053e-05  5.00356e-09  9.19048e+04  4.82142e-11  2.39148e-14  6.09538e-11  9.19048e+04  1.29760e-23
+R          7.77411e-12  6.99275e-14  2.60962e-12  1.52054e-23  1.05619e-11  1.11656e-17  2.13515e-13  5.44377e-18 -1.05298e-13
+
+Temperature = 280 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          7.23361e+02  1.06370e+05  1.29753e+06  2.50055e+07
+  lowest relaxation eigenvalue (1/s):  3.50415e+08   separation Lambda_N/Lambda_N+1: 7.13596e-02
+  R (cm^3/s): capture 3.82990e-11   return 2.68436e-11   net reaction 1.14554e-11
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.29777e+06  4.34922e+04  1.24645e+06  2.78330e-06  7.51984e+03  3.07440e-03  3.05134e+02  3.28914e-03 -1.05943e-09
+G3         4.40978e+02  7.38156e+02  2.96489e+02  2.28900e-04  5.44625e-01  1.46876e-06  6.08481e-02  8.35071e-02  1.19805e-12
+G4         4.88665e+03  1.14845e+02  2.50052e+07  5.41527e-09  7.90613e+00  1.02597e-03  1.99855e+02  1.16914e-05  2.50000e+07
+G6         1.04869e-08  8.55431e-05  5.63349e-09  1.06370e+05 -2.26923e-09 -6.92925e-15  4.48358e-11  1.06370e+05  6.10797e-22
+R          8.91123e-12  6.36654e-14  2.38813e-12 -7.09382e-22  1.14554e-11  9.63979e-18  1.70681e-13  4.15292e-18 -7.82999e-14
+
+Temperature = 290 K    Pressure = 500 torr
+
+  chemical eigenvalues (1/s):          9.85355e+02  1.68293e+05  1.58292e+06  2.50084e+07
+  lowest relaxation eigenvalue (1/s):  2.21998e+08   separation Lambda_N/Lambda_N+1: 1.12651e-01
+  R (cm^3/s): capture 3.85168e-11   return 3.00112e-11   net reaction 8.50560e-12
+  warning: the largest chemical eigenvalue 2.500835880120719e7 s-1 is 0.113 of the lowest relaxation eigenvalue 2.2199801170864117e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.58337e+06  5.14175e+04  1.51702e+06  4.33495e-06  1.39933e+04  9.60129e-03  9.31012e+02  1.15458e-02  4.56488e-10
+G3         6.11630e+02  1.00524e+03  3.91181e+02  2.85728e-04  1.92373e+00  7.02172e-06  2.68553e-01  2.40438e-01  1.75038e-12
+G4         7.20941e+03  1.57165e+02  2.50079e+07  9.04005e-09  2.81499e+01  3.04997e-03  4.97180e+02  6.15097e-05  2.50000e+07
+G6         2.08248e-08  1.16194e-04  1.15124e-08  1.68293e+05 -1.27121e-09  6.45034e-14  1.70922e-10  1.68293e+05  4.89258e-22
+R          5.83022e-12  6.74115e-14  2.46244e-12 -1.09123e-22  8.50560e-12  1.44790e-17  2.60973e-13  7.77328e-18 -1.15476e-13
+
+Temperature = 290 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          9.85392e+02  1.89593e+05  1.59069e+06  2.50084e+07
+  lowest relaxation eigenvalue (1/s):  2.66395e+08   separation Lambda_N/Lambda_N+1: 9.38773e-02
+  R (cm^3/s): capture 3.85168e-11   return 2.94326e-11   net reaction 9.08426e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.59114e+06  5.15681e+04  1.52298e+06  4.69311e-06  1.57554e+04  9.37058e-03  8.34830e+02  1.01518e-02  6.84732e-10
+G3         6.13429e+02  1.00530e+03  3.89596e+02  3.53443e-04  1.80763e+00  6.38652e-06  2.27413e-01  2.40470e-01 -1.36141e-12
+G4         7.24369e+03  1.56393e+02  2.50079e+07  1.03503e-08  2.65966e+01  3.28335e-03  5.03083e+02  5.07733e-05  2.50000e+07
+G6         2.25265e-08  1.43740e-04  1.21396e-08  1.89593e+05  1.08570e-09 -1.68735e-14  1.35319e-10  1.89593e+05 -1.71692e-21
+R          6.56467e-12  6.33401e-14  2.32642e-12  9.37100e-23  9.08426e-12  1.31398e-17  2.23060e-13  6.34626e-18 -9.32412e-14
+
+Temperature = 290 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          9.85438e+02  2.20646e+05  1.59971e+06  2.50084e+07
+  lowest relaxation eigenvalue (1/s):  3.37429e+08   separation Lambda_N/Lambda_N+1: 7.41147e-02
+  R (cm^3/s): capture 3.85168e-11   return 2.86196e-11   net reaction 9.89726e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.60016e+06  5.17326e+04  1.52952e+06  5.19579e-06  1.81924e+04  8.94281e-03  7.18273e+02  8.54809e-03  3.42366e-09
+G3         6.15393e+02  1.00536e+03  3.87886e+02  4.65891e-04  1.65817e+00  5.60390e-06  1.82933e-01  2.40462e-01 -2.86868e-12
+G4         7.28001e+03  1.55590e+02  2.50080e+07  1.15473e-08  2.45628e+01  3.58229e-03  5.09950e+02  3.99059e-05  2.50000e+07
+G6         2.49216e-08  1.89486e-04  1.30493e-08  2.20646e+05 -1.07057e-09  7.01442e-14  1.92246e-10  2.20646e+05  1.59776e-21
+R          7.58040e-12  5.80998e-14  2.14837e-12 -9.18991e-23  9.89726e-12  1.14763e-17  1.80462e-13  4.86661e-18 -7.00899e-14
+
+Temperature = 300 K    Pressure = 500 torr
+
+  chemical eigenvalues (1/s):          1.33730e+03  3.22506e+05  1.94674e+06  2.50129e+07
+  lowest relaxation eigenvalue (1/s):  2.14329e+08   separation Lambda_N/Lambda_N+1: 1.16703e-01
+  R (cm^3/s): capture 3.87287e-11   return 3.14804e-11   net reaction 7.24824e-12
+  warning: the largest chemical eigenvalue 2.5012875755427584e7 s-1 is 0.117 of the lowest relaxation eigenvalue 2.143290868487211e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.94756e+06  6.10224e+04  1.85359e+06  7.65047e-06  3.09225e+04  2.52252e-02  2.02520e+03  2.79452e-02  1.21131e-09
+G3         8.42986e+02  1.36376e+03  5.14095e+02  5.39648e-04  5.29405e+00  2.39582e-05  7.40749e-01  6.46082e-01 -9.26946e-14
+G4         1.05490e+04  2.13404e+02  2.50120e+07  1.85414e-08  7.83686e+01  9.53561e-03  1.18727e+03  1.91135e-04  2.50000e+07
+G6         4.60167e-08  2.37476e-04  2.62968e-08  3.22506e+05  1.44528e-09 -7.59636e-14  4.99467e-10  3.22506e+05  5.98183e-22
+R          4.86173e-12  6.02956e-14  2.15883e-12  3.78416e-23  7.24824e-12  1.66143e-17  2.67112e-13  8.98902e-18 -9.97562e-14
+
+Temperature = 300 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          1.33738e+03  3.64763e+05  1.96031e+06  2.50130e+07
+  lowest relaxation eigenvalue (1/s):  2.57191e+08   separation Lambda_N/Lambda_N+1: 9.72545e-02
+  R (cm^3/s): capture 3.87287e-11   return 3.09654e-11   net reaction 7.76322e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.96114e+06  6.12558e+04  1.86306e+06  8.35006e-06  3.50023e+04  2.48272e-02  1.82887e+03  2.46306e-02 -1.61508e-09
+G3         8.46228e+02  1.36386e+03  5.11354e+02  6.71472e-04  5.00103e+00  2.19789e-05  6.31949e-01  6.46280e-01  2.13198e-12
+G4         1.06144e+04  2.12022e+02  2.50121e+07  2.15360e-08  7.45532e+01  1.03398e-02  1.20511e+03  1.58501e-04  2.50000e+07
+G6         5.01663e-08  2.95532e-04  2.79858e-08  3.64763e+05  5.40223e-09 -5.14129e-14  3.90151e-10  3.64763e+05 -2.38915e-21
+R          5.50359e-12  5.69544e-14  2.05354e-12  1.39974e-22  7.76322e-12  1.52040e-17  2.30357e-13  7.36406e-18 -8.12379e-14
+
+Temperature = 300 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.33749e+03  4.26742e+05  1.97652e+06  2.50131e+07
+  lowest relaxation eigenvalue (1/s):  3.25770e+08   separation Lambda_N/Lambda_N+1: 7.67814e-02
+  R (cm^3/s): capture 3.87287e-11   return 3.02359e-11   net reaction 8.49280e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         1.97737e+06  6.15135e+04  1.87357e+06  9.57260e-06  4.07006e+04  2.39477e-02  1.58749e+03  2.08340e-02 -4.03771e-10
+G3         8.49806e+02  1.36397e+03  5.08383e+02  8.97600e-04  4.62028e+00  1.95003e-05  5.13021e-01  6.46407e-01 -2.96623e-12
+G4         1.06845e+04  2.10579e+02  2.50122e+07  2.81674e-08  6.94704e+01  1.13842e-02  1.22611e+03  1.24962e-04  2.50000e+07
+G6         5.74916e-08  3.95133e-04  3.35088e-08  4.26742e+05  3.55924e-08 -6.95032e-13  1.70052e-10  4.26742e+05 -3.22374e-23
+R          6.40003e-12  5.26142e-14  1.91334e-12  9.19397e-22  8.49280e-12  1.34269e-17  1.88547e-13  5.67346e-18 -6.17434e-14
+
+Temperature = 310 K    Pressure = 500 torr
+
+  chemical eigenvalues (1/s):          1.80852e+03  5.74703e+05  2.38623e+06  2.50198e+07
+  lowest relaxation eigenvalue (1/s):  1.96115e+08   separation Lambda_N/Lambda_N+1: 1.27577e-01
+  R (cm^3/s): capture 3.89349e-11   return 3.27970e-11   net reaction 6.13785e-12
+  warning: the largest chemical eigenvalue 2.5019806909441553e7 s-1 is 0.128 of the lowest relaxation eigenvalue 1.9611525803986984e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         2.38770e+06  7.21105e+04  2.24863e+06  1.31834e-05  6.28076e+04  6.11763e-02  4.15439e+03  6.40608e-02  0.00000e+00
+G3         1.14617e+03  1.84322e+03  6.79687e+02  9.51046e-04  1.37802e+01  7.56378e-05  1.94507e+00  1.63127e+00  1.78452e-13
+G4         1.51277e+04  2.91029e+02  2.50183e+07  3.67737e-08  2.07146e+02  2.73526e-02  2.67797e+03  5.64597e-04  2.50000e+07
+G6         9.76369e-08  4.50362e-04  5.82600e-08  5.74703e+05 -4.77577e-08  1.02318e-14  9.84148e-10  5.74703e+05  6.47947e-21
+R          3.97165e-12  5.48906e-14  1.93880e-12 -3.98715e-22  6.13785e-12  1.87852e-17  2.70926e-13  1.03671e-17 -9.84446e-14
+
+Temperature = 310 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          1.80870e+03  6.52799e+05  2.41075e+06  2.50200e+07
+  lowest relaxation eigenvalue (1/s):  2.35332e+08   separation Lambda_N/Lambda_N+1: 1.06318e-01
+  R (cm^3/s): capture 3.89349e-11   return 3.23446e-11   net reaction 6.59022e-12
+  warning: the largest chemical eigenvalue 2.502000155515491e7 s-1 is 0.106 of the lowest relaxation eigenvalue 2.3533179824493927e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         2.41225e+06  7.24905e+04  2.26437e+06  1.44919e-05  7.15987e+04  6.08162e-02  3.78470e+03  5.66439e-02  6.52166e-09
+G3         1.15226e+03  1.84340e+03  6.74753e+02  1.19015e-03  1.30867e+01  6.99459e-05  1.67094e+00  1.63206e+00  1.60607e-12
+G4         1.52588e+04  2.88429e+02  2.50185e+07  4.39966e-08  1.98199e+02  2.98754e-02  2.72776e+03  4.68673e-04  2.50000e+07
+G6         1.07191e-07  5.63776e-04  6.20194e-08  6.52799e+05 -1.76594e-08 -2.57135e-13  1.14423e-09  6.52799e+05  6.30764e-21
+R          4.52821e-12  5.21231e-14  1.85479e-12 -1.46893e-22  6.59022e-12  1.73275e-17  2.35677e-13  8.51932e-18 -8.06065e-14
+
+Temperature = 310 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          1.80892e+03  7.68063e+05  2.44082e+06  2.50202e+07
+  lowest relaxation eigenvalue (1/s):  2.98078e+08   separation Lambda_N/Lambda_N+1: 8.39384e-02
+  R (cm^3/s): capture 3.89349e-11   return 3.16986e-11   net reaction 7.23629e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         2.44234e+06  7.29159e+04  2.28211e+06  1.80265e-05  8.39983e+04  5.93890e-02  3.32036e+03  4.81058e-02  1.08694e-09
+G3         1.15907e+03  1.84360e+03  6.69358e+02  1.64048e-03  1.21748e+01  6.27046e-05  1.36824e+00  1.63274e+00 -6.24583e-13
+G4         1.54009e+04  2.85697e+02  2.50187e+07  7.77182e-08  1.86095e+02  3.31966e-02  2.78707e+03  3.70872e-04  2.50000e+07
+G6         1.33521e-07  7.77486e-04  9.54008e-08  7.68063e+05 -2.45093e-08 -1.44420e-12  1.19420e-09  7.68063e+05  4.63944e-21
+R          5.31314e-12  4.84854e-14  1.74123e-12 -2.04301e-22  7.23629e-12  1.54645e-17  1.95090e-13  6.59094e-18 -6.16855e-14
+
+Temperature = 320 K    Pressure = 500 torr
+
+  chemical eigenvalues (1/s):          2.43778e+03  9.75066e+05  2.93418e+06  2.50307e+07
+  lowest relaxation eigenvalue (1/s):  1.88995e+08   separation Lambda_N/Lambda_N+1: 1.32441e-01
+  R (cm^3/s): capture 3.91357e-11   return 3.39609e-11   net reaction 5.17482e-12
+  warning: the largest chemical eigenvalue 2.5030673137467578e7 s-1 is 0.132 of the lowest relaxation eigenvalue 1.8899474072613284e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         2.93677e+06  8.51715e+04  2.72227e+06  2.11896e-05  1.21269e+05  1.39150e-01  8.06609e+03  1.38486e-01 -7.19563e-09
+G3         1.54451e+03  2.48270e+03  8.97009e+02  1.60717e-03  3.25689e+01  2.20061e-04  4.71947e+00  3.89210e+00  6.53932e-12
+G4         2.14237e+04  3.95038e+02  2.50280e+07  6.60000e-08  4.89967e+02  7.25111e-02  5.72462e+03  1.52243e-03  2.50000e+07
+G6         1.89937e-07  8.14163e-04  1.17590e-07  9.75066e+05  2.68395e-08  1.07485e-13  3.28311e-09  9.75066e+05  4.36336e-21
+R          3.26792e-12  4.84880e-14  1.66908e-12  7.96510e-23  5.17482e-12  2.09453e-17  2.71834e-13  1.19197e-17 -8.25406e-14
+
+Temperature = 320 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          2.43813e+03  1.11161e+06  2.97549e+06  2.50311e+07
+  lowest relaxation eigenvalue (1/s):  2.26785e+08   separation Lambda_N/Lambda_N+1: 1.10373e-01
+  R (cm^3/s): capture 3.91357e-11   return 3.35678e-11   net reaction 5.56793e-12
+  warning: the largest chemical eigenvalue 2.5031070166591253e7 s-1 is 0.110 of the lowest relaxation eigenvalue 2.2678521638523743e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         2.97814e+06  8.57364e+04  2.74609e+06  2.33963e-05  1.38908e+05  1.39461e-01  7.40025e+03  1.22686e-01 -2.61659e-09
+G3         1.55486e+03  2.48302e+03  8.89097e+02  2.01946e-03  3.10766e+01  2.05142e-04  4.08778e+00  3.89469e+00  6.45328e-12
+G4         2.16569e+04  3.90750e+02  2.50284e+07  8.14533e-08  4.71912e+02  7.97801e-02  5.85378e+03  1.27030e-03  2.50000e+07
+G6         2.09429e-07  1.02372e-03  1.25589e-07  1.11161e+06 -1.58179e-08  3.30892e-12  6.43365e-09  1.11161e+06 -3.71959e-21
+R          3.74412e-12  4.62602e-14  1.60725e-12 -4.45350e-23  5.56793e-12  1.94656e-17  2.38460e-13  9.82280e-18 -6.81838e-14
+
+Temperature = 320 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          2.43858e+03  1.31424e+06  3.02748e+06  2.50315e+07
+  lowest relaxation eigenvalue (1/s):  2.87250e+08   separation Lambda_N/Lambda_N+1: 8.71419e-02
+  R (cm^3/s): capture 3.91357e-11   return 3.30021e-11   net reaction 6.13363e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         3.03020e+06  8.63766e+04  2.77326e+06  2.70438e-05  1.64010e+05  1.37611e-01  6.55025e+03  1.04426e-01 -5.88733e-09
+G3         1.56659e+03  2.48337e+03  8.80405e+02  2.73319e-03  2.90965e+01  1.85840e-04  3.38183e+00  3.89716e+00  4.90449e-12
+G4         2.19127e+04  3.86221e+02  2.50288e+07  1.09189e-07  4.46932e+02  8.94755e-02  6.00946e+03  1.01190e-03  2.50000e+07
+G6         2.42147e-07  1.38669e-03  1.48275e-07  1.31424e+06 -1.34032e-07  2.55775e-12  5.78581e-09  1.31424e+06 -3.24749e-21
+R          4.42170e-12  4.33058e-14  1.52181e-12 -3.88722e-22  6.13363e-12  1.75478e-17  1.99574e-13  7.62781e-18 -5.27753e-14
+
+Temperature = 330 K    Pressure = 500 torr
+
+  chemical eigenvalues (1/s):          3.27604e+03  1.57207e+06  3.60718e+06  2.50477e+07
+  lowest relaxation eigenvalue (1/s):  1.82543e+08   separation Lambda_N/Lambda_N+1: 1.37215e-01
+  R (cm^3/s): capture 3.93316e-11   return 3.49875e-11   net reaction 4.34405e-12
+  warning: the largest chemical eigenvalue 2.5047657561132785e7 s-1 is 0.137 of the lowest relaxation eigenvalue 1.8254254833072558e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         3.61169e+06  1.00246e+05  3.27555e+06  3.28047e-05  2.21001e+05  2.97139e-01  1.48883e+04  2.85108e-01 -1.00961e-08
+G3         2.05789e+03  3.33338e+03  1.18376e+03  2.59634e-03  7.20949e+01  5.97439e-04  1.08155e+01  8.81898e+00 -7.14915e-12
+G4         2.98494e+04  5.35012e+02  2.50431e+07  1.11808e-07  1.07895e+03  1.78818e-01  1.16328e+04  3.85806e-03  2.50000e+07
+G6         3.49362e-07  1.39766e-03  2.24766e-07  1.57207e+06  2.80267e-08  2.93993e-12  1.03655e-08  1.57207e+06 -1.10330e-20
+R          2.67464e-12  4.26190e-14  1.42429e-12  3.26616e-23  4.34405e-12  2.30625e-17  2.70276e-13  1.36765e-17 -6.78101e-14
+
+Temperature = 330 K    Pressure = 600 torr
+
+  chemical eigenvalues (1/s):          3.27671e+03  1.79835e+06  3.67509e+06  2.50485e+07
+  lowest relaxation eigenvalue (1/s):  2.19040e+08   separation Lambda_N/Lambda_N+1: 1.14356e-01
+  R (cm^3/s): capture 3.93316e-11   return 3.46494e-11   net reaction 4.68218e-12
+  warning: the largest chemical eigenvalue 2.5048455072206337e7 s-1 is 0.114 of the lowest relaxation eigenvalue 2.1903996601201218e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         3.67972e+06  1.01065e+05  3.31062e+06  3.66461e-05  2.54278e+05  3.00165e-01  1.37541e+04  2.52917e-01  4.15724e-09
+G3         2.07493e+03  3.33392e+03  1.17161e+03  3.28205e-03  6.90959e+01  5.61237e-04  9.44720e+00  8.82666e+00 -5.15404e-12
+G4         3.02485e+04  5.28262e+02  2.50438e+07  1.48291e-07  1.04596e+03  1.98184e-01  1.19458e+04  3.23446e-03  2.50000e+07
+G6         3.89931e-07  1.76914e-03  2.46793e-07  1.79835e+06 -9.94035e-08  6.64936e-13  1.06406e-08  1.79835e+06 -1.14332e-21
+R          3.07846e-12  4.08393e-14  1.38035e-12 -1.04843e-22  4.68218e-12  2.15855e-17  2.39030e-13  1.12993e-17 -5.65300e-14
+
+Temperature = 330 K    Pressure = 760 torr
+
+  chemical eigenvalues (1/s):          3.27758e+03  2.13590e+06  3.76266e+06  2.50494e+07
+  lowest relaxation eigenvalue (1/s):  2.77436e+08   separation Lambda_N/Lambda_N+1: 9.02889e-02
+  R (cm^3/s): capture 3.93316e-11   return 3.41593e-11   net reaction 5.17224e-12
+
+From\To             G2           G3           G4           G6            R           P1           P5           P7   escape(G4)
+G2         3.76744e+06  1.02004e+05  3.35112e+06  2.92491e-05  3.02030e+05  2.99205e-01  1.22816e+04  2.15846e-01  0.00000e+00
+G3         2.09448e+03  3.33450e+03  1.15820e+03  3.97571e-03  6.50827e+01  5.13583e-04  7.89909e+00  8.83436e+00 -5.32030e-12
+G4         3.06921e+04  5.21101e+02  2.50445e+07  1.44992e-07  9.99035e+02  2.24347e-01  1.23274e+04  2.59122e-03  2.50000e+07
+G6         3.04042e-07  2.14307e-03  2.20189e-07  2.13590e+06  6.10738e-08  3.73797e-13  7.03558e-09  2.13590e+06 -2.67251e-21
+R          3.65785e-12  3.84594e-14  1.31798e-12  6.81669e-23  5.17224e-12  1.96447e-17  2.02192e-13  8.80440e-18 -4.42730e-14
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Rate coefficients from G2 (1/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  3.64490e+04  1.01034e+06  1.17418e-06  2.25136e+03  1.07717e-03  1.62028e+02  1.60936e-03     1.55162e-10
+      600  3.65087e+04  1.01257e+06  1.25185e-06  2.50594e+03  1.03334e-03  1.43261e+02  1.40545e-03     4.18937e-09
+      760  3.65728e+04  1.01497e+06  1.39115e-06  2.85060e+03  9.65043e-04  1.21133e+02  1.19332e-03    -2.63775e-09
+
+  P(torr)      G2 loss
+      500  1.04921e+06
+      600  1.05173e+06
+      760  1.05452e+06
+
+   Temperature = 280 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  4.32934e+04  1.23878e+06  2.32759e-06  5.85950e+03  3.36524e-03  4.01821e+02  4.47004e-03     5.29713e-10
+      600  4.33889e+04  1.24246e+06  2.50393e-06  6.56043e+03  3.25639e-03  3.57773e+02  3.91762e-03     7.94570e-10
+      760  4.34922e+04  1.24645e+06  2.78330e-06  7.51984e+03  3.07440e-03  3.05134e+02  3.28914e-03    -1.05943e-09
+
+  P(torr)      G2 loss
+      500  1.28834e+06
+      600  1.29276e+06
+      760  1.29777e+06
+
+   Temperature = 290 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  5.14175e+04  1.51702e+06  4.33495e-06  1.39933e+04  9.60129e-03  9.31012e+02  1.15458e-02     4.56488e-10
+      600  5.15681e+04  1.52298e+06  4.69311e-06  1.57554e+04  9.37058e-03  8.34830e+02  1.01518e-02     6.84732e-10
+      760  5.17326e+04  1.52952e+06  5.19579e-06  1.81924e+04  8.94281e-03  7.18273e+02  8.54809e-03     3.42366e-09
+
+  P(torr)      G2 loss
+      500  1.58337e+06
+      600  1.59114e+06
+      760  1.60016e+06
+
+   Temperature = 300 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  6.10224e+04  1.85359e+06  7.65047e-06  3.09225e+04  2.52252e-02  2.02520e+03  2.79452e-02     1.21131e-09
+      600  6.12558e+04  1.86306e+06  8.35006e-06  3.50023e+04  2.48272e-02  1.82887e+03  2.46306e-02    -1.61508e-09
+      760  6.15135e+04  1.87357e+06  9.57260e-06  4.07006e+04  2.39477e-02  1.58749e+03  2.08340e-02    -4.03771e-10
+
+  P(torr)      G2 loss
+      500  1.94756e+06
+      600  1.96114e+06
+      760  1.97737e+06
+
+   Temperature = 310 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  7.21105e+04  2.24863e+06  1.31834e-05  6.28076e+04  6.11763e-02  4.15439e+03  6.40608e-02     0.00000e+00
+      600  7.24905e+04  2.26437e+06  1.44919e-05  7.15987e+04  6.08162e-02  3.78470e+03  5.66439e-02     6.52166e-09
+      760  7.29159e+04  2.28211e+06  1.80265e-05  8.39983e+04  5.93890e-02  3.32036e+03  4.81058e-02     1.08694e-09
+
+  P(torr)      G2 loss
+      500  2.38770e+06
+      600  2.41225e+06
+      760  2.44234e+06
+
+   Temperature = 320 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  8.51715e+04  2.72227e+06  2.11896e-05  1.21269e+05  1.39150e-01  8.06609e+03  1.38486e-01    -7.19563e-09
+      600  8.57364e+04  2.74609e+06  2.33963e-05  1.38908e+05  1.39461e-01  7.40025e+03  1.22686e-01    -2.61659e-09
+      760  8.63766e+04  2.77326e+06  2.70438e-05  1.64010e+05  1.37611e-01  6.55025e+03  1.04426e-01    -5.88733e-09
+
+  P(torr)      G2 loss
+      500  2.93677e+06
+      600  2.97814e+06
+      760  3.03020e+06
+
+   Temperature = 330 K
+
+  P(torr)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  1.00246e+05  3.27555e+06  3.28047e-05  2.21001e+05  2.97139e-01  1.48883e+04  2.85108e-01    -1.00961e-08
+      600  1.01065e+05  3.31062e+06  3.66461e-05  2.54278e+05  3.00165e-01  1.37541e+04  2.52917e-01     4.15724e-09
+      760  1.02004e+05  3.35112e+06  2.92491e-05  3.02030e+05  2.99205e-01  1.22816e+04  2.15846e-01     0.00000e+00
+
+  P(torr)      G2 loss
+      500  3.61169e+06
+      600  3.67972e+06
+      760  3.76744e+06
+
+Rate coefficients from G3 (1/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  3.11468e+02  2.28037e+02  6.55490e-05  1.93233e-01  4.53870e-07  2.83858e-02  2.68952e-02     7.56392e-13
+      600  3.11979e+02  2.27561e+02  8.00634e-05  1.79496e-01  4.05522e-07  2.37272e-02  2.68882e-02    -5.60290e-13
+      760  3.12528e+02  2.27052e+02  1.04307e-04  1.62153e-01  3.47827e-07  1.87881e-02  2.68722e-02     0.00000e+00
+
+  P(torr)      G3 loss
+      500  5.39754e+02
+      600  5.39771e+02
+      760  5.39789e+02
+
+   Temperature = 280 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  4.38956e+02  2.98321e+02  1.41876e-04  6.40168e-01  1.87777e-06  9.06970e-02  8.35351e-02     1.19805e-12
+      600  4.39927e+02  2.97438e+02  1.74485e-04  5.98172e-01  1.69290e-06  7.62783e-02  8.35308e-02    -1.56267e-13
+      760  4.40978e+02  2.96489e+02  2.28900e-04  5.44625e-01  1.46876e-06  6.08481e-02  8.35071e-02     1.19805e-12
+
+  P(torr)      G3 loss
+      500  7.38092e+02
+      600  7.38123e+02
+      760  7.38156e+02
+
+   Temperature = 290 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  6.11630e+02  3.91181e+02  2.85728e-04  1.92373e+00  7.02172e-06  2.68553e-01  2.40438e-01     1.75038e-12
+      600  6.13429e+02  3.89596e+02  3.53443e-04  1.80763e+00  6.38652e-06  2.27413e-01  2.40470e-01    -1.36141e-12
+      760  6.15393e+02  3.87886e+02  4.65891e-04  1.65817e+00  5.60390e-06  1.82933e-01  2.40462e-01    -2.86868e-12
+
+  P(torr)      G3 loss
+      500  1.00524e+03
+      600  1.00530e+03
+      760  1.00536e+03
+
+   Temperature = 300 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  8.42986e+02  5.14095e+02  5.39648e-04  5.29405e+00  2.39582e-05  7.40749e-01  6.46082e-01    -9.26946e-14
+      600  8.46228e+02  5.11354e+02  6.71472e-04  5.00103e+00  2.19789e-05  6.31949e-01  6.46280e-01     2.13198e-12
+      760  8.49806e+02  5.08383e+02  8.97600e-04  4.62028e+00  1.95003e-05  5.13021e-01  6.46407e-01    -2.96623e-12
+
+  P(torr)      G3 loss
+      500  1.36376e+03
+      600  1.36386e+03
+      760  1.36397e+03
+
+   Temperature = 310 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  1.14617e+03  6.79687e+02  9.51046e-04  1.37802e+01  7.56378e-05  1.94507e+00  1.63127e+00     1.78452e-13
+      600  1.15226e+03  6.74753e+02  1.19015e-03  1.30867e+01  6.99459e-05  1.67094e+00  1.63206e+00     1.60607e-12
+      760  1.15907e+03  6.69358e+02  1.64048e-03  1.21748e+01  6.27046e-05  1.36824e+00  1.63274e+00    -6.24583e-13
+
+  P(torr)      G3 loss
+      500  1.84322e+03
+      600  1.84340e+03
+      760  1.84360e+03
+
+   Temperature = 320 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  1.54451e+03  8.97009e+02  1.60717e-03  3.25689e+01  2.20061e-04  4.71947e+00  3.89210e+00     6.53932e-12
+      600  1.55486e+03  8.89097e+02  2.01946e-03  3.10766e+01  2.05142e-04  4.08778e+00  3.89469e+00     6.45328e-12
+      760  1.56659e+03  8.80405e+02  2.73319e-03  2.90965e+01  1.85840e-04  3.38183e+00  3.89716e+00     4.90449e-12
+
+  P(torr)      G3 loss
+      500  2.48270e+03
+      600  2.48302e+03
+      760  2.48337e+03
+
+   Temperature = 330 K
+
+  P(torr)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  2.05789e+03  1.18376e+03  2.59634e-03  7.20949e+01  5.97439e-04  1.08155e+01  8.81898e+00    -7.14915e-12
+      600  2.07493e+03  1.17161e+03  3.28205e-03  6.90959e+01  5.61237e-04  9.44720e+00  8.82666e+00    -5.15404e-12
+      760  2.09448e+03  1.15820e+03  3.97571e-03  6.50827e+01  5.13583e-04  7.89909e+00  8.83436e+00    -5.32030e-12
+
+  P(torr)      G3 loss
+      500  3.33338e+03
+      600  3.33392e+03
+      760  3.33450e+03
+
+Rate coefficients from G4 (1/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  3.21262e+03  8.50951e+01  1.75399e-09  2.71641e+00  2.32851e-04  7.24856e+01  4.96452e-06     2.50000e+07
+      600  3.22113e+03  8.48810e+01  1.86186e-09  2.53056e+00  2.47152e-04  7.29828e+01  4.07178e-06     2.50000e+07
+      760  3.23000e+03  8.46601e+01  2.32836e-09  2.29451e+00  2.64957e-04  7.35484e+01  2.88419e-06     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50034e+07
+      600  2.50034e+07
+      760  2.50034e+07
+
+   Temperature = 280 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  4.85107e+03  1.15689e+02  4.07360e-09  9.20764e+00  8.87637e-04  1.95998e+02  1.83381e-05     2.50000e+07
+      600  4.86843e+03  1.15275e+02  4.56660e-09  8.63902e+00  9.48764e-04  1.97792e+02  1.50391e-05     2.50000e+07
+      760  4.88665e+03  1.14845e+02  5.41527e-09  7.90613e+00  1.02597e-03  1.99855e+02  1.16914e-05     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50052e+07
+      600  2.50052e+07
+      760  2.50052e+07
+
+   Temperature = 290 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  7.20941e+03  1.57165e+02  9.04005e-09  2.81499e+01  3.04997e-03  4.97180e+02  6.15097e-05     2.50000e+07
+      600  7.24369e+03  1.56393e+02  1.03503e-08  2.65966e+01  3.28335e-03  5.03083e+02  5.07733e-05     2.50000e+07
+      760  7.28001e+03  1.55590e+02  1.15473e-08  2.45628e+01  3.58229e-03  5.09950e+02  3.99059e-05     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50079e+07
+      600  2.50079e+07
+      760  2.50080e+07
+
+   Temperature = 300 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  1.05490e+04  2.13404e+02  1.85414e-08  7.83686e+01  9.53561e-03  1.18727e+03  1.91135e-04     2.50000e+07
+      600  1.06144e+04  2.12022e+02  2.15360e-08  7.45532e+01  1.03398e-02  1.20511e+03  1.58501e-04     2.50000e+07
+      760  1.06845e+04  2.10579e+02  2.81674e-08  6.94704e+01  1.13842e-02  1.22611e+03  1.24962e-04     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50120e+07
+      600  2.50121e+07
+      760  2.50122e+07
+
+   Temperature = 310 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  1.51277e+04  2.91029e+02  3.67737e-08  2.07146e+02  2.73526e-02  2.67797e+03  5.64597e-04     2.50000e+07
+      600  1.52588e+04  2.88429e+02  4.39966e-08  1.98199e+02  2.98754e-02  2.72776e+03  4.68673e-04     2.50000e+07
+      760  1.54009e+04  2.85697e+02  7.77182e-08  1.86095e+02  3.31966e-02  2.78707e+03  3.70872e-04     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50183e+07
+      600  2.50185e+07
+      760  2.50187e+07
+
+   Temperature = 320 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  2.14237e+04  3.95038e+02  6.60000e-08  4.89967e+02  7.25111e-02  5.72462e+03  1.52243e-03     2.50000e+07
+      600  2.16569e+04  3.90750e+02  8.14533e-08  4.71912e+02  7.97801e-02  5.85378e+03  1.27030e-03     2.50000e+07
+      760  2.19127e+04  3.86221e+02  1.09189e-07  4.46932e+02  8.94755e-02  6.00946e+03  1.01190e-03     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50280e+07
+      600  2.50284e+07
+      760  2.50288e+07
+
+   Temperature = 330 K
+
+  P(torr)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  2.98494e+04  5.35012e+02  1.11808e-07  1.07895e+03  1.78818e-01  1.16328e+04  3.85806e-03     2.50000e+07
+      600  3.02485e+04  5.28262e+02  1.48291e-07  1.04596e+03  1.98184e-01  1.19458e+04  3.23446e-03     2.50000e+07
+      760  3.06921e+04  5.21101e+02  1.44992e-07  9.99035e+02  2.24347e-01  1.23274e+04  2.59122e-03     2.50000e+07
+
+  P(torr)      G4 loss
+      500  2.50431e+07
+      600  2.50438e+07
+      760  2.50445e+07
+
+Rate coefficients from G6 (1/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  3.41515e-09  2.23770e-05  1.82849e-09  5.07584e-11 -5.37204e-16  1.08411e-11  3.69109e+04     8.66810e-22
+      600  3.63936e-09  2.73321e-05  1.87979e-09  1.39397e-09 -1.85037e-17  6.85716e-12  4.12312e+04     2.67022e-22
+      760  4.04394e-09  3.56087e-05  2.16548e-09 -8.72740e-11  3.87870e-14  5.34415e-11  4.74467e+04    -3.69448e-22
+
+  P(torr)      G6 loss
+      500  3.69109e+04
+      600  4.12312e+04
+      760  4.74467e+04
+
+   Temperature = 280 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  8.77929e-09  5.30178e-05  4.73809e-09  6.42474e-10  1.43227e-14  6.47625e-11  8.19185e+04     1.02047e-21
+      600  9.43802e-09  6.52053e-05  5.00356e-09  4.82142e-11  2.39148e-14  6.09538e-11  9.19048e+04     1.29760e-23
+      760  1.04869e-08  8.55431e-05  5.63349e-09 -2.26923e-09 -6.92925e-15  4.48358e-11  1.06370e+05     6.10797e-22
+
+  P(torr)      G6 loss
+      500  8.19185e+04
+      600  9.19048e+04
+      760  1.06370e+05
+
+   Temperature = 290 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  2.08248e-08  1.16194e-04  1.15124e-08 -1.27121e-09  6.45034e-14  1.70922e-10  1.68293e+05     4.89258e-22
+      600  2.25265e-08  1.43740e-04  1.21396e-08  1.08570e-09 -1.68735e-14  1.35319e-10  1.89593e+05    -1.71692e-21
+      760  2.49216e-08  1.89486e-04  1.30493e-08 -1.07057e-09  7.01442e-14  1.92246e-10  2.20646e+05     1.59776e-21
+
+  P(torr)      G6 loss
+      500  1.68293e+05
+      600  1.89593e+05
+      760  2.20646e+05
+
+   Temperature = 300 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  4.60167e-08  2.37476e-04  2.62968e-08  1.44528e-09 -7.59636e-14  4.99467e-10  3.22506e+05     5.98183e-22
+      600  5.01663e-08  2.95532e-04  2.79858e-08  5.40223e-09 -5.14129e-14  3.90151e-10  3.64763e+05    -2.38915e-21
+      760  5.74916e-08  3.95133e-04  3.35088e-08  3.55924e-08 -6.95032e-13  1.70052e-10  4.26742e+05    -3.22374e-23
+
+  P(torr)      G6 loss
+      500  3.22506e+05
+      600  3.64763e+05
+      760  4.26742e+05
+
+   Temperature = 310 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  9.76369e-08  4.50362e-04  5.82600e-08 -4.77577e-08  1.02318e-14  9.84148e-10  5.74703e+05     6.47947e-21
+      600  1.07191e-07  5.63776e-04  6.20194e-08 -1.76594e-08 -2.57135e-13  1.14423e-09  6.52799e+05     6.30764e-21
+      760  1.33521e-07  7.77486e-04  9.54008e-08 -2.45093e-08 -1.44420e-12  1.19420e-09  7.68063e+05     4.63944e-21
+
+  P(torr)      G6 loss
+      500  5.74703e+05
+      600  6.52799e+05
+      760  7.68063e+05
+
+   Temperature = 320 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  1.89937e-07  8.14163e-04  1.17590e-07  2.68395e-08  1.07485e-13  3.28311e-09  9.75066e+05     4.36336e-21
+      600  2.09429e-07  1.02372e-03  1.25589e-07 -1.58179e-08  3.30892e-12  6.43365e-09  1.11161e+06    -3.71959e-21
+      760  2.42147e-07  1.38669e-03  1.48275e-07 -1.34032e-07  2.55775e-12  5.78581e-09  1.31424e+06    -3.24749e-21
+
+  P(torr)      G6 loss
+      500  9.75066e+05
+      600  1.11161e+06
+      760  1.31424e+06
+
+   Temperature = 330 K
+
+  P(torr)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  3.49362e-07  1.39766e-03  2.24766e-07  2.80267e-08  2.93993e-12  1.03655e-08  1.57207e+06    -1.10330e-20
+      600  3.89931e-07  1.76914e-03  2.46793e-07 -9.94035e-08  6.64936e-13  1.06406e-08  1.79835e+06    -1.14332e-21
+      760  3.04042e-07  2.14307e-03  2.20189e-07  6.10738e-08  3.73797e-13  7.03558e-09  2.13590e+06    -2.67251e-21
+
+  P(torr)      G6 loss
+      500  1.57207e+06
+      600  1.79835e+06
+      760  2.13590e+06
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.04498e-17  2.40605e-13  5.73341e-18   -1.47492e-13
+      600  9.31431e-18  2.01840e-13  4.64273e-18   -1.17122e-13
+      760  7.94488e-18  1.59370e-13  3.52133e-18   -8.61614e-14
+
+   Temperature = 280 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.24121e-17  2.52117e-13  6.69398e-18   -1.31505e-13
+      600  1.11656e-17  2.13515e-13  5.44377e-18   -1.05298e-13
+      760  9.63979e-18  1.70681e-13  4.15292e-18   -7.82999e-14
+
+   Temperature = 290 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.44790e-17  2.60973e-13  7.77328e-18   -1.15476e-13
+      600  1.31398e-17  2.23060e-13  6.34626e-18   -9.32412e-14
+      760  1.14763e-17  1.80462e-13  4.86661e-18   -7.00899e-14
+
+   Temperature = 300 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.66143e-17  2.67112e-13  8.98902e-18   -9.97562e-14
+      600  1.52040e-17  2.30357e-13  7.36406e-18   -8.12379e-14
+      760  1.34269e-17  1.88547e-13  5.67346e-18   -6.17434e-14
+
+   Temperature = 310 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.87852e-17  2.70926e-13  1.03671e-17   -9.84446e-14
+      600  1.73275e-17  2.35677e-13  8.51932e-18   -8.06065e-14
+      760  1.54645e-17  1.95090e-13  6.59094e-18   -6.16855e-14
+
+   Temperature = 320 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.09453e-17  2.71834e-13  1.19197e-17   -8.25406e-14
+      600  1.94656e-17  2.38460e-13  9.82280e-18   -6.81838e-14
+      760  1.75478e-17  1.99574e-13  7.62781e-18   -5.27753e-14
+
+   Temperature = 330 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.30625e-17  2.70276e-13  1.36765e-17   -6.78101e-14
+      600  2.15855e-17  2.39030e-13  1.12993e-17   -5.65300e-14
+      760  1.96447e-17  2.02192e-13  8.80440e-18   -4.42730e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  8.20699e-12  8.24469e-14  3.11029e-12  6.34864e-23
+      600  9.13519e-12  7.65838e-14  2.89742e-12  1.74182e-21
+      760  1.03918e-11  6.91825e-14  2.62708e-12 -1.08994e-22
+
+   Temperature = 280 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.94331e-12  7.48395e-14  2.78151e-12  2.01014e-22
+      600  7.77411e-12  6.99275e-14  2.60962e-12  1.52054e-23
+      760  8.91123e-12  6.36654e-14  2.38813e-12 -7.09382e-22
+
+   Temperature = 290 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  5.83022e-12  6.74115e-14  2.46244e-12 -1.09123e-22
+      600  6.56467e-12  6.33401e-14  2.32642e-12  9.37100e-23
+      760  7.58040e-12  5.80998e-14  2.14837e-12 -9.18991e-23
+
+   Temperature = 300 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  4.86173e-12  6.02956e-14  2.15883e-12  3.78416e-23
+      600  5.50359e-12  5.69544e-14  2.05354e-12  1.39974e-22
+      760  6.40003e-12  5.26142e-14  1.91334e-12  9.19397e-22
+
+   Temperature = 310 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  3.97165e-12  5.48906e-14  1.93880e-12 -3.98715e-22
+      600  4.52821e-12  5.21231e-14  1.85479e-12 -1.46893e-22
+      760  5.31314e-12  4.84854e-14  1.74123e-12 -2.04301e-22
+
+   Temperature = 320 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  3.26792e-12  4.84880e-14  1.66908e-12  7.96510e-23
+      600  3.74412e-12  4.62602e-14  1.60725e-12 -4.45350e-23
+      760  4.42170e-12  4.33058e-14  1.52181e-12 -3.88722e-22
+
+   Temperature = 330 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  2.67464e-12  4.26190e-14  1.42429e-12  3.26616e-23
+      600  3.07846e-12  4.08393e-14  1.38035e-12 -1.04843e-22
+      760  3.65785e-12  3.84594e-14  1.31798e-12  6.81669e-23
+
+Capture, return and net reaction of R (cm^3/s), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)      capture       return          net
+      500  3.80748e-11  2.65820e-11  1.14929e-11
+      600  3.80748e-11  2.58809e-11  1.21939e-11
+      760  3.80748e-11  2.49136e-11  1.31612e-11
+
+   Temperature = 280 K
+
+  P(torr)      capture       return          net
+      500  3.82990e-11  2.83787e-11  9.92029e-12
+      600  3.82990e-11  2.77371e-11  1.05619e-11
+      760  3.82990e-11  2.68436e-11  1.14554e-11
+
+   Temperature = 290 K
+
+  P(torr)      capture       return          net
+      500  3.85168e-11  3.00112e-11  8.50560e-12
+      600  3.85168e-11  2.94326e-11  9.08426e-12
+      760  3.85168e-11  2.86196e-11  9.89726e-12
+
+   Temperature = 300 K
+
+  P(torr)      capture       return          net
+      500  3.87287e-11  3.14804e-11  7.24824e-12
+      600  3.87287e-11  3.09654e-11  7.76322e-12
+      760  3.87287e-11  3.02359e-11  8.49280e-12
+
+   Temperature = 310 K
+
+  P(torr)      capture       return          net
+      500  3.89349e-11  3.27970e-11  6.13785e-12
+      600  3.89349e-11  3.23446e-11  6.59022e-12
+      760  3.89349e-11  3.16986e-11  7.23629e-12
+
+   Temperature = 320 K
+
+  P(torr)      capture       return          net
+      500  3.91357e-11  3.39609e-11  5.17482e-12
+      600  3.91357e-11  3.35678e-11  5.56793e-12
+      760  3.91357e-11  3.30021e-11  6.13363e-12
+
+   Temperature = 330 K
+
+  P(torr)      capture       return          net
+      500  3.93316e-11  3.49875e-11  4.34405e-12
+      600  3.93316e-11  3.46494e-11  4.68218e-12
+      760  3.93316e-11  3.41593e-11  5.17224e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  9.09240e-05  2.09352e+00  4.98867e-05   -1.28334e+00
+      600  7.63848e-05  1.65525e+00  3.80741e-05   -9.60496e-01
+      760  6.03658e-05  1.21091e+00  2.67553e-05   -6.54661e-01
+
+   Temperature = 280 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.25118e-04  2.54143e+00  6.74777e-05   -1.32562e+00
+      600  1.05716e-04  2.02156e+00  5.15416e-05   -9.96960e-01
+      760  8.41504e-05  1.48996e+00  3.62528e-05   -6.83518e-01
+
+   Temperature = 290 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.70230e-04  3.06825e+00  9.13902e-05   -1.35765e+00
+      600  1.44644e-04  2.45546e+00  6.98599e-05   -1.02640e+00
+      760  1.15954e-04  1.82335e+00  4.91713e-05   -7.08175e-01
+
+   Temperature = 300 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.29219e-04  3.68519e+00  1.24017e-04   -1.37628e+00
+      600  1.95847e-04  2.96728e+00  9.48583e-05   -1.04644e+00
+      760  1.58098e-04  2.22008e+00  6.68032e-05   -7.27008e-01
+
+   Temperature = 310 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  3.06054e-04  4.41402e+00  1.68904e-04   -1.60389e+00
+      600  2.62928e-04  3.57616e+00  1.29272e-04   -1.22312e+00
+      760  2.13707e-04  2.69600e+00  9.10818e-05   -8.52447e-01
+
+   Temperature = 320 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  4.04755e-04  5.25301e+00  2.30340e-04   -1.59504e+00
+      600  3.49602e-04  4.28274e+00  1.76417e-04   -1.22458e+00
+      760  2.86092e-04  3.25376e+00  1.24360e-04   -8.60424e-01
+
+   Temperature = 330 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  5.30899e-04  6.22176e+00  3.14832e-04   -1.56099e+00
+      600  4.61014e-04  5.10509e+00  2.41325e-04   -1.20734e+00
+      760  3.79810e-04  3.90919e+00  1.70224e-04   -8.55973e-01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  7.14095e+01  7.17375e-01  2.70628e+01  5.52399e-10
+      600  7.49159e+01  6.28049e-01  2.37612e+01  1.42843e-08
+      760  7.89573e+01  5.25654e-01  1.99607e+01 -8.28146e-10
+
+   Temperature = 280 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.99910e+01  7.54408e-01  2.80386e+01  2.02629e-09
+      600  7.36053e+01  6.62073e-01  2.47079e+01  1.43965e-10
+      760  7.77905e+01  5.55767e-01  2.08472e+01 -6.19254e-09
+
+   Temperature = 290 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.85457e+01  7.92554e-01  2.89508e+01 -1.28296e-09
+      600  7.22642e+01  6.97250e-01  2.56093e+01  1.03156e-09
+      760  7.65909e+01  5.87029e-01  2.17067e+01 -9.28530e-10
+
+   Temperature = 300 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.70746e+01  8.31865e-01  2.97842e+01  5.22079e-10
+      600  7.08931e+01  7.33644e-01  2.64521e+01  1.80303e-09
+      760  7.53583e+01  6.19515e-01  2.25289e+01  1.08256e-08
+
+   Temperature = 310 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.47075e+01  8.94297e-01  3.15876e+01 -6.49600e-09
+      600  6.87111e+01  7.90917e-01  2.81446e+01 -2.22895e-09
+      760  7.34236e+01  6.70032e-01  2.40625e+01 -2.82329e-09
+
+   Temperature = 320 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.31504e+01  9.37000e-01  3.22540e+01  1.53920e-09
+      600  6.72444e+01  8.30832e-01  2.88661e+01 -7.99848e-10
+      760  7.20893e+01  7.06039e-01  2.48109e+01 -6.33755e-09
+
+   Temperature = 330 K
+
+  P(torr)        R->G2        R->G3        R->G4        R->G6
+      500  6.15702e+01  9.81088e-01  3.27871e+01  7.51871e-10
+      600  6.57485e+01  8.72228e-01  2.94809e+01 -2.23920e-09
+      760  7.07208e+01  7.43574e-01  2.54819e+01  1.31794e-09
+
+Thermal fate of G2 (%), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  2.20276e-01  1.08690e-07  1.62366e-02  1.77271e-04     9.97633e+01
+      600  2.44368e-01  1.03924e-07  1.43491e-02  1.77162e-04     9.97411e+01
+      760  2.76971e-01  9.67406e-08  1.21405e-02  1.77035e-04     9.97107e+01
+
+   Temperature = 280 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  4.67188e-01  2.78846e-07  3.30329e-02  3.89219e-04     9.94994e+01
+      600  5.20745e-01  2.68718e-07  2.93864e-02  3.88820e-04     9.94495e+01
+      760  5.93954e-01  2.52672e-07  2.50737e-02  3.88325e-04     9.93806e+01
+
+   Temperature = 290 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  9.08301e-01  6.54019e-07  6.28570e-02  7.94434e-04     9.90280e+01
+      600  1.01652e+00  6.34987e-07  5.62806e-02  7.93076e-04     9.89264e+01
+      760  1.16574e+00  6.02866e-07  4.84225e-02  7.91322e-04     9.87850e+01
+
+   Temperature = 300 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  1.63252e+00  1.41500e-06  1.12488e-01  1.51747e-03     9.82535e+01
+      600  1.83281e+00  1.38344e-06  1.01342e-01  1.51322e-03     9.80643e+01
+      760  2.11092e+00  1.32547e-06  8.78951e-02  1.50763e-03     9.77997e+01
+
+   Temperature = 310 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  2.70624e+00  2.84540e-06  1.91079e-01  2.73092e-03     9.70999e+01
+      600  3.04929e+00  2.80291e-06  1.73332e-01  2.71848e-03     9.67747e+01
+      760  3.52798e+00  2.71113e-06  1.51632e-01  2.70191e-03     9.63177e+01
+
+   Temperature = 320 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  4.24933e+00  5.36820e-06  3.07412e-01  4.64302e-03     9.54386e+01
+      600  4.79237e+00  5.31821e-06  2.80317e-01  4.61121e-03     9.49227e+01
+      760  5.55197e+00  5.18298e-06  2.46909e-01  4.56806e-03     9.41965e+01
+
+   Temperature = 330 K
+
+  P(torr)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+      500  6.29795e+00  9.55387e-06  4.72442e-01  7.49523e-03     9.32221e+01
+      600  7.10028e+00  9.51275e-06  4.32826e-01  7.42131e-03     9.24595e+01
+      760  8.22231e+00  9.33353e-06  3.83610e-01  7.31982e-03     9.13868e+01
+
+Thermal fate of G3 (%), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  1.62929e-01  1.47208e-07  1.47518e-02  5.09733e-03     9.98172e+01
+      600  1.74513e-01  1.35618e-07  1.28132e-02  5.09865e-03     9.98076e+01
+      760  1.90421e-01  1.20900e-07  1.06342e-02  5.10013e-03     9.97938e+01
+
+   Temperature = 280 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  3.64630e-01  4.21700e-07  3.22527e-02  1.15685e-02     9.95915e+01
+      600  3.91463e-01  3.91061e-07  2.81697e-02  1.15721e-02     9.95688e+01
+      760  4.28673e-01  3.51593e-07  2.35455e-02  1.15760e-02     9.95362e+01
+
+   Temperature = 290 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  7.44163e-01  1.10126e-06  6.57407e-02  2.44303e-02     9.91657e+01
+      600  8.00242e-01  1.02791e-06  5.77495e-02  2.44394e-02     9.91176e+01
+      760  8.78665e-01  9.32019e-07  4.86280e-02  2.44489e-02     9.90483e+01
+
+   Temperature = 300 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  1.39769e+00  2.64604e-06  1.25657e-01  4.83529e-02     9.84283e+01
+      600  1.50428e+00  2.48563e-06  1.11037e-01  4.83745e-02     9.83363e+01
+      760  1.65437e+00  2.27268e-06  9.42158e-02  4.83971e-02     9.82030e+01
+
+   Temperature = 310 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  2.43136e+00  5.91391e-06  2.28336e-01  9.02522e-02     9.72500e+01
+      600  2.61693e+00  5.59077e-06  2.03020e-01  9.02998e-02     9.70897e+01
+      760  2.87948e+00  5.15448e-06  1.73625e-01  9.03509e-02     9.68565e+01
+
+   Temperature = 320 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  3.95742e+00  1.23098e-05  3.89699e-01  1.59724e-01     9.54931e+01
+      600  4.25472e+00  1.17079e-05  3.48627e-01  1.59824e-01     9.52368e+01
+      760  4.67639e+00  1.08814e-05  3.00527e-01  1.59925e-01     9.48631e+01
+
+   Temperature = 330 K
+
+  P(torr)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+      500  6.05515e+00  2.40789e-05  6.32829e-01  2.69276e-01     9.30427e+01
+      600  6.49606e+00  2.30369e-05  5.69695e-01  2.69476e-01     9.26648e+01
+      760  7.12135e+00  2.15800e-05  4.95107e-01  2.69660e-01     9.21139e+01
+
+Thermal fate of G4 (%), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  3.97213e-05  9.45744e-10  2.92040e-04  4.01449e-08     9.99997e+01
+      600  4.21947e-05  1.00232e-09  2.93784e-04  4.01485e-08     9.99997e+01
+      760  4.56014e-05  1.07259e-09  2.95758e-04  4.01501e-08     9.99997e+01
+
+   Temperature = 280 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  1.29146e-04  3.60586e-09  7.90389e-04  1.29105e-07     9.99991e+01
+      600  1.37741e-04  3.84839e-09  7.96855e-04  1.29110e-07     9.99991e+01
+      760  1.49661e-04  4.15400e-09  8.04260e-04  1.29102e-07     9.99990e+01
+
+   Temperature = 290 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  3.79091e-04  1.23915e-08  2.00663e-03  3.82805e-07     9.99976e+01
+      600  4.05798e-04  1.33196e-08  2.02836e-03  3.82760e-07     9.99976e+01
+      760  4.43042e-04  1.45059e-08  2.05355e-03  3.82631e-07     9.99975e+01
+
+   Temperature = 300 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  1.01377e-03  3.87435e-08  4.79532e-03  1.05331e-06     9.99942e+01
+      600  1.08861e-03  4.19473e-08  4.86207e-03  1.05286e-06     9.99940e+01
+      760  1.19340e-03  4.60998e-08  4.94039e-03  1.05197e-06     9.99939e+01
+
+   Temperature = 310 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  2.49263e-03  1.11120e-07  1.08223e-02  2.70342e-06     9.99867e+01
+      600  2.68215e-03  1.21187e-07  1.10110e-02  2.70092e-06     9.99863e+01
+      760  2.94845e-03  1.34415e-07  1.12353e-02  2.69646e-06     9.99858e+01
+
+   Temperature = 320 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  5.65752e-03  2.94509e-07  2.31421e-02  6.50152e-06     9.99712e+01
+      600  6.09874e-03  3.23543e-07  2.36366e-02  6.49034e-06     9.99703e+01
+      760  6.71858e-03  3.62197e-07  2.42310e-02  6.47119e-06     9.99690e+01
+
+   Temperature = 330 K
+
+  P(torr)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+      500  1.19444e-02  7.25942e-07  4.70278e-02  1.47019e-05     9.99410e+01
+      600  1.28895e-02  8.03326e-07  4.82344e-02  1.46608e-05     9.99389e+01
+      760  1.42137e-02  9.07679e-07  4.97022e-02  1.45916e-05     9.99361e+01
+
+Thermal fate of G6 (%), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  9.89322e-11  8.77986e-17  8.97408e-12  1.00000e+02     6.05277e-08
+      600  1.19087e-10  8.98653e-17  8.51178e-12  1.00000e+02     6.61757e-08
+      760  1.42750e-10  1.72492e-16  8.09464e-12  1.00000e+02     7.49082e-08
+
+   Temperature = 280 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  2.36824e-10  2.90440e-16  2.09567e-11  1.00000e+02     6.44723e-08
+      600  2.77844e-10  3.03502e-16  2.00554e-11  1.00000e+02     7.06585e-08
+      760  3.42665e-10  2.76263e-16  1.89800e-11  1.00000e+02     8.00623e-08
+
+   Temperature = 290 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  5.13148e-10  7.98752e-16  4.54987e-11  1.00000e+02     6.84859e-08
+      600  6.07398e-10  7.70490e-16  4.38611e-11  1.00000e+02     7.51643e-08
+      760  7.54228e-10  8.32260e-16  4.18535e-11  1.00000e+02     8.50778e-08
+
+   Temperature = 300 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  1.02986e-09  1.92505e-15  9.26979e-11  1.00000e+02     7.24994e-08
+      600  1.22051e-09  1.99996e-15  9.00841e-11  1.00000e+02     7.96934e-08
+      760  1.54045e-09  1.94165e-15  8.72892e-11  1.00000e+02     9.09500e-08
+
+   Temperature = 310 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  1.89747e-09  4.63667e-15  1.79138e-10  1.00000e+02     7.62359e-08
+      600  2.25785e-09  4.78943e-15  1.75539e-10  1.00000e+02     8.38749e-08
+      760  2.91223e-09  5.03017e-15  1.75938e-10  1.00000e+02     9.80740e-08
+
+   Temperature = 320 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  3.30796e-09  1.02905e-14  3.25791e-10  1.00000e+02     7.97657e-08
+      600  3.91780e-09  1.10809e-14  3.21697e-10  1.00000e+02     8.77361e-08
+      760  4.92500e-09  1.16768e-14  3.17582e-10  1.00000e+02     1.00121e-07
+
+   Temperature = 330 K
+
+  P(torr)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+      500  5.38656e-09  2.15967e-14  5.63391e-10  1.00000e+02     8.27552e-08
+      600  6.38656e-09  2.27019e-14  5.61135e-10  1.00000e+02     9.11935e-08
+      760  7.14929e-09  2.16713e-14  4.97158e-10  1.00000e+02     9.24463e-08
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  9.10683e-05  2.09684e+00  4.99659e-05   -1.28538e+00
+      600  7.65258e-05  1.65831e+00  3.81443e-05   -9.62269e-01
+      760  6.04987e-05  1.21357e+00  2.68142e-05   -6.56102e-01
+
+   Temperature = 280 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.25532e-04  2.54983e+00  6.77009e-05   -1.33000e+00
+      600  1.06125e-04  2.02939e+00  5.17413e-05   -1.00082e+00
+      760  8.45431e-05  1.49691e+00  3.64220e-05   -6.86707e-01
+
+   Temperature = 290 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.71307e-04  3.08765e+00  9.19683e-05   -1.36624e+00
+      600  1.45723e-04  2.47377e+00  7.03809e-05   -1.03406e+00
+      760  1.17005e-04  1.83987e+00  4.96169e-05   -7.14593e-01
+
+   Temperature = 300 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.31784e-04  3.72644e+00  1.25405e-04   -1.39169e+00
+      600  1.98448e-04  3.00669e+00  9.61181e-05   -1.06034e+00
+      760  1.60670e-04  2.25621e+00  6.78903e-05   -7.38839e-01
+
+   Temperature = 310 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  3.11581e-04  4.49372e+00  1.71954e-04   -1.63285e+00
+      600  2.68613e-04  3.65349e+00  1.32068e-04   -1.24957e+00
+      760  2.19435e-04  2.76826e+00  9.35231e-05   -8.75295e-01
+
+   Temperature = 320 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  4.16083e-04  5.40002e+00  2.36786e-04   -1.63968e+00
+      600  3.61382e-04  4.42705e+00  1.82362e-04   -1.26584e+00
+      760  2.98127e-04  3.39064e+00  1.29592e-04   -8.96622e-01
+
+   Temperature = 330 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  5.52680e-04  6.47702e+00  3.27748e-04   -1.62503e+00
+      600  4.83896e-04  5.35848e+00  2.53303e-04   -1.26727e+00
+      760  4.03502e-04  4.15303e+00  1.80842e-04   -9.09366e-01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  7.90523e-08  1.17980e-02  1.63426e-04    9.91764e+01
+      600  7.90914e-08  1.09202e-02  1.65072e-04    9.92928e+01
+      760  7.74035e-08  9.72211e-03  1.66965e-04    9.94326e+01
+
+   Temperature = 280 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.00019e-07  2.36630e-02  3.60920e-04    9.87560e+01
+      600  2.02110e-07  2.20986e-02  3.64245e-04    9.89488e+01
+      760  2.00305e-07  1.98959e-02  3.68146e-04    9.91694e+01
+
+   Temperature = 290 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  4.63532e-07  4.44673e-02  7.42954e-04    9.82331e+01
+      600  4.72947e-07  4.19030e-02  7.49159e-04    9.85174e+01
+      760  4.74623e-07  3.81612e-02  7.56478e-04    9.88356e+01
+
+   Temperature = 300 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  9.93658e-07  7.87964e-02  1.43628e-03    9.75847e+01
+      600  1.02351e-06  7.49275e-02  1.44691e-03    9.79770e+01
+      760  1.03997e-06  6.90384e-02  1.45957e-03    9.84119e+01
+
+   Temperature = 310 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.96401e-06  1.31434e-01  2.62158e-03    9.70046e+01
+      600  2.04757e-06  1.26480e-01  2.63871e-03    9.74666e+01
+      760  2.11263e-06  1.18288e-01  2.65928e-03    9.79858e+01
+
+   Temperature = 320 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  3.70113e-06  2.10992e-01  4.55480e-03    9.60235e+01
+      600  3.89379e-06  2.04896e-01  4.57981e-03    9.66288e+01
+      760  4.06726e-06  1.93959e-01  4.60992e-03    9.73070e+01
+
+   Temperature = 330 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  6.61738e-06  3.25333e-01  7.55941e-03    9.48142e+01
+      600  7.02442e-06  3.18843e-01  7.59323e-03    9.55816e+01
+      760  7.42867e-06  3.05580e-01  7.63368e-03    9.64425e+01
+
+Long-time yields, total (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  9.11473e-05  2.10864e+00  2.13392e-04    9.78911e+01
+      600  7.66048e-05  1.66923e+00  2.03217e-04    9.83305e+01
+      760  6.05761e-05  1.22330e+00  1.93779e-04    9.87764e+01
+
+   Temperature = 280 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.25732e-04  2.57350e+00  4.28621e-04    9.74259e+01
+      600  1.06328e-04  2.05149e+00  4.15987e-04    9.79480e+01
+      760  8.47434e-05  1.51681e+00  4.04568e-04    9.84827e+01
+
+   Temperature = 290 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  1.71770e-04  3.13212e+00  8.34922e-04    9.68669e+01
+      600  1.46195e-04  2.51567e+00  8.19540e-04    9.74834e+01
+      760  1.17480e-04  1.87804e+00  8.06095e-04    9.81210e+01
+
+   Temperature = 300 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  2.32778e-04  3.80524e+00  1.56168e-03    9.61930e+01
+      600  1.99472e-04  3.08162e+00  1.54303e-03    9.69166e+01
+      760  1.61710e-04  2.32525e+00  1.52746e-03    9.76731e+01
+
+   Temperature = 310 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  3.13545e-04  4.62516e+00  2.79353e-03    9.53717e+01
+      600  2.70661e-04  3.77997e+00  2.77077e-03    9.62170e+01
+      760  2.21548e-04  2.88655e+00  2.75280e-03    9.71105e+01
+
+   Temperature = 320 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  4.19784e-04  5.61101e+00  4.79159e-03    9.43838e+01
+      600  3.65276e-04  4.63195e+00  4.76217e-03    9.53629e+01
+      760  3.02194e-04  3.58460e+00  4.73951e-03    9.64104e+01
+
+   Temperature = 330 K
+
+  P(torr)        R->P1        R->P5        R->P7  R->escape(G4)
+      500  5.59297e-04  6.80235e+00  7.88716e-03    9.31892e+01
+      600  4.90920e-04  5.67733e+00  7.84653e-03    9.43143e+01
+      760  4.10931e-04  4.45861e+00  7.81453e-03    9.55332e+01
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
+
+   Temperature = 270 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.04174e-01   1.69591e-08    1.21135e-01
+      600  8.68119e-02   5.53548e-09    9.25475e-02
+      760  6.85361e-02   1.68180e-08    1.48911e-02
+
+   Temperature = 280 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.08465e-01   8.43763e-09    1.69600e-01
+      600  9.03880e-02   1.16370e-08    1.18494e-01
+      760  7.13596e-02   1.11638e-08    7.15587e-02
+
+   Temperature = 290 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.12651e-01   1.20150e-08    2.02383e-01
+      600  9.38773e-02   5.23768e-09    1.33958e-01
+      760  7.41147e-02   4.02539e-09    1.01158e-01
+
+   Temperature = 300 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.16703e-01   8.40652e-10    2.48493e-01
+      600  9.72545e-02   5.95132e-09    1.79795e-01
+      760  7.67814e-02   4.65050e-11    1.04053e-01
+
+   Temperature = 310 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.27577e-01   2.24195e-09    2.95543e-01
+      600  1.06318e-01   1.44632e-10    2.08266e-01
+      760  8.39384e-02   2.34368e-08    9.08015e-02
+
+   Temperature = 320 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.32441e-01   3.20115e-10    3.45366e-01
+      600  1.10373e-01   6.26654e-09    2.43543e-01
+      760  8.71419e-02   7.32786e-09    1.41112e-01
+
+   Temperature = 330 K
+
+  P(torr)   separation  loss balance  detailed bal.
+      500  1.37215e-01   2.65645e-10    3.94790e-01
+      600  1.14356e-01   8.99681e-09    2.68950e-01
+      760  9.02889e-02   1.31327e-07    1.98849e-01
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Rate coefficients from G2 (1/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  3.64490e+04  1.01034e+06  1.17418e-06  2.25136e+03  1.07717e-03  1.62028e+02  1.60936e-03     1.55162e-10
+   280  4.32934e+04  1.23878e+06  2.32759e-06  5.85950e+03  3.36524e-03  4.01821e+02  4.47004e-03     5.29713e-10
+   290  5.14175e+04  1.51702e+06  4.33495e-06  1.39933e+04  9.60129e-03  9.31012e+02  1.15458e-02     4.56488e-10
+   300  6.10224e+04  1.85359e+06  7.65047e-06  3.09225e+04  2.52252e-02  2.02520e+03  2.79452e-02     1.21131e-09
+   310  7.21105e+04  2.24863e+06  1.31834e-05  6.28076e+04  6.11763e-02  4.15439e+03  6.40608e-02     0.00000e+00
+   320  8.51715e+04  2.72227e+06  2.11896e-05  1.21269e+05  1.39150e-01  8.06609e+03  1.38486e-01    -7.19563e-09
+   330  1.00246e+05  3.27555e+06  3.28047e-05  2.21001e+05  2.97139e-01  1.48883e+04  2.85108e-01    -1.00961e-08
+
+  T(K)      G2 loss
+   270  1.04921e+06
+   280  1.28834e+06
+   290  1.58337e+06
+   300  1.94756e+06
+   310  2.38770e+06
+   320  2.93677e+06
+   330  3.61169e+06
+
+   Pressure = 600 torr
+
+  T(K)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  3.65087e+04  1.01257e+06  1.25185e-06  2.50594e+03  1.03334e-03  1.43261e+02  1.40545e-03     4.18937e-09
+   280  4.33889e+04  1.24246e+06  2.50393e-06  6.56043e+03  3.25639e-03  3.57773e+02  3.91762e-03     7.94570e-10
+   290  5.15681e+04  1.52298e+06  4.69311e-06  1.57554e+04  9.37058e-03  8.34830e+02  1.01518e-02     6.84732e-10
+   300  6.12558e+04  1.86306e+06  8.35006e-06  3.50023e+04  2.48272e-02  1.82887e+03  2.46306e-02    -1.61508e-09
+   310  7.24905e+04  2.26437e+06  1.44919e-05  7.15987e+04  6.08162e-02  3.78470e+03  5.66439e-02     6.52166e-09
+   320  8.57364e+04  2.74609e+06  2.33963e-05  1.38908e+05  1.39461e-01  7.40025e+03  1.22686e-01    -2.61659e-09
+   330  1.01065e+05  3.31062e+06  3.66461e-05  2.54278e+05  3.00165e-01  1.37541e+04  2.52917e-01     4.15724e-09
+
+  T(K)      G2 loss
+   270  1.05173e+06
+   280  1.29276e+06
+   290  1.59114e+06
+   300  1.96114e+06
+   310  2.41225e+06
+   320  2.97814e+06
+   330  3.67972e+06
+
+   Pressure = 760 torr
+
+  T(K)       G2->G3       G2->G4       G2->G6        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  3.65728e+04  1.01497e+06  1.39115e-06  2.85060e+03  9.65043e-04  1.21133e+02  1.19332e-03    -2.63775e-09
+   280  4.34922e+04  1.24645e+06  2.78330e-06  7.51984e+03  3.07440e-03  3.05134e+02  3.28914e-03    -1.05943e-09
+   290  5.17326e+04  1.52952e+06  5.19579e-06  1.81924e+04  8.94281e-03  7.18273e+02  8.54809e-03     3.42366e-09
+   300  6.15135e+04  1.87357e+06  9.57260e-06  4.07006e+04  2.39477e-02  1.58749e+03  2.08340e-02    -4.03771e-10
+   310  7.29159e+04  2.28211e+06  1.80265e-05  8.39983e+04  5.93890e-02  3.32036e+03  4.81058e-02     1.08694e-09
+   320  8.63766e+04  2.77326e+06  2.70438e-05  1.64010e+05  1.37611e-01  6.55025e+03  1.04426e-01    -5.88733e-09
+   330  1.02004e+05  3.35112e+06  2.92491e-05  3.02030e+05  2.99205e-01  1.22816e+04  2.15846e-01     0.00000e+00
+
+  T(K)      G2 loss
+   270  1.05452e+06
+   280  1.29777e+06
+   290  1.60016e+06
+   300  1.97737e+06
+   310  2.44234e+06
+   320  3.03020e+06
+   330  3.76744e+06
+
+Rate coefficients from G3 (1/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  3.11468e+02  2.28037e+02  6.55490e-05  1.93233e-01  4.53870e-07  2.83858e-02  2.68952e-02     7.56392e-13
+   280  4.38956e+02  2.98321e+02  1.41876e-04  6.40168e-01  1.87777e-06  9.06970e-02  8.35351e-02     1.19805e-12
+   290  6.11630e+02  3.91181e+02  2.85728e-04  1.92373e+00  7.02172e-06  2.68553e-01  2.40438e-01     1.75038e-12
+   300  8.42986e+02  5.14095e+02  5.39648e-04  5.29405e+00  2.39582e-05  7.40749e-01  6.46082e-01    -9.26946e-14
+   310  1.14617e+03  6.79687e+02  9.51046e-04  1.37802e+01  7.56378e-05  1.94507e+00  1.63127e+00     1.78452e-13
+   320  1.54451e+03  8.97009e+02  1.60717e-03  3.25689e+01  2.20061e-04  4.71947e+00  3.89210e+00     6.53932e-12
+   330  2.05789e+03  1.18376e+03  2.59634e-03  7.20949e+01  5.97439e-04  1.08155e+01  8.81898e+00    -7.14915e-12
+
+  T(K)      G3 loss
+   270  5.39754e+02
+   280  7.38092e+02
+   290  1.00524e+03
+   300  1.36376e+03
+   310  1.84322e+03
+   320  2.48270e+03
+   330  3.33338e+03
+
+   Pressure = 600 torr
+
+  T(K)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  3.11979e+02  2.27561e+02  8.00634e-05  1.79496e-01  4.05522e-07  2.37272e-02  2.68882e-02    -5.60290e-13
+   280  4.39927e+02  2.97438e+02  1.74485e-04  5.98172e-01  1.69290e-06  7.62783e-02  8.35308e-02    -1.56267e-13
+   290  6.13429e+02  3.89596e+02  3.53443e-04  1.80763e+00  6.38652e-06  2.27413e-01  2.40470e-01    -1.36141e-12
+   300  8.46228e+02  5.11354e+02  6.71472e-04  5.00103e+00  2.19789e-05  6.31949e-01  6.46280e-01     2.13198e-12
+   310  1.15226e+03  6.74753e+02  1.19015e-03  1.30867e+01  6.99459e-05  1.67094e+00  1.63206e+00     1.60607e-12
+   320  1.55486e+03  8.89097e+02  2.01946e-03  3.10766e+01  2.05142e-04  4.08778e+00  3.89469e+00     6.45328e-12
+   330  2.07493e+03  1.17161e+03  3.28205e-03  6.90959e+01  5.61237e-04  9.44720e+00  8.82666e+00    -5.15404e-12
+
+  T(K)      G3 loss
+   270  5.39771e+02
+   280  7.38123e+02
+   290  1.00530e+03
+   300  1.36386e+03
+   310  1.84340e+03
+   320  2.48302e+03
+   330  3.33392e+03
+
+   Pressure = 760 torr
+
+  T(K)       G3->G2       G3->G4       G3->G6        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  3.12528e+02  2.27052e+02  1.04307e-04  1.62153e-01  3.47827e-07  1.87881e-02  2.68722e-02     0.00000e+00
+   280  4.40978e+02  2.96489e+02  2.28900e-04  5.44625e-01  1.46876e-06  6.08481e-02  8.35071e-02     1.19805e-12
+   290  6.15393e+02  3.87886e+02  4.65891e-04  1.65817e+00  5.60390e-06  1.82933e-01  2.40462e-01    -2.86868e-12
+   300  8.49806e+02  5.08383e+02  8.97600e-04  4.62028e+00  1.95003e-05  5.13021e-01  6.46407e-01    -2.96623e-12
+   310  1.15907e+03  6.69358e+02  1.64048e-03  1.21748e+01  6.27046e-05  1.36824e+00  1.63274e+00    -6.24583e-13
+   320  1.56659e+03  8.80405e+02  2.73319e-03  2.90965e+01  1.85840e-04  3.38183e+00  3.89716e+00     4.90449e-12
+   330  2.09448e+03  1.15820e+03  3.97571e-03  6.50827e+01  5.13583e-04  7.89909e+00  8.83436e+00    -5.32030e-12
+
+  T(K)      G3 loss
+   270  5.39789e+02
+   280  7.38156e+02
+   290  1.00536e+03
+   300  1.36397e+03
+   310  1.84360e+03
+   320  2.48337e+03
+   330  3.33450e+03
+
+Rate coefficients from G4 (1/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  3.21262e+03  8.50951e+01  1.75399e-09  2.71641e+00  2.32851e-04  7.24856e+01  4.96452e-06     2.50000e+07
+   280  4.85107e+03  1.15689e+02  4.07360e-09  9.20764e+00  8.87637e-04  1.95998e+02  1.83381e-05     2.50000e+07
+   290  7.20941e+03  1.57165e+02  9.04005e-09  2.81499e+01  3.04997e-03  4.97180e+02  6.15097e-05     2.50000e+07
+   300  1.05490e+04  2.13404e+02  1.85414e-08  7.83686e+01  9.53561e-03  1.18727e+03  1.91135e-04     2.50000e+07
+   310  1.51277e+04  2.91029e+02  3.67737e-08  2.07146e+02  2.73526e-02  2.67797e+03  5.64597e-04     2.50000e+07
+   320  2.14237e+04  3.95038e+02  6.60000e-08  4.89967e+02  7.25111e-02  5.72462e+03  1.52243e-03     2.50000e+07
+   330  2.98494e+04  5.35012e+02  1.11808e-07  1.07895e+03  1.78818e-01  1.16328e+04  3.85806e-03     2.50000e+07
+
+  T(K)      G4 loss
+   270  2.50034e+07
+   280  2.50052e+07
+   290  2.50079e+07
+   300  2.50120e+07
+   310  2.50183e+07
+   320  2.50280e+07
+   330  2.50431e+07
+
+   Pressure = 600 torr
+
+  T(K)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  3.22113e+03  8.48810e+01  1.86186e-09  2.53056e+00  2.47152e-04  7.29828e+01  4.07178e-06     2.50000e+07
+   280  4.86843e+03  1.15275e+02  4.56660e-09  8.63902e+00  9.48764e-04  1.97792e+02  1.50391e-05     2.50000e+07
+   290  7.24369e+03  1.56393e+02  1.03503e-08  2.65966e+01  3.28335e-03  5.03083e+02  5.07733e-05     2.50000e+07
+   300  1.06144e+04  2.12022e+02  2.15360e-08  7.45532e+01  1.03398e-02  1.20511e+03  1.58501e-04     2.50000e+07
+   310  1.52588e+04  2.88429e+02  4.39966e-08  1.98199e+02  2.98754e-02  2.72776e+03  4.68673e-04     2.50000e+07
+   320  2.16569e+04  3.90750e+02  8.14533e-08  4.71912e+02  7.97801e-02  5.85378e+03  1.27030e-03     2.50000e+07
+   330  3.02485e+04  5.28262e+02  1.48291e-07  1.04596e+03  1.98184e-01  1.19458e+04  3.23446e-03     2.50000e+07
+
+  T(K)      G4 loss
+   270  2.50034e+07
+   280  2.50052e+07
+   290  2.50079e+07
+   300  2.50121e+07
+   310  2.50185e+07
+   320  2.50284e+07
+   330  2.50438e+07
+
+   Pressure = 760 torr
+
+  T(K)       G4->G2       G4->G3       G4->G6        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  3.23000e+03  8.46601e+01  2.32836e-09  2.29451e+00  2.64957e-04  7.35484e+01  2.88419e-06     2.50000e+07
+   280  4.88665e+03  1.14845e+02  5.41527e-09  7.90613e+00  1.02597e-03  1.99855e+02  1.16914e-05     2.50000e+07
+   290  7.28001e+03  1.55590e+02  1.15473e-08  2.45628e+01  3.58229e-03  5.09950e+02  3.99059e-05     2.50000e+07
+   300  1.06845e+04  2.10579e+02  2.81674e-08  6.94704e+01  1.13842e-02  1.22611e+03  1.24962e-04     2.50000e+07
+   310  1.54009e+04  2.85697e+02  7.77182e-08  1.86095e+02  3.31966e-02  2.78707e+03  3.70872e-04     2.50000e+07
+   320  2.19127e+04  3.86221e+02  1.09189e-07  4.46932e+02  8.94755e-02  6.00946e+03  1.01190e-03     2.50000e+07
+   330  3.06921e+04  5.21101e+02  1.44992e-07  9.99035e+02  2.24347e-01  1.23274e+04  2.59122e-03     2.50000e+07
+
+  T(K)      G4 loss
+   270  2.50034e+07
+   280  2.50052e+07
+   290  2.50080e+07
+   300  2.50122e+07
+   310  2.50187e+07
+   320  2.50288e+07
+   330  2.50445e+07
+
+Rate coefficients from G6 (1/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  3.41515e-09  2.23770e-05  1.82849e-09  5.07584e-11 -5.37204e-16  1.08411e-11  3.69109e+04     8.66810e-22
+   280  8.77929e-09  5.30178e-05  4.73809e-09  6.42474e-10  1.43227e-14  6.47625e-11  8.19185e+04     1.02047e-21
+   290  2.08248e-08  1.16194e-04  1.15124e-08 -1.27121e-09  6.45034e-14  1.70922e-10  1.68293e+05     4.89258e-22
+   300  4.60167e-08  2.37476e-04  2.62968e-08  1.44528e-09 -7.59636e-14  4.99467e-10  3.22506e+05     5.98183e-22
+   310  9.76369e-08  4.50362e-04  5.82600e-08 -4.77577e-08  1.02318e-14  9.84148e-10  5.74703e+05     6.47947e-21
+   320  1.89937e-07  8.14163e-04  1.17590e-07  2.68395e-08  1.07485e-13  3.28311e-09  9.75066e+05     4.36336e-21
+   330  3.49362e-07  1.39766e-03  2.24766e-07  2.80267e-08  2.93993e-12  1.03655e-08  1.57207e+06    -1.10330e-20
+
+  T(K)      G6 loss
+   270  3.69109e+04
+   280  8.19185e+04
+   290  1.68293e+05
+   300  3.22506e+05
+   310  5.74703e+05
+   320  9.75066e+05
+   330  1.57207e+06
+
+   Pressure = 600 torr
+
+  T(K)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  3.63936e-09  2.73321e-05  1.87979e-09  1.39397e-09 -1.85037e-17  6.85716e-12  4.12312e+04     2.67022e-22
+   280  9.43802e-09  6.52053e-05  5.00356e-09  4.82142e-11  2.39148e-14  6.09538e-11  9.19048e+04     1.29760e-23
+   290  2.25265e-08  1.43740e-04  1.21396e-08  1.08570e-09 -1.68735e-14  1.35319e-10  1.89593e+05    -1.71692e-21
+   300  5.01663e-08  2.95532e-04  2.79858e-08  5.40223e-09 -5.14129e-14  3.90151e-10  3.64763e+05    -2.38915e-21
+   310  1.07191e-07  5.63776e-04  6.20194e-08 -1.76594e-08 -2.57135e-13  1.14423e-09  6.52799e+05     6.30764e-21
+   320  2.09429e-07  1.02372e-03  1.25589e-07 -1.58179e-08  3.30892e-12  6.43365e-09  1.11161e+06    -3.71959e-21
+   330  3.89931e-07  1.76914e-03  2.46793e-07 -9.94035e-08  6.64936e-13  1.06406e-08  1.79835e+06    -1.14332e-21
+
+  T(K)      G6 loss
+   270  4.12312e+04
+   280  9.19048e+04
+   290  1.89593e+05
+   300  3.64763e+05
+   310  6.52799e+05
+   320  1.11161e+06
+   330  1.79835e+06
+
+   Pressure = 760 torr
+
+  T(K)       G6->G2       G6->G3       G6->G4        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  4.04394e-09  3.56087e-05  2.16548e-09 -8.72740e-11  3.87870e-14  5.34415e-11  4.74467e+04    -3.69448e-22
+   280  1.04869e-08  8.55431e-05  5.63349e-09 -2.26923e-09 -6.92925e-15  4.48358e-11  1.06370e+05     6.10797e-22
+   290  2.49216e-08  1.89486e-04  1.30493e-08 -1.07057e-09  7.01442e-14  1.92246e-10  2.20646e+05     1.59776e-21
+   300  5.74916e-08  3.95133e-04  3.35088e-08  3.55924e-08 -6.95032e-13  1.70052e-10  4.26742e+05    -3.22374e-23
+   310  1.33521e-07  7.77486e-04  9.54008e-08 -2.45093e-08 -1.44420e-12  1.19420e-09  7.68063e+05     4.63944e-21
+   320  2.42147e-07  1.38669e-03  1.48275e-07 -1.34032e-07  2.55775e-12  5.78581e-09  1.31424e+06    -3.24749e-21
+   330  3.04042e-07  2.14307e-03  2.20189e-07  6.10738e-08  3.73797e-13  7.03558e-09  2.13590e+06    -2.67251e-21
+
+  T(K)      G6 loss
+   270  4.74467e+04
+   280  1.06370e+05
+   290  2.20646e+05
+   300  4.26742e+05
+   310  7.68063e+05
+   320  1.31424e+06
+   330  2.13590e+06
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  1.04498e-17  2.40605e-13  5.73341e-18   -1.47492e-13
+   280  1.24121e-17  2.52117e-13  6.69398e-18   -1.31505e-13
+   290  1.44790e-17  2.60973e-13  7.77328e-18   -1.15476e-13
+   300  1.66143e-17  2.67112e-13  8.98902e-18   -9.97562e-14
+   310  1.87852e-17  2.70926e-13  1.03671e-17   -9.84446e-14
+   320  2.09453e-17  2.71834e-13  1.19197e-17   -8.25406e-14
+   330  2.30625e-17  2.70276e-13  1.36765e-17   -6.78101e-14
+
+   Pressure = 600 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  9.31431e-18  2.01840e-13  4.64273e-18   -1.17122e-13
+   280  1.11656e-17  2.13515e-13  5.44377e-18   -1.05298e-13
+   290  1.31398e-17  2.23060e-13  6.34626e-18   -9.32412e-14
+   300  1.52040e-17  2.30357e-13  7.36406e-18   -8.12379e-14
+   310  1.73275e-17  2.35677e-13  8.51932e-18   -8.06065e-14
+   320  1.94656e-17  2.38460e-13  9.82280e-18   -6.81838e-14
+   330  2.15855e-17  2.39030e-13  1.12993e-17   -5.65300e-14
+
+   Pressure = 760 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.94488e-18  1.59370e-13  3.52133e-18   -8.61614e-14
+   280  9.63979e-18  1.70681e-13  4.15292e-18   -7.82999e-14
+   290  1.14763e-17  1.80462e-13  4.86661e-18   -7.00899e-14
+   300  1.34269e-17  1.88547e-13  5.67346e-18   -6.17434e-14
+   310  1.54645e-17  1.95090e-13  6.59094e-18   -6.16855e-14
+   320  1.75478e-17  1.99574e-13  7.62781e-18   -5.27753e-14
+   330  1.96447e-17  2.02192e-13  8.80440e-18   -4.42730e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  8.20699e-12  8.24469e-14  3.11029e-12  6.34864e-23
+   280  6.94331e-12  7.48395e-14  2.78151e-12  2.01014e-22
+   290  5.83022e-12  6.74115e-14  2.46244e-12 -1.09123e-22
+   300  4.86173e-12  6.02956e-14  2.15883e-12  3.78416e-23
+   310  3.97165e-12  5.48906e-14  1.93880e-12 -3.98715e-22
+   320  3.26792e-12  4.84880e-14  1.66908e-12  7.96510e-23
+   330  2.67464e-12  4.26190e-14  1.42429e-12  3.26616e-23
+
+   Pressure = 600 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  9.13519e-12  7.65838e-14  2.89742e-12  1.74182e-21
+   280  7.77411e-12  6.99275e-14  2.60962e-12  1.52054e-23
+   290  6.56467e-12  6.33401e-14  2.32642e-12  9.37100e-23
+   300  5.50359e-12  5.69544e-14  2.05354e-12  1.39974e-22
+   310  4.52821e-12  5.21231e-14  1.85479e-12 -1.46893e-22
+   320  3.74412e-12  4.62602e-14  1.60725e-12 -4.45350e-23
+   330  3.07846e-12  4.08393e-14  1.38035e-12 -1.04843e-22
+
+   Pressure = 760 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  1.03918e-11  6.91825e-14  2.62708e-12 -1.08994e-22
+   280  8.91123e-12  6.36654e-14  2.38813e-12 -7.09382e-22
+   290  7.58040e-12  5.80998e-14  2.14837e-12 -9.18991e-23
+   300  6.40003e-12  5.26142e-14  1.91334e-12  9.19397e-22
+   310  5.31314e-12  4.84854e-14  1.74123e-12 -2.04301e-22
+   320  4.42170e-12  4.33058e-14  1.52181e-12 -3.88722e-22
+   330  3.65785e-12  3.84594e-14  1.31798e-12  6.81669e-23
+
+Capture, return and net reaction of R (cm^3/s), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)      capture       return          net
+   270  3.80748e-11  2.65820e-11  1.14929e-11
+   280  3.82990e-11  2.83787e-11  9.92029e-12
+   290  3.85168e-11  3.00112e-11  8.50560e-12
+   300  3.87287e-11  3.14804e-11  7.24824e-12
+   310  3.89349e-11  3.27970e-11  6.13785e-12
+   320  3.91357e-11  3.39609e-11  5.17482e-12
+   330  3.93316e-11  3.49875e-11  4.34405e-12
+
+   Pressure = 600 torr
+
+  T(K)      capture       return          net
+   270  3.80748e-11  2.58809e-11  1.21939e-11
+   280  3.82990e-11  2.77371e-11  1.05619e-11
+   290  3.85168e-11  2.94326e-11  9.08426e-12
+   300  3.87287e-11  3.09654e-11  7.76322e-12
+   310  3.89349e-11  3.23446e-11  6.59022e-12
+   320  3.91357e-11  3.35678e-11  5.56793e-12
+   330  3.93316e-11  3.46494e-11  4.68218e-12
+
+   Pressure = 760 torr
+
+  T(K)      capture       return          net
+   270  3.80748e-11  2.49136e-11  1.31612e-11
+   280  3.82990e-11  2.68436e-11  1.14554e-11
+   290  3.85168e-11  2.86196e-11  9.89726e-12
+   300  3.87287e-11  3.02359e-11  8.49280e-12
+   310  3.89349e-11  3.16986e-11  7.23629e-12
+   320  3.91357e-11  3.30021e-11  6.13363e-12
+   330  3.93316e-11  3.41593e-11  5.17224e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  9.09240e-05  2.09352e+00  4.98867e-05   -1.28334e+00
+   280  1.25118e-04  2.54143e+00  6.74777e-05   -1.32562e+00
+   290  1.70230e-04  3.06825e+00  9.13902e-05   -1.35765e+00
+   300  2.29219e-04  3.68519e+00  1.24017e-04   -1.37628e+00
+   310  3.06054e-04  4.41402e+00  1.68904e-04   -1.60389e+00
+   320  4.04755e-04  5.25301e+00  2.30340e-04   -1.59504e+00
+   330  5.30899e-04  6.22176e+00  3.14832e-04   -1.56099e+00
+
+   Pressure = 600 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.63848e-05  1.65525e+00  3.80741e-05   -9.60496e-01
+   280  1.05716e-04  2.02156e+00  5.15416e-05   -9.96960e-01
+   290  1.44644e-04  2.45546e+00  6.98599e-05   -1.02640e+00
+   300  1.95847e-04  2.96728e+00  9.48583e-05   -1.04644e+00
+   310  2.62928e-04  3.57616e+00  1.29272e-04   -1.22312e+00
+   320  3.49602e-04  4.28274e+00  1.76417e-04   -1.22458e+00
+   330  4.61014e-04  5.10509e+00  2.41325e-04   -1.20734e+00
+
+   Pressure = 760 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  6.03658e-05  1.21091e+00  2.67553e-05   -6.54661e-01
+   280  8.41504e-05  1.48996e+00  3.62528e-05   -6.83518e-01
+   290  1.15954e-04  1.82335e+00  4.91713e-05   -7.08175e-01
+   300  1.58098e-04  2.22008e+00  6.68032e-05   -7.27008e-01
+   310  2.13707e-04  2.69600e+00  9.10818e-05   -8.52447e-01
+   320  2.86092e-04  3.25376e+00  1.24360e-04   -8.60424e-01
+   330  3.79810e-04  3.90919e+00  1.70224e-04   -8.55973e-01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  7.14095e+01  7.17375e-01  2.70628e+01  5.52399e-10
+   280  6.99910e+01  7.54408e-01  2.80386e+01  2.02629e-09
+   290  6.85457e+01  7.92554e-01  2.89508e+01 -1.28296e-09
+   300  6.70746e+01  8.31865e-01  2.97842e+01  5.22079e-10
+   310  6.47075e+01  8.94297e-01  3.15876e+01 -6.49600e-09
+   320  6.31504e+01  9.37000e-01  3.22540e+01  1.53920e-09
+   330  6.15702e+01  9.81088e-01  3.27871e+01  7.51871e-10
+
+   Pressure = 600 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  7.49159e+01  6.28049e-01  2.37612e+01  1.42843e-08
+   280  7.36053e+01  6.62073e-01  2.47079e+01  1.43965e-10
+   290  7.22642e+01  6.97250e-01  2.56093e+01  1.03156e-09
+   300  7.08931e+01  7.33644e-01  2.64521e+01  1.80303e-09
+   310  6.87111e+01  7.90917e-01  2.81446e+01 -2.22895e-09
+   320  6.72444e+01  8.30832e-01  2.88661e+01 -7.99848e-10
+   330  6.57485e+01  8.72228e-01  2.94809e+01 -2.23920e-09
+
+   Pressure = 760 torr
+
+  T(K)        R->G2        R->G3        R->G4        R->G6
+   270  7.89573e+01  5.25654e-01  1.99607e+01 -8.28146e-10
+   280  7.77905e+01  5.55767e-01  2.08472e+01 -6.19254e-09
+   290  7.65909e+01  5.87029e-01  2.17067e+01 -9.28530e-10
+   300  7.53583e+01  6.19515e-01  2.25289e+01  1.08256e-08
+   310  7.34236e+01  6.70032e-01  2.40625e+01 -2.82329e-09
+   320  7.20893e+01  7.06039e-01  2.48109e+01 -6.33755e-09
+   330  7.07208e+01  7.43574e-01  2.54819e+01  1.31794e-09
+
+Thermal fate of G2 (%), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  2.20276e-01  1.08690e-07  1.62366e-02  1.77271e-04     9.97633e+01
+   280  4.67188e-01  2.78846e-07  3.30329e-02  3.89219e-04     9.94994e+01
+   290  9.08301e-01  6.54019e-07  6.28570e-02  7.94434e-04     9.90280e+01
+   300  1.63252e+00  1.41500e-06  1.12488e-01  1.51747e-03     9.82535e+01
+   310  2.70624e+00  2.84540e-06  1.91079e-01  2.73092e-03     9.70999e+01
+   320  4.24933e+00  5.36820e-06  3.07412e-01  4.64302e-03     9.54386e+01
+   330  6.29795e+00  9.55387e-06  4.72442e-01  7.49523e-03     9.32221e+01
+
+   Pressure = 600 torr
+
+  T(K)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  2.44368e-01  1.03924e-07  1.43491e-02  1.77162e-04     9.97411e+01
+   280  5.20745e-01  2.68718e-07  2.93864e-02  3.88820e-04     9.94495e+01
+   290  1.01652e+00  6.34987e-07  5.62806e-02  7.93076e-04     9.89264e+01
+   300  1.83281e+00  1.38344e-06  1.01342e-01  1.51322e-03     9.80643e+01
+   310  3.04929e+00  2.80291e-06  1.73332e-01  2.71848e-03     9.67747e+01
+   320  4.79237e+00  5.31821e-06  2.80317e-01  4.61121e-03     9.49227e+01
+   330  7.10028e+00  9.51275e-06  4.32826e-01  7.42131e-03     9.24595e+01
+
+   Pressure = 760 torr
+
+  T(K)        G2->R       G2->P1       G2->P5       G2->P7  G2->escape(G4)
+   270  2.76971e-01  9.67406e-08  1.21405e-02  1.77035e-04     9.97107e+01
+   280  5.93954e-01  2.52672e-07  2.50737e-02  3.88325e-04     9.93806e+01
+   290  1.16574e+00  6.02866e-07  4.84225e-02  7.91322e-04     9.87850e+01
+   300  2.11092e+00  1.32547e-06  8.78951e-02  1.50763e-03     9.77997e+01
+   310  3.52798e+00  2.71113e-06  1.51632e-01  2.70191e-03     9.63177e+01
+   320  5.55197e+00  5.18298e-06  2.46909e-01  4.56806e-03     9.41965e+01
+   330  8.22231e+00  9.33353e-06  3.83610e-01  7.31982e-03     9.13868e+01
+
+Thermal fate of G3 (%), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  1.62929e-01  1.47208e-07  1.47518e-02  5.09733e-03     9.98172e+01
+   280  3.64630e-01  4.21700e-07  3.22527e-02  1.15685e-02     9.95915e+01
+   290  7.44163e-01  1.10126e-06  6.57407e-02  2.44303e-02     9.91657e+01
+   300  1.39769e+00  2.64604e-06  1.25657e-01  4.83529e-02     9.84283e+01
+   310  2.43136e+00  5.91391e-06  2.28336e-01  9.02522e-02     9.72500e+01
+   320  3.95742e+00  1.23098e-05  3.89699e-01  1.59724e-01     9.54931e+01
+   330  6.05515e+00  2.40789e-05  6.32829e-01  2.69276e-01     9.30427e+01
+
+   Pressure = 600 torr
+
+  T(K)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  1.74513e-01  1.35618e-07  1.28132e-02  5.09865e-03     9.98076e+01
+   280  3.91463e-01  3.91061e-07  2.81697e-02  1.15721e-02     9.95688e+01
+   290  8.00242e-01  1.02791e-06  5.77495e-02  2.44394e-02     9.91176e+01
+   300  1.50428e+00  2.48563e-06  1.11037e-01  4.83745e-02     9.83363e+01
+   310  2.61693e+00  5.59077e-06  2.03020e-01  9.02998e-02     9.70897e+01
+   320  4.25472e+00  1.17079e-05  3.48627e-01  1.59824e-01     9.52368e+01
+   330  6.49606e+00  2.30369e-05  5.69695e-01  2.69476e-01     9.26648e+01
+
+   Pressure = 760 torr
+
+  T(K)        G3->R       G3->P1       G3->P5       G3->P7  G3->escape(G4)
+   270  1.90421e-01  1.20900e-07  1.06342e-02  5.10013e-03     9.97938e+01
+   280  4.28673e-01  3.51593e-07  2.35455e-02  1.15760e-02     9.95362e+01
+   290  8.78665e-01  9.32019e-07  4.86280e-02  2.44489e-02     9.90483e+01
+   300  1.65437e+00  2.27268e-06  9.42158e-02  4.83971e-02     9.82030e+01
+   310  2.87948e+00  5.15448e-06  1.73625e-01  9.03509e-02     9.68565e+01
+   320  4.67639e+00  1.08814e-05  3.00527e-01  1.59925e-01     9.48631e+01
+   330  7.12135e+00  2.15800e-05  4.95107e-01  2.69660e-01     9.21139e+01
+
+Thermal fate of G4 (%), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  3.97213e-05  9.45744e-10  2.92040e-04  4.01449e-08     9.99997e+01
+   280  1.29146e-04  3.60586e-09  7.90389e-04  1.29105e-07     9.99991e+01
+   290  3.79091e-04  1.23915e-08  2.00663e-03  3.82805e-07     9.99976e+01
+   300  1.01377e-03  3.87435e-08  4.79532e-03  1.05331e-06     9.99942e+01
+   310  2.49263e-03  1.11120e-07  1.08223e-02  2.70342e-06     9.99867e+01
+   320  5.65752e-03  2.94509e-07  2.31421e-02  6.50152e-06     9.99712e+01
+   330  1.19444e-02  7.25942e-07  4.70278e-02  1.47019e-05     9.99410e+01
+
+   Pressure = 600 torr
+
+  T(K)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  4.21947e-05  1.00232e-09  2.93784e-04  4.01485e-08     9.99997e+01
+   280  1.37741e-04  3.84839e-09  7.96855e-04  1.29110e-07     9.99991e+01
+   290  4.05798e-04  1.33196e-08  2.02836e-03  3.82760e-07     9.99976e+01
+   300  1.08861e-03  4.19473e-08  4.86207e-03  1.05286e-06     9.99940e+01
+   310  2.68215e-03  1.21187e-07  1.10110e-02  2.70092e-06     9.99863e+01
+   320  6.09874e-03  3.23543e-07  2.36366e-02  6.49034e-06     9.99703e+01
+   330  1.28895e-02  8.03326e-07  4.82344e-02  1.46608e-05     9.99389e+01
+
+   Pressure = 760 torr
+
+  T(K)        G4->R       G4->P1       G4->P5       G4->P7  G4->escape(G4)
+   270  4.56014e-05  1.07259e-09  2.95758e-04  4.01501e-08     9.99997e+01
+   280  1.49661e-04  4.15400e-09  8.04260e-04  1.29102e-07     9.99990e+01
+   290  4.43042e-04  1.45059e-08  2.05355e-03  3.82631e-07     9.99975e+01
+   300  1.19340e-03  4.60998e-08  4.94039e-03  1.05197e-06     9.99939e+01
+   310  2.94845e-03  1.34415e-07  1.12353e-02  2.69646e-06     9.99858e+01
+   320  6.71858e-03  3.62197e-07  2.42310e-02  6.47119e-06     9.99690e+01
+   330  1.42137e-02  9.07679e-07  4.97022e-02  1.45916e-05     9.99361e+01
+
+Thermal fate of G6 (%), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  9.89322e-11  8.77986e-17  8.97408e-12  1.00000e+02     6.05277e-08
+   280  2.36824e-10  2.90440e-16  2.09567e-11  1.00000e+02     6.44723e-08
+   290  5.13148e-10  7.98752e-16  4.54987e-11  1.00000e+02     6.84859e-08
+   300  1.02986e-09  1.92505e-15  9.26979e-11  1.00000e+02     7.24994e-08
+   310  1.89747e-09  4.63667e-15  1.79138e-10  1.00000e+02     7.62359e-08
+   320  3.30796e-09  1.02905e-14  3.25791e-10  1.00000e+02     7.97657e-08
+   330  5.38656e-09  2.15967e-14  5.63391e-10  1.00000e+02     8.27552e-08
+
+   Pressure = 600 torr
+
+  T(K)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  1.19087e-10  8.98653e-17  8.51178e-12  1.00000e+02     6.61757e-08
+   280  2.77844e-10  3.03502e-16  2.00554e-11  1.00000e+02     7.06585e-08
+   290  6.07398e-10  7.70490e-16  4.38611e-11  1.00000e+02     7.51643e-08
+   300  1.22051e-09  1.99996e-15  9.00841e-11  1.00000e+02     7.96934e-08
+   310  2.25785e-09  4.78943e-15  1.75539e-10  1.00000e+02     8.38749e-08
+   320  3.91780e-09  1.10809e-14  3.21697e-10  1.00000e+02     8.77361e-08
+   330  6.38656e-09  2.27019e-14  5.61135e-10  1.00000e+02     9.11935e-08
+
+   Pressure = 760 torr
+
+  T(K)        G6->R       G6->P1       G6->P5       G6->P7  G6->escape(G4)
+   270  1.42750e-10  1.72492e-16  8.09464e-12  1.00000e+02     7.49082e-08
+   280  3.42665e-10  2.76263e-16  1.89800e-11  1.00000e+02     8.00623e-08
+   290  7.54228e-10  8.32260e-16  4.18535e-11  1.00000e+02     8.50778e-08
+   300  1.54045e-09  1.94165e-15  8.72892e-11  1.00000e+02     9.09500e-08
+   310  2.91223e-09  5.03017e-15  1.75938e-10  1.00000e+02     9.80740e-08
+   320  4.92500e-09  1.16768e-14  3.17582e-10  1.00000e+02     1.00121e-07
+   330  7.14929e-09  2.16713e-14  4.97158e-10  1.00000e+02     9.24463e-08
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  9.10683e-05  2.09684e+00  4.99659e-05   -1.28538e+00
+   280  1.25532e-04  2.54983e+00  6.77009e-05   -1.33000e+00
+   290  1.71307e-04  3.08765e+00  9.19683e-05   -1.36624e+00
+   300  2.31784e-04  3.72644e+00  1.25405e-04   -1.39169e+00
+   310  3.11581e-04  4.49372e+00  1.71954e-04   -1.63285e+00
+   320  4.16083e-04  5.40002e+00  2.36786e-04   -1.63968e+00
+   330  5.52680e-04  6.47702e+00  3.27748e-04   -1.62503e+00
+
+   Pressure = 600 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.65258e-05  1.65831e+00  3.81443e-05   -9.62269e-01
+   280  1.06125e-04  2.02939e+00  5.17413e-05   -1.00082e+00
+   290  1.45723e-04  2.47377e+00  7.03809e-05   -1.03406e+00
+   300  1.98448e-04  3.00669e+00  9.61181e-05   -1.06034e+00
+   310  2.68613e-04  3.65349e+00  1.32068e-04   -1.24957e+00
+   320  3.61382e-04  4.42705e+00  1.82362e-04   -1.26584e+00
+   330  4.83896e-04  5.35848e+00  2.53303e-04   -1.26727e+00
+
+   Pressure = 760 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  6.04987e-05  1.21357e+00  2.68142e-05   -6.56102e-01
+   280  8.45431e-05  1.49691e+00  3.64220e-05   -6.86707e-01
+   290  1.17005e-04  1.83987e+00  4.96169e-05   -7.14593e-01
+   300  1.60670e-04  2.25621e+00  6.78903e-05   -7.38839e-01
+   310  2.19435e-04  2.76826e+00  9.35231e-05   -8.75295e-01
+   320  2.98127e-04  3.39064e+00  1.29592e-04   -8.96622e-01
+   330  4.03502e-04  4.15303e+00  1.80842e-04   -9.09366e-01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.90523e-08  1.17980e-02  1.63426e-04    9.91764e+01
+   280  2.00019e-07  2.36630e-02  3.60920e-04    9.87560e+01
+   290  4.63532e-07  4.44673e-02  7.42954e-04    9.82331e+01
+   300  9.93658e-07  7.87964e-02  1.43628e-03    9.75847e+01
+   310  1.96401e-06  1.31434e-01  2.62158e-03    9.70046e+01
+   320  3.70113e-06  2.10992e-01  4.55480e-03    9.60235e+01
+   330  6.61738e-06  3.25333e-01  7.55941e-03    9.48142e+01
+
+   Pressure = 600 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.90914e-08  1.09202e-02  1.65072e-04    9.92928e+01
+   280  2.02110e-07  2.20986e-02  3.64245e-04    9.89488e+01
+   290  4.72947e-07  4.19030e-02  7.49159e-04    9.85174e+01
+   300  1.02351e-06  7.49275e-02  1.44691e-03    9.79770e+01
+   310  2.04757e-06  1.26480e-01  2.63871e-03    9.74666e+01
+   320  3.89379e-06  2.04896e-01  4.57981e-03    9.66288e+01
+   330  7.02442e-06  3.18843e-01  7.59323e-03    9.55816e+01
+
+   Pressure = 760 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.74035e-08  9.72211e-03  1.66965e-04    9.94326e+01
+   280  2.00305e-07  1.98959e-02  3.68146e-04    9.91694e+01
+   290  4.74623e-07  3.81612e-02  7.56478e-04    9.88356e+01
+   300  1.03997e-06  6.90384e-02  1.45957e-03    9.84119e+01
+   310  2.11263e-06  1.18288e-01  2.65928e-03    9.79858e+01
+   320  4.06726e-06  1.93959e-01  4.60992e-03    9.73070e+01
+   330  7.42867e-06  3.05580e-01  7.63368e-03    9.64425e+01
+
+Long-time yields, total (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  9.11473e-05  2.10864e+00  2.13392e-04    9.78911e+01
+   280  1.25732e-04  2.57350e+00  4.28621e-04    9.74259e+01
+   290  1.71770e-04  3.13212e+00  8.34922e-04    9.68669e+01
+   300  2.32778e-04  3.80524e+00  1.56168e-03    9.61930e+01
+   310  3.13545e-04  4.62516e+00  2.79353e-03    9.53717e+01
+   320  4.19784e-04  5.61101e+00  4.79159e-03    9.43838e+01
+   330  5.59297e-04  6.80235e+00  7.88716e-03    9.31892e+01
+
+   Pressure = 600 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  7.66048e-05  1.66923e+00  2.03217e-04    9.83305e+01
+   280  1.06328e-04  2.05149e+00  4.15987e-04    9.79480e+01
+   290  1.46195e-04  2.51567e+00  8.19540e-04    9.74834e+01
+   300  1.99472e-04  3.08162e+00  1.54303e-03    9.69166e+01
+   310  2.70661e-04  3.77997e+00  2.77077e-03    9.62170e+01
+   320  3.65276e-04  4.63195e+00  4.76217e-03    9.53629e+01
+   330  4.90920e-04  5.67733e+00  7.84653e-03    9.43143e+01
+
+   Pressure = 760 torr
+
+  T(K)        R->P1        R->P5        R->P7  R->escape(G4)
+   270  6.05761e-05  1.22330e+00  1.93779e-04    9.87764e+01
+   280  8.47434e-05  1.51681e+00  4.04568e-04    9.84827e+01
+   290  1.17480e-04  1.87804e+00  8.06095e-04    9.81210e+01
+   300  1.61710e-04  2.32525e+00  1.52746e-03    9.76731e+01
+   310  2.21548e-04  2.88655e+00  2.75280e-03    9.71105e+01
+   320  3.02194e-04  3.58460e+00  4.73951e-03    9.64104e+01
+   330  4.10931e-04  4.45861e+00  7.81453e-03    9.55332e+01
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
+
+   Pressure = 500 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   270  1.04174e-01   1.69591e-08    1.21135e-01
+   280  1.08465e-01   8.43763e-09    1.69600e-01
+   290  1.12651e-01   1.20150e-08    2.02383e-01
+   300  1.16703e-01   8.40652e-10    2.48493e-01
+   310  1.27577e-01   2.24195e-09    2.95543e-01
+   320  1.32441e-01   3.20115e-10    3.45366e-01
+   330  1.37215e-01   2.65645e-10    3.94790e-01
+
+   Pressure = 600 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   270  8.68119e-02   5.53548e-09    9.25475e-02
+   280  9.03880e-02   1.16370e-08    1.18494e-01
+   290  9.38773e-02   5.23768e-09    1.33958e-01
+   300  9.72545e-02   5.95132e-09    1.79795e-01
+   310  1.06318e-01   1.44632e-10    2.08266e-01
+   320  1.10373e-01   6.26654e-09    2.43543e-01
+   330  1.14356e-01   8.99681e-09    2.68950e-01
+
+   Pressure = 760 torr
+
+  T(K)   separation  loss balance  detailed bal.
+   270  6.85361e-02   1.68180e-08    1.48911e-02
+   280  7.13596e-02   1.11638e-08    7.15587e-02
+   290  7.41147e-02   4.02539e-09    1.01158e-01
+   300  7.67814e-02   4.65050e-11    1.04053e-01
+   310  8.39384e-02   2.34368e-08    9.08015e-02
+   320  8.71419e-02   7.32786e-09    1.41112e-01
+   330  9.02889e-02   1.31327e-07    1.98849e-01
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Rate coefficients from G2 (1/s), temperature-pressure tables:
+
+G2->G3
+
+P\T            270          280          290          300          310          320          330
+500    3.64490e+04  4.32934e+04  5.14175e+04  6.10224e+04  7.21105e+04  8.51715e+04  1.00246e+05
+600    3.65087e+04  4.33889e+04  5.15681e+04  6.12558e+04  7.24905e+04  8.57364e+04  1.01065e+05
+760    3.65728e+04  4.34922e+04  5.17326e+04  6.15135e+04  7.29159e+04  8.63766e+04  1.02004e+05
+
+G2->G4
+
+P\T            270          280          290          300          310          320          330
+500    1.01034e+06  1.23878e+06  1.51702e+06  1.85359e+06  2.24863e+06  2.72227e+06  3.27555e+06
+600    1.01257e+06  1.24246e+06  1.52298e+06  1.86306e+06  2.26437e+06  2.74609e+06  3.31062e+06
+760    1.01497e+06  1.24645e+06  1.52952e+06  1.87357e+06  2.28211e+06  2.77326e+06  3.35112e+06
+
+G2->G6
+
+P\T            270          280          290          300          310          320          330
+500    1.17418e-06  2.32759e-06  4.33495e-06  7.65047e-06  1.31834e-05  2.11896e-05  3.28047e-05
+600    1.25185e-06  2.50393e-06  4.69311e-06  8.35006e-06  1.44919e-05  2.33963e-05  3.66461e-05
+760    1.39115e-06  2.78330e-06  5.19579e-06  9.57260e-06  1.80265e-05  2.70438e-05  2.92491e-05
+
+G2->R
+
+P\T            270          280          290          300          310          320          330
+500    2.25136e+03  5.85950e+03  1.39933e+04  3.09225e+04  6.28076e+04  1.21269e+05  2.21001e+05
+600    2.50594e+03  6.56043e+03  1.57554e+04  3.50023e+04  7.15987e+04  1.38908e+05  2.54278e+05
+760    2.85060e+03  7.51984e+03  1.81924e+04  4.07006e+04  8.39983e+04  1.64010e+05  3.02030e+05
+
+G2->P1
+
+P\T            270          280          290          300          310          320          330
+500    1.07717e-03  3.36524e-03  9.60129e-03  2.52252e-02  6.11763e-02  1.39150e-01  2.97139e-01
+600    1.03334e-03  3.25639e-03  9.37058e-03  2.48272e-02  6.08162e-02  1.39461e-01  3.00165e-01
+760    9.65043e-04  3.07440e-03  8.94281e-03  2.39477e-02  5.93890e-02  1.37611e-01  2.99205e-01
+
+G2->P5
+
+P\T            270          280          290          300          310          320          330
+500    1.62028e+02  4.01821e+02  9.31012e+02  2.02520e+03  4.15439e+03  8.06609e+03  1.48883e+04
+600    1.43261e+02  3.57773e+02  8.34830e+02  1.82887e+03  3.78470e+03  7.40025e+03  1.37541e+04
+760    1.21133e+02  3.05134e+02  7.18273e+02  1.58749e+03  3.32036e+03  6.55025e+03  1.22816e+04
+
+G2->P7
+
+P\T            270          280          290          300          310          320          330
+500    1.60936e-03  4.47004e-03  1.15458e-02  2.79452e-02  6.40608e-02  1.38486e-01  2.85108e-01
+600    1.40545e-03  3.91762e-03  1.01518e-02  2.46306e-02  5.66439e-02  1.22686e-01  2.52917e-01
+760    1.19332e-03  3.28914e-03  8.54809e-03  2.08340e-02  4.81058e-02  1.04426e-01  2.15846e-01
+
+G2->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    1.55162e-10  5.29713e-10  4.56488e-10  1.21131e-09  0.00000e+00 -7.19563e-09 -1.00961e-08
+600    4.18937e-09  7.94570e-10  6.84732e-10 -1.61508e-09  6.52166e-09 -2.61659e-09  4.15724e-09
+760   -2.63775e-09 -1.05943e-09  3.42366e-09 -4.03771e-10  1.08694e-09 -5.88733e-09  0.00000e+00
+
+G2 loss
+
+P\T            270          280          290          300          310          320          330
+500    1.04921e+06  1.28834e+06  1.58337e+06  1.94756e+06  2.38770e+06  2.93677e+06  3.61169e+06
+600    1.05173e+06  1.29276e+06  1.59114e+06  1.96114e+06  2.41225e+06  2.97814e+06  3.67972e+06
+760    1.05452e+06  1.29777e+06  1.60016e+06  1.97737e+06  2.44234e+06  3.03020e+06  3.76744e+06
+
+Rate coefficients from G3 (1/s), temperature-pressure tables:
+
+G3->G2
+
+P\T            270          280          290          300          310          320          330
+500    3.11468e+02  4.38956e+02  6.11630e+02  8.42986e+02  1.14617e+03  1.54451e+03  2.05789e+03
+600    3.11979e+02  4.39927e+02  6.13429e+02  8.46228e+02  1.15226e+03  1.55486e+03  2.07493e+03
+760    3.12528e+02  4.40978e+02  6.15393e+02  8.49806e+02  1.15907e+03  1.56659e+03  2.09448e+03
+
+G3->G4
+
+P\T            270          280          290          300          310          320          330
+500    2.28037e+02  2.98321e+02  3.91181e+02  5.14095e+02  6.79687e+02  8.97009e+02  1.18376e+03
+600    2.27561e+02  2.97438e+02  3.89596e+02  5.11354e+02  6.74753e+02  8.89097e+02  1.17161e+03
+760    2.27052e+02  2.96489e+02  3.87886e+02  5.08383e+02  6.69358e+02  8.80405e+02  1.15820e+03
+
+G3->G6
+
+P\T            270          280          290          300          310          320          330
+500    6.55490e-05  1.41876e-04  2.85728e-04  5.39648e-04  9.51046e-04  1.60717e-03  2.59634e-03
+600    8.00634e-05  1.74485e-04  3.53443e-04  6.71472e-04  1.19015e-03  2.01946e-03  3.28205e-03
+760    1.04307e-04  2.28900e-04  4.65891e-04  8.97600e-04  1.64048e-03  2.73319e-03  3.97571e-03
+
+G3->R
+
+P\T            270          280          290          300          310          320          330
+500    1.93233e-01  6.40168e-01  1.92373e+00  5.29405e+00  1.37802e+01  3.25689e+01  7.20949e+01
+600    1.79496e-01  5.98172e-01  1.80763e+00  5.00103e+00  1.30867e+01  3.10766e+01  6.90959e+01
+760    1.62153e-01  5.44625e-01  1.65817e+00  4.62028e+00  1.21748e+01  2.90965e+01  6.50827e+01
+
+G3->P1
+
+P\T            270          280          290          300          310          320          330
+500    4.53870e-07  1.87777e-06  7.02172e-06  2.39582e-05  7.56378e-05  2.20061e-04  5.97439e-04
+600    4.05522e-07  1.69290e-06  6.38652e-06  2.19789e-05  6.99459e-05  2.05142e-04  5.61237e-04
+760    3.47827e-07  1.46876e-06  5.60390e-06  1.95003e-05  6.27046e-05  1.85840e-04  5.13583e-04
+
+G3->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.83858e-02  9.06970e-02  2.68553e-01  7.40749e-01  1.94507e+00  4.71947e+00  1.08155e+01
+600    2.37272e-02  7.62783e-02  2.27413e-01  6.31949e-01  1.67094e+00  4.08778e+00  9.44720e+00
+760    1.87881e-02  6.08481e-02  1.82933e-01  5.13021e-01  1.36824e+00  3.38183e+00  7.89909e+00
+
+G3->P7
+
+P\T            270          280          290          300          310          320          330
+500    2.68952e-02  8.35351e-02  2.40438e-01  6.46082e-01  1.63127e+00  3.89210e+00  8.81898e+00
+600    2.68882e-02  8.35308e-02  2.40470e-01  6.46280e-01  1.63206e+00  3.89469e+00  8.82666e+00
+760    2.68722e-02  8.35071e-02  2.40462e-01  6.46407e-01  1.63274e+00  3.89716e+00  8.83436e+00
+
+G3->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    7.56392e-13  1.19805e-12  1.75038e-12 -9.26946e-14  1.78452e-13  6.53932e-12 -7.14915e-12
+600   -5.60290e-13 -1.56267e-13 -1.36141e-12  2.13198e-12  1.60607e-12  6.45328e-12 -5.15404e-12
+760    0.00000e+00  1.19805e-12 -2.86868e-12 -2.96623e-12 -6.24583e-13  4.90449e-12 -5.32030e-12
+
+G3 loss
+
+P\T            270          280          290          300          310          320          330
+500    5.39754e+02  7.38092e+02  1.00524e+03  1.36376e+03  1.84322e+03  2.48270e+03  3.33338e+03
+600    5.39771e+02  7.38123e+02  1.00530e+03  1.36386e+03  1.84340e+03  2.48302e+03  3.33392e+03
+760    5.39789e+02  7.38156e+02  1.00536e+03  1.36397e+03  1.84360e+03  2.48337e+03  3.33450e+03
+
+Rate coefficients from G4 (1/s), temperature-pressure tables:
+
+G4->G2
+
+P\T            270          280          290          300          310          320          330
+500    3.21262e+03  4.85107e+03  7.20941e+03  1.05490e+04  1.51277e+04  2.14237e+04  2.98494e+04
+600    3.22113e+03  4.86843e+03  7.24369e+03  1.06144e+04  1.52588e+04  2.16569e+04  3.02485e+04
+760    3.23000e+03  4.88665e+03  7.28001e+03  1.06845e+04  1.54009e+04  2.19127e+04  3.06921e+04
+
+G4->G3
+
+P\T            270          280          290          300          310          320          330
+500    8.50951e+01  1.15689e+02  1.57165e+02  2.13404e+02  2.91029e+02  3.95038e+02  5.35012e+02
+600    8.48810e+01  1.15275e+02  1.56393e+02  2.12022e+02  2.88429e+02  3.90750e+02  5.28262e+02
+760    8.46601e+01  1.14845e+02  1.55590e+02  2.10579e+02  2.85697e+02  3.86221e+02  5.21101e+02
+
+G4->G6
+
+P\T            270          280          290          300          310          320          330
+500    1.75399e-09  4.07360e-09  9.04005e-09  1.85414e-08  3.67737e-08  6.60000e-08  1.11808e-07
+600    1.86186e-09  4.56660e-09  1.03503e-08  2.15360e-08  4.39966e-08  8.14533e-08  1.48291e-07
+760    2.32836e-09  5.41527e-09  1.15473e-08  2.81674e-08  7.77182e-08  1.09189e-07  1.44992e-07
+
+G4->R
+
+P\T            270          280          290          300          310          320          330
+500    2.71641e+00  9.20764e+00  2.81499e+01  7.83686e+01  2.07146e+02  4.89967e+02  1.07895e+03
+600    2.53056e+00  8.63902e+00  2.65966e+01  7.45532e+01  1.98199e+02  4.71912e+02  1.04596e+03
+760    2.29451e+00  7.90613e+00  2.45628e+01  6.94704e+01  1.86095e+02  4.46932e+02  9.99035e+02
+
+G4->P1
+
+P\T            270          280          290          300          310          320          330
+500    2.32851e-04  8.87637e-04  3.04997e-03  9.53561e-03  2.73526e-02  7.25111e-02  1.78818e-01
+600    2.47152e-04  9.48764e-04  3.28335e-03  1.03398e-02  2.98754e-02  7.97801e-02  1.98184e-01
+760    2.64957e-04  1.02597e-03  3.58229e-03  1.13842e-02  3.31966e-02  8.94755e-02  2.24347e-01
+
+G4->P5
+
+P\T            270          280          290          300          310          320          330
+500    7.24856e+01  1.95998e+02  4.97180e+02  1.18727e+03  2.67797e+03  5.72462e+03  1.16328e+04
+600    7.29828e+01  1.97792e+02  5.03083e+02  1.20511e+03  2.72776e+03  5.85378e+03  1.19458e+04
+760    7.35484e+01  1.99855e+02  5.09950e+02  1.22611e+03  2.78707e+03  6.00946e+03  1.23274e+04
+
+G4->P7
+
+P\T            270          280          290          300          310          320          330
+500    4.96452e-06  1.83381e-05  6.15097e-05  1.91135e-04  5.64597e-04  1.52243e-03  3.85806e-03
+600    4.07178e-06  1.50391e-05  5.07733e-05  1.58501e-04  4.68673e-04  1.27030e-03  3.23446e-03
+760    2.88419e-06  1.16914e-05  3.99059e-05  1.24962e-04  3.70872e-04  1.01190e-03  2.59122e-03
+
+G4->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07
+600    2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07
+760    2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07  2.50000e+07
+
+G4 loss
+
+P\T            270          280          290          300          310          320          330
+500    2.50034e+07  2.50052e+07  2.50079e+07  2.50120e+07  2.50183e+07  2.50280e+07  2.50431e+07
+600    2.50034e+07  2.50052e+07  2.50079e+07  2.50121e+07  2.50185e+07  2.50284e+07  2.50438e+07
+760    2.50034e+07  2.50052e+07  2.50080e+07  2.50122e+07  2.50187e+07  2.50288e+07  2.50445e+07
+
+Rate coefficients from G6 (1/s), temperature-pressure tables:
+
+G6->G2
+
+P\T            270          280          290          300          310          320          330
+500    3.41515e-09  8.77929e-09  2.08248e-08  4.60167e-08  9.76369e-08  1.89937e-07  3.49362e-07
+600    3.63936e-09  9.43802e-09  2.25265e-08  5.01663e-08  1.07191e-07  2.09429e-07  3.89931e-07
+760    4.04394e-09  1.04869e-08  2.49216e-08  5.74916e-08  1.33521e-07  2.42147e-07  3.04042e-07
+
+G6->G3
+
+P\T            270          280          290          300          310          320          330
+500    2.23770e-05  5.30178e-05  1.16194e-04  2.37476e-04  4.50362e-04  8.14163e-04  1.39766e-03
+600    2.73321e-05  6.52053e-05  1.43740e-04  2.95532e-04  5.63776e-04  1.02372e-03  1.76914e-03
+760    3.56087e-05  8.55431e-05  1.89486e-04  3.95133e-04  7.77486e-04  1.38669e-03  2.14307e-03
+
+G6->G4
+
+P\T            270          280          290          300          310          320          330
+500    1.82849e-09  4.73809e-09  1.15124e-08  2.62968e-08  5.82600e-08  1.17590e-07  2.24766e-07
+600    1.87979e-09  5.00356e-09  1.21396e-08  2.79858e-08  6.20194e-08  1.25589e-07  2.46793e-07
+760    2.16548e-09  5.63349e-09  1.30493e-08  3.35088e-08  9.54008e-08  1.48275e-07  2.20189e-07
+
+G6->R
+
+P\T            270          280          290          300          310          320          330
+500    5.07584e-11  6.42474e-10 -1.27121e-09  1.44528e-09 -4.77577e-08  2.68395e-08  2.80267e-08
+600    1.39397e-09  4.82142e-11  1.08570e-09  5.40223e-09 -1.76594e-08 -1.58179e-08 -9.94035e-08
+760   -8.72740e-11 -2.26923e-09 -1.07057e-09  3.55924e-08 -2.45093e-08 -1.34032e-07  6.10738e-08
+
+G6->P1
+
+P\T            270          280          290          300          310          320          330
+500   -5.37204e-16  1.43227e-14  6.45034e-14 -7.59636e-14  1.02318e-14  1.07485e-13  2.93993e-12
+600   -1.85037e-17  2.39148e-14 -1.68735e-14 -5.14129e-14 -2.57135e-13  3.30892e-12  6.64936e-13
+760    3.87870e-14 -6.92925e-15  7.01442e-14 -6.95032e-13 -1.44420e-12  2.55775e-12  3.73797e-13
+
+G6->P5
+
+P\T            270          280          290          300          310          320          330
+500    1.08411e-11  6.47625e-11  1.70922e-10  4.99467e-10  9.84148e-10  3.28311e-09  1.03655e-08
+600    6.85716e-12  6.09538e-11  1.35319e-10  3.90151e-10  1.14423e-09  6.43365e-09  1.06406e-08
+760    5.34415e-11  4.48358e-11  1.92246e-10  1.70052e-10  1.19420e-09  5.78581e-09  7.03558e-09
+
+G6->P7
+
+P\T            270          280          290          300          310          320          330
+500    3.69109e+04  8.19185e+04  1.68293e+05  3.22506e+05  5.74703e+05  9.75066e+05  1.57207e+06
+600    4.12312e+04  9.19048e+04  1.89593e+05  3.64763e+05  6.52799e+05  1.11161e+06  1.79835e+06
+760    4.74467e+04  1.06370e+05  2.20646e+05  4.26742e+05  7.68063e+05  1.31424e+06  2.13590e+06
+
+G6->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    8.66810e-22  1.02047e-21  4.89258e-22  5.98183e-22  6.47947e-21  4.36336e-21 -1.10330e-20
+600    2.67022e-22  1.29760e-23 -1.71692e-21 -2.38915e-21  6.30764e-21 -3.71959e-21 -1.14332e-21
+760   -3.69448e-22  6.10797e-22  1.59776e-21 -3.22374e-23  4.63944e-21 -3.24749e-21 -2.67251e-21
+
+G6 loss
+
+P\T            270          280          290          300          310          320          330
+500    3.69109e+04  8.19185e+04  1.68293e+05  3.22506e+05  5.74703e+05  9.75066e+05  1.57207e+06
+600    4.12312e+04  9.19048e+04  1.89593e+05  3.64763e+05  6.52799e+05  1.11161e+06  1.79835e+06
+760    4.74467e+04  1.06370e+05  2.20646e+05  4.26742e+05  7.68063e+05  1.31424e+06  2.13590e+06
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), temperature-pressure tables:
+
+R->P1
+
+P\T            270          280          290          300          310          320          330
+500    1.04498e-17  1.24121e-17  1.44790e-17  1.66143e-17  1.87852e-17  2.09453e-17  2.30625e-17
+600    9.31431e-18  1.11656e-17  1.31398e-17  1.52040e-17  1.73275e-17  1.94656e-17  2.15855e-17
+760    7.94488e-18  9.63979e-18  1.14763e-17  1.34269e-17  1.54645e-17  1.75478e-17  1.96447e-17
+
+R->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.40605e-13  2.52117e-13  2.60973e-13  2.67112e-13  2.70926e-13  2.71834e-13  2.70276e-13
+600    2.01840e-13  2.13515e-13  2.23060e-13  2.30357e-13  2.35677e-13  2.38460e-13  2.39030e-13
+760    1.59370e-13  1.70681e-13  1.80462e-13  1.88547e-13  1.95090e-13  1.99574e-13  2.02192e-13
+
+R->P7
+
+P\T            270          280          290          300          310          320          330
+500    5.73341e-18  6.69398e-18  7.77328e-18  8.98902e-18  1.03671e-17  1.19197e-17  1.36765e-17
+600    4.64273e-18  5.44377e-18  6.34626e-18  7.36406e-18  8.51932e-18  9.82280e-18  1.12993e-17
+760    3.52133e-18  4.15292e-18  4.86661e-18  5.67346e-18  6.59094e-18  7.62781e-18  8.80440e-18
+
+R->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500   -1.47492e-13 -1.31505e-13 -1.15476e-13 -9.97562e-14 -9.84446e-14 -8.25406e-14 -6.78101e-14
+600   -1.17122e-13 -1.05298e-13 -9.32412e-14 -8.12379e-14 -8.06065e-14 -6.81838e-14 -5.65300e-14
+760   -8.61614e-14 -7.82999e-14 -7.00899e-14 -6.17434e-14 -6.16855e-14 -5.27753e-14 -4.42730e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), temperature-pressure tables:
+
+R->G2
+
+P\T            270          280          290          300          310          320          330
+500    8.20699e-12  6.94331e-12  5.83022e-12  4.86173e-12  3.97165e-12  3.26792e-12  2.67464e-12
+600    9.13519e-12  7.77411e-12  6.56467e-12  5.50359e-12  4.52821e-12  3.74412e-12  3.07846e-12
+760    1.03918e-11  8.91123e-12  7.58040e-12  6.40003e-12  5.31314e-12  4.42170e-12  3.65785e-12
+
+R->G3
+
+P\T            270          280          290          300          310          320          330
+500    8.24469e-14  7.48395e-14  6.74115e-14  6.02956e-14  5.48906e-14  4.84880e-14  4.26190e-14
+600    7.65838e-14  6.99275e-14  6.33401e-14  5.69544e-14  5.21231e-14  4.62602e-14  4.08393e-14
+760    6.91825e-14  6.36654e-14  5.80998e-14  5.26142e-14  4.84854e-14  4.33058e-14  3.84594e-14
+
+R->G4
+
+P\T            270          280          290          300          310          320          330
+500    3.11029e-12  2.78151e-12  2.46244e-12  2.15883e-12  1.93880e-12  1.66908e-12  1.42429e-12
+600    2.89742e-12  2.60962e-12  2.32642e-12  2.05354e-12  1.85479e-12  1.60725e-12  1.38035e-12
+760    2.62708e-12  2.38813e-12  2.14837e-12  1.91334e-12  1.74123e-12  1.52181e-12  1.31798e-12
+
+R->G6
+
+P\T            270          280          290          300          310          320          330
+500    6.34864e-23  2.01014e-22 -1.09123e-22  3.78416e-23 -3.98715e-22  7.96510e-23  3.26616e-23
+600    1.74182e-21  1.52054e-23  9.37100e-23  1.39974e-22 -1.46893e-22 -4.45350e-23 -1.04843e-22
+760   -1.08994e-22 -7.09382e-22 -9.18991e-23  9.19397e-22 -2.04301e-22 -3.88722e-22  6.81669e-23
+
+Capture, return and net reaction of R (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T            270          280          290          300          310          320          330
+500    3.80748e-11  3.82990e-11  3.85168e-11  3.87287e-11  3.89349e-11  3.91357e-11  3.93316e-11
+600    3.80748e-11  3.82990e-11  3.85168e-11  3.87287e-11  3.89349e-11  3.91357e-11  3.93316e-11
+760    3.80748e-11  3.82990e-11  3.85168e-11  3.87287e-11  3.89349e-11  3.91357e-11  3.93316e-11
+
+return
+
+P\T            270          280          290          300          310          320          330
+500    2.65820e-11  2.83787e-11  3.00112e-11  3.14804e-11  3.27970e-11  3.39609e-11  3.49875e-11
+600    2.58809e-11  2.77371e-11  2.94326e-11  3.09654e-11  3.23446e-11  3.35678e-11  3.46494e-11
+760    2.49136e-11  2.68436e-11  2.86196e-11  3.02359e-11  3.16986e-11  3.30021e-11  3.41593e-11
+
+net
+
+P\T            270          280          290          300          310          320          330
+500    1.14929e-11  9.92029e-12  8.50560e-12  7.24824e-12  6.13785e-12  5.17482e-12  4.34405e-12
+600    1.21939e-11  1.05619e-11  9.08426e-12  7.76322e-12  6.59022e-12  5.56793e-12  4.68218e-12
+760    1.31612e-11  1.14554e-11  9.89726e-12  8.49280e-12  7.23629e-12  6.13363e-12  5.17224e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), temperature-pressure tables:
+
+R->P1
+
+P\T            270          280          290          300          310          320          330
+500    9.09240e-05  1.25118e-04  1.70230e-04  2.29219e-04  3.06054e-04  4.04755e-04  5.30899e-04
+600    7.63848e-05  1.05716e-04  1.44644e-04  1.95847e-04  2.62928e-04  3.49602e-04  4.61014e-04
+760    6.03658e-05  8.41504e-05  1.15954e-04  1.58098e-04  2.13707e-04  2.86092e-04  3.79810e-04
+
+R->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.09352e+00  2.54143e+00  3.06825e+00  3.68519e+00  4.41402e+00  5.25301e+00  6.22176e+00
+600    1.65525e+00  2.02156e+00  2.45546e+00  2.96728e+00  3.57616e+00  4.28274e+00  5.10509e+00
+760    1.21091e+00  1.48996e+00  1.82335e+00  2.22008e+00  2.69600e+00  3.25376e+00  3.90919e+00
+
+R->P7
+
+P\T            270          280          290          300          310          320          330
+500    4.98867e-05  6.74777e-05  9.13902e-05  1.24017e-04  1.68904e-04  2.30340e-04  3.14832e-04
+600    3.80741e-05  5.15416e-05  6.98599e-05  9.48583e-05  1.29272e-04  1.76417e-04  2.41325e-04
+760    2.67553e-05  3.62528e-05  4.91713e-05  6.68032e-05  9.10818e-05  1.24360e-04  1.70224e-04
+
+R->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500   -1.28334e+00 -1.32562e+00 -1.35765e+00 -1.37628e+00 -1.60389e+00 -1.59504e+00 -1.56099e+00
+600   -9.60496e-01 -9.96960e-01 -1.02640e+00 -1.04644e+00 -1.22312e+00 -1.22458e+00 -1.20734e+00
+760   -6.54661e-01 -6.83518e-01 -7.08175e-01 -7.27008e-01 -8.52447e-01 -8.60424e-01 -8.55973e-01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), temperature-pressure tables:
+
+R->G2
+
+P\T            270          280          290          300          310          320          330
+500    7.14095e+01  6.99910e+01  6.85457e+01  6.70746e+01  6.47075e+01  6.31504e+01  6.15702e+01
+600    7.49159e+01  7.36053e+01  7.22642e+01  7.08931e+01  6.87111e+01  6.72444e+01  6.57485e+01
+760    7.89573e+01  7.77905e+01  7.65909e+01  7.53583e+01  7.34236e+01  7.20893e+01  7.07208e+01
+
+R->G3
+
+P\T            270          280          290          300          310          320          330
+500    7.17375e-01  7.54408e-01  7.92554e-01  8.31865e-01  8.94297e-01  9.37000e-01  9.81088e-01
+600    6.28049e-01  6.62073e-01  6.97250e-01  7.33644e-01  7.90917e-01  8.30832e-01  8.72228e-01
+760    5.25654e-01  5.55767e-01  5.87029e-01  6.19515e-01  6.70032e-01  7.06039e-01  7.43574e-01
+
+R->G4
+
+P\T            270          280          290          300          310          320          330
+500    2.70628e+01  2.80386e+01  2.89508e+01  2.97842e+01  3.15876e+01  3.22540e+01  3.27871e+01
+600    2.37612e+01  2.47079e+01  2.56093e+01  2.64521e+01  2.81446e+01  2.88661e+01  2.94809e+01
+760    1.99607e+01  2.08472e+01  2.17067e+01  2.25289e+01  2.40625e+01  2.48109e+01  2.54819e+01
+
+R->G6
+
+P\T            270          280          290          300          310          320          330
+500    5.52399e-10  2.02629e-09 -1.28296e-09  5.22079e-10 -6.49600e-09  1.53920e-09  7.51871e-10
+600    1.42843e-08  1.43965e-10  1.03156e-09  1.80303e-09 -2.22895e-09 -7.99848e-10 -2.23920e-09
+760   -8.28146e-10 -6.19254e-09 -9.28530e-10  1.08256e-08 -2.82329e-09 -6.33755e-09  1.31794e-09
+
+Thermal fate of G2 (%), temperature-pressure tables:
+
+G2->R
+
+P\T            270          280          290          300          310          320          330
+500    2.20276e-01  4.67188e-01  9.08301e-01  1.63252e+00  2.70624e+00  4.24933e+00  6.29795e+00
+600    2.44368e-01  5.20745e-01  1.01652e+00  1.83281e+00  3.04929e+00  4.79237e+00  7.10028e+00
+760    2.76971e-01  5.93954e-01  1.16574e+00  2.11092e+00  3.52798e+00  5.55197e+00  8.22231e+00
+
+G2->P1
+
+P\T            270          280          290          300          310          320          330
+500    1.08690e-07  2.78846e-07  6.54019e-07  1.41500e-06  2.84540e-06  5.36820e-06  9.55387e-06
+600    1.03924e-07  2.68718e-07  6.34987e-07  1.38344e-06  2.80291e-06  5.31821e-06  9.51275e-06
+760    9.67406e-08  2.52672e-07  6.02866e-07  1.32547e-06  2.71113e-06  5.18298e-06  9.33353e-06
+
+G2->P5
+
+P\T            270          280          290          300          310          320          330
+500    1.62366e-02  3.30329e-02  6.28570e-02  1.12488e-01  1.91079e-01  3.07412e-01  4.72442e-01
+600    1.43491e-02  2.93864e-02  5.62806e-02  1.01342e-01  1.73332e-01  2.80317e-01  4.32826e-01
+760    1.21405e-02  2.50737e-02  4.84225e-02  8.78951e-02  1.51632e-01  2.46909e-01  3.83610e-01
+
+G2->P7
+
+P\T            270          280          290          300          310          320          330
+500    1.77271e-04  3.89219e-04  7.94434e-04  1.51747e-03  2.73092e-03  4.64302e-03  7.49523e-03
+600    1.77162e-04  3.88820e-04  7.93076e-04  1.51322e-03  2.71848e-03  4.61121e-03  7.42131e-03
+760    1.77035e-04  3.88325e-04  7.91322e-04  1.50763e-03  2.70191e-03  4.56806e-03  7.31982e-03
+
+G2->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    9.97633e+01  9.94994e+01  9.90280e+01  9.82535e+01  9.70999e+01  9.54386e+01  9.32221e+01
+600    9.97411e+01  9.94495e+01  9.89264e+01  9.80643e+01  9.67747e+01  9.49227e+01  9.24595e+01
+760    9.97107e+01  9.93806e+01  9.87850e+01  9.77997e+01  9.63177e+01  9.41965e+01  9.13868e+01
+
+Thermal fate of G3 (%), temperature-pressure tables:
+
+G3->R
+
+P\T            270          280          290          300          310          320          330
+500    1.62929e-01  3.64630e-01  7.44163e-01  1.39769e+00  2.43136e+00  3.95742e+00  6.05515e+00
+600    1.74513e-01  3.91463e-01  8.00242e-01  1.50428e+00  2.61693e+00  4.25472e+00  6.49606e+00
+760    1.90421e-01  4.28673e-01  8.78665e-01  1.65437e+00  2.87948e+00  4.67639e+00  7.12135e+00
+
+G3->P1
+
+P\T            270          280          290          300          310          320          330
+500    1.47208e-07  4.21700e-07  1.10126e-06  2.64604e-06  5.91391e-06  1.23098e-05  2.40789e-05
+600    1.35618e-07  3.91061e-07  1.02791e-06  2.48563e-06  5.59077e-06  1.17079e-05  2.30369e-05
+760    1.20900e-07  3.51593e-07  9.32019e-07  2.27268e-06  5.15448e-06  1.08814e-05  2.15800e-05
+
+G3->P5
+
+P\T            270          280          290          300          310          320          330
+500    1.47518e-02  3.22527e-02  6.57407e-02  1.25657e-01  2.28336e-01  3.89699e-01  6.32829e-01
+600    1.28132e-02  2.81697e-02  5.77495e-02  1.11037e-01  2.03020e-01  3.48627e-01  5.69695e-01
+760    1.06342e-02  2.35455e-02  4.86280e-02  9.42158e-02  1.73625e-01  3.00527e-01  4.95107e-01
+
+G3->P7
+
+P\T            270          280          290          300          310          320          330
+500    5.09733e-03  1.15685e-02  2.44303e-02  4.83529e-02  9.02522e-02  1.59724e-01  2.69276e-01
+600    5.09865e-03  1.15721e-02  2.44394e-02  4.83745e-02  9.02998e-02  1.59824e-01  2.69476e-01
+760    5.10013e-03  1.15760e-02  2.44489e-02  4.83971e-02  9.03509e-02  1.59925e-01  2.69660e-01
+
+G3->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    9.98172e+01  9.95915e+01  9.91657e+01  9.84283e+01  9.72500e+01  9.54931e+01  9.30427e+01
+600    9.98076e+01  9.95688e+01  9.91176e+01  9.83363e+01  9.70897e+01  9.52368e+01  9.26648e+01
+760    9.97938e+01  9.95362e+01  9.90483e+01  9.82030e+01  9.68565e+01  9.48631e+01  9.21139e+01
+
+Thermal fate of G4 (%), temperature-pressure tables:
+
+G4->R
+
+P\T            270          280          290          300          310          320          330
+500    3.97213e-05  1.29146e-04  3.79091e-04  1.01377e-03  2.49263e-03  5.65752e-03  1.19444e-02
+600    4.21947e-05  1.37741e-04  4.05798e-04  1.08861e-03  2.68215e-03  6.09874e-03  1.28895e-02
+760    4.56014e-05  1.49661e-04  4.43042e-04  1.19340e-03  2.94845e-03  6.71858e-03  1.42137e-02
+
+G4->P1
+
+P\T            270          280          290          300          310          320          330
+500    9.45744e-10  3.60586e-09  1.23915e-08  3.87435e-08  1.11120e-07  2.94509e-07  7.25942e-07
+600    1.00232e-09  3.84839e-09  1.33196e-08  4.19473e-08  1.21187e-07  3.23543e-07  8.03326e-07
+760    1.07259e-09  4.15400e-09  1.45059e-08  4.60998e-08  1.34415e-07  3.62197e-07  9.07679e-07
+
+G4->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.92040e-04  7.90389e-04  2.00663e-03  4.79532e-03  1.08223e-02  2.31421e-02  4.70278e-02
+600    2.93784e-04  7.96855e-04  2.02836e-03  4.86207e-03  1.10110e-02  2.36366e-02  4.82344e-02
+760    2.95758e-04  8.04260e-04  2.05355e-03  4.94039e-03  1.12353e-02  2.42310e-02  4.97022e-02
+
+G4->P7
+
+P\T            270          280          290          300          310          320          330
+500    4.01449e-08  1.29105e-07  3.82805e-07  1.05331e-06  2.70342e-06  6.50152e-06  1.47019e-05
+600    4.01485e-08  1.29110e-07  3.82760e-07  1.05286e-06  2.70092e-06  6.49034e-06  1.46608e-05
+760    4.01501e-08  1.29102e-07  3.82631e-07  1.05197e-06  2.69646e-06  6.47119e-06  1.45916e-05
+
+G4->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    9.99997e+01  9.99991e+01  9.99976e+01  9.99942e+01  9.99867e+01  9.99712e+01  9.99410e+01
+600    9.99997e+01  9.99991e+01  9.99976e+01  9.99940e+01  9.99863e+01  9.99703e+01  9.99389e+01
+760    9.99997e+01  9.99990e+01  9.99975e+01  9.99939e+01  9.99858e+01  9.99690e+01  9.99361e+01
+
+Thermal fate of G6 (%), temperature-pressure tables:
+
+G6->R
+
+P\T            270          280          290          300          310          320          330
+500    9.89322e-11  2.36824e-10  5.13148e-10  1.02986e-09  1.89747e-09  3.30796e-09  5.38656e-09
+600    1.19087e-10  2.77844e-10  6.07398e-10  1.22051e-09  2.25785e-09  3.91780e-09  6.38656e-09
+760    1.42750e-10  3.42665e-10  7.54228e-10  1.54045e-09  2.91223e-09  4.92500e-09  7.14929e-09
+
+G6->P1
+
+P\T            270          280          290          300          310          320          330
+500    8.77986e-17  2.90440e-16  7.98752e-16  1.92505e-15  4.63667e-15  1.02905e-14  2.15967e-14
+600    8.98653e-17  3.03502e-16  7.70490e-16  1.99996e-15  4.78943e-15  1.10809e-14  2.27019e-14
+760    1.72492e-16  2.76263e-16  8.32260e-16  1.94165e-15  5.03017e-15  1.16768e-14  2.16713e-14
+
+G6->P5
+
+P\T            270          280          290          300          310          320          330
+500    8.97408e-12  2.09567e-11  4.54987e-11  9.26979e-11  1.79138e-10  3.25791e-10  5.63391e-10
+600    8.51178e-12  2.00554e-11  4.38611e-11  9.00841e-11  1.75539e-10  3.21697e-10  5.61135e-10
+760    8.09464e-12  1.89800e-11  4.18535e-11  8.72892e-11  1.75938e-10  3.17582e-10  4.97158e-10
+
+G6->P7
+
+P\T            270          280          290          300          310          320          330
+500    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+600    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+760    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+G6->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    6.05277e-08  6.44723e-08  6.84859e-08  7.24994e-08  7.62359e-08  7.97657e-08  8.27552e-08
+600    6.61757e-08  7.06585e-08  7.51643e-08  7.96934e-08  8.38749e-08  8.77361e-08  9.11935e-08
+760    7.49082e-08  8.00623e-08  8.50778e-08  9.09500e-08  9.80740e-08  1.00121e-07  9.24463e-08
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P1
+
+P\T            270          280          290          300          310          320          330
+500    9.10683e-05  1.25532e-04  1.71307e-04  2.31784e-04  3.11581e-04  4.16083e-04  5.52680e-04
+600    7.65258e-05  1.06125e-04  1.45723e-04  1.98448e-04  2.68613e-04  3.61382e-04  4.83896e-04
+760    6.04987e-05  8.45431e-05  1.17005e-04  1.60670e-04  2.19435e-04  2.98127e-04  4.03502e-04
+
+R->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.09684e+00  2.54983e+00  3.08765e+00  3.72644e+00  4.49372e+00  5.40002e+00  6.47702e+00
+600    1.65831e+00  2.02939e+00  2.47377e+00  3.00669e+00  3.65349e+00  4.42705e+00  5.35848e+00
+760    1.21357e+00  1.49691e+00  1.83987e+00  2.25621e+00  2.76826e+00  3.39064e+00  4.15303e+00
+
+R->P7
+
+P\T            270          280          290          300          310          320          330
+500    4.99659e-05  6.77009e-05  9.19683e-05  1.25405e-04  1.71954e-04  2.36786e-04  3.27748e-04
+600    3.81443e-05  5.17413e-05  7.03809e-05  9.61181e-05  1.32068e-04  1.82362e-04  2.53303e-04
+760    2.68142e-05  3.64220e-05  4.96169e-05  6.78903e-05  9.35231e-05  1.29592e-04  1.80842e-04
+
+R->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500   -1.28538e+00 -1.33000e+00 -1.36624e+00 -1.39169e+00 -1.63285e+00 -1.63968e+00 -1.62503e+00
+600   -9.62269e-01 -1.00082e+00 -1.03406e+00 -1.06034e+00 -1.24957e+00 -1.26584e+00 -1.26727e+00
+760   -6.56102e-01 -6.86707e-01 -7.14593e-01 -7.38839e-01 -8.75295e-01 -8.96622e-01 -9.09366e-01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P1
+
+P\T            270          280          290          300          310          320          330
+500    7.90523e-08  2.00019e-07  4.63532e-07  9.93658e-07  1.96401e-06  3.70113e-06  6.61738e-06
+600    7.90914e-08  2.02110e-07  4.72947e-07  1.02351e-06  2.04757e-06  3.89379e-06  7.02442e-06
+760    7.74035e-08  2.00305e-07  4.74623e-07  1.03997e-06  2.11263e-06  4.06726e-06  7.42867e-06
+
+R->P5
+
+P\T            270          280          290          300          310          320          330
+500    1.17980e-02  2.36630e-02  4.44673e-02  7.87964e-02  1.31434e-01  2.10992e-01  3.25333e-01
+600    1.09202e-02  2.20986e-02  4.19030e-02  7.49275e-02  1.26480e-01  2.04896e-01  3.18843e-01
+760    9.72211e-03  1.98959e-02  3.81612e-02  6.90384e-02  1.18288e-01  1.93959e-01  3.05580e-01
+
+R->P7
+
+P\T            270          280          290          300          310          320          330
+500    1.63426e-04  3.60920e-04  7.42954e-04  1.43628e-03  2.62158e-03  4.55480e-03  7.55941e-03
+600    1.65072e-04  3.64245e-04  7.49159e-04  1.44691e-03  2.63871e-03  4.57981e-03  7.59323e-03
+760    1.66965e-04  3.68146e-04  7.56478e-04  1.45957e-03  2.65928e-03  4.60992e-03  7.63368e-03
+
+R->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    9.91764e+01  9.87560e+01  9.82331e+01  9.75847e+01  9.70046e+01  9.60235e+01  9.48142e+01
+600    9.92928e+01  9.89488e+01  9.85174e+01  9.79770e+01  9.74666e+01  9.66288e+01  9.55816e+01
+760    9.94326e+01  9.91694e+01  9.88356e+01  9.84119e+01  9.79858e+01  9.73070e+01  9.64425e+01
+
+Long-time yields, total (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P1
+
+P\T            270          280          290          300          310          320          330
+500    9.11473e-05  1.25732e-04  1.71770e-04  2.32778e-04  3.13545e-04  4.19784e-04  5.59297e-04
+600    7.66048e-05  1.06328e-04  1.46195e-04  1.99472e-04  2.70661e-04  3.65276e-04  4.90920e-04
+760    6.05761e-05  8.47434e-05  1.17480e-04  1.61710e-04  2.21548e-04  3.02194e-04  4.10931e-04
+
+R->P5
+
+P\T            270          280          290          300          310          320          330
+500    2.10864e+00  2.57350e+00  3.13212e+00  3.80524e+00  4.62516e+00  5.61101e+00  6.80235e+00
+600    1.66923e+00  2.05149e+00  2.51567e+00  3.08162e+00  3.77997e+00  4.63195e+00  5.67733e+00
+760    1.22330e+00  1.51681e+00  1.87804e+00  2.32525e+00  2.88655e+00  3.58460e+00  4.45861e+00
+
+R->P7
+
+P\T            270          280          290          300          310          320          330
+500    2.13392e-04  4.28621e-04  8.34922e-04  1.56168e-03  2.79353e-03  4.79159e-03  7.88716e-03
+600    2.03217e-04  4.15987e-04  8.19540e-04  1.54303e-03  2.77077e-03  4.76217e-03  7.84653e-03
+760    1.93779e-04  4.04568e-04  8.06095e-04  1.52746e-03  2.75280e-03  4.73951e-03  7.81453e-03
+
+R->escape(G4)
+
+P\T            270          280          290          300          310          320          330
+500    9.78911e+01  9.74259e+01  9.68669e+01  9.61930e+01  9.53717e+01  9.43838e+01  9.31892e+01
+600    9.83305e+01  9.79480e+01  9.74834e+01  9.69166e+01  9.62170e+01  9.53629e+01  9.43143e+01
+760    9.87764e+01  9.84827e+01  9.81210e+01  9.76731e+01  9.71105e+01  9.64104e+01  9.55332e+01
+
+Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
+
+separation
+
+P\T            270          280          290          300          310          320          330
+500    1.04174e-01  1.08465e-01  1.12651e-01  1.16703e-01  1.27577e-01  1.32441e-01  1.37215e-01
+600    8.68119e-02  9.03880e-02  9.38773e-02  9.72545e-02  1.06318e-01  1.10373e-01  1.14356e-01
+760    6.85361e-02  7.13596e-02  7.41147e-02  7.67814e-02  8.39384e-02  8.71419e-02  9.02889e-02
+
+loss balance
+
+P\T            270          280          290          300          310          320          330
+500    1.69591e-08  8.43763e-09  1.20150e-08  8.40652e-10  2.24195e-09  3.20115e-10  2.65645e-10
+600    5.53548e-09  1.16370e-08  5.23768e-09  5.95132e-09  1.44632e-10  6.26654e-09  8.99681e-09
+760    1.68180e-08  1.11638e-08  4.02539e-09  4.65050e-11  2.34368e-08  7.32786e-09  1.31327e-07
+
+detailed bal.
+
+P\T            270          280          290          300          310          320          330
+500    1.21135e-01  1.69600e-01  2.02383e-01  2.48493e-01  2.95543e-01  3.45366e-01  3.94790e-01
+600    9.25475e-02  1.18494e-01  1.33958e-01  1.79795e-01  2.08266e-01  2.43543e-01  2.68950e-01
+760    1.48911e-02  7.15587e-02  1.01158e-01  1.04053e-01  9.08015e-02  1.41112e-01  1.98849e-01
+

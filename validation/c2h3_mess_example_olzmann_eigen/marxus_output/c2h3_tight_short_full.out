@@ -1,28 +1,322 @@
-# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example_olzmann_eigen/input/c2h3_tight_short.inp: grain 70.000 cm-1
-# solution method: steady state J N = F (GO10 eqs. 7, 8): final, with its thermal eigenpair by FullDecomposition (sum-rule tolerance 1.5e-2)
-#   well W1       grains    493 (absolute -172 .. 320), channels: B1
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example_olzmann_eigen/input/c2h3_tight_short.inp
+ Method:             STEADY STATE, OLZMANN (final steady state; steady-state family)
+                     J N = R F without an absorbing barrier (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), eqs. 7, 8)
+                     with the thermal rate coefficients of the lowest eigenpair of the same J (eq. 12)
+                     and the thermal fates of the wells (Boltzmann distribution of one well as source)
+ Solvers:            linear systems: banded Cholesky factorization of the symmetrized J, relative residual <= 1e-8
+                     thermal eigenpair: FullDecomposition, sum-rule tolerance 1.5e-2 (warning only)
+ Parallel:           4 threads (rayon) over the 1 conditions (T, p); 1 conditions at a time
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   1000
+ Pressures (torr):   760
+ Energy grid:        grains of 70.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     collision frequency: Lennard-Jones (per well, below)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant P1 through B1 (P1 -> W1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
 
-# final steady state
-T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
-1000,760,1.000000e0,0.000000e0,0.000000e0,2.580407e5,2.580407e5,1.000000e0,2.920727e3,1.000000000001,2.068e-12
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W1      493        -172 .. 320   <dE_down> = 200 cm-1 (T/300 K)^0.85; sigma 3.455 A, epsilon 64.82 K, reduced mass 3.797 amu
 
-# thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by FullDecomposition; sum-rule tolerance 1.5e-2
-# k_uni = sum_j k_th(j) + k_sink: the specific rate coefficients k(E) of the product channels (and the sink)
-#   averaged over the normalized thermal eigenvector of J, the eigenvector of the lowest eigenvalue lambda_1,
-#   "analogous to eqn (9) but with Ns = Ns_th being the normalized eigenvector associated with the lowest
-#   eigenvalue lambda_1" (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12).
-# lambda_1 = lowest eigenvalue of J (same paper, eq. 12). The column sums of J are the loss rates, so
-#   lambda_1 = k_uni exactly; numerically lambda_1 carries an absolute error of order eps*||J|| and is lost when
-#   it lies many orders of magnitude below the collision frequency (deep wells, low T), while the eigenvector,
-#   and with it k_uni, is much less sensitive. k_uni is therefore the reported rate coefficient.
-# precision_floor = eps*max(S_ii), S the symmetrized J: the order of the absolute rounding error of lambda_1.
-#   A lambda_1 near or below it, even a negative one, is rounding noise below the double-precision floor; this
-#   is not a merging of eigenvalues, which would show as a small lambda_2/k_uni (thermal decay no longer
-#   separated from relaxation).
-# sum_rule_deviation = |lambda_1 - k_uni| / k_uni; above the tolerance a warning is listed below.
-T[K],P[Torr],k_uni[1/s],lambda_1[1/s],precision_floor[1/s],sum_rule_deviation,lambda_2/k_uni,k_th(W1:B1)[1/s],k_inf(W1:B1)[1/s],k_sink(W1)[1/s],fpop(W1)
-1000,760,1.600403e4,1.600403e4,1.810e-3,4.121e-11,1.349284e4,1.600403e4,2.580407e5,0.000000e0,1.000000e0
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B1       W1       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
 
-# bimolecular rate coefficients of P1 [cm3/s] by detailed balance from the thermal k_uni of the final steady state
-T[K],P[Torr],k_inf_assoc[cm3/s],k_inf_diss[1/s],k_uni[1/s],k(P1->W1)
-1000,760,4.145087e-11,2.580407e5,1.600403e4,2.570839e-12
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W1     -34.44       4.42
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B1       4.42       W1       P1   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+FINAL STEADY STATE (no absorbing barrier)
+____________________________________________________________________________________________________
+
+J N = R F without a barrier: under continuous formation, after the stabilized population has reached its own
+steady state, the yields of every exit, chemical activation and thermal reaction together (GO10 eqs. 7-9).
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Yields (% of the formed adducts), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.00000e+02
+
+Yields without the return to P1 (% of the net reaction), by temperature:
+
+   Temperature = 1000 K
+
+Chemical-activation rate coefficients k_ca (1/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  2.58041e+05
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)      capture       return          net
+      760  4.14509e-11  4.14509e-11 -2.58263e-23
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Yields (% of the formed adducts), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.00000e+02
+
+Yields without the return to P1 (% of the net reaction), by pressure:
+
+   Pressure = 760 torr
+
+Chemical-activation rate coefficients k_ca (1/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  2.58041e+05
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)      capture       return          net
+  1000  4.14509e-11  4.14509e-11 -2.58263e-23
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Yields (% of the formed adducts), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.00000e+02
+
+Yields without the return to P1 (% of the net reaction), temperature-pressure tables:
+
+Chemical-activation rate coefficients k_ca (1/s), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    2.58041e+05
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T           1000
+760    4.14509e-11
+
+return
+
+P\T           1000
+760    4.14509e-11
+
+net
+
+P\T           1000
+760   -2.58263e-23
+
+____________________________________________________________________________________________________
+THERMAL RATE COEFFICIENTS OF THE FINAL STEADY STATE (lowest eigenpair of J)
+____________________________________________________________________________________________________
+
+k_uni = sum of the specific rate coefficients averaged over the normalized eigenvector of the lowest eigenvalue
+lambda_1 of J (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), text after eq. 12); lambda_1 = k_uni in exact
+arithmetic (eq. 12), checked as the sum rule (warning above 1.5e-2). Eigen-solver: FullDecomposition. The thermal branching is
+k_th(channel)/k_uni: the yields of the thermal decay of the network.
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal rate coefficients (1/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)        k_uni     lambda_1       W1->P1
+      760  1.60040e+04  1.60040e+04  1.60040e+04
+
+Thermal branching (% of the thermal decay k_uni), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.00000e+02
+
+High-pressure rate coefficients k_inf (1/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  2.58041e+05
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+      760  4.12071e-11     1.34928e+04  1.80957e-03
+
+Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       P1->W1
+      760  2.57084e-12
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal rate coefficients (1/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)        k_uni     lambda_1       W1->P1
+  1000  1.60040e+04  1.60040e+04  1.60040e+04
+
+Thermal branching (% of the thermal decay k_uni), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.00000e+02
+
+High-pressure rate coefficients k_inf (1/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  2.58041e+05
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+  1000  4.12071e-11     1.34928e+04  1.80957e-03
+
+Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       P1->W1
+  1000  2.57084e-12
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal rate coefficients (1/s), temperature-pressure tables:
+
+k_uni
+
+P\T           1000
+760    1.60040e+04
+
+lambda_1
+
+P\T           1000
+760    1.60040e+04
+
+W1->P1
+
+P\T           1000
+760    1.60040e+04
+
+Thermal branching (% of the thermal decay k_uni), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.00000e+02
+
+High-pressure rate coefficients k_inf (1/s), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    2.58041e+05
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), temperature-pressure tables:
+
+sum rule
+
+P\T           1000
+760    4.12071e-11
+
+lambda_2/k_uni
+
+P\T           1000
+760    1.34928e+04
+
+floor (1/s)
+
+P\T           1000
+760    1.80957e-03
+
+Association by detailed balance, k(P1 -> W1) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), temperature-pressure tables:
+
+P1->W1
+
+P\T           1000
+760    2.57084e-12
+
+____________________________________________________________________________________________________
+THERMAL FATES OF THE WELLS (final steady state with the Boltzmann distribution of one well as the source)
+____________________________________________________________________________________________________
+
+The probability that a molecule thermalized in a well ends in each exit of the network, k_x^T J^-1 f0_w.
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal fate of the molecules thermalized in W1 (%), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)       W1->P1
+      760  1.00000e+02
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal fate of the molecules thermalized in W1 (%), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)       W1->P1
+  1000  1.00000e+02
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal fate of the molecules thermalized in W1 (%), temperature-pressure tables:
+
+W1->P1
+
+P\T           1000
+760    1.00000e+02
+

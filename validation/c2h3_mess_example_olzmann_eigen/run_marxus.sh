@@ -17,9 +17,9 @@ cd "$repo"
 cargo build -j 4 --release --example chemical_activation_from_deck
 run() {  # deck solver
     echo "running $1 ($2)"
-    ./target/release/examples/chemical_activation_from_deck "$here/input/$1.inp" P1 \
-        --method steady-state --steady-state final --eigen-solver "$2" \
-        | grep -v "Iterative diagonalization" > "$here/marxus_output/$1_$2.out"
+    ./target/release/examples/chemical_activation_from_deck "$here/input/$1.inp" P1 --threads 4 \
+        --method steady-state-olzmann --eigen-solver "$2" \
+        --csv "$here/marxus_output/$1_$2.csv" > "$here/marxus_output/$1_$2.out"
 }
 for deck in c2h3_tight c2h3_tight_short c2h3_tight_short_notunneling; do
     run "$deck" inverse

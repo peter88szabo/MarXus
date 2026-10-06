@@ -7,15 +7,106 @@
 > - The CSE run uses `--method cse`.
 > - After the re-run, every comparison CSV of this directory is byte-identical to the previous one. The thermal rows are identical to those of the former eigenvalue outputs.
 
+## The four methods (2026-10-06)
+
+MarXus has four methods in three families, and each is run separately, with its own output files (`run_marxus.sh`, for the exact Eckart model and the MESS Eckart model):
+
+| family | method | output stem |
+|---|---|---|
+| steady state | [SteadyStateOlzmann](../../docs/methods/steady_state_olzmann.md) | `case2_tstlevel_E[_mess_eckart]_olzmann` |
+| steady state | [SteadyStateAbsorbingBarrier](../../docs/methods/steady_state_absorbing_barrier.md) | `case2_tstlevel_E[_mess_eckart]_absorbing_barrier` |
+| eigenvalue | [CSE](../../docs/methods/chemically_significant_eigenvalues.md) | `case2_tstlevel_E[_mess_eckart]_cse` |
+| time integration | [TimeIntegration](../../docs/methods/direct_time_integration.md) | `case2_tstlevel_E[_mess_eckart]_time_integration` |
+
+**Comparison.** `four_methods_comparison.csv` and `plots/four_methods_760torr.png` show the four side by side, with MESS:
+- the bimolecular-to-bimolecular rate coefficient k(R → IEPOX + OH);
+- the bimolecular-to-well rate coefficients k(R → G2), k(R → G4);
+- the long-time IEPOX + OH yield.
+
+**Results at 760 Torr, MESS Eckart model** (`four_methods_comparison.csv`; 300 K in the table):
+
+| quantity | MESS | SteadyStateAbsorbingBarrier | CSE | SteadyStateOlzmann (overall) | TimeIntegration (overall) |
+|---|---|---|---|---|---|
+| k(R → IEPOX + OH), cm³/s | 1.954e-13 | 1.887e-13 | 1.886e-13 | 1.943e-13 | 1.943e-13 |
+| k(R → G4), cm³/s | 1.883e-12 | 1.678e-12 | 1.913e-12 | – | – |
+| long-time IEPOX + OH, % of the net reaction | 2.47 (fate of its rate tables) | – | 2.325250 | 2.325250 | 2.325250 |
+
+- **Bimolecular-to-bimolecular R → IEPOX + OH** (chemical activation):
+  - The two prompt quantities, the absorbing barrier (k∞Φ_P5) and CSE (G13 eq. 21), agree within 0.6% at 270–330 K.
+  - Both are 2.6–3.5% below MESS's R → P5 (collisional part; see Section 4.4).
+  - The overall values (SteadyStateOlzmann, TimeIntegration) are 1–7% above the prompt ones: the thermal formation through the stabilized wells. They are identical to each other.
+- **Bimolecular-to-well R → G4** (stabilization):
+  - CSE is 1.4–1.6% above MESS at 270–300 K and 4.9–5.2% above at 310–330 K.
+  - The absorbing barrier is 6–11% lower. It counts the flux into the grains 10 kT below the lowest threshold of G4, which is a different definition of stabilization from the chemical eigenmode of CSE.
+  - R → G2: CSE +2.4 … +3.2%, absorbing barrier −2.9 … +1.7% from MESS.
+- **Step between 304 and 305 K in MarXus** (`../../reports/low_energy_reduction_temperature_step.md`).
+  - Between 300 and 310 K, R → G4 rises by 3.2% and R → G2 falls by 0.9% relative to the smooth trend, in every method. The lowest relaxation eigenvalue drops by 5.1%. MESS is smooth there.
+  - Cause: the low-energy reduction of the exponential-down kernel (`collision_kernels.rs`) measures the density-of-states gradient over n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 grains. With 38 cm⁻¹ grains, n_ref changes from 8 to 9 at 304.7 K, and a 1 K scan puts the step exactly between 304 and 305 K.
+  - The choice of the low-energy rule is open (decision needed).
+- **Long-time yield:** identical in SteadyStateOlzmann, CSE and TimeIntegration at all 21 conditions, the exact identity $`k^T J^{-1} F`$.
+- **Decomposition** (`plots/yields.png`). The IEPOX + OH prompt yield (absorbing barrier) + stabilization × thermal fate of each well (Olzmann run) equals the Olzmann total within 9·10⁻⁴ percentage points.
+
+## Key diagnostic: two methods, the same long-time yields
+
+**Comparison (2026-10-06).** Two different MarXus methods were compared on the same observable, both with the MESS Eckart tunneling model:
+- the **final steady state**, J·N = R·F with the IEPOX + OH yield $`k_x^T J^{-1} F`$;
+- the **long-time yields reconstructed from MarXus's own CSE rate tables**: R forms the wells and the direct products, and each well then ends in a product, the escape or back in R (the absorbing chain of the CSE well rate coefficients).
+
+| IEPOX + OH share at 300 K, 760 Torr | % of the net reaction |
+|---|---|
+| final steady state | 2.32525045 |
+| reconstructed from the CSE kinetics | 2.32525079 |
+
+**All 21 conditions.** Largest relative deviation (`cse_vs_final_steady_state.csv`, `plots/cse_vs_final_steady_state.png`):
+
+| channel | largest relative deviation |
+|---|---|
+| IEPOX + OH (P5) | 3.1·10⁻⁷ |
+| escape (G4) | 1.6·10⁻⁸ |
+| P1 | 6.1·10⁻⁷ |
+| P7 (about 10⁻⁵ of the reaction) | 1.4·10⁻⁴ |
+
+These deviations are at the precision of the 7 printed digits.
+
+**Why they agree.**
+- **Exact identity.** With G13 eqs. 21 and 25–30, both quantities are $`\sum_\lambda p^{(x)}_\lambda p^{(R)}_\lambda/(\Lambda_\lambda Q_R)`$ over all eigenpairs. This is the spectral form of $`k_x^T J^{-1} F`$, an identity that holds whether or not the chemical and relaxation eigenvalues are separated.
+- **What it validates.** The agreement does not validate the CSE approximation. It validates the two independent code paths against each other:
+  - the banded Cholesky linear solve;
+  - the full eigendecomposition, $`M^{-1}`$, the assembly of the rate coefficients and the absorbing chain.
+- **Library test.** The unit test `cse_long_time_yields_equal_the_final_steady_state_yields` checks the same identity to 10⁻⁸.
+
+**What still differs.** The individual coefficients have different definitions: CSE gives phenomenological rate coefficients, the steady state gives flux coefficients and yields. Both recover the same long-time observable.
+
+**Pulse experiments.** The same long-time yields also follow from a pulse. For a normalized pulse $`F`$, the integrated yield is $`Y_r(\infty) = \int_0^\infty k_r^T e^{-Jt} F\,dt = k_r^T J^{-1} F`$, so pulsed and continuously fed experiments share their integrated yields but not their time traces.
+
+## Third method: direct time integration (2026-10-06)
+
+**Run.** The master equation integrated in time from a pulse of chemically activated G2: Rodas4 (adapted from KPP), MESS Eckart model, 21 conditions on 4 threads, 102 s (`reports/direct_time_integration.md`).
+
+**Identity.**
+- At t = 100 s the yields of R, P1, P5, P7 and escape equal the final steady state at all 21 conditions, to the 7 printed digits (`time_integration_vs_final_steady_state.csv`). This is the identity $`Y(\infty) = k^T J^{-1} F`$.
+- The total population + yields stays 100.0%.
+- With the CSE identity above, all three methods give the same long-time yields.
+
+**Time scales at 300 K, 760 Torr** (`plots/time_evolution_300K_760torr.png`):
+- **R:** the nascent G2 redissociates within about 10⁻⁹ s (78.4%).
+- **IEPOX + OH:** complete at about 10⁻⁸ s (0.502%), formed by chemically activated G4.
+- **Escape:** from G4 between 10⁻¹⁰ and 10⁻⁵ s (21.1%).
+- **P7:** a prompt part near 10⁻⁹ s and a thermal part near 10⁻⁴ … 10⁻³ s, through stabilized G3 → G6.
+
 ## 1. Files
 
 | file | content |
 |---|---|
 | `Gamma-Case2_..._12.7kcal.inp/.log/.out` | Peter's MESS input, log and output (2025-09-29), **untouched** |
 | `marxus_input/case2_tstlevel_E.inp` | the same deck with `TSTLevel E` added to the two phase-space-theory cores (Section 3.1); otherwise identical (checked with `diff`) |
-| `run_marxus.sh` | the MarXus runs (at most 4 cores) |
-| `marxus_output/case2_tstlevel_E_steady_states.out` | steady-state method: intermediate (absorbing barrier) and final steady state; the final one with its thermal rate coefficients, k_uni and k∞ of every channel (lowest eigenpair of J, GO10 eq. 12) |
-| `marxus_output/case2_default_EJ_steady_states.out` | the original deck as is (PST cores at the EJ level), for comparison |
+| `run_marxus.sh` | the MarXus runs (at most 4 cores); every run writes a human-readable report (`*.out`) and machine-readable tables (`*.csv`, `--csv`), which the comparison script reads |
+| `cse_vs_final_steady_state.csv`, `plots/cse_vs_final_steady_state.png` | **key diagnostic**: long-time shares from the MarXus CSE rate tables vs the MarXus final steady state (section above) |
+| `marxus_output/case2_tstlevel_E_mess_eckart_time_integration.*`, `time_integration_vs_final_steady_state.csv`, `plots/time_evolution_300K_760torr.png` | the third method, direct time integration of a pulse (Rodas4, 10⁻¹² … 10² s): populations and exit yields vs time; its long-time yields vs the final steady state |
+| `plots/yields.png` | yields in %: long-time yields of every channel (MarXus and MESS), IEPOX + OH prompt / through the stabilized wells / together, stabilization yields of the wells, CSE prompt branching of R |
+| `marxus_output/*_tables.csv` | every table of the reports, machine-readable (read by the plots) |
+| `marxus_output/case2_tstlevel_E_<method>.{out,csv,_tables.csv}` | the four methods, one run each (`run_marxus.sh`): `olzmann` (SteadyStateOlzmann: final steady state, thermal eigenpair, thermal fates of the wells), `absorbing_barrier` (SteadyStateAbsorbingBarrier: intermediate steady state), `cse`, `time_integration`; `*.out` is the report, `*.csv` and `*_tables.csv` the machine-readable tables |
+| `marxus_output/case2_default_EJ_absorbing_barrier.*` | the original deck as is (PST cores at the EJ level): SteadyStateAbsorbingBarrier run for the capture comparison |
 | `marxus_output/eckart_kappa.csv` | MarXus canonical Eckart factors κ(T), 100–2000 K (`examples/eckart_kappa_from_deck.rs`): exact Eckart (`kappa`) and the MESS model (`kappa_mess`) |
 | `marxus_output/case2_tstlevel_E_mess_eckart_*.out` | the same runs with the MESS Eckart tunneling model (`--tunneling mess-eckart`, Section 4.4), and the CSE species tables `…_cse.out` (Section 4.5) |
 | `cse_comparison.csv`, `plots/cse_vs_mess.png` | every species-to-species rate coefficient: MESS vs the MarXus CSE method (Section 4.5) |
@@ -214,7 +305,7 @@ The MESS log prints neither the collision frequency nor the kernel normalization
 
 | entries | MarXus/MESS − 1 |
 |---|---|
-| **R → P5 (IEPOX + OH)** | **−2.8 … −3.5%** |
+| **R → P5 (IEPOX + OH)** | **−2.7 … −3.5%** |
 | R → G2, G3, G4 | +1 … +6% |
 | R → P1, P7 | −1.4 … −5.0% |
 | well → well | within ±1% (G4 → G3 +1 … +2.5%) |

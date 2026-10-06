@@ -1,5 +1,5 @@
 # deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h3_mess_example/input/c2h3_tight.inp: grain 21.000 cm-1
-# solution method: steady state J N = F (GO10 eqs. 7, 8): intermediate (absorbing barrier 3 k_BT below the lowest threshold)
+# solution method: SteadyStateAbsorbingBarrier: intermediate steady state, absorbing barrier 3 k_BT below the lowest threshold
 #   well W1       grains   2634 (absolute -574 .. 2059), channels: B1
 
 # intermediate steady state (absorbing barrier 3 k_BT below the lowest threshold)

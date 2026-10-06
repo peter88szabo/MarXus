@@ -4,7 +4,7 @@
 Reads
   input/c2h3_tight.inp                         the deck (stationary points for the PES diagram)
   reference_mess_output/*.out                  the stored MESS results
-  marxus_output/<deck>_<solver>.out            MarXus, --steady-state final (run_marxus.sh): thermal
+  marxus_output/<deck>_<solver>.csv            MarXus (machine-readable, --csv), --method steady-state-olzmann (run_marxus.sh): thermal
                                                rate coefficients of the final steady state;
                                                solver: inverse (default), lapack, full
   ../c2h3_mess_example/comparison_table.csv    the earlier absorbing-barrier (intermediate steady state)
@@ -161,7 +161,7 @@ def read_deck(path):
 # Data
 # ----------------------------------------------------------------------------------------------
 mess_high, mess_p = read_mess(os.path.join(HERE, "reference_mess_output", "c2h3_tight.out"))
-runs = {s: read_eigen(os.path.join(HERE, "marxus_output", f"c2h3_tight_{s}.out")) for s in ("inverse", "lapack")}
+runs = {s: read_eigen(os.path.join(HERE, "marxus_output", f"c2h3_tight_{s}.csv")) for s in ("inverse", "lapack")}
 temperatures = sorted({t for t, _ in mess_p})
 pressures = sorted({p for _, p in mess_p})
 os.makedirs(os.path.join(HERE, "plots"), exist_ok=True)
@@ -247,23 +247,23 @@ plt.close(fig)
 fig, ax = plt.subplots(figsize=(7.8, 5.8))
 for t, c in zip(temperatures, colors):
     sel = [r for r in rows if r["T_K"] == t]
-    ax.plot(pressures, [mess_p[(t, q)][0] for q in pressures], "-o", color=c, mfc="none", label=f"{t:.0f} K")
+    ax.plot(pressures, [mess_p[(t, q)][0] for q in pressures], "-", marker="x", ms=10, mew=2, color=c, label=f"{t:.0f} K")
     ax.plot([r["p_atm"] for r in sel if r["solver"] == "inverse"],
-            [r["marxus_k_uni"] for r in sel if r["solver"] == "inverse"], "s", color=c, ms=5)
+            [r["marxus_k_uni"] for r in sel if r["solver"] == "inverse"], "o", color=c, ms=5)
     ax.plot([r["p_atm"] for r in sel if r["solver"] == "lapack"],
             [r["marxus_k_uni"] for r in sel if r["solver"] == "lapack"], "D", color=c, ms=5)
-    ax.plot([25.0], [mess_high[t][0]], "o", color=c, mfc="none")
+    ax.plot([25.0], [mess_high[t][0]], "none", marker="x", ms=10, mew=2, color=c)
     k_inf = [best((t, q))[1]["k_inf(W1:B1)[1/s]"] for q in pressures if best((t, q))[1]]
     if k_inf:
-        ax.plot([25.0], [k_inf[0]], "s", color=c, ms=5)
+        ax.plot([25.0], [k_inf[0]], "o", color=c, ms=5)
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xticks([0.1, 0.3, 1, 3, 10, 25])
 ax.set_xticklabels(["0.1", "0.3", "1", "3", "10", "$\\infty$"])
 ax.set_xlabel("pressure (atm)")
 ax.set_ylabel("k(C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H) (s$^{-1}$)")
-ax.set_title("Dissociation fall-off: MESS (open circles) vs MarXus k$_{uni}$\n"
-             "(squares: inverse iteration; diamonds: LAPACK where the Cholesky factor does not exist)", fontsize=10)
+ax.set_title("Dissociation fall-off: MESS (x, lines) vs MarXus k$_{uni}$\n"
+             "(circles: inverse iteration; diamonds: LAPACK where the Cholesky factor does not exist)", fontsize=10)
 ax.legend(fontsize=8, ncol=2, title="T")
 fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "falloff_W1_P1.png"), dpi=200)
@@ -373,7 +373,7 @@ labels, values, bar_colors = [], [], []
 for deck, tag in (("c2h3_tight_short_notunneling", "no tunneling"), ("c2h3_tight_short", "Eckart")):
     mh, mp = read_mess(os.path.join(HERE, "reference_mess_output", deck + ".out"))
     for solver, label, color, _ in SOLVERS:
-        thermal, association, _, _ = read_eigen(os.path.join(HERE, "marxus_output", f"{deck}_{solver}.out"))
+        thermal, association, _, _ = read_eigen(os.path.join(HERE, "marxus_output", f"{deck}_{solver}.csv"))
         key = (1000.0, 1.0)
         for name, ours, mess_value in (("k$_{uni}$", thermal[key]["k_uni[1/s]"], mp[key][0]),
                                        ("k assoc.", association[key]["k(P1->W1)"], mp[key][1])):

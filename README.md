@@ -10,9 +10,11 @@ MarXus is a **microcanonical rate code** and **master-equation solver** for gas-
   - Tight transition states are treated by RRKM theory, with exact Eckart tunneling.
   - Barrierless channels are treated by phase space theory (TST levels T, E, EJ) or by the inverse Laplace transform of k∞(T).
   - SACM is in progress.
-- **Master equation for multiwell networks.** It includes collisional energy transfer (exponential down or stepladder), isomerization, product channels, bimolecular sinks, and chemically activated formation from bimolecular reactants. It is solved by **two methods that answer different questions of the same equation**:
-  - the **steady state**, either intermediate (absorbing barrier) or final (Olzmann). The final one includes the thermal rate coefficient from the lowest eigenpair of the same matrix.
-  - the **chemically significant eigenvalues**, which give phenomenological rate coefficients for kinetic models (Miller, Klippenstein; Georgievskii et al.).
+- **Master equation for multiwell networks.** It includes collisional energy transfer (exponential down or stepladder), isomerization, product channels, bimolecular sinks, and chemically activated formation from bimolecular reactants. It is solved by **four methods in three families**, which answer different questions of the same equation (one method per run; each has its own document):
+  - steady state: [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md), the final steady state, with the thermal rate coefficient from the lowest eigenpair of the same matrix;
+  - steady state: [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md), the intermediate steady state;
+  - eigenvalue: [CSE](docs/methods/chemically_significant_eigenvalues.md), phenomenological rate coefficients for kinetic models (Miller, Klippenstein; Georgievskii et al.);
+  - time integration: [TimeIntegration](docs/methods/direct_time_integration.md), the grained populations integrated with adaptive, L-stable Rosenbrock methods (adapted from KPP), without a steady-state assumption or an eigenvalue separation.
 - **Input** in the MESS deck format, so existing decks can be used, with MarXus extension blocks for its own settings.
 - **Thermochemistry:** partition functions and U, H, F, G, S, Cv, Cp in the RRHO and quasi-RRHO (Grimme) approximations.
 
@@ -20,7 +22,7 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 
 ---
 
-## Current state (2026-10-05)
+## Current state (2026-10-06)
 
 | area | status |
 |---|---|
@@ -30,12 +32,16 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 | Inverse Laplace transform (ILT) for barrierless channels | implemented, tested |
 | Phase space theory (PST) for −C_n/Rⁿ potentials, levels T, E, EJ | implemented, tested, used in the master equation (validated, ZZ-allyl + O₂ Case 2) |
 | PST with arbitrary 1D potential, SACM | in progress |
-| Multiwell chemical-activation master equation (steady states) | implemented, tested, validated (C₂H₃; four-well ZZ-allyl + O₂ Case 2) |
-| Thermal rate coefficients of the final steady state (lowest eigenpair of J: k_uni, λ₁, λ₂; N(t)) | implemented, tested, validated (C₂H₃, 300–2000 K) |
-| CSE method (phenomenological rate coefficients, Miller–Klippenstein / Georgievskii et al. 2013) | implemented, tested, validated against a four-well MESS run |
+| Multiwell chemical-activation master equation: four methods in three families | |
+| – [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md) (final steady state; thermal eigenpair k_uni, λ₁, λ₂; thermal fates of the wells) | implemented, tested, validated (C₂H₃, 300–2000 K; four-well ZZ-allyl + O₂ Case 2) |
+| – [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) (intermediate steady state) | implemented, tested, validated (C₂H₃; Case 2) |
+| – [CSE](docs/methods/chemically_significant_eigenvalues.md) (phenomenological rate coefficients, Miller–Klippenstein / Georgievskii et al. 2013) | implemented, tested, validated (four-well MESS run, Case 2; C₂H₃, 300–2000 K) |
+| – [TimeIntegration](docs/methods/direct_time_integration.md) (Rosenbrock Ros2–Rodas4, adapted from KPP) | implemented, tested; reproduces the final steady state on the four-well network; late-time decay = k_uni within 3·10⁻⁶ (C₂H₃) |
+| Parallel runs over the conditions (T, p) with rayon | implemented, tested |
+| Exponential-down kernel, low-energy reduction | open decision: its integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 gives steps in T, e.g. +3% in R → G4 of Case 2 at 304.7 K (`reports/low_energy_reduction_temperature_step.md`) |
 | Higher precision (double-double, arbitrary-precision reference) | planned (`reports/higher_precision_decision.md`) |
 
-The source contains 176 library unit tests (`cargo test`).
+The source contains 218 library unit tests (`cargo test`).
 
 ---
 
@@ -89,11 +95,11 @@ The energy-grained master equation is $`dN/dt = R\,F - 𝐉 N`$ with $`𝐉 = \o
 - A given distribution.
 - **Consecutive chemical activation:** coupled master equations, the output of one feeding the next (PO14 pp. 236–237).
 
-MarXus has **two solution methods**: the steady state and the chemically significant eigenvalues (CSE). They are chosen in the `MarXus` block of the deck header or on the command line (see Usage).
+MarXus has **four solution methods in three families**: [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md) and [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) (steady state), [CSE](docs/methods/chemically_significant_eigenvalues.md) (eigenvalue) and [TimeIntegration](docs/methods/direct_time_integration.md) (time integration). One is chosen per run, in the `MarXus` block of the deck header or on the command line (see Usage); there is no default.
 
-**Solution method 1: steady state, J·N = F (GO10 eqs. 7, 8), in two versions (GO10 Sec. 3.2)**
-- **Intermediate steady state** with an absorbing barrier, at a user-chosen distance below the threshold (default 10 kT).
-- **Final steady state** (Olzmann) with physical sinks and no absorbing barrier. Its J also gives the thermal rate coefficients (below).
+**Steady-state family, J·N = F (GO10 eqs. 7, 8), two methods (GO10 Sec. 3.2), one per run:**
+- [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md): the intermediate steady state, with an absorbing barrier at a user-chosen distance below the threshold (default 10 kT).
+- [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md): the final steady state, with physical sinks and no absorbing barrier. Its 𝐉 also gives the thermal rate coefficients (below).
 - Solvers: banded Cholesky of the symmetrized operator, or BiCGSTAB.
 - Every result is checked for its residual and mass balance.
 
@@ -113,11 +119,15 @@ MarXus has **two solution methods**: the steady state and the chemically signifi
   - LAPACK DSYEVD.
 - **Time-dependent populations** N(t) by eigenvalue expansion (PO14 eqs. 3–4), and the validity windows of the steady-state picture (O02).
 
-**Solution method 2: phenomenological rate coefficients from the chemically significant eigenvalues** (`Method CSE`, `--method cse`):
+**Eigenvalue family: [CSE](docs/methods/chemically_significant_eigenvalues.md), phenomenological rate coefficients from the chemically significant eigenvalues** (`Method CSE`, `--method cse`):
 - The method is that of Miller, Klippenstein (J. Phys. Chem. A 110, 10528 (2006)) in the formulation of Georgievskii et al. (J. Phys. Chem. A 117, 12146 (2013)).
 - It produces species-to-species tables of well ↔ well, well → products, reactant → wells and reactant → products, as MESS does.
 - Diagnostics: the eigenvalue separation, the relaxational projections, the loss balance, detailed balance and the precision floor.
 - It reproduces a four-well MESS run to a few percent (`validation/ZZAllyl+O2_Gamma_Case2/`).
+
+**Time-integration family: [TimeIntegration](docs/methods/direct_time_integration.md)** (`Method TimeIntegration`, `--method time-integration`):
+- The grained populations and the yields of every exit are integrated in time, from a pulse or under continuous formation, with the adaptive, L-stable Rosenbrock methods Ros2–Rodas4 adapted from KPP (`src/numeric/integrators/`).
+- At long times the yields equal those of SteadyStateOlzmann exactly ($`k^T 𝐉^{-1} F`$).
 
 **Input**
 - Decks in the MESS input format (a subset), so existing decks can be used.
@@ -128,7 +138,7 @@ MarXus has **two solution methods**: the steady state and the chemically signifi
 **Validation**
 - `validation/c2h3_mess_example/` (intermediate steady state) and `validation/c2h3_mess_example_olzmann_eigen/` (thermal rate coefficients of the final steady state) compare H + C₂H₂ ⇌ C₂H₃ at 300–2000 K and 0.1–10 atm with the stored MESS results.
 - The thermal rate coefficients agree within ±2.5% from 750 to 1750 K. At 300–1000 K the residual offsets are the known exact vs semiclassical Eckart difference.
-- Where both are valid, the intermediate steady state and the thermal rate coefficients of the final steady state agree with each other to 0.01%.
+- At 300–1000 K the association from the intermediate steady state (10 kT) and from the thermal rate coefficients of the final steady state agree within 0.023%. Above 1000 K they separate as the absorbing barrier loses its plateau.
 - `validation/ZZAllyl+O2_Gamma_Case2/` reproduces a four-well MESS run: ZZ-allyl + O₂ with two PST channels, Eckart tunneling and an escape sink.
   - The capture rate agrees within 0.5%.
   - Every channel's k∞ agrees within 0.3–0.7% once the tunneling factor is accounted for. MarXus's exact Eckart κ is 2–23% larger than MESS's.
@@ -144,19 +154,27 @@ MarXus has **two solution methods**: the steady state and the chemically signifi
 
 ---
 
-## Master-equation solvers: one master equation, three questions
+## Master-equation solvers: one master equation, four methods, three families
 
-**All solvers of MarXus solve the same master equation.** They use the same grains, the same collision operator, the same microcanonical rate coefficients k(E) and the same source of chemically activated adducts. They differ only in the **question** they ask of that equation, that is, which solution of it is computed.
+**All methods of MarXus solve the same master equation.** They use the same grains, the same collision operator, the same microcanonical rate coefficients k(E) and the same source of chemically activated adducts. They differ only in the **question** they ask of that equation, that is, which solution of it is computed. Their results are therefore **different quantities, not approximations of one quantity**.
 
-There are two solution methods and three solvers in total: the steady-state method with two solvers (intermediate and final steady state) and the CSE method. Their results are therefore **different quantities, not three approximations of one quantity**:
+**One method per run.** The two steady-state methods belong to one family, but they are different ways of solving, and each run computes one of them. Each method is described in detail in its own document (follow the links).
 
-| solver | the question it answers |
-|---|---|
-| **1. Intermediate steady state** (absorbing barrier, as in SSUMES) | What happens to freshly formed adducts on their first collisional descent? Which fraction redissociates, which decomposes to each product, and which is stabilized? |
-| **2. Final steady state** (Olzmann), with its thermal eigenpair | Under continuous formation, once the stabilized population has itself reached a steady state (no net stabilization), what are the yields of all products and sinks? And, from the lowest eigenpair of the same J: how fast does a thermalized adduct react? |
-| **3. Chemically significant eigenvalues** (CSE; Miller, Klippenstein; Georgievskii et al.) | Which species-to-species rate coefficients (reactants, wells, products) define a kinetic model that reproduces the master-equation kinetics after collisional relaxation? |
+| family | method (`Method` / `--method`) | the question it answers |
+|---|---|---|
+| steady state | [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md) (`steady-state-olzmann`): final steady state, with its thermal eigenpair | Under continuous formation, once the stabilized population has itself reached a steady state (no net stabilization), what are the yields of all products and sinks? And, from the lowest eigenpair of the same 𝐉: how fast does a thermalized adduct react? |
+| steady state | [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) (`steady-state-absorbing-barrier`): intermediate steady state, as in SSUMES | What happens to freshly formed adducts on their first collisional descent? Which fraction redissociates, which decomposes to each product (bimolecular-to-bimolecular), and which is stabilized (bimolecular-to-well)? |
+| eigenvalue | [CSE](docs/methods/chemically_significant_eigenvalues.md) (`cse`; Miller, Klippenstein; Georgievskii et al.) | Which species-to-species rate coefficients (reactants, wells, products) define a kinetic model that reproduces the master-equation kinetics after collisional relaxation? |
+| time integration | [TimeIntegration](docs/methods/direct_time_integration.md) (`time-integration`; Rosenbrock, adapted from KPP) | How do the populations of all grains and the yields of all exits evolve in time, from a pulse of activated adducts or under continuous formation, through relaxation and chemistry? |
 
-Solvers 1 and 2 give flux coefficients and yields; solver 3 gives phenomenological rate coefficients. Miller and Klippenstein (MK06, pp. 10529, 10531): "application of the steady-state approximation … is virtually always an attempt to equate a phenomenological rate coefficient to a flux coefficient. Sometimes this is a valid approach, and sometimes it is not."
+**What each method gives:**
+- The two steady-state methods give flux coefficients and yields.
+- CSE gives phenomenological rate coefficients.
+- TimeIntegration gives the time evolution itself.
+
+**Every method reports the reactant explicitly:**
+- **bimolecular-to-bimolecular** rate coefficients and yields, e.g. R → IEPOX + OH (chemical activation);
+- where defined, **bimolecular-to-well** (stabilization) rate coefficients and yields, e.g. R → G4. Miller and Klippenstein (MK06, pp. 10529, 10531): "application of the steady-state approximation … is virtually always an attempt to equate a phenomenological rate coefficient to a flux coefficient. Sometimes this is a valid approach, and sometimes it is not."
 
 **References used in this section**
 
@@ -266,156 +284,50 @@ F(E) = \int_0^{E-E_0} n_{\mathrm A}(\varepsilon)\;n_{\mathrm B}(E-E_0-\varepsilo
 
 In the shift approximation this becomes $`F(E) = n_{\mathrm A}\big(E + E_R - \langle E_{\mathrm B}\rangle\big)`$, with $`E_R`$ the 0 K reaction energy.
 
-### Solver 1: intermediate steady state (absorbing barrier)
-
-**Question.** What is the fate of the nascent adducts during their first collisional descent?
-
-**Equation.** Each well gets an absorbing barrier at $`E_{\mathrm{abs}} = E_{\mathrm{thr,min}} - X\,k_BT`$ (default $`X = 10`$, `--barrier-kt`). A molecule transferred below it counts as stabilized and is removed. With $`𝐉_{\mathrm{abs}}`$, the operator on the grains above the barriers, and $`R = 1`$:
-
-```math
-\sum_j J^{\mathrm{abs}}_{ij}\,N^s_j = F_i \quad \big(𝐉_{\mathrm{abs}}\,N^{s} = F\big),
-\qquad
-\Phi_r = \sum_E k_r(E)\,N^s(E),
-\qquad
-\Phi_{\mathrm{stab}} = \sum_{E \ge E_{\mathrm{abs}}} \omega \sum_{E' < E_{\mathrm{abs}}} P(E' \leftarrow E)\,N^s(E)
-```
-
-($`\Phi_{\mathrm{stab}}`$ also includes the isomerization flux that arrives below the barrier of the target well, and the part of the source formed below a barrier; `chemical_activation_operator.rs`). The yields obey $`\sum_r \Phi_r + \Phi_{\mathrm{stab}} + \Phi_{\mathrm{sink}} = 1`$, and the apparent bimolecular rate coefficients are $`k(\mathrm{A+B} \to X) = k_\infty\,\Phi_X`$ (PR03 eq. 44).
-
-**Time window.** The solution holds for $`(0.1\,\lambda_F)^{-1} < t < (10\,k_{\mathrm{uni}})^{-1}`$ (O02 p. 3618; SN84), with $`\lambda_F`$ the eigenvalue whose eigenvector has the largest weight in $`F`$. In this window the activated population has relaxed, and the stabilized adducts have not yet reacted thermally.
-
-**What it gives for chemical activation:**
-
-- the prompt branching of the nascent adducts: redissociation, chemically activated products, stabilization;
-- the falloff of the association, $`k(\mathrm{A+B}\to W) = k_\infty\,\Phi_{\mathrm{stab},W}`$, which is "the rate into the absorbing barrier" (PR03);
-- the chemically activated product channels, $`k(\mathrm{A+B}\to P) = k_\infty\,\Phi_P`$.
-
-**What it does not give:**
-
-- the later thermal reaction of the stabilized adducts;
-- the thermal rate coefficient.
-
-**Limits:**
-
-- The barrier position is a choice, and for shallow wells the results depend on it. A barrier below the well bottom is refused.
-- With a physical bimolecular sink the barrier is "artificial", and "a too low product yield would be predicted" (O02 p. 3617).
-
-### Solver 2: final steady state (Olzmann) and its thermal eigenpair
-
-**Question.** Under continuous formation, after the stabilized population has itself reached a steady state, where does every formed molecule end? And how fast does a thermalized adduct react?
-
-**Equation.** The same $`𝐉`$ is used, without a barrier (GO10 eq. 8; PO14 eq. 5):
-
-```math
-\sum_j J_{ij}\,N^s_j = R\,F_i \quad \big(𝐉\,N^{s} = R\,F\big),
-\qquad
-\tilde N^{s} = \frac{𝐉^{-1}\,F}{\sum_i \big(𝐉^{-1}\,F\big)_i},
-\qquad
-k^{ca}_r = \sum_E k_r(E)\,\tilde N^s(E) \quad \text{(GO10 eq. 9)},
-```
-
-```math
-\Phi_r = \sum_E k_r(E)\,N^s(E) \quad \text{(O02 eq. 10)},
-\qquad
-\Phi_{\mathrm{sink}} = k_c[\mathrm D] \sum_E N^s(E) .
-```
-
-**The thermal eigenpair of the same $`𝐉`$** (GO10 eq. 12 and the text after it) is part of this solver, not a method of its own. Its eigenvector is the thermal steady-state population:
-
-```math
-𝐉\,\tilde n^{th} = \lambda_1\,\tilde n^{th},
-\qquad
-k^{th} = \lambda_1,
-\qquad
-k^{th}_r = \sum_E k_r(E)\,\tilde n^{th}(E),
-\qquad
-k_{\mathrm{uni}} = \sum_r k^{th}_r + k_c[\mathrm D] .
-```
-
-**How it is computed and reported:**
-
-- MarXus reports the eigenvector average $`k_{\mathrm{uni}}`$, with $`\lambda_1`$ beside it as the sum-rule check.
-- The default solver, inverse iteration, factors $`𝐒 + \sigma𝐈`$ and solves $`(𝐒+\sigma𝐈)\,x = u`$ repeatedly. Each step is a steady-state solve with the previous distribution as the source.
-- For one well with one entrance channel, the association follows by detailed balance: $`k(\mathrm{A+B}\to W) = k_{\mathrm{uni}}\;k_{\infty,\mathrm{assoc}}/k_{\infty,\mathrm{diss}}`$.
-
-**Time scale.** The solution is reached when the experimental time is distinctly longer than $`1/k_{\mathrm{uni}}`$ (O02 p. 3618). At that point "there is no more net stabilization; the stabilization reservoir is filled up, and time-independent energy distributions have been established" (GO10 p. 12295).
-
-**What it gives for chemical activation:**
-
-- the complete fate of all formed molecules, including those that react after stabilization;
-- with physical sinks (for example O₂ addition or an escape channel), the yields that a continuously fed system shows;
-- non-thermal sources and consecutive activation (PO14);
-- $`k^{ca}`$ (activated adduct) and $`k^{th}`$ (thermalized adduct) from one and the same $`𝐉`$, directly comparable (GO10).
-
-**Link to solver 1.** A physical sink in the window $`0.01\,\omega > k_c[\mathrm D] > 10\,k_{\mathrm{uni}}`$ gives the absorbing-barrier yield within 10% (O02 p. 3618). The sink acts as a physically defined absorbing barrier.
-
-**Limits:**
-
-- Without a sink, and with a single exit such as back to A + B, every molecule eventually leaves through it. In O02's words (text after eq. 13), "one trivially has … $`\Phi_2 = 1`$".
-- For deep wells at low T, $`𝐉\,N = F`$ then becomes numerically singular, for example C₂H₃ at 300–500 K. The thermal eigenpair is still obtained (shifted inverse iteration). For the stabilization, use solver 1 or 3.
-
-### Solver 3: chemically significant eigenvalues (CSE)
-
-**Question.** Which phenomenological rate coefficients between species reproduce the kinetics after relaxation?
-
-**Equations** (G13; MK06). All eigenpairs of $`\hat{𝐆} = 𝐉`$ are computed, $`\hat{𝐆}\,f^{(\lambda)} = \Lambda_\lambda\,f^{(\lambda)}`$. For $`n_w`$ wells, the $`n_w`$ lowest eigenvalues are chemically significant and must be well separated from the relaxation eigenvalues, $`\Lambda_{n_w} \ll \Lambda_{n_w+1}`$ (MK06 eq. 19). With $`Q_i = \sum_{E \in i} f^0(E)`$ and $`p^{(\nu)}_\lambda = \sum_E f^{(\lambda)}(E)\,k_{\to\nu}(E)`$ (eq. 15), with $`𝐌`$ the matrix of the elements $`M_{i\lambda}`$ below and $`𝚲 = \mathrm{diag}(\Lambda_1, \dots, \Lambda_{n_w})`$:
-
-```math
-M_{i\lambda} = Q_i^{-1/2} \sum_{E\in i} f^{(\lambda)}(E) \quad \text{(eq. 25)},
-\qquad
-k_{j\to i} = -\sqrt{Q_i/Q_j}\;\big(𝐌𝚲𝐌^{-1}\big)_{ij} \quad \text{(eq. 27)},
-```
-
-```math
-k_{i\to\nu} = Q_i^{-1/2} \sum_{\lambda \le n_w} \big(𝐌^{-1}\big)_{\lambda i}\,p^{(\nu)}_\lambda \quad \text{(eq. 30)},
-\qquad
-k_{R\to i} = \frac{\sqrt{Q_i}}{Q_R} \sum_{\lambda \le n_w} M_{i\lambda}\,p^{(R)}_\lambda \quad \text{(eq. 28)},
-```
-
-```math
-k_{R\to\mu} = \frac{1}{Q_R} \sum_{\lambda > n_w} \frac{p^{(\mu)}_\lambda\,p^{(R)}_\lambda}{\Lambda_\lambda} \quad \text{(eq. 21)}.
-```
-
-**Validity.** The rate coefficients describe the kinetics for $`t \gg 1/\Lambda_{n_w+1}`$, after relaxation. They exist only while the chemically significant eigenvalues stay separated from the relaxation eigenvalues. Otherwise G13 (Sec. IV) merges species. MarXus warns when $`\Lambda_{n_w}/\Lambda_{n_w+1} > 0.1`$; merging is not implemented.
-
-**What it gives for chemical activation:**
-
-- $`k_{R\to i}`$ (eq. 28): stabilization into well $`i`$;
-- $`k_{R\to\mu}`$ (eq. 21): the chemically activated, well-skipping products, carried by the relaxation modes;
-- the thermal well → well and well → product rate coefficients;
-- together, a complete mechanism for kinetic models.
-
-**What it does not give:**
-
-- yields of a continuously fed system;
-- non-thermal sources;
-- results when the separation fails.
-
 ### Side by side
 
-| | 1. intermediate steady state | 2. final steady state (+ thermal eigenpair) | 3. CSE |
-|---|---|---|---|
-| master equation | same J, same F | same J, same F | same J, same F |
-| mathematical problem | linear system on the grains above the absorbing barriers | linear system on all grains; lowest eigenpair of the same J | all eigenpairs of J |
-| stabilized adducts | removed (counted as stabilized) | stay in the well and react thermally | a chemical eigenmode per well |
-| time scale | $`(0.1\lambda_F)^{-1} < t < (10k_{\mathrm{uni}})^{-1}`$ | $`t \gg 1/k_{\mathrm{uni}}`$ | $`t \gg 1/\Lambda_{n_w+1}`$ |
-| output | yields Φ, $`k_\infty\Phi_X`$ | $`k^{ca}`$, yields Φ, sink yields; $`k_{\mathrm{uni}}`$, $`\lambda_1`$, $`k^{th}_r`$ | species-to-species rate coefficients |
-| kind of quantity | flux coefficient | flux coefficient; thermal rate coefficient | phenomenological rate coefficient |
-| needs | barrier distance (choice) | a sink or exit for a well-conditioned J·N = F | eigenvalue separation |
-| typical use | association falloff, prompt product branching | yields with physical sinks (continuous formation), consecutive activation, thermal $`k_{\mathrm{uni}}`$ | rate coefficients for a kinetic mechanism |
+| | [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) | [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md) | [CSE](docs/methods/chemically_significant_eigenvalues.md) | [TimeIntegration](docs/methods/direct_time_integration.md) |
+|---|---|---|---|---|
+| master equation | same J, same F | same J, same F | same J, same F | same J, same F |
+| mathematical problem | linear system on the grains above the absorbing barriers | linear system on all grains; lowest eigenpair of the same J | all eigenpairs of J | initial-value problem, adaptive Rosenbrock steps |
+| stabilized adducts | removed (counted as stabilized) | stay in the well and react thermally | a chemical eigenmode per well | stay in the well; followed in time |
+| time scale | $`(0.1\lambda_F)^{-1} < t < (10k_{\mathrm{uni}})^{-1}`$ | $`t \gg 1/k_{\mathrm{uni}}`$ | $`t \gg 1/\Lambda_{n_w+1}`$ | every t |
+| output | yields Φ, $`k_\infty\Phi_X`$ | $`k^{ca}`$, yields Φ, sink yields; $`k_{\mathrm{uni}}`$, $`\lambda_1`$, $`k^{th}_r`$ | species-to-species rate coefficients | N(t) of every well, Y(t) of every exit |
+| kind of quantity | flux coefficient | flux coefficient; thermal rate coefficient | phenomenological rate coefficient | populations and yields vs time |
+| needs | barrier distance (choice) | a sink or exit for a well-conditioned J·N = F | eigenvalue separation | output time range |
+| typical use | association falloff, prompt product branching | yields with physical sinks (continuous formation), consecutive activation, thermal $`k_{\mathrm{uni}}`$ | rate coefficients for a kinetic mechanism | time-resolved experiments, checks of the other solvers |
 
-### Where the three must agree: identities and measured agreement
+### Where the solvers must agree: identities and measured agreement
 
-- **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ of solver 2 (test `a_single_well_gives_the_eigenvector_average_as_its_rate_coefficient`, to 10⁻⁸).
+**Exact identity 1: pulse and continuous formation have the same long-time yields.** For the linear master equation with a normalized initial distribution $`F`$ (a pulse) and no further source, the population decays as $`N(t) = e^{-𝐉 t} F`$, and the yield of channel $`r`$ accumulated up to $`t \to \infty`$ is
+
+```math
+Y_r(\infty) = \int_0^\infty k_r^T\, e^{-𝐉 t} F \, dt = k_r^T\, 𝐉^{-1} F ,
+```
+
+since all eigenvalues of $`𝐉`$ are positive. This is exactly the yield of the final steady state per formed adduct with the same $`F`$ (GO10 eqs. 8, 9). A pulsed experiment and a continuously fed experiment therefore share their integrated yields, while their time traces differ. Vereecken et al. found the two "identical for all practical purposes" (J. Chem. Phys. 106, 6564 (1997), Table I).
+
+**Measured for identity 1.** The direct time integration of a pulse (TimeIntegration) on the four-well ZZ-allyl + O₂ network reaches, at t = 100 s, the final-steady-state yields of every exit at all 21 conditions, to the 7 printed digits (`validation/ZZAllyl+O2_Gamma_Case2/time_integration_vs_final_steady_state.csv`, `plots/time_evolution_300K_760torr.png`).
+
+**Exact identity 2: the CSE rate coefficients reproduce the final steady state.**
+- **The reconstruction.** Take the long-time yields from the CSE rate coefficients: R forms the wells and the direct products, and each well then ends in a product, the escape or back in R (the absorbing chain of the CSE well rate coefficients, `chemically_significant_eigenvalues::reactant_yields`). These yields equal those of the final steady state, as fractions of the net reaction.
+- **Why.** With G13 eqs. 21 and 25–30, both are $`\sum_\lambda p^{(x)}_\lambda\, p^{(R)}_\lambda / (\Lambda_\lambda Q_R)`$ over all eigenpairs, the spectral form of $`k_x^T 𝐉^{-1} F`$. This holds independently of the eigenvalue separation; the individual CSE coefficients lose their meaning without separation, but this sum does not.
+- **What it checks.** The two methods reach the same observable through independent code: a banded Cholesky solve on one side; the full eigendecomposition, $`𝐌^{-1}`$, the rate assembly and the absorbing chain on the other.
+- **Measured.**
+  - The test `cse_long_time_yields_equal_the_final_steady_state_yields` holds to 10⁻⁸.
+  - ZZ-allyl + O₂ (`validation/ZZAllyl+O2_Gamma_Case2/cse_vs_final_steady_state.csv` and `plots/cse_vs_final_steady_state.png`): IEPOX + OH at 300 K and 760 Torr is 2.32525045% from the final steady state and 2.32525079% from the CSE kinetics.
+  - Over all 21 conditions the IEPOX + OH share agrees to 3.1·10⁻⁷ relative, the escape to 1.6·10⁻⁸ and P1 to 6.1·10⁻⁷. These are the precision of the 7 printed digits. P7, about 10⁻⁵ of the reaction, agrees to 1.4·10⁻⁴.
+
+- **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ of SteadyStateOlzmann (test `a_single_well_gives_the_eigenvector_average_as_its_rate_coefficient`, to 10⁻⁸).
 - **Well separation and continuous formation.** Steady-state yields equal time-integrated single-injection yields (Vereecken et al., J. Chem. Phys. 106, 6564 (1997), Table I). The CSE R → product and R → well rate coefficients equal the fractions accumulated on the relaxation time scale (G13 p. 12153).
 - **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example*`):
-  - At 300–1000 K, solver 1 (10 kT) and the thermal association of solver 2 agree to 0.01%.
-  - Above about 1500 K, solver 1 fails because of the barrier distance (0.1 atm, 10 kT): −13% at 1500 K, −42% at 1750 K, no result at 2000 K.
-  - Solver 2 stays within ±2.5% of the MESS (CSE) result from 750 to 1750 K.
+  - At 300–1000 K, SteadyStateAbsorbingBarrier (10 kT) and the thermal association of SteadyStateOlzmann agree within 0.023% (largest deviation per temperature over the five pressures: 0.0007% at 300 K, 0.004% at 500 K, 0.018% at 750 K, 0.023% at 1000 K; `comparison_table.csv`, inverse iteration). Above 1000 K they separate as the absorbing barrier loses its plateau: 1.2% at 1250 K, 13% at 1500 K, 77% at 1750 K, no barrier result at 2000 K.
+  - Above about 1500 K, SteadyStateAbsorbingBarrier fails because of the barrier distance (0.1 atm, 10 kT): −13% at 1500 K, −42% at 1750 K, no result at 2000 K.
+  - SteadyStateOlzmann stays within ±2.5% of the MESS (CSE) result from 750 to 1750 K.
 - **ZZ-allyl + O₂, four wells** (`validation/ZZAllyl+O2_Gamma_Case2/`):
-  - Solver 3 reproduces the MESS species tables to a few percent.
-  - The long-time IEPOX + OH share of solver 2 differs from MESS's long-time fate by +7 … +12% with the exact Eckart tunneling, and by −5.1 … −5.9% with the MESS tunneling model. The escape share agrees within 0.5%.
-  - The apparent $`k(\mathrm R\to \mathrm{IEPOX+OH})`$ of solver 1 is 15% above MESS's R → P5. These are different quantities: the prompt formation is assigned by the barrier in one and by the eigenvalue splitting in the other.
+  - CSE reproduces the MESS species tables to a few percent.
+  - The long-time IEPOX + OH share of SteadyStateOlzmann differs from MESS's long-time fate by +7 … +12% with the exact Eckart tunneling, and by −5.1 … −5.9% with the MESS tunneling model. The escape share agrees within 0.5%.
+  - The apparent $`k(\mathrm R\to \mathrm{IEPOX+OH})`$ of SteadyStateAbsorbingBarrier is 15% above MESS's R → P5. These are different quantities: the prompt formation is assigned by the barrier in one and by the eigenvalue splitting in the other.
 
 ---
 
@@ -423,31 +335,37 @@ k_{R\to\mu} = \frac{1}{Q_R} \sum_{\lambda > n_w} \frac{p^{(\mu)}_\lambda\,p^{(R)
 
 ```
 cargo run --release --example chemical_activation_from_deck -- deck.inp REACTANT \
-    --method steady-state --steady-state both --eigen-solver inverse
+    --method steady-state-olzmann --threads 4 --csv out.csv > out.report
 ```
 
-The solution method and its settings can be given in the deck header, in a `MarXus ... End` block (a MarXus extension of the MESS format). Every keyword is optional; the command-line option in the last column overrides it:
+The method and its settings can be given in the deck header, in a `MarXus ... End` block (a MarXus extension of the MESS format). `Method` is required (in the deck or on the command line); the other keywords are optional. The command-line option in the second column overrides the deck:
 
 ```
 MarXus
-  Method                              SteadyState        ! SteadyState | CSE
-  SteadyState                         Both               ! Intermediate | Final | Both
-  AbsorbingBarrierBelowThreshold[kT]  10                 ! intermediate steady state
+  Method                              SteadyStateOlzmann ! SteadyStateOlzmann | SteadyStateAbsorbingBarrier | CSE | TimeIntegration
+  AbsorbingBarrierBelowThreshold[kT]  10                 ! SteadyStateAbsorbingBarrier
   EigenSolver                         InverseIteration   ! InverseIteration | FullDecomposition | Lapack
   SumRuleTolerance                    1.5e-2             ! thermal eigenpair of the final steady state
+  Integrator                          Rodas4             ! time integration: Rodas4 | Rodas3 | Ros4 | Ros3 | Ros2
+  InitialState                        Pulse              ! time integration: Pulse | Continuous
+  TimeRange[s]                        1e-12  1e2         ! time integration: first and last output time
+  TimesPerDecade                      4                  ! time integration
+  IntegrationTolerance                1e-6               ! time integration: relative tolerance
 End
 ```
 
 | deck keyword | option | meaning (default) |
 |---|---|---|
-| `Method` | `--method steady-state\|cse` | solution method (steady state) |
-| `SteadyState` | `--steady-state intermediate\|final\|both` | versions of the steady-state method (both); the final one includes the thermal rate coefficients |
+| `Method` | `--method steady-state-olzmann\|steady-state-absorbing-barrier\|cse\|time-integration` | the method of the run (required, no default; see the method documents) |
 | `AbsorbingBarrierBelowThreshold[kT]` | `--barrier-kt X` | absorbing barrier of the intermediate steady state, in k_BT below the lowest threshold (10) |
 | `EigenSolver` | `--eigen-solver inverse\|full\|lapack` | thermal eigenpair of the final steady state (inverse iteration); CSE needs all eigenpairs (LAPACK; `full` also possible, inverse iteration refused) |
 | `SumRuleTolerance` | `--sum-rule-tolerance X` | warning threshold of \|λ₁ − k_uni\|/k_uni (1.5e-2) |
+| – | `--csv FILE` | also write the machine-readable tables (CSV with titled blocks) to FILE, and every table of the report to FILE_tables.csv |
+| `Integrator`, `InitialState`, `TimeRange[s]`, `TimesPerDecade`, `IntegrationTolerance` | `--integrator`, `--initial`, `--time-range T1 T2`, `--times-per-decade`, `--integration-tolerance` | time integration: Rosenbrock method (Rodas4), pulse or continuous formation (pulse), output times (1e-12 to 1e2 s, 4 per decade), relative tolerance (1e-6) |
+| – | `--threads N` | number of threads; the conditions (T, p) are independent and computed in parallel (default: RAYON_NUM_THREADS, otherwise all cores) |
 | – | `--tunneling exact-eckart\|mess-eckart` | Eckart transmission model: exact Eckart (default); `mess-eckart` only for comparison with MESS (see Tunneling model below) |
 
-A setting that the selected solution does not use is reported as a note in the output, not refused. `eigenvalue` is neither a method nor a steady-state version: the thermal eigenpair belongs to the final steady state.
+A setting that the chosen method does not use is reported as a note in the output, not refused. `SteadyState` / `--steady-state` and `both` no longer exist: the two steady-state methods are chosen by `Method`, one per run. `eigenvalue` is not a method: the thermal eigenpair belongs to SteadyStateOlzmann.
 
 The output tables begin with comment lines that explain the quantities, with their references. The source file `examples/chemical_activation_from_deck.rs` documents all columns.
 
@@ -540,7 +458,9 @@ export OPENBLAS_NUM_THREADS=4
 
 ### 3. Rust crates (automatic)
 
-The current version has no crate dependencies.
+- `rayon` (pure Rust): the conditions (T, p) of a master-equation run are computed in parallel (`--threads N`).
+
+`cargo build` downloads and compiles it by itself; it needs no system library.
 
 The planned higher-precision eigenvalue analysis (`reports/higher_precision_decision.md`) will use pure-Rust crates only:
 - `qd`: double-double;

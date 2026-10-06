@@ -88,7 +88,7 @@ It does not extract the phenomenological rate-coefficient matrix of G13. That ma
 
 **All 21 conditions, significant entries:**
 - R → G2: +2.1 … +3.3%; R → G3: +0.9 … +3.6%; R → G4: +1.4 … +6.1%.
-- **R → P5: −2.8 … −3.5%**; R → P1: −1.4 … −2.3%; R → P7: −3.9 … −5.0%.
+- **R → P5: −2.7 … −3.5%**; R → P1: −1.4 … −2.3%; R → P7: −3.9 … −5.0%.
 - Well → well: within ±1%, except G4 → G3, +1.0 … +2.5%.
 - Well → R: +0.2 … +6%.
 - Well → products: within −3.4 … +3.8%.
@@ -105,3 +105,37 @@ It does not extract the phenomenological rate-coefficient matrix of G13. That ma
 1. **Well merging** (G13 Sec. IV, eq. 31) when the chemical eigenvalues approach the relaxation ones: not implemented; only a warning.
 2. **Product → well rate coefficients** (bimolecular-to-isomer for the products). They need the products' partition functions (Q_ν), which the adapter does not yet provide for non-reactant bimolecular species.
 3. **Precision.** Chemical eigenvalues near the double-precision floor are only warned about. This is the planned higher-precision work (`higher_precision_decision.md`).
+
+## 6. Yields from the CSE rate coefficients, and the identity with the final steady state (2026-10-06)
+
+**Code.** `chemically_significant_eigenvalues::reactant_yields(rates) -> ReactantYields`:
+- **Prompt branching** of the reactant: $k_{R\to X} / \sum_{X\ne R} k_{R\to X}$ over the wells (stabilization) and the bimolecular channels other than R (direct, chemically activated, well-skipping products). It sums to 1.
+- **Thermal fate of each well:** the absorbing chain of the well rate coefficients, $B = (I - Q)^{-1} A$, with $Q_{ij} = k_{i\to j}/k_i$, $A_{i\nu} = k_{i\to\nu}/k_i$ and $k_i$ the sum of all rates out of well $i$. One dense inverse (`numeric/dense_inverse.rs`).
+- **Long-time yields:** the direct part $k_{R\to x}$ plus the part through the wells $\sum_i k_{R\to i} B_{ix}$. Both are normalized to the eventual net reaction, with the final return to R excluded.
+
+**Identity.** With all eigenpairs, the long-time yields equal the yields of the final steady state as fractions of the net reaction:
+- **Derivation.** Insert G13 eqs. 28 and 30 for $k_{R\to i}$ and $k_{i\to\nu}$, and the well rate matrix $Q^{1/2} M \Lambda M^{-1} Q^{-1/2}$ (eq. 27). The chemical part becomes $\sum_{\lambda\,\mathrm{chem}} p^{(x)}_\lambda p^{(R)}_\lambda / (\Lambda_\lambda Q_R)$, because $M^{-1}M = 1$. Eq. 21 contributes the same sum over the relaxation modes. The total is the spectral form of $k_x^T J^{-1} F$, since $J^{-1} = D U \Lambda^{-1} U^T D^{-1}$.
+- **No separation needed.** The identity holds whether or not the chemical and relaxation eigenvalues are separated.
+- **What it checks.** It compares two independent code paths:
+  - the steady state: a banded Cholesky solve;
+  - CSE: the full eigendecomposition, $M^{-1}$, the rate assembly and the absorbing chain.
+- **Test.** `chemical_activation_driver::tests::cse_long_time_yields_equal_the_final_steady_state_yields`, two wells with an escape sink and an entrance, at 10 and 760 Torr. It requires:
+  - the identity to 10⁻⁸ relative;
+  - direct + through the wells = total;
+  - the prompt branching and every well fate to sum to 1.
+
+**Validation diagnostic** (ZZ-allyl + O₂ Case 2, MESS Eckart model, 21 conditions; `validation/ZZAllyl+O2_Gamma_Case2/cse_vs_final_steady_state.csv`, computed from the stored outputs):
+
+| quantity | value |
+|---|---|
+| IEPOX + OH at 300 K, 760 Torr | 2.32525045% (final steady state) vs 2.32525079% (CSE kinetics) |
+| largest relative deviation, P5 | 3.1·10⁻⁷ |
+| largest relative deviation, escape | 1.6·10⁻⁸ |
+| largest relative deviation, P1 | 6.1·10⁻⁷ |
+| largest relative deviation, P7 (about 10⁻⁵ of the reaction) | 1.4·10⁻⁴ |
+
+The deviations are at the precision of the 7 printed digits.
+
+**Pulse experiments** (Peter's note, verified). For a normalized pulse $F$, $Y_r(\infty) = \int_0^\infty k_r^T e^{-Jt}F\,dt = k_r^T J^{-1} F$, because all eigenvalues of $J$ are positive. This equals the final-steady-state yield per formed adduct, so pulsed and continuously fed experiments share their integrated yields but not their time traces.
+
+**Not to be confused with the thermal eigenpair.** The lowest eigenpair belongs to the final-steady-state operator. Its eigenvector is the decay distribution of a thermalized population without a source, and in general it differs from the driven distribution of the chemically activated steady state.

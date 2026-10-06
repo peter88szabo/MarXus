@@ -32,7 +32,10 @@ use crate::barrierless::phasespace::types::PstTstLevel;
 use crate::inertia::inertia::get_brot;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
-use super::solution_method::{eigen_solver_from_keyword, SolutionMethod, SolutionSettings, SteadyStateVersions};
+use super::solution_method::{
+    eigen_solver_from_keyword, initial_state_from_keyword, integrator_from_keyword, SolutionMethod,
+    SolutionSettings, STEADY_STATE_KEYWORD_REPLACED,
+};
 
 #[derive(Clone, Debug)]
 pub struct MessGlobal {
@@ -465,11 +468,15 @@ fn unit_tag(line: &str) -> Option<&str> {
 /// (`solution_method.rs`). Every keyword is optional; the command line overrides them.
 ///
 ///   MarXus
-///     Method                              SteadyState        (or CSE)
-///     SteadyState                         Both               (Intermediate, Final or Both)
+///     Method                              SteadyStateOlzmann (SteadyStateAbsorbingBarrier, CSE or TimeIntegration; required)
 ///     AbsorbingBarrierBelowThreshold[kT]  10                 (intermediate steady state)
 ///     EigenSolver                         InverseIteration   (FullDecomposition or Lapack)
 ///     SumRuleTolerance                    1.5e-2             (thermal eigenpair of the final steady state)
+///     Integrator                          Rodas4             (time integration: Rodas4, Rodas3, Ros4, Ros3, Ros2)
+///     InitialState                        Pulse              (time integration: Pulse or Continuous)
+///     TimeRange[s]                        1e-12  1e2         (time integration: first and last output time)
+///     TimesPerDecade                      4                  (time integration: output times per decade)
+///     IntegrationTolerance                1e-6               (time integration: relative tolerance)
 ///   End
 fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
     let context = |what: &str| format!("MarXus header block: {what}");
@@ -487,14 +494,25 @@ fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
         let value = line.split_whitespace().nth(1).ok_or_else(|| context(&format!("no value in '{line}'")))?;
         match key {
             "Method" => settings.method = Some(SolutionMethod::from_keyword(value).map_err(|e| context(&e))?),
-            "SteadyState" => settings.steady_state = Some(SteadyStateVersions::from_keyword(value).map_err(|e| context(&e))?),
+            "SteadyState" => return Err(context(&format!("the keyword SteadyState no longer exists: {STEADY_STATE_KEYWORD_REPLACED}."))),
             "AbsorbingBarrierBelowThreshold[kT]" => settings.absorbing_barrier_kt = Some(parse_f64(value)?),
             "EigenSolver" => settings.eigen_solver = Some(eigen_solver_from_keyword(value).map_err(|e| context(&e))?),
             "SumRuleTolerance" => settings.sum_rule_tolerance = Some(parse_f64(value)?),
+            "Integrator" => settings.integrator = Some(integrator_from_keyword(value).map_err(|e| context(&e))?),
+            "InitialState" => settings.initial_state = Some(initial_state_from_keyword(value).map_err(|e| context(&e))?),
+            "TimeRange[s]" => {
+                let last = line
+                    .split_whitespace()
+                    .nth(2)
+                    .ok_or_else(|| context("TimeRange[s] needs two values, the first and the last output time"))?;
+                settings.time_range_s = Some((parse_f64(value)?, parse_f64(last)?));
+            }
+            "TimesPerDecade" => settings.times_per_decade = Some(parse_usize(value)?),
+            "IntegrationTolerance" => settings.integration_tolerance = Some(parse_f64(value)?),
             _ => {
                 return Err(context(&format!(
-                    "unknown keyword '{key}' (Method, SteadyState, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
-                     SumRuleTolerance)"
+                    "unknown keyword '{key}' (Method, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
+                     SumRuleTolerance, Integrator, InitialState, TimeRange[s], TimesPerDecade, IntegrationTolerance)"
                 )))
             }
         }
@@ -1146,28 +1164,54 @@ End
     }
 
     const MARXUS_HEADER_DECK: &str = "TemperatureList[K] 300.\nPressureList[torr] 760\n\
-MarXus\n  Method SteadyState\n  SteadyState Final   ! the thermal eigenpair is part of it\n  EigenSolver Lapack\n  \
+MarXus\n  Method SteadyStateOlzmann   ! the thermal eigenpair is part of it\n  EigenSolver Lapack\n  \
 SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n";
 
     #[test]
     fn the_marxus_header_block_gives_the_solution_settings() {
         use super::super::chemical_activation_eigen::EigenSolver;
-        use super::super::solution_method::{SolutionMethod, SteadyStateVersions};
+        use super::super::solution_method::SolutionMethod;
         let parsed = parse_mess_input(MARXUS_HEADER_DECK).expect("should parse");
         assert_eq!(
             parsed.global.solution,
             SolutionSettings {
-                method: Some(SolutionMethod::SteadyState),
-                steady_state: Some(SteadyStateVersions::Final),
+                method: Some(SolutionMethod::SteadyStateOlzmann),
                 absorbing_barrier_kt: Some(5.0),
                 eigen_solver: Some(EigenSolver::FullDecompositionLapack),
                 sum_rule_tolerance: Some(0.02),
+                ..Default::default()
             }
         );
         // The header keywords around the block are still read.
         assert_eq!(parsed.global.pressures_torr, vec![760.0]);
-        let cse = parse_mess_input(&MARXUS_HEADER_DECK.replace("Method SteadyState", "Method CSE")).unwrap();
-        assert_eq!(cse.global.solution.method, Some(SolutionMethod::ChemicallySignificantEigenvalues));
+        let cse = parse_mess_input(
+            &MARXUS_HEADER_DECK.replace("Method SteadyStateOlzmann", "Method CSE"),
+        )
+        .unwrap();
+        assert_eq!(
+            cse.global.solution.method,
+            Some(SolutionMethod::ChemicallySignificantEigenvalues)
+        );
+    }
+
+    #[test]
+    fn the_marxus_header_block_gives_the_time_integration_settings() {
+        use super::super::direct_time_integration::InitialState;
+        use super::super::solution_method::SolutionMethod;
+        use crate::numeric::integrators::rosenbrock_methods::RosenbrockMethod;
+        let deck = "TemperatureList[K] 300.\nPressureList[torr] 760\nMarXus\n  Method TimeIntegration\n  Integrator Ros4\n  \
+InitialState Continuous\n  TimeRange[s] 1e-10 1e1\n  TimesPerDecade 3\n  IntegrationTolerance 1e-7\nEnd\nModel\nEnd\n";
+        let s = parse_mess_input(deck).unwrap().global.solution;
+        assert_eq!(s.method, Some(SolutionMethod::TimeIntegration));
+        assert_eq!(s.integrator, Some(RosenbrockMethod::Ros4));
+        assert_eq!(s.initial_state, Some(InitialState::ContinuousFormation));
+        assert_eq!(s.time_range_s, Some((1e-10, 1e1)));
+        assert_eq!(s.times_per_decade, Some(3));
+        assert_eq!(s.integration_tolerance, Some(1e-7));
+        let one_value = deck.replace("TimeRange[s] 1e-10 1e1", "TimeRange[s] 1e-10");
+        assert!(parse_mess_input(&one_value)
+            .unwrap_err()
+            .contains("TimeRange"));
     }
 
     #[test]
@@ -1180,12 +1224,31 @@ SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n
     fn the_marxus_header_block_refuses_unknown_keywords_values_and_repetitions() {
         let unknown = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "Solver Lapack");
         assert!(parse_mess_input(&unknown).unwrap_err().contains("MarXus"));
-        let eigenvalue = MARXUS_HEADER_DECK.replace("SteadyState Final", "SteadyState Eigenvalue");
-        assert!(parse_mess_input(&eigenvalue).unwrap_err().contains("final steady state"));
-        let repeated = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  EigenSolver Full");
-        assert!(parse_mess_input(&repeated).unwrap_err().contains("EigenSolver"));
-        let two_blocks = MARXUS_HEADER_DECK.replace("Model\n", "MarXus\n  Method CSE\nEnd\nModel\n");
-        assert!(parse_mess_input(&two_blocks).unwrap_err().contains("MarXus"));
+        // The removed keyword SteadyState names the two steady-state methods that replace it.
+        let old_keyword = MARXUS_HEADER_DECK.replace(
+            "EigenSolver Lapack",
+            "EigenSolver Lapack\n  SteadyState Final",
+        );
+        assert!(parse_mess_input(&old_keyword)
+            .unwrap_err()
+            .contains("SteadyStateAbsorbingBarrier"));
+        let eigenvalue =
+            MARXUS_HEADER_DECK.replace("Method SteadyStateOlzmann", "Method Eigenvalue");
+        assert!(parse_mess_input(&eigenvalue)
+            .unwrap_err()
+            .contains("final steady state"));
+        let repeated = MARXUS_HEADER_DECK.replace(
+            "EigenSolver Lapack",
+            "EigenSolver Lapack\n  EigenSolver Full",
+        );
+        assert!(parse_mess_input(&repeated)
+            .unwrap_err()
+            .contains("EigenSolver"));
+        let two_blocks =
+            MARXUS_HEADER_DECK.replace("Model\n", "MarXus\n  Method CSE\nEnd\nModel\n");
+        assert!(parse_mess_input(&two_blocks)
+            .unwrap_err()
+            .contains("MarXus"));
     }
 
     #[test]
