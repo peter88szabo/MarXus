@@ -49,6 +49,11 @@ pub struct MessGlobal {
     pub excess_energy_over_temperature: Option<f64>,
     pub energy_step_over_temperature: Option<f64>,
     pub model_energy_limit_kcal_mol: Option<f64>,
+    /// ChemicalEigenvalueMax: CSE species merging, chemical eigenvalues <= this x the lowest relaxation
+    /// eigenvalue (only MESS's absolute mode, 0 < value < 1).
+    pub chemical_eigenvalue_max: Option<f64>,
+    /// WellProjectionThreshold: primary wells of the CSE species partition.
+    pub well_projection_threshold: Option<f64>,
 
     pub alpha_factor_cm1: Option<f64>,
     pub alpha_power: Option<f64>,
@@ -724,6 +729,8 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         excess_energy_over_temperature: None,
         energy_step_over_temperature: None,
         model_energy_limit_kcal_mol: None,
+        chemical_eigenvalue_max: None,
+        well_projection_threshold: None,
         alpha_factor_cm1: None,
         alpha_power: None,
         lj_epsilons_cm1: None,
@@ -775,6 +782,18 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 }
                 "ExponentCutoff" => global.exponent_cutoff = Some(parse_f64(v)?),
                 "ExcessEnergyOverTemperature" => global.excess_energy_over_temperature = Some(parse_f64(v)?),
+                "ChemicalEigenvalueMax" => {
+                    let x = parse_f64(v)?;
+                    if !(x > 0.0 && x < 1.0) {
+                        return Err(format!(
+                            "ChemicalEigenvalueMax {x}: MarXus implements only MESS's absolute threshold, 0 < value < 1 \
+                             (chemical eigenvalues <= value x the lowest relaxation eigenvalue); MESS's modes with a \
+                             value > 1 (relaxational projection) or < 0 (eigenvalue ratio) are not implemented."
+                        ));
+                    }
+                    global.chemical_eigenvalue_max = Some(x);
+                }
+                "WellProjectionThreshold" => global.well_projection_threshold = Some(parse_f64(v)?),
                 "EnergyStepOverTemperature" => {
                     global.energy_step_over_temperature = Some(parse_f64(v)?)
                 }
@@ -1202,6 +1221,27 @@ SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n
             cse.global.solution.method,
             Some(SolutionMethod::ChemicallySignificantEigenvalues)
         );
+    }
+
+    #[test]
+    fn the_cse_merging_thresholds_are_read_from_the_header() {
+        // MESS keywords: ChemicalEigenvalueMax (chemical eigenvalues <= this x the lowest relaxation eigenvalue)
+        // and WellProjectionThreshold (primary wells of the partition), both used by the CSE species merging.
+        let deck = MARXUS_HEADER_DECK.replace(
+            "PressureList[torr] 760\n",
+            "PressureList[torr] 760\nChemicalEigenvalueMax 0.2\nWellProjectionThreshold 0.3\n",
+        );
+        let g = parse_mess_input(&deck).unwrap().global;
+        assert_eq!(g.chemical_eigenvalue_max, Some(0.2));
+        assert_eq!(g.well_projection_threshold, Some(0.3));
+        let absent = parse_mess_input(MARXUS_HEADER_DECK).unwrap().global;
+        assert_eq!(absent.chemical_eigenvalue_max, None);
+        // Only MESS's absolute threshold, 0 < value < 1, is implemented; the other MESS modes are refused.
+        for bad in ["ChemicalEigenvalueMax 2", "ChemicalEigenvalueMax -0.5", "ChemicalEigenvalueMax 0"] {
+            let deck = MARXUS_HEADER_DECK.replace("PressureList[torr] 760\n", &format!("PressureList[torr] 760\n{bad}\n"));
+            let err = parse_mess_input(&deck).unwrap_err();
+            assert!(err.contains("ChemicalEigenvalueMax"), "{bad}: {err}");
+        }
     }
 
     #[test]

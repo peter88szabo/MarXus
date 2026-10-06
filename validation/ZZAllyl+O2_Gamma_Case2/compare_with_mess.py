@@ -30,6 +30,7 @@ and writes
   plots/cse_vs_mess.png           CSE method vs MESS: reactant row at 760 Torr and deviations of all entries
   plots/pes.png                   the network
   plots/iepox_oh_yield.png        P5 (IEPOX + OH): long-time share, deviation, apparent k(R -> P5)
+  plots/p5_share.png              SteadyStateOlzmann vs MESS: long-time P5 share; deviation of the P5 and escape shares
   plots/tunneling_ratio_bars.png  kappa(MarXus)/kappa(MESS) per barrier at 200, 300, 400 K; kappa at 300 K
   plots/high_pressure_deviation.png, plots/apparent_rates_760torr.png
 
@@ -403,6 +404,28 @@ for ax in axes:
     ax.legend(fontsize=7)
 fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "iepox_oh_yield.png"), dpi=200)
+plt.close(fig)
+
+# P5 share of the net reaction (restored figure of 2026-10-05): SteadyStateOlzmann (final steady state, exact Eckart)
+# against MESS's long-time fate, with the deviation of the P5 and the escape shares.
+fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6))
+colors = plt.cm.plasma(np.linspace(0.0, 0.8, len(pressures)))
+for p, c in zip(pressures, colors):
+    sel = [r for r in shares if r["p_torr"] == p]
+    axes[0].plot([r["T_K"] for r in sel], [100 * r["mess_P5"] for r in sel], "-", marker="x", ms=10, mew=2, color=c, label=f"MESS {p:g} Torr")
+    axes[0].plot([r["T_K"] for r in sel], [100 * r["marxus_P5"] for r in sel], "o", ms=5, color=c, label=f"MarXus {p:g} Torr")
+    axes[1].plot([r["T_K"] for r in sel], [r["dev_P5_percent"] for r in sel], "-o", ms=5, color=c, label=f"P5, {p:g} Torr")
+    axes[1].plot([r["T_K"] for r in sel], [r["dev_ESC_percent"] for r in sel], "--^", color=c, mfc="none", label=f"escape, {p:g} Torr")
+axes[0].set_ylabel("P5 (IEPOX + OH) share of the net reaction (%)")
+axes[0].set_title("long-time P5 yield (MarXus: SteadyStateOlzmann, exact Eckart)", fontsize=10)
+axes[1].axhline(0, color="k", lw=0.8)
+axes[1].set_ylabel("MarXus / MESS - 1 (%)")
+axes[1].set_title("deviation of the shares (SteadyStateOlzmann vs MESS)", fontsize=10)
+for ax in axes:
+    ax.set_xlabel("T (K)")
+    ax.legend(fontsize=7)
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "p5_share.png"), dpi=200)
 plt.close(fig)
 
 # Tunneling factors: ratio MarXus/MESS per barrier (grouped bars) and kappa at 300 K.

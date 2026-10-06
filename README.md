@@ -40,9 +40,9 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 | Parallel runs over the conditions (T, p) with rayon; cores from `NCores` (deck) or `--ncore` | implemented, tested |
 | Exponential-down kernel with the low-energy reservoir state (MESMER) where the normalization fails | implemented, tested, validated on both systems; replaces the former reduction rule, whose integer window caused a step of +3% in R → G4 of Case 2 at 304.7 K (`reports/low_energy_reservoir_state.md`) |
 | Higher precision (double-double, arbitrary-precision reference) | planned (`reports/higher_precision_decision.md`) |
-| CSE species merging at poor time-scale separation (Georgievskii et al. 2013, Sec. IV, as in MESS) | planned (`reports/cse_species_merging.md`) |
+| CSE species merging at poor time-scale separation (Georgievskii et al. 2013, Sec. IV; criteria and partition as MESS) | implemented, tested (`reports/cse_species_merging.md`); no merging in the validations at `ChemicalEigenvalueMax 0.2` |
 
-The source contains 229 library unit tests (`cargo test`).
+The source contains 238 library unit tests (`cargo test`).
 
 ---
 
@@ -323,6 +323,11 @@ since all eigenvalues of $`𝐉`$ are positive. This is exactly the yield of the
   - ZZ-allyl + O₂ (`validation/ZZAllyl+O2_Gamma_Case2/cse_vs_final_steady_state.csv` and `plots/cse_vs_final_steady_state.png`): IEPOX + OH at 300 K and 760 Torr is 2.32448% from both the final steady state and the CSE kinetics.
   - Over all 21 conditions the IEPOX + OH share agrees to 3.6·10⁻⁷ relative, the escape to 1.9·10⁻⁸ and P1 to 5.6·10⁻⁷: the precision of the printed digits. P7, at most 0.008% of the reaction and formed through G6, agrees to 5.3·10⁻⁴; the CSE entries on its path (R → G6 ≈ 10⁻²² cm³/s) are at the rounding level.
 - **All identities, measured on both systems:** `reports/method_comparison.md` (script `validation/method_comparison.py`; per system `method_comparison.csv` and `plots/method_*.png`).
+- **The four methods in figures, against MESS and against each other** (rates, fall-off, yields, chemical activation, thermal activation, total formation yield, time evolution): `reports/four_methods_figures.md` (script `validation/four_methods_figures.py`; per system `four_methods_figures.csv`, `plots/mess_four_methods_*.png` and `plots/internal_four_methods_*.png`).
+
+**Exact identity 3 (one well): the slowest mode of a pulse gives the CSE association.**
+- **The statement.** At late times a pulse decays as $`N(t) = A\,e^{-k_{\mathrm{uni}} t}`$. The amplitude extrapolated to t = 0 is $`A = (\sum_E f^{(1)})(\sum_E f^{(1)} k_R)/\sum_E k_R f^0`$, which is $`k(R \to W)/k_\infty`$ of G13 eq. 28.
+- **Measured.** TimeIntegration $`k_\infty A`$ equals the CSE association within 4.7·10⁻⁵ at all 40 C₂H₃ conditions (`reports/four_methods_figures.md`, Section 2).
 
 - **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ of SteadyStateOlzmann (test `a_single_well_gives_the_eigenvector_average_as_its_rate_coefficient`, to 10⁻⁸).
 - **Well separation and continuous formation.** Steady-state yields equal time-integrated single-injection yields (Vereecken et al., J. Chem. Phys. 106, 6564 (1997), Table I). The CSE R → product and R → well rate coefficients equal the fractions accumulated on the relaxation time scale (G13 p. 12153).
@@ -385,6 +390,7 @@ End
 | – | `--csv FILE` | also write the machine-readable tables (CSV with titled blocks) to FILE, and every table of the report to FILE_tables.csv |
 | `Integrator`, `InitialState`, `TimeRange[s]`, `TimesPerDecade`, `IntegrationTolerance` | `--integrator`, `--initial`, `--time-range T1 T2`, `--times-per-decade`, `--integration-tolerance` | time integration: Rosenbrock method (Rodas4), pulse or continuous formation (pulse), output times (1e-12 to 1e2 s, 4 per decade), relative tolerance (1e-6) |
 | `NCores` | `--ncore N` | number of cores of the run, for every method; `--ncore` overrides `NCores` of the deck, and either may be given alone. The conditions (T, p) are independent and are computed in batches of up to N at a time; LAPACK calls get the cores left over (N / conditions at a time). Default: RAYON_NUM_THREADS, otherwise all logical cores. RUN SETTINGS shows the number and where it came from |
+| `ChemicalEigenvalueMax`, `WellProjectionThreshold` (global section of the deck, MESS's keywords) | – | CSE species merging: the chemical eigenvalues are those ≤ ChemicalEigenvalueMax × the lowest relaxation eigenvalue (0 < value < 1; 0.2, where MESS has no default); wells with a projection on the chemical subspace ≥ WellProjectionThreshold are primary wells of the partition (0.2, as MESS) |
 | – | `--tunneling exact-eckart\|mess-eckart` | Eckart transmission model: exact Eckart (default); `mess-eckart` only for comparison with MESS (see Tunneling model below) |
 
 A setting that the chosen method does not use is reported as a note in the output, not refused. `SteadyState` / `--steady-state` and `both` no longer exist: the two steady-state methods are chosen by `Method`, one per run. `eigenvalue` is not a method: the thermal eigenpair belongs to SteadyStateOlzmann.
@@ -514,7 +520,6 @@ cargo test -j 4 -- --test-threads=4
 
 ## To Do (not implemented yet)
 - Higher precision for the master equation: double-double assembly and solvers with an arbitrary-precision reference path (planned, `reports/higher_precision_decision.md`).
-- Well merging in the CSE method when chemical eigenvalues approach the relaxation ones (Georgievskii et al. 2013, Sec. IV).
 - Treatment of the stepladder model in the eigenvalue analysis when its step spans several grains (independent sub-equations).
 - Excited electronic states in the partition functions and state counts.
 - A general equilibrium-constant routine (thermochemistry).

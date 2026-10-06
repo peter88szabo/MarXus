@@ -1,6 +1,6 @@
 # ZZ-allyl + O₂, Gamma Case 2: MarXus reproduction of the reference MESS run
 
-**MarXus, 2026-10-05.** Peter's request: reproduce his MESS run of this multiwell network. The key quantity is the yield of P5 (IEPOX + OH), a few percent of the total. Most of the reaction ends in the escape channel after stabilization of Gamma-4.
+**MarXus, 2026-10-05.** Reproduction of the reference MESS run of this multiwell network. The key quantity is the yield of P5 (IEPOX + OH), a few percent of the total. Most of the reaction ends in the escape channel after stabilization of Gamma-4.
 
 > **Update (2026-10-05, evening): two solution methods.** MarXus has two solution methods: the steady state (GO10 eqs. 7, 8), in the intermediate and final versions, and the CSE method.
 > - The thermal rate coefficients (k_uni, k∞ of every channel) are part of the final steady state, from the lowest eigenpair of its J (GO10 eq. 12). They are now written in the steady-state outputs after the final steady-state table. The separate `case2_tstlevel_E_eigenvalue.out` and `case2_tstlevel_E_mess_eckart_eigenvalue.out` are gone.
@@ -105,7 +105,7 @@ P5, the escape and P1 agree to the precision of the printed digits. P7 is formed
 
 | file | content |
 |---|---|
-| `Gamma-Case2_..._12.7kcal.inp/.log/.out` | Peter's MESS input, log and output (2025-09-29), **untouched** |
+| `Gamma-Case2_..._12.7kcal.inp/.log/.out` | the reference MESS input, log and output (2025-09-29), **untouched** |
 | `marxus_input/case2_tstlevel_E.inp` | the same deck with `TSTLevel E` added to the two phase-space-theory cores (Section 3.1); otherwise identical (checked with `diff`) |
 | `run_marxus.sh` | the MarXus runs (at most 4 cores); every run writes a human-readable report (`*.out`) and machine-readable tables (`*.csv`, `--csv`), which the comparison script reads |
 | `cse_vs_final_steady_state.csv`, `plots/cse_vs_final_steady_state.png` | **key diagnostic**: long-time shares from the MarXus CSE rate tables vs the MarXus final steady state (section above) |
@@ -121,15 +121,17 @@ P5, the escape and P1 agree to the precision of the printed digits. P7 is formed
 | `capture_comparison.csv`, `high_pressure_comparison.csv`, `net_yields_comparison.csv`, `apparent_rates_comparison.csv`, `kappa_comparison.csv` | the compared numbers |
 | `plots/pes.png` | the network |
 | `plots/iepox_oh_yield.png` | **IEPOX + OH (P5)**: long-time share of the net reaction, its deviation, and the apparent k(R → P5), MESS vs MarXus |
+| `plots/p5_share.png` | **SteadyStateOlzmann vs MESS**: long-time IEPOX + OH share, and the deviation of the IEPOX + OH and escape shares (exact Eckart; restored figure of 2026-10-05) |
 | `plots/tunneling_ratio_bars.png` | **bar plots**: κ(MarXus exact)/κ(MESS) − 1 per barrier at 200, 300, 400 K; κ(300 K) of both codes; reproduction of the MESS factors by the MESS model of MarXus |
 | `plots/high_pressure_deviation.png` | k∞ of every channel, MarXus/MESS − 1 |
 | `plots/apparent_rates_760torr.png` | k(R → X) at 760 Torr |
+| `four_methods_figures.csv`, `plots/mess_four_methods_*.png`, `plots/internal_four_methods_*.png` | the four methods (MESS Eckart model) against MESS and against each other: rates, yields, chemical activation, thermal activation, total formation yield, time evolution (`../four_methods_figures.py`, `../../reports/four_methods_figures.md`; Section 4.6) |
 
 Reproduce:
 
 ```
 bash run_marxus.sh
-source ~/.venvs/science/bin/activate && python3 compare_with_mess.py
+source ~/.venvs/science/bin/activate && python3 compare_with_mess.py && python3 ../four_methods_figures.py
 ```
 
 ## 2. The network (`plots/pes.png`)
@@ -179,11 +181,11 @@ The current MESS source defaults to the **EJ** level, which the module did not h
 
 **Which level the reference run used.** MESS's log says **"TST level: E"** for B12 and B6P7: the 2025 MESS version defaulted to E. With the deck as is, MarXus's EJ capture rate is 10.6% below MESS (`capture_comparison.csv`). With `TSTLevel E` it is **+0.4 … +0.5%**. All results below use `marxus_input/case2_tstlevel_E.inp`.
 
-**MarXus default: EJ** (Peter, 2026-10-05), as in the current MESS source. Decks made for the older default must state `TSTLevel E`.
+**MarXus default: EJ** (2026-10-05), as in the current MESS source. Decks made for the older default must state `TSTLevel E`.
 
 ### 3.1a Isotopic atomic masses
 
-The atomic-mass table (`src/utils/atomic_masses.rs`) now holds the masses of the most abundant isotopes (AME2020: Wang et al., Chin. Phys. C 45, 030003 (2021); Peter, 2026-10-05). It previously mixed standard atomic weights (H 1.00784, O 15.999) with C 12.0.
+The atomic-mass table (`src/utils/atomic_masses.rs`) now holds the masses of the most abundant isotopes (AME2020: Wang et al., Chin. Phys. C 45, 030003 (2021); 2026-10-05). It previously mixed standard atomic weights (H 1.00784, O 15.999) with C 12.0.
 
 The table is used for moments of inertia and for fragment and reduced masses. The examples `co_oh.rs`, `co_oh_interpol.rs` and `phasespace_co_oh_capture.rs` now take their masses from it.
 
@@ -229,7 +231,7 @@ After κ, every channel agrees within 0.3–0.7%. This includes the PST channels
 
 **Interpretation.** MarXus uses the exact Eckart transmission probability, as decided (`reports/tunneling_ilt_and_energy_graining.md`). MESS's κ is lower: by 2–4% for the moderate barriers, and by 17–21% in the deep-tunneling H-transfers, where κ ≈ 10²–10⁵. This is the same direction as in the C₂H₃ benchmark (`validation/c2h3_mess_example/`). How MESS evaluates its Eckart factor was not examined here.
 
-### 4.2 The P5 (IEPOX + OH) yield (`net_yields_comparison.csv`, `plots/iepox_oh_yield.png`)
+### 4.2 The P5 (IEPOX + OH) yield (`net_yields_comparison.csv`, `plots/p5_share.png`, `plots/iepox_oh_yield.png`)
 
 **How the shares are computed.**
 - *Normalization.* All shares are fractions of the net reaction, P1 + P5 + P7 + escape = 1. MarXus normalizes to the capture rate k∞, which includes the prompt redissociation of hot G2 to R (65–89% of k∞); MESS's phenomenological k(R → X) do not.
@@ -272,7 +274,7 @@ The MESS escape entry R → G4-escape is **negative**, −1.3·10⁻¹³ cm³/s,
 
 For deep tunneling it is smaller than the exact Eckart factor (Section 4.1).
 
-**What was implemented in MarXus (Peter, 2026-10-05).**
+**What was implemented in MarXus (2026-10-05).**
 - **The model:** `src/tunneling/mess_eckart_tunneling.rs` mirrors this model. It is selectable with `MessNetworkSettings::eckart_tunneling = EckartTunnelingModel::Mess` or `--tunneling mess-eckart`; the exact Eckart stays the default.
 - **Tests:** the parabolic limit; P(0) = ½ and the clamps; the cutoff rule; the Stieltjes property of the convolution; the adapter scaling of k∞ by κ_MESS/κ_exact.
 - **Reproduction of the MESS log** (`kappa_comparison.csv`, `plots/tunneling_ratio_bars.png`, right panel). For all six barriers at 200, 300 and 1000 K the factors are reproduced to **≤ 5·10⁻⁵**, except deep tunneling (κ ≫ 100) at T ≤ 300 K:
@@ -329,6 +331,67 @@ Two further observations:
 
 With the same tunneling and TST level as MESS, the remaining differences are a few percent, consistent with the collisional part (Section 4.4).
 
+### 4.6 The four methods against MESS and against each other (MESS Eckart model)
+
+Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.csv`; quantities per method in `../../reports/four_methods_figures.md`).
+
+**Quantities per method.**
+- **Only SteadyStateAbsorbingBarrier and CSE separate the direct (chemically activated) and the stabilization rate coefficients.**
+- **The overall rate coefficients and the long-time yields come from all four.** SteadyStateAbsorbingBarrier gives them as prompt + stabilization × the thermal fates of SteadyStateOlzmann.
+- **Thermal fates come from SteadyStateOlzmann and CSE.** MESS's fates are the absorbing chain of its well rows.
+
+**Against MESS** (21 conditions):
+
+| quantity | SteadyStateOlzmann | SteadyStateAbsorbingBarrier | CSE | TimeIntegration |
+|---|---|---|---|---|
+| direct R → P5 | – | −3.5 … −2.6% | −3.6 … −3.0% | – |
+| overall R → P5 / R → escape | −3.5 … −2.8% / +2.2 … +3.2% | −3.5 … −2.7% / +2.2 … +3.1% | −3.5 … −2.8% / +2.2 … +3.2% | −3.5 … −2.8% / +2.2 … +3.2% |
+| R → G2 / G3 / G4 | – | −0.7 … +2.4 / +2.1 … +9.6 / −19.0 … −9.5% | +3.0 … +5.2 / −1.2 … −0.7 / −1.0 … −0.3% | – |
+| long-time share P5 / escape | −5.9 … −5.1% / +0.07 … +0.42% | −5.8 … −5.1% / +0.07 … +0.40% | −5.9 … −5.1% / +0.07 … +0.42% | −5.9 … −5.1% / +0.07 … +0.42% |
+| long-time share P1 / P7 | −4.6 … −4.0% / −1.6 … −0.3% | −4.6 … −3.9% / −1.6 … −0.3% | −4.6 … −4.0% / −1.5 … −0.3% | −4.6 … −4.0% / −1.6 … −0.3% |
+| prompt branching R → P5 | – | −5.9 … −5.1% | −6.3 … −5.1% | – |
+| thermal fate G4 → P5 / G4 → R | +0.3 … +1.9% / +0.7 … +2.2% | – | +0.2 … +0.9% / +1.7 … +2.7% | – |
+| thermal fate G2 → P5 / G2 → R | −3.7 … −3.4% / +1.9 … +4.7% | – | −3.4 … −2.8% / +1.8 … +3.8% | – |
+
+The overall R → P5 (−3.5 … −2.8%) and the P5 share (−5.9 … −5.1%) differ by the net reaction, about 2.5% higher in MarXus than in MESS.
+
+CSE's well rate coefficients against MESS:
+- G4 → P5 +0.8 … +1.5%;
+- G4 → escape +0.56 … +0.58%;
+- G2 → R +2.7 … +5.0%;
+- G2 → G4 +0.7 … +0.9%, G4 → G2 +1.1 … +1.3%.
+
+![rates of the four methods against MESS](plots/mess_four_methods_rates.png)
+
+![yields against MESS](plots/mess_four_methods_yields.png)
+
+![thermal activation against MESS](plots/mess_four_methods_thermal.png)
+
+![each method against MESS](plots/mess_four_methods_deviation.png)
+
+**Against each other:**
+- **Long-time yields against SteadyStateOlzmann:**
+  - TimeIntegration: equal in all printed digits;
+  - CSE: equal in all printed digits for P5, escape and P1; P7 within 5.3·10⁻⁴;
+  - SteadyStateAbsorbingBarrier + thermal fates: P5 +0.003 … +0.19%, escape −0.013 … 0%.
+- **Total formation of P5:**
+  - the prompt part of SteadyStateAbsorbingBarrier is +0.01 … +0.53% above CSE's direct part;
+  - its thermal part is −6.5 … −0.8% below CSE's part through the wells.
+- **Total formation of escape:** CSE's direct R → escape is negative (−1.17 … −0.57% of the eventual net reaction, as MESS's entry); the prompt escape of SteadyStateAbsorbingBarrier is 2.2 … 7.7%. The totals agree.
+- **Direct and stabilization rate coefficients, SteadyStateAbsorbingBarrier against CSE:** R → P5 +0.01 … +0.44%; R → G2 −5.7 … −0.6%, R → G3 +3.2 … +10.6%, R → G4 −18.4 … −9.0%.
+- **Thermal decay against k_uni:** λ₁ within 5.5·10⁻⁷, CSE's lowest chemical eigenvalue within 2.5·10⁻⁵, the TimeIntegration decay within 2.1·10⁻⁶.
+- **Thermal fates, CSE against SteadyStateOlzmann:** G3 within 4.3·10⁻⁶; G2 and G4 into R and P5 within 1.1%.
+
+![long-time yields of the four methods](plots/internal_four_methods_yields.png)
+
+![chemical activation + thermal = total](plots/internal_four_methods_formation.png)
+
+![rate coefficients of the four methods against each other](plots/internal_four_methods_rates.png)
+
+![thermal fates: CSE against SteadyStateOlzmann](plots/internal_four_methods_thermal.png)
+
+![pulse at 300 K, 760 Torr against the other methods](plots/internal_four_methods_time.png)
+
 ## 5. Conclusions
 
 1. **MarXus reproduces the reference MESS run of this four-well network with two phase-space-theory channels and a physical sink.**
@@ -341,5 +404,5 @@ With the same tunneling and TST level as MESS, the remaining differences are a f
 
 1. **MESS's Eckart factor (done).** MESS uses a semiclassical Eckart model. It is available in MarXus as `mess_eckart_tunneling` (`--tunneling mess-eckart`); the exact Eckart stays the default (Section 4.4). Still open: the ground-state cutoff detail for deep tunneling below 300 K.
 4. **Remaining −5.5% in the IEPOX + OH share with the MESS tunneling model (open).** It lies in the collisional part of the master equation (Section 4.4).
-2. **Default PST level (decided, Peter 2026-10-05): EJ.** The deck copy states E explicitly, as the reference run used it.
-3. **Atomic masses (decided and done, Peter 2026-10-05): isotopic** (AME2020), Section 3.1a.
+2. **Default PST level (decided 2026-10-05): EJ.** The deck copy states E explicitly, as the reference run used it.
+3. **Atomic masses (decided and done 2026-10-05): isotopic** (AME2020), Section 3.1a.

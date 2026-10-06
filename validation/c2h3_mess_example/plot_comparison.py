@@ -12,17 +12,19 @@ Reads
 and writes
   plots/pes.png                              stationary points, Eckart barrier and absorbing barriers
   plots/falloff_P1_W1.png                    k(H + C2H2 -> C2H3) versus pressure
-  plots/deviation.png                        MarXus/MESS - 1 for association and dissociation
+  plots/deviation.png                        MarXus/MESS - 1 for association and dissociation: SteadyStateOlzmann (top),
+                                             SteadyStateAbsorbingBarrier (bottom)
   plots/high_pressure_limits.png             k_inf of both directions versus 1000/T
   plots/short_decks_1000K.png                1000 K, 1 atm, with and without tunneling
   plots/barrier_distance_sensitivity.png     association deviation for absorbing barriers 10, 5, 3 kT
                                              below the threshold (marxus_output/c2h3_tight_absorbing_barrier_*kT.csv)
   plots/four_methods_association.png         association: absorbing barrier, Olzmann (detailed balance), CSE vs MESS
   plots/time_evolution_1atm.png              direct time integration of a pulse at 300, 1000, 2000 K
-  plots/olzmann_falloff_W1_P1.png            SteadyStateOlzmann k_uni(T, p) of the dissociation versus pressure
+  plots/pes_olzmann.png                      stationary points; no absorbing barrier (SteadyStateOlzmann)
+  plots/falloff_W1_P1.png                    SteadyStateOlzmann k_uni(T, p) of the dissociation versus pressure
   plots/olzmann_deviation.png                k_uni (and lambda_1) and the detailed-balance association vs MESS
-  plots/olzmann_vs_absorbing_barrier.png     association: Olzmann versus absorbing barriers 10, 5, 3 kT
-  plots/olzmann_sum_rule.png                 |lambda_1 - k_uni|/k_uni (inverse iteration, LAPACK) and lambda_2/k_uni
+  plots/eigen_vs_absorbing_barrier.png       association: Olzmann versus absorbing barriers 10, 5, 3 kT
+  plots/sum_rule.png                         |lambda_1 - k_uni|/k_uni (inverse iteration, LAPACK) and lambda_2/k_uni
   plots/olzmann_solvers_1000K.png            1000 K, 1 atm, with and without tunneling, the three eigen-solvers
   comparison_table.csv                       all compared numbers (absorbing barrier, final steady state)
   barrier_distance_sensitivity.csv           association for barrier distances 10, 5, 3 kT
@@ -253,26 +255,43 @@ fig.savefig(os.path.join(HERE, "plots", "falloff_P1_W1.png"), dpi=200)
 plt.close(fig)
 
 # ----------------------------------------------------------------------------------------------
-# 3. Deviations
+# 3. Deviations from MESS: SteadyStateOlzmann (final steady state with its thermal eigenpair: dissociation
+#    k_uni, association k_uni K by detailed balance; top row) and SteadyStateAbsorbingBarrier (intermediate
+#    steady state, 10 kT; bottom row)
 # ----------------------------------------------------------------------------------------------
-fig, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharey=False)
+olz_dev = read_marxus(os.path.join(HERE, "marxus_output", "c2h3_tight_olzmann.csv"))
+olz_kuni = {(r["T[K]"], round(r["P[Torr]"] / TORR_PER_ATM, 6)): r["k_uni[1/s]"]
+            for r in block(olz_dev, "thermal rate coefficients of the final steady state")}
+olz_assoc = {(r["T[K]"], round(r["P[Torr]"] / TORR_PER_ATM, 6)): r["k(P1->W1)"]
+             for r in block(olz_dev, "bimolecular rate coefficients of P1 [cm3/s] by detailed balance")}
+fig, axes = plt.subplots(2, 2, figsize=(11.5, 9.0), sharex=True)
 pc = plt.cm.plasma(np.linspace(0.0, 0.85, len(pressures)))
-for ax, key, title in ((axes[0], "dev_P1_W1_percent", "association H + C$_2$H$_2$ $\\rightarrow$ C$_2$H$_3$"),
-                       (axes[1], "dev_W1_P1_percent", "dissociation C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H")):
+for p, c in zip(pressures, pc):
+    a_ = [(t, 100 * (olz_assoc[(t, p)] / mess_p[(t, p)][1] - 1)) for t in temperatures if (t, p) in olz_assoc]
+    d_ = [(t, 100 * (olz_kuni[(t, p)] / mess_p[(t, p)][0] - 1)) for t in temperatures if (t, p) in olz_kuni]
+    if a_:
+        axes[0][0].plot(*zip(*a_), "-o", color=c, label=f"{p:g} atm")
+    if d_:
+        axes[0][1].plot(*zip(*d_), "-o", color=c, label=f"{p:g} atm")
+axes[0][0].set_title("association H + C$_2$H$_2$ $\\rightarrow$ C$_2$H$_3$\nSteadyStateOlzmann: k$_{uni}$ K (detailed balance)", fontsize=10)
+axes[0][1].set_title("dissociation C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H\nSteadyStateOlzmann: k$_{uni}$ (thermal eigenvector)", fontsize=10)
+for ax, key, title in ((axes[1][0], "dev_P1_W1_percent", "association H + C$_2$H$_2$ $\\rightarrow$ C$_2$H$_3$\nSteadyStateAbsorbingBarrier (10 kT): k$_\\infty$ $\\Phi_{stab}$"),
+                       (axes[1][1], "dev_W1_P1_percent", "dissociation C$_2$H$_3$ $\\rightarrow$ C$_2$H$_2$ + H\nSteadyStateAbsorbingBarrier (10 kT): k$_{\\infty,d}$ $\\Phi_{stab}$")):
     for p, c in zip(pressures, pc):
         d = [(r["T_K"], r[key]) for r in rows if r["p_atm"] == p and not math.isnan(r[key])]
         if d:
             ax.plot(*zip(*d), "-o", color=c, label=f"{p:g} atm")
+    ax.axvspan(1375, 2100, color="gray", alpha=0.12)
+    ax.text(1400, -5, "absorbing barrier inside the\nthermal distribution of W1", fontsize=8, va="top")
+    ax.set_title(title, fontsize=10)
+for ax in axes.flat:
     ax.axhspan(-5, 5, color="green", alpha=0.08)
     ax.axhline(0, color="k", lw=0.8)
-    ax.axvspan(1375, 2100, color="gray", alpha=0.12)
-    ax.text(1400, ax.get_ylim()[0] * 0.9 if ax.get_ylim()[0] < 0 else -5, "absorbing barrier inside the\nthermal distribution of W1",
-            fontsize=8, va="bottom")
-    ax.set_xlabel("T (K)")
     ax.set_ylabel("MarXus / MESS - 1 (%)")
-    ax.set_title(title)
     ax.set_xlim(250, 2050)
-axes[0].legend(fontsize=8)
+for ax in axes[1]:
+    ax.set_xlabel("T (K)")
+axes[0][0].legend(fontsize=8)
 fig.suptitle("Deviation of MarXus from MESS (green band: $\\pm$5%)")
 fig.tight_layout()
 fig.savefig(os.path.join(HERE, "plots", "deviation.png"), dpi=200)
@@ -583,6 +602,41 @@ with open(os.path.join(HERE, "olzmann_comparison_table.csv"), "w", newline="") a
         writer.writerow({k: (v if isinstance(v, str) else "%.6g" % v) for k, v in r.items()})
 
 # ----------------------------------------------------------------------------------------------
+# SteadyStateOlzmann: potential-energy surface without an absorbing barrier (restored figure of 2026-10-05)
+# ----------------------------------------------------------------------------------------------
+points, barriers = read_deck(os.path.join(HERE, "input", "c2h3_tight.inp"))
+fig, ax = plt.subplots(figsize=(7.5, 5.5))
+x_of = {"W1": 0.0, "B1": 1.0, "P1": 2.0}
+labels = {"W1": "C$_2$H$_3$ (W1)", "P1": "C$_2$H$_2$ + H (P1)"}
+for name, (kind, e) in points.items():
+    x = x_of[name]
+    ax.hlines(e, x - 0.25, x + 0.25, color="k", lw=3)
+    ax.text(x, e - 2.6, f"{labels.get(name, name)}\n{e:.2f} kcal/mol", ha="center", va="top", fontsize=9)
+for b in barriers:
+    x, e = x_of[b["name"]], b["energy"]
+    ax.hlines(e, x - 0.25, x + 0.25, color="firebrick", lw=3)
+    text = f"TS {b['name']}\n{e:.2f} kcal/mol"
+    if "imaginary" in b:
+        text += f"\nEckart tunneling, {b['imaginary']:.0f}i cm$^{{-1}}$"
+    ax.text(x, e + 1.0, text, ha="center", va="bottom", fontsize=9, color="firebrick")
+    for side in (b["left"], b["right"]):  # schematic connectors, not a reaction path
+        xs, es = x_of[side], points[side][1]
+        if xs < x:
+            ax.plot([xs + 0.25, x - 0.25], [es, e], ls=":", color="gray")
+        else:
+            ax.plot([x + 0.25, xs - 0.25], [e, es], ls=":", color="gray")
+ax.text(0.0, points["W1"][1] + 4.0, "no absorbing barrier:\nk$_{uni}$ from the\nthermal eigenvector of J", ha="center", fontsize=8,
+        color="tab:blue")
+ax.set_xlim(-0.6, 2.6)
+ax.set_ylim(min(e for _, e in points.values()) - 6.0, max(b["energy"] for b in barriers) + 9.0)
+ax.set_xticks([])
+ax.set_ylabel("energy (kcal/mol, zero-point corrected)")
+ax.set_title("H + C$_2$H$_2$ $\\rightleftharpoons$ C$_2$H$_3$: stationary points of the deck")
+fig.tight_layout()
+fig.savefig(os.path.join(HERE, "plots", "pes_olzmann.png"), dpi=200)
+plt.close(fig)
+
+# ----------------------------------------------------------------------------------------------
 # SteadyStateOlzmann eigen-solvers, Fall-off curves of the dissociation, k_uni
 # ----------------------------------------------------------------------------------------------
 fig, ax = plt.subplots(figsize=(7.8, 5.8))
@@ -607,7 +661,7 @@ ax.set_title("Dissociation fall-off: MESS (x, lines) vs MarXus k$_{uni}$\n"
              "(circles: inverse iteration; diamonds: LAPACK where the Cholesky factor does not exist)", fontsize=10)
 ax.legend(fontsize=8, ncol=2, title="T")
 fig.tight_layout()
-fig.savefig(os.path.join(HERE, "plots", "olzmann_falloff_W1_P1.png"), dpi=200)
+fig.savefig(os.path.join(HERE, "plots", "falloff_W1_P1.png"), dpi=200)
 plt.close(fig)
 
 # ----------------------------------------------------------------------------------------------
@@ -665,7 +719,7 @@ for ax, p in zip(axes, (0.1, 10.0)):
     ax.legend(fontsize=8)
 axes[0].set_ylabel("MarXus / MESS - 1 (%)")
 fig.tight_layout()
-fig.savefig(os.path.join(HERE, "plots", "olzmann_vs_absorbing_barrier.png"), dpi=200)
+fig.savefig(os.path.join(HERE, "plots", "eigen_vs_absorbing_barrier.png"), dpi=200)
 plt.close(fig)
 
 # ----------------------------------------------------------------------------------------------
@@ -703,7 +757,7 @@ ax.set_ylabel("$\\lambda_2$ / k$_{uni}$")
 ax.set_title("separation of the thermal decay from relaxation")
 ax.legend(fontsize=8)
 fig.tight_layout()
-fig.savefig(os.path.join(HERE, "plots", "olzmann_sum_rule.png"), dpi=200)
+fig.savefig(os.path.join(HERE, "plots", "sum_rule.png"), dpi=200)
 plt.close(fig)
 
 # ----------------------------------------------------------------------------------------------

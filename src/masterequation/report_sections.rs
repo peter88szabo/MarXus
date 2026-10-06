@@ -834,8 +834,10 @@ pub fn thermal_groups(
 // CSE
 // ------------------------------------------------------------------------------------------------------
 
-/// Groups of the CSE solution: the rate coefficients from every well (1/s) and from the reactant (cm3/s),
-/// the yields of the reactant and the thermal fates of the wells (%), and the diagnostics.
+/// Groups of the CSE solution: the rate coefficients from every species (1/s) and from the reactant (cm3/s),
+/// the yields of the reactant and the thermal fates of the species (%), and the diagnostics. Where wells are
+/// merged (Georgievskii et al. 2013, Sec. IV) the species differ between conditions: the rows are all species
+/// of all conditions, by name, and empty where a species does not exist.
 pub fn cse_groups(
     temperatures: &[f64],
     pressures: &[f64],
@@ -844,7 +846,16 @@ pub fn cse_groups(
     let Some(first) = results.first() else {
         return Vec::new();
     };
-    let wells = first.rates.wells.clone();
+    let mut wells: Vec<String> = Vec::new();
+    for r in results {
+        for w in &r.rates.wells {
+            if !wells.contains(w) {
+                wells.push(w.clone());
+            }
+        }
+    }
+    // Index of a species at one condition.
+    let at = |r: &PhenomenologicalConditionResult, name: &str| r.rates.wells.iter().position(|w| w == name);
     let bimolecular = first.rates.bimolecular.clone();
     let index: HashMap<_, _> = results
         .iter()
@@ -852,15 +863,21 @@ pub fn cse_groups(
         .collect();
     let mut groups = Vec::new();
 
-    for (i, well) in wells.iter().enumerate() {
+    for well in &wells {
         let mut quantities = Vec::new();
-        for (j, target) in wells.iter().enumerate().filter(|&(j, _)| j != i) {
+        for target in wells.iter().filter(|&t| t != well) {
+            // Only species that coexist at some condition.
+            if !results.iter().any(|r| at(r, well).is_some() && at(r, target).is_some()) {
+                continue;
+            }
             quantities.push(quantity(
                 format!("{well}->{target}"),
                 temperatures,
                 pressures,
                 &index,
-                |r: &PhenomenologicalConditionResult, _| Some(r.rates.well_to_well_s_inv[i][j]),
+                |r: &PhenomenologicalConditionResult, _| {
+                    Some(r.rates.well_to_well_s_inv[at(r, well)?][at(r, target)?])
+                },
             ));
         }
         for (nu, target) in bimolecular.iter().enumerate() {
@@ -870,7 +887,7 @@ pub fn cse_groups(
                 pressures,
                 &index,
                 |r: &PhenomenologicalConditionResult, _| {
-                    Some(r.rates.well_to_bimolecular_s_inv[i][nu])
+                    Some(r.rates.well_to_bimolecular_s_inv[at(r, well)?][nu])
                 },
             ));
         }
@@ -879,7 +896,10 @@ pub fn cse_groups(
             temperatures,
             pressures,
             &index,
-            |r: &PhenomenologicalConditionResult, _| Some(r.rates.well_to_well_s_inv[i][i]),
+            |r: &PhenomenologicalConditionResult, _| {
+                let i = at(r, well)?;
+                Some(r.rates.well_to_well_s_inv[i][i])
+            },
         ));
         groups.push(QuantityGroup {
             title: format!("Rate coefficients from {well} (1/s)"),
@@ -890,14 +910,14 @@ pub fn cse_groups(
     if let Some(reactant) = &first.rates.reactant {
         let r_name = reactant.name.clone();
         let r_index = bimolecular.iter().position(|b| *b == r_name);
-        let rate = |name: String, pick: Box<dyn Fn(&ReactantRates) -> f64>| {
+        let rate = |name: String, pick: Box<dyn Fn(&PhenomenologicalConditionResult, &ReactantRates) -> Option<f64>>| {
             quantity(
                 name,
                 temperatures,
                 pressures,
                 &index,
                 move |r: &PhenomenologicalConditionResult, _| {
-                    r.rates.reactant.as_ref().map(|x| pick(x))
+                    r.rates.reactant.as_ref().and_then(|x| pick(r, x))
                 },
             )
         };
@@ -910,7 +930,7 @@ pub fn cse_groups(
             .map(|(nu, target)| {
                 rate(
                     format!("{r_name}->{target}"),
-                    Box::new(move |x: &ReactantRates| x.to_bimolecular_cm3_s[nu]),
+                    Box::new(move |_, x: &ReactantRates| Some(x.to_bimolecular_cm3_s[nu])),
                 )
             })
             .collect();
@@ -924,8 +944,13 @@ pub fn cse_groups(
             title: format!("Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k({r_name} -> W) (cm^3/s)"),
             quantities: wells
                 .iter()
-                .enumerate()
-                .map(|(i, well)| rate(format!("{r_name}->{well}"), Box::new(move |x: &ReactantRates| x.to_well_cm3_s[i])))
+                .map(|well| {
+                    let name = well.clone();
+                    rate(
+                        format!("{r_name}->{well}"),
+                        Box::new(move |r, x: &ReactantRates| Some(x.to_well_cm3_s[at(r, &name)?])),
+                    )
+                })
                 .collect(),
         });
         if let Some(ri) = r_index {
@@ -934,16 +959,16 @@ pub fn cse_groups(
                 quantities: vec![
                     rate(
                         "capture".into(),
-                        Box::new(|x: &ReactantRates| x.capture_cm3_s),
+                        Box::new(|_, x: &ReactantRates| Some(x.capture_cm3_s)),
                     ),
                     rate(
                         "return".into(),
-                        Box::new(move |x: &ReactantRates| x.to_bimolecular_cm3_s[ri]),
+                        Box::new(move |_, x: &ReactantRates| Some(x.to_bimolecular_cm3_s[ri])),
                     ),
                     rate(
                         "net".into(),
-                        Box::new(move |x: &ReactantRates| {
-                            x.capture_cm3_s - x.to_bimolecular_cm3_s[ri]
+                        Box::new(move |_, x: &ReactantRates| {
+                            Some(x.capture_cm3_s - x.to_bimolecular_cm3_s[ri])
                         }),
                     ),
                 ],
@@ -951,17 +976,17 @@ pub fn cse_groups(
         }
 
         // Yields of the reactant, computed once per condition.
-        let yields: HashMap<(u64, u64), ReactantYields> = results
+        let yields: HashMap<(u64, u64), (ReactantYields, &PhenomenologicalConditionResult)> = results
             .iter()
             .filter_map(|r| {
                 reactant_yields(&r.rates)
                     .and_then(|y| y.ok())
-                    .map(|y| (condition_key(&r.conditions), y))
+                    .map(|y| (condition_key(&r.conditions), (y, r)))
             })
             .collect();
         let yield_group = |title: String,
                            names: Vec<String>,
-                           pick: &dyn Fn(&ReactantYields, usize) -> f64| {
+                           pick: &dyn Fn(&ReactantYields, &PhenomenologicalConditionResult, usize) -> Option<f64>| {
             QuantityGroup {
                 title,
                 quantities: names
@@ -974,7 +999,7 @@ pub fn cse_groups(
                             .map(|&t| {
                                 pressures
                                     .iter()
-                                    .map(|&p| yields.get(&key(t, p)).map(|y| 100.0 * pick(y, q)))
+                                    .map(|&p| yields.get(&key(t, p)).and_then(|(y, r)| pick(y, r, q)).map(|x| 100.0 * x))
                                     .collect()
                             })
                             .collect(),
@@ -987,13 +1012,13 @@ pub fn cse_groups(
             .filter(|b| **b != r_name)
             .cloned()
             .collect();
-        // The prompt branching of the net reaction, split into its bimolecular and its well part.
-        let n_wells = wells.len();
+        // The prompt branching of the net reaction, split into its bimolecular and its well part (the species of
+        // the condition first).
         if !others.is_empty() {
             groups.push(yield_group(
                 format!("Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of {r_name})"),
                 others.iter().map(|x| format!("{r_name}->{x}")).collect(),
-                &|y, q| y.prompt_branching[n_wells + q],
+                &|y, r, q| Some(y.prompt_branching[r.rates.wells.len() + q]),
             ));
         }
         groups.push(yield_group(
@@ -1001,37 +1026,42 @@ pub fn cse_groups(
                 "Bimolecular-to-well yields (stabilization) (% of the net reaction of {r_name})"
             ),
             wells.iter().map(|x| format!("{r_name}->{x}")).collect(),
-            &|y, q| y.prompt_branching[q],
+            &|y, r, q| Some(y.prompt_branching[at(r, &wells[q])?]),
         ));
-        for (i, well) in wells.iter().enumerate() {
+        for well in &wells {
             let names = bimolecular.iter().map(|x| format!("{well}->{x}")).collect();
             groups.push(yield_group(
                 format!("Thermal fate of {well} (%)"),
                 names,
-                &|y, q| y.well_fates[i][q],
+                &|y, r, q| Some(y.well_fates[at(r, well)?][q]),
             ));
         }
         let channels: Vec<String> = others.iter().map(|x| format!("{r_name}->{x}")).collect();
         groups.push(yield_group(
             format!("Long-time yields, direct (chemically activated) (% of the eventual net reaction of {r_name})"),
             channels.clone(),
-            &|y, q| y.direct[q],
+            &|y, _, q| Some(y.direct[q]),
         ));
         groups.push(yield_group(
             format!("Long-time yields, through the wells (thermal) (% of the eventual net reaction of {r_name})"),
             channels.clone(),
-            &|y, q| y.via_wells[q],
+            &|y, _, q| Some(y.via_wells[q]),
         ));
         groups.push(yield_group(
             format!("Long-time yields, total (% of the eventual net reaction of {r_name})"),
             channels,
-            &|y, q| y.total[q],
+            &|y, _, q| Some(y.total[q]),
         ));
     }
 
     groups.push(QuantityGroup {
-        title: "Diagnostics of the CSE solution (separation Lambda_N/Lambda_N+1; loss balance; detailed balance)".into(),
+        title: "Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells \
+                are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance)"
+            .into(),
         quantities: vec![
+            quantity("species", temperatures, pressures, &index, |r: &PhenomenologicalConditionResult, _| {
+                Some(r.rates.wells.len() as f64)
+            }),
             quantity("separation", temperatures, pressures, &index, |r: &PhenomenologicalConditionResult, _| {
                 r.rates.chemical_eigenvalues_s_inv.last().map(|l| l / r.rates.relaxation_eigenvalue_s_inv)
             }),
@@ -1390,7 +1420,13 @@ mod tests {
     /// Two wells A, B (B with a sink), entrance A <- R opening at grain 320.
     fn network() -> ChemicalActivationNetwork {
         let mut network = two_well_network();
-        network.wells[0].channels.push(Channel {
+        network.wells[0].channels.push(network_entrance_channel());
+        network
+    }
+
+    /// The entrance channel A -> R of `network`.
+    fn network_entrance_channel() -> Channel {
+        Channel {
             name: "A->reactants".into(),
             destination: ChannelDestination::Products { name: "R".into() },
             threshold_grain: None,
@@ -1403,8 +1439,7 @@ mod tests {
                     }
                 })
                 .collect(),
-        });
-        network
+        }
     }
 
     fn steady_states(
@@ -1686,6 +1721,7 @@ mod tests {
             MODEL,
             EigenSolver::FullDecomposition,
             Some(("R", &capture)),
+            &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
         )
         .unwrap();
         let groups = cse_groups(&TEMPERATURES, &PRESSURES, &results);
@@ -1731,6 +1767,88 @@ mod tests {
             "{text}"
         );
         assert!(text.contains("chemical eigenvalues"), "{text}");
+    }
+
+    #[test]
+    fn cse_groups_follow_the_species_by_name_where_wells_are_merged_at_some_conditions() {
+        // A and B in fast equilibrium (low isomerization barrier), with the entrance A <- R. At 300 K, 760 Torr a
+        // ChemicalEigenvalueMax between Lambda_1 and Lambda_2 merges them into the species A+B (Georgievskii et
+        // al. 2013, Sec. IV); at the other conditions they are distinct. Every quantity is looked up by species
+        // name and is missing where its species does not exist.
+        use crate::masterequation::chemical_activation_operator::assemble_operator;
+        use crate::masterequation::chemically_significant_eigenvalues::tests::fast_equilibrium_network;
+        use crate::masterequation::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, CseMerging};
+        let mut network = fast_equilibrium_network();
+        network.wells[0].channels.push(network_entrance_channel());
+        let k_capture = 2.0e-11;
+        let capture = |_t: f64| k_capture;
+        let mut results = run_phenomenological_rates(
+            &network,
+            &TEMPERATURES,
+            &PRESSURES,
+            MODEL,
+            EigenSolver::FullDecomposition,
+            Some(("R", &capture)),
+            &CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() },
+        )
+        .unwrap();
+        let last = results.last_mut().unwrap();
+        assert_eq!((last.conditions.temperature_kelvin, last.conditions.pressure_torr), (300.0, 760.0));
+        let (l1, l2, l3) = (
+            last.rates.chemical_eigenvalues_s_inv[0],
+            last.rates.chemical_eigenvalues_s_inv[1],
+            last.rates.relaxation_eigenvalue_s_inv,
+        );
+        assert!(l2 > 10.0 * l1, "the test needs Lambda_2 well above Lambda_1: {l1:e} {l2:e} {l3:e}");
+        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
+        let options = ChemicalActivationOptions { collision_model: MODEL, steady_state: SteadyState::Final };
+        let op = assemble_operator(&network, &last.conditions, &options).unwrap();
+        last.rates =
+            phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), EigenSolver::FullDecomposition, &merging)
+                .unwrap();
+        assert_eq!(last.rates.wells, ["A+B"]);
+
+        let groups = cse_groups(&TEMPERATURES, &PRESSURES, &results);
+        let values = |title: &str, name: &str| -> Vec<Option<f64>> {
+            let g = group(&groups, title);
+            let q = g.quantities.iter().find(|q| q.name == name).unwrap_or_else(|| panic!("no '{name}' in {:?}", names(g)));
+            q.values.iter().flatten().copied().collect()
+        };
+        let present = |v: Vec<Option<f64>>| v.iter().map(|x| x.is_some()).collect::<Vec<_>>();
+        let only_last = [false, false, false, true];
+        let all_but_last = [true, true, true, false];
+        assert_eq!(present(values("Rate coefficients from A ", "A->B")), all_but_last);
+        assert_eq!(present(values("Rate coefficients from A+B", "A+B loss")), only_last);
+        assert_eq!(present(values("Rate coefficients from A+B", "A+B->P")), only_last);
+        assert_eq!(names(group(&groups, "Bimolecular-to-well rate coefficients")), ["R->A", "R->B", "R->A+B"]);
+        assert_eq!(present(values("Bimolecular-to-well rate coefficients", "R->A")), all_but_last);
+        assert_eq!(present(values("Bimolecular-to-well rate coefficients", "R->A+B")), only_last);
+        // The merged value is the one of the merged species.
+        let k_r_ab = values("Bimolecular-to-well rate coefficients", "R->A+B")[3].unwrap();
+        assert!((k_r_ab / last_rates(&results).reactant.as_ref().unwrap().to_well_cm3_s[0] - 1.0).abs() < 1e-12);
+        // The prompt branching and the long-time yields close at every condition.
+        let sum_present = |title: &str| -> Vec<f64> {
+            let g = group(&groups, title);
+            (0..TEMPERATURES.len() * PRESSURES.len())
+                .map(|c| g.quantities.iter().filter_map(|q| q.values[c / PRESSURES.len()][c % PRESSURES.len()]).sum())
+                .collect()
+        };
+        for (a, b) in sum_present("Bimolecular-to-bimolecular yields").iter().zip(sum_present("Bimolecular-to-well yields")) {
+            assert!((a + b - 100.0).abs() < 1e-6, "{a} + {b}");
+        }
+        for s in sum_present("Long-time yields, total") {
+            assert!((s - 100.0).abs() < 1e-6, "{s}");
+        }
+        assert!((sum_present("Thermal fate of A+B")[3] - 100.0).abs() < 1e-6);
+        // The number of species at every condition.
+        let species: Vec<f64> = values("Diagnostics of the CSE solution", "species").into_iter().map(Option::unwrap).collect();
+        assert_eq!(species, [2.0, 2.0, 2.0, 1.0]);
+    }
+
+    fn last_rates(
+        results: &[PhenomenologicalConditionResult],
+    ) -> &crate::masterequation::chemically_significant_eigenvalues::PhenomenologicalRates {
+        &results.last().unwrap().rates
     }
 
     #[test]

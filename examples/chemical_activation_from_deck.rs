@@ -1,34 +1,38 @@
 //! Master-equation calculation for an input deck in the MESS input format.
 //!
 //!   cargo run --release --example chemical_activation_from_deck -- [deck.inp] [reactant]
-//!       [--method steady-state|cse] [--steady-state intermediate|final|both] [--barrier-kt X]
+//!       [--method steady-state-olzmann|steady-state-absorbing-barrier|cse|time-integration] [--barrier-kt X]
 //!       [--eigen-solver inverse|full|lapack] [--sum-rule-tolerance X] [--tunneling exact-eckart|mess-eckart]
 //!       [--csv FILE] [--ncore N] [--integrator rodas4|rodas3|ros4|ros3|ros2] [--initial pulse|continuous]
 //!       [--time-range T1 T2] [--times-per-decade N] [--integration-tolerance X]
 //!
-//! Two solution methods (`masterequation::solution_method`), chosen in the `MarXus ... End` block of the deck
-//! header (`mess_input.rs`) or on the command line, which overrides the deck:
+//! Four solution methods, one per run (`masterequation::solution_method`), chosen in the `MarXus ... End` block
+//! of the deck header (`mess_input.rs`) or on the command line, which overrides the deck. There is no default.
 //!
-//! 1. Steady state, J N = F (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010) [GO10],
-//!    eqs. 7, 8), in two versions (GO10 Sec. 3.2):
-//!    - intermediate steady state: absorbing barrier X k_BT below the lowest threshold of each well;
-//!    - final steady state: no absorbing barrier. It includes the thermal rate coefficients of the same J
-//!      (`chemical_activation_eigen.rs`): k_uni(T, p) = sum_j k_j^th + k_c[D], the specific rate
-//!      coefficients averaged over the normalized eigenvector of the lowest eigenvalue, the thermal
-//!      steady-state population (GO10, text after eq. 12), and lambda_1 (eq. 12) beside it. A deviation
-//!      between the two above the tolerance is reported as a warning (on stderr and in the table); the
-//!      output explains this with the reference. For a single well formed through one entrance channel,
-//!      the association rate coefficient follows by detailed balance, k(R -> W, T, p) = k_uni(T, p) K(T),
-//!      with K = k_inf,assoc/k_inf,diss of the high-pressure rate coefficients of the entrance channel.
-//! 2. Phenomenological rate coefficients from the chemically significant eigenvalues (CSE: Miller,
-//!    Klippenstein, J. Phys. Chem. A 110, 10528 (2006); Georgievskii et al., J. Phys. Chem. A 117, 12146
-//!    (2013); `chemically_significant_eigenvalues.rs`). It needs all eigenpairs: LAPACK unless the full
-//!    Householder/QL decomposition is asked for; inverse iteration is refused.
+//! 1. SteadyStateOlzmann: the final steady state, J N = F without absorbing barrier (Gonzalez-Garcia, Olzmann,
+//!    Phys. Chem. Chem. Phys. 12, 12290 (2010) [GO10], eqs. 7, 8; Sec. 3.2). It includes the thermal rate
+//!    coefficients of the same J (`chemical_activation_eigen.rs`): k_uni(T, p) = sum_j k_j^th + k_c[D], the
+//!    specific rate coefficients averaged over the normalized eigenvector of the lowest eigenvalue, the thermal
+//!    steady-state population (GO10, text after eq. 12), and lambda_1 (eq. 12) beside it. A deviation between
+//!    the two above the tolerance is reported as a warning (on stderr and in the table); the output explains
+//!    this with the reference. For a single well formed through one entrance channel, the association rate
+//!    coefficient follows by detailed balance, k(R -> W, T, p) = k_uni(T, p) K(T), with K = k_inf,assoc /
+//!    k_inf,diss of the high-pressure rate coefficients of the entrance channel.
+//! 2. SteadyStateAbsorbingBarrier: the intermediate steady state, J N = F with an absorbing barrier X k_BT below
+//!    the lowest threshold of each well (GO10 Sec. 3.2).
+//! 3. CSE: phenomenological rate coefficients from the chemically significant eigenvalues (Miller, Klippenstein,
+//!    J. Phys. Chem. A 110, 10528 (2006); Georgievskii et al., J. Phys. Chem. A 117, 12146 (2013) [G13];
+//!    `chemically_significant_eigenvalues.rs`). It needs all eigenpairs: LAPACK unless the full Householder/QL
+//!    decomposition is asked for; inverse iteration is refused. Where fewer eigenvalues than wells are at most
+//!    ChemicalEigenvalueMax x the lowest relaxation eigenvalue, the wells are merged into species (G13 Sec. IV,
+//!    with the partition of MESS) and the output warns.
+//! 4. TimeIntegration: dN/dt = R F - J N with the yields of every exit, by Rosenbrock methods
+//!    (`direct_time_integration.rs`).
 //!
 //! Options (deck keyword in the MarXus block in brackets):
-//! --method               `steady-state` (default), `cse` or `time-integration` [Method SteadyState | CSE | TimeIntegration]
-//! --steady-state         versions of the steady-state method: `intermediate`, `final` or `both` (default)
-//!                        [SteadyState Intermediate | Final | Both]
+//! --method               `steady-state-olzmann`, `steady-state-absorbing-barrier`, `cse` or `time-integration`;
+//!                        required here or in the deck [Method SteadyStateOlzmann | SteadyStateAbsorbingBarrier |
+//!                        CSE | TimeIntegration]
 //! --barrier-kt X         absorbing barrier of the intermediate steady state (default 10; a smaller value for
 //!                        wells that are shallow compared with 10 k_BT plus their thermal width; the
 //!                        stabilization then depends on this choice) [AbsorbingBarrierBelowThreshold[kT] X]
@@ -55,6 +59,9 @@
 //!                        otherwise all logical cores [NCores]
 //! A setting that the selected solution does not use is reported as a note, not refused.
 //!
+//! CSE species merging, keywords of the deck's global section (MESS's names; no command-line option):
+//! ChemicalEigenvalueMax X (0 < X < 1, default 0.2) and WellProjectionThreshold X (default 0.2).
+//!
 //! Output: a human-readable report on stdout (`report_sections.rs`, `report_tables.rs`):
 //! - RUN SETTINGS (method, solvers, conditions, grid, collisions, tunneling, source) and CHEMICAL NETWORK
 //!   (wells, channels with their rate models, sinks), then the energetics in kcal/mol relative to the Reactant;
@@ -64,7 +71,9 @@
 //!   final steady state, the thermal fate of each well, and chemical activation and thermal reaction separately
 //!   (prompt, through the stabilized wells) and together (final steady state);
 //! - CSE: species-to-species tables per condition, the rate coefficients from every species, the prompt branching
-//!   of the reactant, the thermal fate of each well and the long-time yields (direct + through the wells).
+//!   of the reactant, the thermal fate of each species and the long-time yields (direct + through the wells);
+//!   merged species are named by their wells joined with "+", and the tables by T and p list every species of
+//!   every condition (empty where a species does not exist).
 //!
 //! The deck's `Reactant` (a Bimolecular species) forms the wells through its barriers; the source is
 //! thermal (Pfeifle, Olzmann, Int. J. Chem. Kinet. 46, 231 (2014), eqs. 7 and 9). The machine-readable table
@@ -90,6 +99,7 @@ use MarXus::masterequation::chemical_activation_network::{
     SteadyState,
 };
 use MarXus::masterequation::chemical_activation_operator::low_energy_reservoirs;
+use MarXus::masterequation::chemically_significant_eigenvalues::CseMerging;
 use MarXus::masterequation::chemical_activation_sources::thermal_entrance_source;
 use MarXus::masterequation::chemical_activation_steady_state::LinearSolver;
 use MarXus::masterequation::direct_time_integration::{
@@ -191,6 +201,14 @@ fn main() -> Result<(), String> {
         deck.global.reactant_name = Some(reactant.clone());
     }
     let merged = deck.global.solution.overridden_by(&command_line);
+    // CSE species merging (MESS header keywords ChemicalEigenvalueMax, WellProjectionThreshold).
+    let merging = CseMerging {
+        chemical_eigenvalue_max: deck.global.chemical_eigenvalue_max.unwrap_or(CseMerging::default().chemical_eigenvalue_max),
+        well_projection_threshold: deck
+            .global
+            .well_projection_threshold
+            .unwrap_or(CseMerging::default().well_projection_threshold),
+    };
     let resolved = merged.resolve()?;
     // Where the number of cores comes from (shown in RUN SETTINGS).
     let cores_source = if command_line.cores.is_some() {
@@ -337,7 +355,17 @@ fn main() -> Result<(), String> {
                 "CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients".to_string(),
                 "(Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)".to_string(),
             ],
-            vec![format!("all eigenpairs of the symmetrized J: {eigen_solver:?}; well-to-well matrix inverted by Gauss-Jordan elimination")],
+            vec![
+                format!("all eigenpairs of the symmetrized J: {eigen_solver:?}; well-to-well matrix inverted by Gauss-Jordan elimination"),
+                format!(
+                    "species merging (Georgievskii et al. 2013, Sec. IV; criteria as MESS): ChemicalEigenvalueMax {} ({}), \
+                     WellProjectionThreshold {} ({})",
+                    merging.chemical_eigenvalue_max,
+                    if deck.global.chemical_eigenvalue_max.is_some() { "deck" } else { "default" },
+                    merging.well_projection_threshold,
+                    if deck.global.well_projection_threshold.is_some() { "deck" } else { "default" }
+                ),
+            ],
         ),
         Solution::TimeIntegration(plan) => (
             vec![
@@ -926,6 +954,7 @@ fn main() -> Result<(), String> {
                 model.collision_model,
                 solver,
                 reactant_name.map(|r| (r, &capture as &dyn Fn(f64) -> f64)),
+                &merging,
             )
         });
         for outcome in per_condition {

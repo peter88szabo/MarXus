@@ -39,6 +39,147 @@ use crate::numeric::dense_inverse::invert_dense;
 /// separated from the relaxation ones.
 pub const CSE_SEPARATION_WARNING: f64 = 0.1;
 
+/// Species merging (G13 Sec. IV), with the criteria of MESS (`MasterEquation`, direct method, and
+/// `ReactiveComplex::threshold_well_partition`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CseMerging {
+    /// `ChemicalEigenvalueMax`: the chemical eigenvalues are those with Lambda <= this x the lowest relaxation
+    /// eigenvalue Lambda_(N+1) (N wells), counted from the lowest. If fewer than N are chemical, the wells are
+    /// partitioned into that many species. Only MESS's absolute mode, 0 < value < 1, is implemented. MESS has
+    /// no default (the keyword is required there); the MarXus default 0.2 is the value of both MESS decks of
+    /// the validations.
+    pub chemical_eigenvalue_max: f64,
+    /// `WellProjectionThreshold`: wells whose projection on the chemical subspace is at least this are
+    /// primary wells of the partition (MESS default 0.2).
+    pub well_projection_threshold: f64,
+}
+
+impl Default for CseMerging {
+    fn default() -> Self {
+        Self { chemical_eigenvalue_max: 0.2, well_projection_threshold: 0.2 }
+    }
+}
+
+/// Number of chemical eigenvalues: the eigenvalues (ascending) Lambda_0 .. Lambda_(N-1) that are at most
+/// `chemical_eigenvalue_max` x Lambda_N, counted from the lowest (MESS: `eigenval[itemp] > chemical_threshold *
+/// relax_eval_min` ends the count, with relax_eval_min = eigenval[well_size()]).
+pub fn chemical_eigenvalue_count(values: &[f64], n_wells: usize, chemical_eigenvalue_max: f64) -> usize {
+    let relaxation = values[n_wells];
+    values[..n_wells].iter().take_while(|&&v| v <= chemical_eigenvalue_max * relaxation).count()
+}
+
+/// The wells grouped into chemical species, and the wells in equilibrium with the bimolecular species.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WellPartition {
+    /// Every group: well indices, ascending; the groups are the merged species.
+    pub groups: Vec<Vec<usize>>,
+    /// Wells not in any group: in equilibrium with the bimolecular species (no rate coefficients of their own).
+    pub bimolecular_group: Vec<usize>,
+    /// Number of chemical eigenvalues minus the total projection of the groups on the chemical subspace.
+    pub projection_error: f64,
+}
+
+/// Projection of a group of wells on the chemical subspace: |P_chem |g>|^2 with the group vector
+/// |g> = sum_(w in g) sqrt(Q_w/Q_g) |w> (G13 eqs. 31-32): sum_lambda (sum_w sqrt(Q_w) M_(w,lambda))^2 / Q_g.
+fn group_projection(group: &[usize], pop_chem: &[Vec<f64>], q: &[f64]) -> f64 {
+    let q_group: f64 = group.iter().map(|&w| q[w]).sum();
+    let chem_size = pop_chem.first().map_or(0, |row| row.len());
+    (0..chem_size)
+        .map(|l| {
+            let x: f64 = group.iter().map(|&w| q[w].sqrt() * pop_chem[w][l]).sum();
+            x * x
+        })
+        .sum::<f64>()
+        / q_group
+}
+
+/// Partition of the wells into `chem_size` species, as MESS (`ReactiveComplex::threshold_well_partition`):
+/// 1. the wells ordered by their own projection on the chemical subspace; the primary wells are taken in that
+///    order while their projection is at least `well_projection_threshold`, and at least `chem_size` of them;
+/// 2. of all partitions of the primary wells into `chem_size` groups, the one with the largest total
+///    projection;
+/// 3. the other wells, one at a time, into the group whose projection they raise most, while that raise is
+///    not negative; the wells left over form the bimolecular group.
+///
+/// `pop_chem[w][lambda]` = M_(w,lambda) of the chemical eigenvectors (G13 eq. 25), `q` the Q_w of the wells.
+pub fn partition_wells(pop_chem: &[Vec<f64>], q: &[f64], chem_size: usize, well_projection_threshold: f64) -> WellPartition {
+    let n = pop_chem.len();
+    let mut order: Vec<usize> = (0..n).collect();
+    let own: Vec<f64> = (0..n).map(|w| group_projection(&[w], pop_chem, q)).collect();
+    order.sort_by(|&a, &b| own[b].total_cmp(&own[a]).then(a.cmp(&b)));
+    let mut primary = Vec::new();
+    for &w in &order {
+        if own[w] < well_projection_threshold && primary.len() >= chem_size {
+            break;
+        }
+        primary.push(w);
+    }
+
+    // All partitions of the primary wells into exactly chem_size non-empty groups (restricted growth strings).
+    let mut best: Option<(f64, Vec<Vec<usize>>)> = None;
+    let mut labels = vec![0usize; primary.len()];
+    fn visit(
+        k: usize,
+        used: usize,
+        labels: &mut Vec<usize>,
+        primary: &[usize],
+        chem_size: usize,
+        score: &dyn Fn(&[Vec<usize>]) -> f64,
+        best: &mut Option<(f64, Vec<Vec<usize>>)>,
+    ) {
+        if k == primary.len() {
+            if used == chem_size {
+                let mut groups = vec![Vec::new(); chem_size];
+                for (i, &label) in labels.iter().enumerate() {
+                    groups[label].push(primary[i]);
+                }
+                groups.iter_mut().for_each(|g| g.sort());
+                let projection = score(&groups);
+                if best.as_ref().map_or(true, |(p, _)| projection > *p) {
+                    *best = Some((projection, groups));
+                }
+            }
+            return;
+        }
+        // Not enough elements left to open the missing groups.
+        if chem_size - used > primary.len() - k {
+            return;
+        }
+        for label in 0..(used + 1).min(chem_size) {
+            labels[k] = label;
+            visit(k + 1, used.max(label + 1), labels, primary, chem_size, score, best);
+        }
+    }
+    let score = |groups: &[Vec<usize>]| groups.iter().map(|g| group_projection(g, pop_chem, q)).sum::<f64>();
+    visit(0, 0, &mut labels, &primary, chem_size, &score, &mut best);
+    let mut groups = best.map(|(_, g)| g).unwrap_or_default();
+
+    // The other wells, the best (well, group) pair first, while the projection does not decrease.
+    let mut rest: Vec<usize> = (0..n).filter(|w| !primary.contains(w)).collect();
+    while !rest.is_empty() && !groups.is_empty() {
+        let mut choice: Option<(f64, usize, usize)> = None;
+        for (r, &w) in rest.iter().enumerate() {
+            for (g, group) in groups.iter().enumerate() {
+                let mut with = group.clone();
+                with.push(w);
+                let raise = group_projection(&with, pop_chem, q) - group_projection(group, pop_chem, q);
+                if choice.map_or(true, |(best, _, _)| raise > best) {
+                    choice = Some((raise, r, g));
+                }
+            }
+        }
+        match choice {
+            Some((raise, r, g)) if raise >= 0.0 => {
+                groups[g].push(rest.remove(r));
+                groups[g].sort();
+            }
+            _ => break,
+        }
+    }
+    let projection_error = chem_size as f64 - score(&groups);
+    WellPartition { groups, bimolecular_group: rest, projection_error }
+}
+
 /// Rate coefficients from the bimolecular reactant (cm3 s-1).
 #[derive(Debug, Clone)]
 pub struct ReactantRates {
@@ -55,15 +196,25 @@ pub struct ReactantRates {
 /// Phenomenological rate coefficients of a network at one temperature and pressure.
 #[derive(Debug, Clone)]
 pub struct PhenomenologicalRates {
+    /// The kinetic species: the wells, or, where wells are merged (G13 Sec. IV), the merged species, named by
+    /// their wells joined with "+". All rate coefficients below refer to these species.
     pub wells: Vec<String>,
+    /// The wells of every species (one well each without merging).
+    pub well_groups: Vec<Vec<String>>,
+    /// Wells in equilibrium with the bimolecular species (MESS's "bimolecular group"): no rate coefficients.
+    pub bimolecular_group: Vec<String>,
+    /// Number of chemical eigenvalues minus the projection of the species on the chemical subspace (0 without
+    /// merging).
+    pub partition_projection_error: f64,
     /// Bimolecular channels: product names (the reactant included when a channel leads to it), then the
     /// escape sinks "escape(W)" of the wells with a pseudo-first-order sink.
     pub bimolecular: Vec<String>,
-    /// Q_i of the wells (relative, common absolute energy scale).
+    /// Q_i of the species (relative, common absolute energy scale); the sum over its wells (G13 eq. 32).
     pub partition_functions: Vec<f64>,
-    /// The N chemical eigenvalues (s-1), ascending.
+    /// The chemical eigenvalues (s-1), ascending: one per species.
     pub chemical_eigenvalues_s_inv: Vec<f64>,
-    /// The lowest relaxation eigenvalue (s-1); NaN if there is none.
+    /// The lowest eigenvalue that is not chemical (s-1); NaN if there is none. Without merging this is
+    /// Lambda_(N+1), the lowest relaxation eigenvalue.
     pub relaxation_eigenvalue_s_inv: f64,
     /// 1 - sum_i M_(i,lambda)^2 of every chemical eigenvector.
     pub relaxational_projection: Vec<f64>,
@@ -84,12 +235,22 @@ pub struct PhenomenologicalRates {
 /// Phenomenological rate coefficients from the chemically significant eigenpairs of the operator `op`
 /// (assembled without absorbing barrier). `reactant`: name of the bimolecular channel that is the reactant
 /// and its capture rate coefficient k^(c) (cm3 s-1). `solver`: a full decomposition (all eigenpairs).
+/// `merging`: when fewer eigenvalues than wells are chemical, the wells are merged into species (G13 Sec. IV,
+/// with the criteria of MESS; `CseMerging`).
 pub fn phenomenological_rate_coefficients(
     network: &ChemicalActivationNetwork,
     op: &ChemicalActivationOperator,
     reactant: Option<(&str, f64)>,
     solver: EigenSolver,
+    merging: &CseMerging,
 ) -> Result<PhenomenologicalRates, String> {
+    if !(merging.chemical_eigenvalue_max > 0.0 && merging.chemical_eigenvalue_max < 1.0) {
+        return Err(format!(
+            "CSE analysis: ChemicalEigenvalueMax = {} is outside 0 < value < 1 (only MESS's absolute threshold is \
+             implemented).",
+            merging.chemical_eigenvalue_max
+        ));
+    }
     let symmetrized = symmetrize(op);
     require_symmetry(symmetrized.max_relative_asymmetry)?;
     let (values, vectors) = full_decomposition(&symmetrized.dense(), solver)?;
@@ -140,18 +301,46 @@ pub fn phenomenological_rate_coefficients(
         }
     }
 
-    // M (G13 eq. 25) over the chemical eigenstates, its inverse, and K = M Lambda M^-1.
-    let n = n_wells;
-    let mut m = vec![vec![0.0; n]; n];
-    for (lambda, u) in vectors.iter().take(n).enumerate() {
+    // M (G13 eq. 25) of the wells over the N lowest eigenstates.
+    let n_wells_all = n_wells;
+    let mut m_wells = vec![vec![0.0; n_wells_all]; n_wells_all];
+    for (lambda, u) in vectors.iter().take(n_wells_all).enumerate() {
         for (k, &(w, _)) in op.states.iter().enumerate() {
-            m[w][lambda] += d[k] * u[k];
+            m_wells[w][lambda] += d[k] * u[k];
         }
     }
-    for (w, row) in m.iter_mut().enumerate() {
+    for (w, row) in m_wells.iter_mut().enumerate() {
         row.iter_mut().for_each(|x| *x /= q[w].sqrt());
     }
-    let m_inv = invert_dense(&m).map_err(|e| format!("CSE analysis: the projection matrix M is singular ({e})."))?;
+
+    // Chemical eigenvalues and the species (G13 Sec. IV; MESS direct method and threshold_well_partition).
+    let chem_size = chemical_eigenvalue_count(&values, n_wells_all, merging.chemical_eigenvalue_max);
+    let partition = if chem_size == n_wells_all {
+        WellPartition { groups: (0..n_wells_all).map(|w| vec![w]).collect(), bimolecular_group: Vec::new(), projection_error: 0.0 }
+    } else if chem_size == 0 {
+        WellPartition { groups: Vec::new(), bimolecular_group: (0..n_wells_all).collect(), projection_error: 0.0 }
+    } else {
+        let pop_chem: Vec<Vec<f64>> = m_wells.iter().map(|row| row[..chem_size].to_vec()).collect();
+        partition_wells(&pop_chem, &q, chem_size, merging.well_projection_threshold)
+    };
+    let groups = &partition.groups;
+    let n = groups.len();
+    // Q of the species (eq. 32) and M of the species: the basis vector |g> = sum_(w in g) sqrt(Q_w/Q_g) |w>
+    // (eq. 31), so M_(g,lambda) = sum_(w in g) sqrt(Q_w/Q_g) M_(w,lambda).
+    let q_species: Vec<f64> = groups.iter().map(|g| g.iter().map(|&w| q[w]).sum()).collect();
+    let m: Vec<Vec<f64>> = groups
+        .iter()
+        .zip(&q_species)
+        .map(|(g, &qg)| (0..n).map(|l| g.iter().map(|&w| (q[w] / qg).sqrt() * m_wells[w][l]).sum()).collect())
+        .collect();
+    let q = q_species;
+
+    // Its inverse and K = M Lambda M^-1.
+    let m_inv = if n > 0 {
+        invert_dense(&m).map_err(|e| format!("CSE analysis: the projection matrix M is singular ({e})."))?
+    } else {
+        Vec::new()
+    };
     let k_matrix: Vec<Vec<f64>> = (0..n)
         .map(|i| (0..n).map(|j| (0..n).map(|l| m[i][l] * values[l] * m_inv[l][j]).sum()).collect())
         .collect();
@@ -188,18 +377,48 @@ pub fn phenomenological_rate_coefficients(
             }
         }
     }
-    let relaxational_projection: Vec<f64> = (0..n).map(|l| 1.0 - (0..n).map(|i| m[i][l] * m[i][l]).sum::<f64>()).collect();
+    // Projection of every chemical eigenvector on the relaxational subspace (outside the thermal well vectors).
+    let relaxational_projection: Vec<f64> =
+        (0..n).map(|l| 1.0 - (0..n_wells_all).map(|w| m_wells[w][l] * m_wells[w][l]).sum::<f64>()).collect();
     let relaxation_eigenvalue = values.get(n).copied().unwrap_or(f64::NAN);
     let precision_floor = f64::EPSILON * symmetrized.band_matrix().max_abs_diagonal();
+    let well_names: Vec<String> = network.wells.iter().map(|w| w.name.clone()).collect();
+    let species_names: Vec<String> =
+        groups.iter().map(|g| g.iter().map(|&w| well_names[w].clone()).collect::<Vec<_>>().join("+")).collect();
     let mut warnings = Vec::new();
-    let separation = values[n - 1] / relaxation_eigenvalue;
-    if separation > CSE_SEPARATION_WARNING {
+    if n < n_wells_all {
+        let eigenvalues: Vec<String> = values[..n_wells_all].iter().map(|v| format!("{v:.4e}")).collect();
+        let free: Vec<String> = partition.bimolecular_group.iter().map(|&w| well_names[w].clone()).collect();
         warnings.push(format!(
-            "the largest chemical eigenvalue {:e} s-1 is {separation:.3} of the lowest relaxation eigenvalue {relaxation_eigenvalue:e} \
-             s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, \
-             Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).",
-            values[n - 1]
+            "species merged (Georgievskii et al. 2013, Sec. IV; criteria as MESS): only {n} of the {n_wells_all} lowest \
+             eigenvalues ({}) s-1 are at most ChemicalEigenvalueMax = {} x the lowest relaxation eigenvalue {:.4e} s-1, \
+             so the wells are not all kinetically distinct. Species: {}{}. Partition projection error {:.3e}. Rate \
+             coefficients are given for the merged species only; their wells cannot be distinguished at this \
+             condition.",
+            eigenvalues.join(", "),
+            merging.chemical_eigenvalue_max,
+            values[n_wells_all],
+            if species_names.is_empty() { "none".to_string() } else { species_names.join(", ") },
+            if free.is_empty() {
+                String::new()
+            } else {
+                format!("; in equilibrium with the bimolecular species (no rate coefficients): {}", free.join(", "))
+            },
+            partition.projection_error
         ));
+    }
+    if n > 0 {
+        let separation = values[n - 1] / relaxation_eigenvalue;
+        if separation > CSE_SEPARATION_WARNING {
+            warnings.push(format!(
+                "the largest chemical eigenvalue {:e} s-1 is {separation:.3} of the lowest relaxation eigenvalue {relaxation_eigenvalue:e} \
+                 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, \
+                 Miller, Klippenstein 2006). Species are merged only above ChemicalEigenvalueMax = {} (Georgievskii et \
+                 al. 2013, Sec. IV).",
+                values[n - 1],
+                merging.chemical_eigenvalue_max
+            ));
+        }
     }
     for (l, &value) in values.iter().take(n).enumerate() {
         if value < 100.0 * precision_floor {
@@ -210,7 +429,7 @@ pub fn phenomenological_rate_coefficients(
         }
     }
 
-    // Reactant rates (eqs. 28, 21, 22).
+    // Reactant rates (eqs. 28, 21, 22). Eq. 21 runs over every eigenstate that is not chemical.
     let reactant = match reactant {
         None => None,
         Some((name, capture)) => {
@@ -240,7 +459,10 @@ pub fn phenomenological_rate_coefficients(
     };
 
     Ok(PhenomenologicalRates {
-        wells: network.wells.iter().map(|w| w.name.clone()).collect(),
+        wells: species_names,
+        well_groups: groups.iter().map(|g| g.iter().map(|&w| well_names[w].clone()).collect()).collect(),
+        bimolecular_group: partition.bimolecular_group.iter().map(|&w| well_names[w].clone()).collect(),
+        partition_projection_error: partition.projection_error,
         bimolecular,
         partition_functions: q,
         chemical_eigenvalues_s_inv: values[..n].to_vec(),
@@ -377,7 +599,7 @@ pub fn reactant_yields(rates: &PhenomenologicalRates) -> Option<Result<ReactantY
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::constants::KB_CM;
     use crate::masterequation::chemical_activation_eigen::{thermal_rate_coefficients, DEFAULT_SUM_RULE_TOLERANCE};
@@ -403,6 +625,118 @@ mod tests {
         well.channels[channel].rate_constant_s_inv.iter().zip(&f).map(|(k, f)| k * f).sum::<f64>() / f.iter().sum::<f64>()
     }
 
+    // ---- Species merging (G13 Sec. IV; MESS `threshold_well_partition`) ----
+
+    #[test]
+    fn the_number_of_chemical_eigenvalues_follows_the_mess_threshold() {
+        // Chemical eigenvalues are those with Lambda <= ChemicalEigenvalueMax x Lambda_(N+1), counted from the
+        // lowest; Lambda_(N+1) is the lowest relaxation eigenvalue for N wells (MESS, direct method).
+        let values = [1.0, 50.0, 300.0, 1000.0];
+        assert_eq!(chemical_eigenvalue_count(&values, 3, 0.2), 2);
+        assert_eq!(chemical_eigenvalue_count(&values, 3, 0.01), 1);
+        assert_eq!(chemical_eigenvalue_count(&values, 3, 0.5), 3);
+        assert_eq!(chemical_eigenvalue_count(&values, 3, 0.0005), 0);
+    }
+
+    #[test]
+    fn wells_in_equilibrium_form_one_group_and_a_decoupled_well_joins_the_bimolecular_group() {
+        // One chemical eigenvector, in equilibrium between wells 0 and 1 (Q = 3 and 1), absent from well 2.
+        let q = [3.0, 1.0, 2.0];
+        let pop = vec![vec![(3.0f64 / 4.0).sqrt()], vec![(1.0f64 / 4.0).sqrt()], vec![0.0]];
+        let p = partition_wells(&pop, &q, 1, 0.2);
+        assert_eq!(p.groups, vec![vec![0, 1]]);
+        assert_eq!(p.bimolecular_group, vec![2]);
+        assert!(p.projection_error.abs() < 1e-12, "{}", p.projection_error);
+    }
+
+    #[test]
+    fn the_partition_with_the_largest_projection_is_chosen() {
+        // Two chemical eigenvectors: well 2 alone, and wells 0 + 1 in equilibrium.
+        let q = [3.0, 1.0, 2.0];
+        let pop = vec![vec![0.0, (3.0f64 / 4.0).sqrt()], vec![0.0, (1.0f64 / 4.0).sqrt()], vec![1.0, 0.0]];
+        let p = partition_wells(&pop, &q, 2, 0.2);
+        let mut groups = p.groups.clone();
+        groups.sort();
+        assert_eq!(groups, vec![vec![0, 1], vec![2]]);
+        assert!(p.bimolecular_group.is_empty());
+        assert!(p.projection_error.abs() < 1e-12, "{}", p.projection_error);
+    }
+
+    #[test]
+    fn a_well_with_a_small_projection_joins_the_group_whose_projection_it_raises() {
+        // One eigenvector in equilibrium among all three wells. Well 2 has a small weight: its own projection
+        // 0.01 lies below the threshold (a secondary well), and adding it raises the group projection to 1.
+        let q = [3.0, 0.96, 0.04];
+        let total: f64 = q.iter().sum();
+        let pop: Vec<Vec<f64>> = q.iter().map(|x| vec![(x / total).sqrt()]).collect();
+        let p = partition_wells(&pop, &q, 1, 0.2);
+        assert_eq!(p.groups, vec![vec![0, 1, 2]]);
+        assert!(p.bimolecular_group.is_empty());
+        assert!(p.projection_error.abs() < 1e-12, "{}", p.projection_error);
+    }
+
+    /// Two wells A, B with a low isomerization barrier (absolute grain 100, k = W#/(h rho) both ways): they
+    /// equilibrate much faster than they react (product thresholds at grains 300 and 340).
+    pub(crate) fn fast_equilibrium_network() -> ChemicalActivationNetwork {
+        let mut network = two_well_network();
+        let planck_cm1_s = 3.3356e-11;
+        let ts: isize = 100;
+        let w_ts = |absolute: isize| if absolute < ts { 0.0 } else { (1.0 + 0.05 * (absolute - ts) as f64).powi(6) };
+        for (w, other) in [(0usize, 1usize), (1, 0)] {
+            let offset = network.wells[w].bottom_offset_grains;
+            let rho = network.wells[w].density_of_states.clone();
+            let channel = network.wells[w]
+                .channels
+                .iter_mut()
+                .find(|c| c.destination == ChannelDestination::Well { index: other })
+                .unwrap();
+            channel.rate_constant_s_inv = (0..rho.len()).map(|i| w_ts(i as isize + offset) / (planck_cm1_s * rho[i])).collect();
+        }
+        network
+    }
+
+    #[test]
+    fn wells_in_fast_equilibrium_are_merged_and_the_group_decays_with_k_uni() {
+        let network = fast_equilibrium_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let no_merging = CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() };
+        let separate = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &no_merging).unwrap();
+        assert_eq!(separate.wells, vec!["A".to_string(), "B".to_string()]);
+        let (l1, l2, l3) = (
+            separate.chemical_eigenvalues_s_inv[0],
+            separate.chemical_eigenvalues_s_inv[1],
+            separate.relaxation_eigenvalue_s_inv,
+        );
+        assert!(l2 > 10.0 * l1, "the test needs Lambda_2 well above Lambda_1: {l1:e} {l2:e} {l3:e}");
+        // A threshold between the two leaves one chemical eigenvalue: A and B are merged.
+        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
+        let merged = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &merging).unwrap();
+        assert_eq!(merged.wells, vec!["A+B".to_string()]);
+        assert_eq!(merged.well_groups, vec![vec!["A".to_string(), "B".to_string()]]);
+        assert!(merged.bimolecular_group.is_empty());
+        assert_eq!(merged.chemical_eigenvalues_s_inv.len(), 1);
+        assert!(merged.warnings.iter().any(|w| w.contains("merged")), "{:?}", merged.warnings);
+        // Q of the merged species is the sum (G13 eq. 32).
+        let q_sum = separate.partition_functions[0] + separate.partition_functions[1];
+        assert!((merged.partition_functions[0] / q_sum - 1.0).abs() < 1e-12);
+        // One chemical eigenstate: the rate of the merged species into the bimolecular channels is the thermal
+        // k_uni, the average of k(E) over the thermal eigenvector of J (GO10 after eq. 12).
+        let th = thermal_rate_coefficients(&network, &op, EigenSolver::FullDecomposition, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
+        let out: f64 = merged.well_to_bimolecular_s_inv[0].iter().sum();
+        assert!((out / th.k_uni_s_inv - 1.0).abs() < 1e-8, "{out:e} vs {:e}", th.k_uni_s_inv);
+        assert!((merged.well_to_well_s_inv[0][0] / out - 1.0).abs() < 1e-8);
+    }
+
+    #[test]
+    fn separated_wells_are_not_merged_with_the_default_threshold() {
+        let network = two_well_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        assert_eq!(rates.wells, vec!["A".to_string(), "B".to_string()]);
+        assert!(rates.bimolecular_group.is_empty());
+        assert!(!rates.warnings.iter().any(|w| w.contains("merged")));
+    }
+
     #[test]
     fn a_single_well_gives_the_eigenvector_average_as_its_rate_coefficient() {
         // One chemical eigenstate: k_(W->P) = (1/sqrt(Q)) M^-1 p_1 is the average of k(E) over the thermal
@@ -410,7 +744,7 @@ mod tests {
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 400, 0, 300)] };
         let cond = Conditions { temperature_kelvin: 600.0, pressure_torr: 760.0 };
         let op = assemble_operator(&network, &cond, &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let olzmann = thermal_rate_coefficients(&network, &op, EigenSolver::FullDecomposition, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
         assert_eq!(rates.chemical_eigenvalues_s_inv.len(), 1);
         assert!((rates.well_to_bimolecular_s_inv[0][0] / olzmann.k_uni_s_inv - 1.0).abs() < 1e-8);
@@ -422,7 +756,7 @@ mod tests {
         // Two wells A <-> B, products P from both, an escape sink in B (300 K, 760 Torr).
         let network = two_well_network();
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         assert_eq!(rates.wells, vec!["A".to_string(), "B".to_string()]);
         assert!(rates.bimolecular.contains(&"P".to_string()) && rates.bimolecular.contains(&"escape(B)".to_string()));
         // Georgievskii et al. (2013) eq. 29: k_i = sum_j k_(i->j) + sum_nu k_(i->nu) (an identity, because the
@@ -440,7 +774,7 @@ mod tests {
         let network = two_well_network();
         let high = Conditions { temperature_kelvin: 300.0, pressure_torr: 1.0e9 };
         let op = assemble_operator(&network, &high, &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let kt = KB_CM * 300.0;
         let isomerization = network.wells[0].channels.iter().position(|c| c.name == "A->B").unwrap();
         let products = network.wells[0].channels.iter().position(|c| matches!(c.destination, ChannelDestination::Products { .. })).unwrap();
@@ -461,7 +795,7 @@ mod tests {
         network.wells[0].channels[entrance].destination = ChannelDestination::Products { name: "R".into() };
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
         let k_capture = 3.0e-11;
-        let rates = phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), EigenSolver::FullDecomposition).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let reactant = rates.reactant.as_ref().unwrap();
         let r = rates.bimolecular.iter().position(|n| n == "R").unwrap();
         let kt = KB_CM * conditions().temperature_kelvin;

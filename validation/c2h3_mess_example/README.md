@@ -12,7 +12,7 @@ The methods are compared with each other and with MESS. Common settings: 1 cm⁻
 
 **Reference.** The MESS example set ("Examples_From_Argon"), case `c2h3`: one well and one tight transition state, with and without Eckart tunneling. It is the model of Miller & Klippenstein (2004), H + C₂H₂ (+M) ⇌ C₂H₃ (+M); the PDF `miller2004.pdf` is in the original example directory.
 
-**One directory.** Everything is in this directory, including the eigen-solver study that was previously kept in `../c2h3_mess_example_olzmann_eigen/` (merged on 2026-10-06, Section 8).
+**One directory.** Everything is in this directory, including the eigen-solver study that was previously kept in `../c2h3_mess_example_olzmann_eigen/` (merged on 2026-10-06; results in Section 4.5, history in Section 8).
 
 ## 1. Contents of this directory
 
@@ -29,9 +29,12 @@ The methods are compared with each other and with MESS. Common settings: 1 cm⁻
 | `plot_comparison.py` | reads all outputs; writes the figures and the three CSV files below |
 | `comparison_table.csv` | absorbing-barrier association and the dissociation from the final steady state, against MESS, all 40 conditions |
 | `barrier_distance_sensitivity.csv` | association for barrier distances 10, 5 and 3 k_BT, all conditions |
+| `plots/deviation.png` | deviation from MESS: SteadyStateOlzmann (top row: k_uni·K association, k_uni dissociation) and SteadyStateAbsorbingBarrier (bottom row) |
+| `plots/pes_olzmann.png`, `plots/falloff_W1_P1.png`, `plots/olzmann_deviation.png`, `plots/eigen_vs_absorbing_barrier.png`, `plots/sum_rule.png`, `plots/olzmann_solvers_1000K.png` | the SteadyStateOlzmann figures of the former `../c2h3_mess_example_olzmann_eigen/` (its `deviation.png` and `short_decks_1000K.png` are `olzmann_deviation.png` and `olzmann_solvers_1000K.png` here, because those names are taken) |
 | `olzmann_comparison_table.csv` | SteadyStateOlzmann: k_uni, λ₁, sum rule, λ₂/k_uni, association k_uni·K, against MESS, all conditions |
 | `time_integration_decay_vs_k_uni.csv` | late-time decay rate of the pulse (TimeIntegration) against the thermal k_uni (SteadyStateOlzmann), 750–2000 K |
 | `method_comparison.csv`, `plots/method_*.png` | identities and agreements between the four methods (`../method_comparison.py`, `../../reports/method_comparison.md`) |
+| `four_methods_figures.csv`, `plots/mess_four_methods_*.png`, `plots/internal_four_methods_*.png` | the four methods against MESS and against each other: rates, fall-off, yields, deviations, time evolution (`../four_methods_figures.py`, `../../reports/four_methods_figures.md`; Section 4.8) |
 | `plots/*.png` | the figures below |
 
 The decks are byte-identical copies of `MESS_kinetics/Examples_From_Argon/examples/c2h3/*.inp`, and MarXus reads them unchanged. They contain no `Reactant` line, so the reactant P1 (H + C₂H₂) is given on the command line.
@@ -39,7 +42,7 @@ The decks are byte-identical copies of `MESS_kinetics/Examples_From_Argon/exampl
 **To reproduce:**
 
     ./run_marxus.sh                                                      # about 14 min on 4 cores; 11 min of it the time integration of the full deck
-    source ~/.venvs/science/bin/activate && python3 plot_comparison.py && python3 ../method_comparison.py
+    source ~/.venvs/science/bin/activate && python3 plot_comparison.py && python3 ../method_comparison.py && python3 ../four_methods_figures.py
 
 ## 2. System and settings
 
@@ -124,8 +127,10 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 ![deviation](plots/deviation.png)
 
-**Definitions** (`comparison_table.csv`):
-- association: k∞(T) Φ_stab, from SteadyStateAbsorbingBarrier (10 kT);
+**`deviation.png`, top row: SteadyStateOlzmann** (`olzmann_comparison_table.csv`): association k_uni·K by detailed balance, dissociation k_uni from the thermal eigenvector, all 40 conditions.
+
+**`deviation.png`, bottom row, and the table below: SteadyStateAbsorbingBarrier** (`comparison_table.csv`):
+- association: k∞(T) Φ_stab (10 kT);
 - dissociation: k∞,d(T) Φ_stab, with k∞,d from the final steady state (750–2000 K).
 
 | T (K) | p (atm) | MESS k(P1→W1) | MarXus | Δ | MESS k(W1→P1) | MarXus | Δ |
@@ -216,7 +221,9 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 ### 4.5 SteadyStateOlzmann: the thermal eigenpair and the three eigen-solvers
 
-![dissociation fall-off](plots/olzmann_falloff_W1_P1.png)
+![PES without absorbing barrier](plots/pes_olzmann.png)
+
+![dissociation fall-off](plots/falloff_W1_P1.png)
 
 ![deviation](plots/olzmann_deviation.png)
 
@@ -236,7 +243,7 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 | `lapack` | LAPACK DSYEVD (Householder + divide and conquer, system OpenBLAS), all eigenpairs | O(n³), blocked |
 | `full` | in-house Householder (tred2) + implicit QL (tql2), all eigenpairs, Olzmann's route | O(n³), unblocked |
 
-**Sum-rule deviation** |λ₁ − k_uni|/k_uni by temperature, over the five pressures (`plots/olzmann_sum_rule.png`):
+**Sum-rule deviation** |λ₁ − k_uni|/k_uni by temperature, over the five pressures (`plots/sum_rule.png`):
 
 | T (K) | inverse iteration | LAPACK DSYEVD |
 |---|---|---|
@@ -248,7 +255,7 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 Warnings on the full deck: 6 for inverse iteration, 9 for LAPACK.
 
-![sum rule](plots/olzmann_sum_rule.png)
+![sum rule](plots/sum_rule.png)
 
 **300 K: complete results from the thermal eigenvector, while λ₁ is noise.**
 - λ₁ ≈ 10⁻¹⁵ s⁻¹ lies 13 orders below the double-precision floor (≈ 10⁻² s⁻¹). Its computed values are ±10⁻⁸ … 10⁻⁶ s⁻¹, and the warnings say so.
@@ -257,9 +264,9 @@ Warnings on the full deck: 6 for inverse iteration, 9 for LAPACK.
 
 **Separation λ₂/k_uni** (thermal decay vs relaxation): 10²³–10²⁵ at 300 K, 10¹²–10¹³ at 500 K, 10³–10⁴ at 1000 K, 68–149 at 1500 K, 15–22 at 2000 K.
 
-**Association with three barrier distances against SteadyStateOlzmann** (`plots/olzmann_vs_absorbing_barrier.png`):
+**Association with three barrier distances against SteadyStateOlzmann** (`plots/eigen_vs_absorbing_barrier.png`):
 
-![eigen vs barrier](plots/olzmann_vs_absorbing_barrier.png)
+![eigen vs barrier](plots/eigen_vs_absorbing_barrier.png)
 
 **The three solvers at 1000 K, 1 atm** (short decks, `plots/olzmann_solvers_1000K.png`): identical k_uni and association to 7 digits (Section 4.1).
 
@@ -314,6 +321,50 @@ The threshold lies 13 591 cm⁻¹ above the bottom.
 **Effect.** The reservoir keeps the Boltzmann weight of its grains, so k_uni and the detailed balance of CSE are not affected.
 - **Against MESS-type truncation.** Truncating these grains raised k_uni by 2.5% at 300 K.
 - **Against the former SSUMES-type reduction factors.** Those acted on up to 300 grains at 2000 K and gave k_uni −7.8 … −4.5% and a CSE association −9.1 … −4.9% from MESS there. With the reservoir both are −2.6 … −2.1%.
+
+### 4.8 The four methods against MESS and against each other
+
+Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.csv`; quantities and definitions in `../../reports/four_methods_figures.md`).
+
+**Quantities per method.**
+- **Association:** SteadyStateOlzmann k_uni·K; SteadyStateAbsorbingBarrier k_∞·Φ_stab; CSE G13 eq. 28; TimeIntegration k_∞·A, with A the amplitude of the slowest mode of the pulse extrapolated to t = 0.
+- **Dissociation:** k_uni; k_∞,d·Φ_stab; CSE k(W1 → P1); the late decay rate of the pulse (750–2000 K).
+- **TimeIntegration association = CSE association, identically.** For one well A = (Σ f⁽¹⁾)(Σ f⁽¹⁾ k_R)/Σ k_R f⁰ = k(R → W)/k_∞ of G13 eq. 28. Measured: within 4.7·10⁻⁵ at all 40 conditions.
+
+**Against MESS** (ranges over the pressures):
+
+| method | quantity | 300–500 K | 750–1250 K | 1500–2000 K |
+|---|---|---|---|---|
+| SteadyStateOlzmann | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −2.3 … +1.9% / −2.9 … +1.8% | −1.4 … +13.2% / −3.5 … −1.8% |
+| SteadyStateAbsorbingBarrier | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −3.5 … +1.9% / −4.1 … +1.8% | −31.2 … −5.3% / −35.5 … −6.0% (no 2000 K) |
+| CSE | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −2.5 … +1.9% / −2.9 … +1.8% | −3.1 … −1.7% / −3.5 … −1.8% |
+| TimeIntegration | association / dissociation | +3.2 … +5.8% / not resolved | −2.5 … +1.9% / −2.9 … +1.8% | −3.1 … −1.7% / −3.5 … −1.8% |
+
+**Yields against MESS** (stabilization = k/k_∞; MESS from its own tables):
+- **Stabilization**, all four methods at 300–500 K: +0.1 … +1.0%. The +3 … +6% of k_∞ (the tunneling model) cancels in k/k_∞.
+- **Prompt redissociation:** −4.7 … −0.2% at 300–500 K, within 0.5% above.
+
+![rates of the four methods against MESS](plots/mess_four_methods_rates.png)
+
+![deviation of each method from MESS](plots/mess_four_methods_deviation.png)
+
+![fall-off of both directions](plots/mess_four_methods_falloff.png)
+
+![yields against MESS](plots/mess_four_methods_yields.png)
+
+**Against each other** (`plots/internal_four_methods_*.png`):
+- **Dissociation:** CSE = SteadyStateOlzmann in all printed digits at 750–2000 K; TimeIntegration decay = k_uni within 3.1·10⁻⁶; SteadyStateAbsorbingBarrier within 1.2% up to 1250 K, −34 … −4% at 1500–1750 K.
+- **Association against SteadyStateOlzmann:** CSE and TimeIntegration within 5·10⁻⁵ at 300–500 K, −0.21 … 0% at 750–1250 K, −13.9 … −0.5% at 1500–2000 K (the CSE pair departs from detailed balance at poor separation, Section 5.4). SteadyStateAbsorbingBarrier −1.2 … +0.02% at 750–1250 K, −33.8 … −4.2% at 1500–1750 K.
+- **Prompt redissociation:** all within 0.47% of SteadyStateOlzmann.
+- **Time evolution:**
+  - At 300 and 1000 K the pulse reaches a plateau equal to the stabilization yield of every method. It then decays as (k(R → W)/k_∞) exp(−k(W → P) t) of CSE and SteadyStateOlzmann.
+  - At 2000 K there is no plateau.
+
+![the four methods against each other: rates](plots/internal_four_methods_rates.png)
+
+![yields and k_ca of the four methods](plots/internal_four_methods_yields.png)
+
+![pulse against the two-state model](plots/internal_four_methods_time.png)
 
 ## 5. Interpretation
 
@@ -391,7 +442,7 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 
 ## 6. Still open
 
-- **Final steady state of deep wells without a sink at low T** (double precision): postponed by Peter.
+- **Final steady state of deep wells without a sink at low T** (double precision): postponed.
 - **CSE species merging** at poor separation (Georgievskii et al. 2013, Sec. IV, as in MESS): planned, `../../reports/cse_species_merging.md`.
 
 ## 7. Code changes made for this validation (MarXus, uncommitted; 2026-10-05)
@@ -415,6 +466,7 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 - **2026-10-05, evening.** The thermal eigenpair of the final steady state was studied in a separate directory, `../c2h3_mess_example_olzmann_eigen/`.
 - **2026-10-06:**
   - **Four methods.** One run each, in this directory.
-  - **One directory** (Peter: "for the C2H3 system we do not need two directories"). The eigen-solver runs, the plot section and the results of `../c2h3_mess_example_olzmann_eigen/` were merged into this directory (Section 4.5; outputs `<deck>_olzmann_{lapack,full}.*`, `olzmann_comparison_table.csv`, `plots/olzmann_*.png`), and that directory was removed. Its inputs and MESS reference outputs were byte-identical copies of the ones here.
+  - **One directory**. The eigen-solver runs, the plot section and the results of `../c2h3_mess_example_olzmann_eigen/` were merged into this directory (Section 4.5; outputs `<deck>_olzmann_{lapack,full}.*`, `olzmann_comparison_table.csv`, `plots/olzmann_*.png`), and that directory was removed. Its inputs and MESS reference outputs were byte-identical copies of the ones here.
+  - **Olzmann figures restored under their former names** (they had been renamed with an `olzmann_` prefix, and `deviation.png` showed only the absorbing barrier). Regenerated with the current data: `pes_olzmann.png` (the former `pes.png`; `pes.png` here is the PES of the absorbing-barrier picture), `falloff_W1_P1.png`, `eigen_vs_absorbing_barrier.png`, `sum_rule.png`. `deviation.png` is now 2×2: SteadyStateOlzmann against MESS on top, the absorbing barrier at the bottom. The former `deviation.png` and `short_decks_1000K.png` of the eigen directory are `olzmann_deviation.png` and `olzmann_solvers_1000K.png`, because both names are taken here.
   - **Low-energy reservoir state.** It replaces the former reduction factors of the collision kernel (`../../reports/low_energy_reservoir_state.md`). It changed the absorbing-barrier rows at 1250–1750 K and the high-T eigenvalue results (Section 4.7). Rows at 300–1000 K are unchanged to the printed digits.
   - **Method comparison.** `method_comparison.csv` and `plots/method_*.png` (Section 4.6).

@@ -36,7 +36,7 @@ use std::io::Write;
 use crate::constants::KB_CM;
 
 use super::chemical_activation_eigen::{thermal_rate_coefficients, EigenSolver, ThermalRateCoefficients};
-use super::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, PhenomenologicalRates};
+use super::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, CseMerging, PhenomenologicalRates};
 use super::chemical_activation_network::{
     ChannelDestination, ChemicalActivationNetwork, ChemicalActivationOptions, CollisionModel, Conditions, SteadyState,
 };
@@ -400,6 +400,7 @@ pub fn run_phenomenological_rates(
     collision_model: CollisionModel,
     solver: EigenSolver,
     reactant: Option<(&str, &dyn Fn(f64) -> f64)>,
+    merging: &CseMerging,
 ) -> Result<Vec<PhenomenologicalConditionResult>, String> {
     network.validate()?;
     let options = ChemicalActivationOptions { collision_model, steady_state: SteadyState::Final };
@@ -410,7 +411,7 @@ pub fn run_phenomenological_rates(
             let context = |e: String| format!("T = {temperature_kelvin} K, p = {pressure_torr} Torr: {e}");
             let op = assemble_operator(network, &conditions, &options).map_err(context)?;
             let reactant_now = reactant.map(|(name, capture)| (name, capture(temperature_kelvin)));
-            let rates = phenomenological_rate_coefficients(network, &op, reactant_now, solver).map_err(context)?;
+            let rates = phenomenological_rate_coefficients(network, &op, reactant_now, solver, merging).map_err(context)?;
             results.push(PhenomenologicalConditionResult { conditions, rates });
         }
     }
@@ -660,6 +661,7 @@ mod tests {
             CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 },
             EigenSolver::FullDecomposition,
             Some(("R", &capture)),
+            &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
         )
         .unwrap();
         assert_eq!(results.len(), 2);
@@ -775,6 +777,67 @@ mod tests {
     }
 
     #[test]
+    fn cse_long_time_yields_equal_the_final_steady_state_yields_also_with_merged_species() {
+        // The identity holds for any invertible group matrix: with A and B merged into one species (one chemical
+        // eigenvalue; G13 Sec. IV), the long-time yields from the rate coefficients of the merged species still
+        // equal k_x^T J^-1 F of the final steady state.
+        use crate::masterequation::chemically_significant_eigenvalues::{reactant_yields, tests::fast_equilibrium_network, CseMerging};
+        let mut network = fast_equilibrium_network();
+        network.wells[0].channels.push(crate::masterequation::chemical_activation_network::Channel {
+            name: "A->reactants".into(),
+            destination: ChannelDestination::Products { name: "R".into() },
+            threshold_grain: None,
+            rate_constant_s_inv: (0..400).map(|i| if i >= 320 { 2.0e7 * ((i - 320) as f64 + 1.0) } else { 0.0 }).collect(),
+        });
+        let model = CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 };
+        let capture = |_t: f64| 2.0e-11;
+        let no_merging = CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() };
+        let separate = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &no_merging)
+            .unwrap()
+            .remove(0)
+            .rates;
+        let (l1, l2, l3) = (
+            separate.chemical_eigenvalues_s_inv[0],
+            separate.chemical_eigenvalues_s_inv[1],
+            separate.relaxation_eigenvalue_s_inv,
+        );
+        let mut spec = run_spec(vec![760.0]);
+        spec.temperatures_kelvin = vec![300.0];
+        spec.options.steady_state = SteadyState::Final;
+        let fss = run_chemical_activation(&network, &spec).unwrap().remove(0).result;
+        let back: f64 = fss
+            .channels
+            .iter()
+            .filter(|c| matches!(&c.destination, ChannelDestination::Products { name } if name == "R"))
+            .map(|c| c.flux)
+            .sum();
+        // One chemical eigenvalue: the species A+B. None: A and B both in equilibrium with the bimolecular
+        // species (the bimolecular group), and all yields come from eq. 21 over every eigenstate.
+        let one = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
+        let none = CseMerging { chemical_eigenvalue_max: 0.5 * l1 / l3, ..CseMerging::default() };
+        for (merging, species, bimolecular_group) in [(one, vec!["A+B"], vec![]), (none, vec![], vec!["A", "B"])] {
+            let cse = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &merging)
+                .unwrap()
+                .remove(0)
+                .rates;
+            assert_eq!(cse.wells, species);
+            assert_eq!(cse.bimolecular_group, bimolecular_group);
+            let yields = reactant_yields(&cse).expect("a reactant").unwrap();
+            for (x, name) in yields.channels.iter().enumerate() {
+                let products: f64 = fss
+                    .channels
+                    .iter()
+                    .filter(|c| matches!(&c.destination, ChannelDestination::Products { name: n } if n == name))
+                    .map(|c| c.flux)
+                    .sum();
+                let sinks: f64 = fss.wells.iter().filter(|w| *name == format!("escape({})", w.name)).map(|w| w.bimolecular_sink_yield).sum();
+                let expected = (products + sinks) / (1.0 - back);
+                assert!((yields.total[x] - expected).abs() < 1e-8 * expected.max(1e-12), "{species:?} {name}: {} vs {expected}", yields.total[x]);
+            }
+        }
+    }
+
+    #[test]
     fn cse_long_time_yields_equal_the_final_steady_state_yields() {
         // With all eigenpairs, the yields reconstructed from the CSE rate coefficients (R -> wells and
         // products, then the wells' absorbing chain) equal k_x^T J^-1 F of the final steady state: both are
@@ -794,6 +857,7 @@ mod tests {
                 model,
                 EigenSolver::FullDecomposition,
                 Some(("R", &capture)),
+                &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
             )
             .unwrap();
             let yields = reactant_yields(&cse[0].rates).expect("a reactant").unwrap();
