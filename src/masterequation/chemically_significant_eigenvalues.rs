@@ -39,25 +39,48 @@ use crate::numeric::dense_inverse::invert_dense;
 /// separated from the relaxation ones.
 pub const CSE_SEPARATION_WARNING: f64 = 0.1;
 
-/// Species merging (G13 Sec. IV), with the criteria of MESS (`MasterEquation`, direct method, and
-/// `ReactiveComplex::threshold_well_partition`).
+/// How `ChemicalEigenvalueMax` (0 < value < 1) decides which of the N lowest eigenvectors are chemical.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ChemicalSubspaceCriterion {
+    /// From the lowest, the eigenvectors are chemical while their projection on the relaxational subspace,
+    /// 1 - F_ne = 1 - sum_i M_(i,lambda)^2, is at most the value: the "relaxation projection threshold" of
+    /// MESS's direct method (`MasterEquation::direct_diagonalization_method`, `CalculationMethod direct`).
+    #[default]
+    RelaxationProjection,
+    /// From the lowest, the eigenvalues are chemical while Lambda <= value x Lambda_(N+1): the rule of MESS's
+    /// reaction-complex code (`ReactiveComplex::there_are_bound_groups`, `well_reduction_method`).
+    EigenvalueRatio,
+}
+
+/// Species merging (G13 Sec. IV), with the criteria of MESS (`MasterEquation::direct_diagonalization_method`, and
+/// `ReactiveComplex::threshold_well_partition` for the partition).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CseMerging {
-    /// `ChemicalEigenvalueMax`: the chemical eigenvalues are those with Lambda <= this x the lowest relaxation
-    /// eigenvalue Lambda_(N+1) (N wells), counted from the lowest. If fewer than N are chemical, the wells are
-    /// partitioned into that many species. Only MESS's absolute mode, 0 < value < 1, is implemented. MESS has
-    /// no default (the keyword is required there); the MarXus default 0.2 is the value of both MESS decks of
-    /// the validations.
+    /// `ChemicalEigenvalueMax` (0 < value < 1): the threshold of `criterion`. If fewer than N eigenvectors are
+    /// chemical, the wells are partitioned into that many species. MESS has no default (the keyword is required
+    /// there); the MarXus default 0.2 is the value of the MESS decks of the validations. MESS's direct method reads a
+    /// value above 1 as the threshold Lambda_(N+1)/Lambda >= value; MarXus refuses it (use EigenvalueRatio with
+    /// 1/value).
     pub chemical_eigenvalue_max: f64,
     /// `WellProjectionThreshold`: wells whose projection on the chemical subspace is at least this are
     /// primary wells of the partition (MESS default 0.2).
     pub well_projection_threshold: f64,
+    /// `ChemicalSubspaceCriterion` (MarXus block): relaxational projection (MESS direct method, default) or
+    /// eigenvalue ratio.
+    pub criterion: ChemicalSubspaceCriterion,
 }
 
 impl Default for CseMerging {
     fn default() -> Self {
-        Self { chemical_eigenvalue_max: 0.2, well_projection_threshold: 0.2 }
+        Self { chemical_eigenvalue_max: 0.2, well_projection_threshold: 0.2, criterion: ChemicalSubspaceCriterion::default() }
     }
+}
+
+/// Number of chemical eigenvectors by the relaxation projection threshold of MESS's direct method: counted from the
+/// lowest while 1 - F_ne <= `threshold` (mess.cc, `direct_diagonalization_method`: `relaxation_projection[itemp] >
+/// chemical_threshold` ends the count).
+pub fn chemical_projection_count(relaxational_projections: &[f64], threshold: f64) -> usize {
+    relaxational_projections.iter().take_while(|&&p| p <= threshold).count()
 }
 
 /// Number of chemical eigenvalues: the eigenvalues (ascending) Lambda_0 .. Lambda_(N-1) that are at most
@@ -246,8 +269,9 @@ pub fn phenomenological_rate_coefficients(
 ) -> Result<PhenomenologicalRates, String> {
     if !(merging.chemical_eigenvalue_max > 0.0 && merging.chemical_eigenvalue_max < 1.0) {
         return Err(format!(
-            "CSE analysis: ChemicalEigenvalueMax = {} is outside 0 < value < 1 (only MESS's absolute threshold is \
-             implemented).",
+            "CSE analysis: ChemicalEigenvalueMax = {} is outside 0 < value < 1. MESS's direct method reads a value \
+             above 1 as the threshold Lambda_(N+1)/Lambda >= value; for that use ChemicalSubspaceCriterion \
+             EigenvalueRatio with 1/value.",
             merging.chemical_eigenvalue_max
         ));
     }
@@ -314,7 +338,15 @@ pub fn phenomenological_rate_coefficients(
     }
 
     // Chemical eigenvalues and the species (G13 Sec. IV; MESS direct method and threshold_well_partition).
-    let chem_size = chemical_eigenvalue_count(&values, n_wells_all, merging.chemical_eigenvalue_max);
+    // 1 - F_ne of the N lowest eigenvectors (MESS: relaxation_projection[l] = 1 - |eigen_pop row l|^2)
+    let projections: Vec<f64> =
+        (0..n_wells_all).map(|l| 1.0 - (0..n_wells_all).map(|w| m_wells[w][l] * m_wells[w][l]).sum::<f64>()).collect();
+    let chem_size = match merging.criterion {
+        ChemicalSubspaceCriterion::RelaxationProjection => chemical_projection_count(&projections, merging.chemical_eigenvalue_max),
+        ChemicalSubspaceCriterion::EigenvalueRatio => {
+            chemical_eigenvalue_count(&values, n_wells_all, merging.chemical_eigenvalue_max)
+        }
+    };
     let partition = if chem_size == n_wells_all {
         WellPartition { groups: (0..n_wells_all).map(|w| vec![w]).collect(), bimolecular_group: Vec::new(), projection_error: 0.0 }
     } else if chem_size == 0 {
@@ -389,15 +421,27 @@ pub fn phenomenological_rate_coefficients(
     if n < n_wells_all {
         let eigenvalues: Vec<String> = values[..n_wells_all].iter().map(|v| format!("{v:.4e}")).collect();
         let free: Vec<String> = partition.bimolecular_group.iter().map(|&w| well_names[w].clone()).collect();
+        let criterion = match merging.criterion {
+            ChemicalSubspaceCriterion::RelaxationProjection => format!(
+                "only {n} of the {n_wells_all} lowest eigenvectors (eigenvalues {} s-1) have a relaxational projection \
+                 1 - F_ne ({}) of at most ChemicalEigenvalueMax = {} (relaxation projection threshold of the MESS direct \
+                 method)",
+                eigenvalues.join(", "),
+                projections.iter().map(|p| format!("{p:.4}")).collect::<Vec<_>>().join(", "),
+                merging.chemical_eigenvalue_max
+            ),
+            ChemicalSubspaceCriterion::EigenvalueRatio => format!(
+                "only {n} of the {n_wells_all} lowest eigenvalues ({}) s-1 are at most ChemicalEigenvalueMax = {} x the \
+                 lowest relaxation eigenvalue {:.4e} s-1",
+                eigenvalues.join(", "),
+                merging.chemical_eigenvalue_max,
+                values[n_wells_all]
+            ),
+        };
         warnings.push(format!(
-            "species merged (Georgievskii et al. 2013, Sec. IV; criteria as MESS): only {n} of the {n_wells_all} lowest \
-             eigenvalues ({}) s-1 are at most ChemicalEigenvalueMax = {} x the lowest relaxation eigenvalue {:.4e} s-1, \
-             so the wells are not all kinetically distinct. Species: {}{}. Partition projection error {:.3e}. Rate \
-             coefficients are given for the merged species only; their wells cannot be distinguished at this \
-             condition.",
-            eigenvalues.join(", "),
-            merging.chemical_eigenvalue_max,
-            values[n_wells_all],
+            "species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): {criterion}, so the wells are not all \
+             kinetically distinct. Species: {}{}. Partition projection error {:.3e}. Rate coefficients are given for \
+             the merged species only; their wells cannot be distinguished at this condition.",
             if species_names.is_empty() { "none".to_string() } else { species_names.join(", ") },
             if free.is_empty() {
                 String::new()
@@ -696,6 +740,29 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn by_default_an_eigenvector_is_chemical_while_its_relaxational_projection_is_below_the_threshold() {
+        // MESS direct method (mess.cc, direct_diagonalization_method, "relaxation projection threshold"): for
+        // 0 < ChemicalEigenvalueMax < 1 the eigenvectors, from the lowest, are chemical while 1 - F_ne <= the value.
+        assert_eq!(ChemicalSubspaceCriterion::default(), ChemicalSubspaceCriterion::RelaxationProjection);
+        assert_eq!(chemical_projection_count(&[0.05, 0.15, 0.3], 0.2), 2);
+        assert_eq!(chemical_projection_count(&[0.25, 0.1], 0.2), 0);
+        let network = fast_equilibrium_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let rates = |threshold: f64| {
+            let merging = CseMerging { chemical_eigenvalue_max: threshold, ..CseMerging::default() };
+            phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &merging).unwrap()
+        };
+        let separate = rates(0.999);
+        let p = separate.relaxational_projection.clone();
+        assert!(p[0] > 0.0 && p[1] > 10.0 * p[0], "the test needs 1 - F_ne of the second eigenvector well above the first: {p:?}");
+        assert_eq!(rates(0.5 * p[0]).wells, Vec::<String>::new());
+        assert_eq!(rates((p[0] * p[1]).sqrt()).wells, vec!["A+B".to_string()]);
+        assert_eq!(separate.wells.len(), 2);
+        let merged = rates((p[0] * p[1]).sqrt());
+        assert!(merged.warnings.iter().any(|w| w.contains("1 - F_ne")), "{:?}", merged.warnings);
+    }
+
+    #[test]
     fn wells_in_fast_equilibrium_are_merged_and_the_group_decays_with_k_uni() {
         let network = fast_equilibrium_network();
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
@@ -709,7 +776,7 @@ pub(crate) mod tests {
         );
         assert!(l2 > 10.0 * l1, "the test needs Lambda_2 well above Lambda_1: {l1:e} {l2:e} {l3:e}");
         // A threshold between the two leaves one chemical eigenvalue: A and B are merged.
-        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
+        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
         let merged = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &merging).unwrap();
         assert_eq!(merged.wells, vec!["A+B".to_string()]);
         assert_eq!(merged.well_groups, vec![vec!["A".to_string(), "B".to_string()]]);

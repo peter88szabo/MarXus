@@ -23,9 +23,10 @@
 //! 3. CSE: phenomenological rate coefficients from the chemically significant eigenvalues (Miller, Klippenstein,
 //!    J. Phys. Chem. A 110, 10528 (2006); Georgievskii et al., J. Phys. Chem. A 117, 12146 (2013) [G13];
 //!    `chemically_significant_eigenvalues.rs`). It needs all eigenpairs: LAPACK unless the full Householder/QL
-//!    decomposition is asked for; inverse iteration is refused. Where fewer eigenvalues than wells are at most
-//!    ChemicalEigenvalueMax x the lowest relaxation eigenvalue, the wells are merged into species (G13 Sec. IV,
-//!    with the partition of MESS) and the output warns.
+//!    decomposition is asked for; inverse iteration is refused. Where fewer of the lowest eigenvectors than wells
+//!    are chemical (relaxational projection 1 - F_ne <= ChemicalEigenvalueMax, as MESS's direct method; or, as an
+//!    option, eigenvalue <= ChemicalEigenvalueMax x the lowest relaxation eigenvalue), the wells are merged into
+//!    species (G13 Sec. IV, with the partition of MESS) and the output warns.
 //! 4. TimeIntegration: dN/dt = R F - J N with the yields of every exit, by Rosenbrock methods
 //!    (`direct_time_integration.rs`).
 //!
@@ -54,6 +55,11 @@
 //! --time-range T1 T2     time integration: first and last output time in s, default 1e-12 1e2 [TimeRange[s]]
 //! --times-per-decade N   time integration: output times per decade, default 4 [TimesPerDecade]
 //! --integration-tolerance X   time integration: relative tolerance, default 1e-6 [IntegrationTolerance]
+//! --collision-integral   Lennard-Jones collision integral Omega(2,2)*: `neufeld` (Neufeld, Janzen, Aziz 1972; default)
+//!                        or `troe` (Troe 1977, eq. 3.3, a +-7% approximation) [CollisionIntegral Neufeld | Troe]
+//! --rotor-reduced-moment reduced moment of the internal rotors (`Rotor Hindered`, `Rotor Free`) from the geometry:
+//!                        `pitzer` (Kilpatrick-Pitzer I(1,3); default) or `bond-axis` (I_A I_B/(I_A + I_B) about the
+//!                        bond axis) [RotorReducedMoment Pitzer | BondAxis]
 //! --ncore N              number of cores: the conditions (T, p) are computed in parallel (rayon), in batches of
 //!                        up to N at a time; overrides NCores of the deck; without either, RAYON_NUM_THREADS,
 //!                        otherwise all logical cores [NCores]
@@ -61,6 +67,10 @@
 //!
 //! CSE species merging, keywords of the deck's global section (MESS's names; no command-line option):
 //! ChemicalEigenvalueMax X (0 < X < 1, default 0.2) and WellProjectionThreshold X (default 0.2).
+//! --chemical-subspace-criterion   how ChemicalEigenvalueMax selects the chemical eigenvectors: `projection`
+//!                        (relaxational projection 1 - F_ne <= X, as MESS's direct method; default) or `eigenvalue-ratio`
+//!                        (eigenvalue <= X x lowest relaxation eigenvalue) [ChemicalSubspaceCriterion RelaxationProjection |
+//!                        EigenvalueRatio]
 //!
 //! Output: a human-readable report on stdout (`report_sections.rs`, `report_tables.rs`):
 //! - RUN SETTINGS (method, solvers, conditions, grid, collisions, tunneling, source) and CHEMICAL NETWORK
@@ -98,8 +108,10 @@ use MarXus::masterequation::chemical_activation_network::{
     AbsorbingBarrier, ChannelDestination, ChemicalActivationOptions, CollisionModel, Conditions,
     SteadyState,
 };
-use MarXus::masterequation::chemical_activation_operator::low_energy_reservoirs;
-use MarXus::masterequation::chemically_significant_eigenvalues::CseMerging;
+use MarXus::masterequation::chemical_activation_operator::{low_energy_reservoirs, RESERVOIR_MARGIN_WARNING_KT};
+use MarXus::masterequation::collisional_relaxation::CollisionIntegral;
+use MarXus::rrkm::internal_rotor::ReducedMomentModel;
+use MarXus::masterequation::chemically_significant_eigenvalues::{ChemicalSubspaceCriterion, CseMerging};
 use MarXus::masterequation::chemical_activation_sources::thermal_entrance_source;
 use MarXus::masterequation::chemical_activation_steady_state::LinearSolver;
 use MarXus::masterequation::direct_time_integration::{
@@ -126,7 +138,7 @@ fn prefixed(section: &str, groups: &[QuantityGroup]) -> Vec<QuantityGroup> {
         .collect()
 }
 use MarXus::masterequation::solution_method::{
-    eigen_solver_from_keyword, initial_state_from_keyword, integrator_from_keyword, Solution,
+    chemical_subspace_criterion_from_keyword, collision_integral_from_keyword, eigen_solver_from_keyword, rotor_reduced_moment_from_keyword, initial_state_from_keyword, integrator_from_keyword, Solution,
     SolutionMethod, SolutionSettings, STEADY_STATE_KEYWORD_REPLACED,
 };
 
@@ -177,6 +189,15 @@ fn main() -> Result<(), String> {
                         .map_err(|_| format!("--ncore: invalid number '{v}'"))?,
                 );
             }
+            "--collision-integral" => {
+                command_line.collision_integral = Some(collision_integral_from_keyword(&value()?)?)
+            }
+            "--rotor-reduced-moment" => {
+                command_line.rotor_reduced_moment = Some(rotor_reduced_moment_from_keyword(&value()?)?)
+            }
+            "--chemical-subspace-criterion" => {
+                command_line.chemical_subspace_criterion = Some(chemical_subspace_criterion_from_keyword(&value()?)?)
+            }
             "--tunneling" => {
                 settings.eckart_tunneling = match value()?.as_str() {
                     "exact-eckart" => EckartTunnelingModel::Exact,
@@ -188,7 +209,7 @@ fn main() -> Result<(), String> {
                 return Err(format!(
                     "unknown option '{other}' (--method, --barrier-kt, --eigen-solver, --sum-rule-tolerance, \
                      --integrator, --initial, --time-range, --times-per-decade, --integration-tolerance, --csv, \
-                     --ncore, --tunneling)"
+                     --ncore, --tunneling, --collision-integral, --rotor-reduced-moment, --chemical-subspace-criterion)"
                 ))
             }
             _ => positional.push(arg),
@@ -201,13 +222,22 @@ fn main() -> Result<(), String> {
         deck.global.reactant_name = Some(reactant.clone());
     }
     let merged = deck.global.solution.overridden_by(&command_line);
-    // CSE species merging (MESS header keywords ChemicalEigenvalueMax, WellProjectionThreshold).
+    // CSE species merging (MESS header keywords ChemicalEigenvalueMax, WellProjectionThreshold; MarXus block
+    // ChemicalSubspaceCriterion or --chemical-subspace-criterion).
     let merging = CseMerging {
         chemical_eigenvalue_max: deck.global.chemical_eigenvalue_max.unwrap_or(CseMerging::default().chemical_eigenvalue_max),
         well_projection_threshold: deck
             .global
             .well_projection_threshold
             .unwrap_or(CseMerging::default().well_projection_threshold),
+        criterion: merged.chemical_subspace_criterion.unwrap_or_default(),
+    };
+    let criterion_source = if command_line.chemical_subspace_criterion.is_some() {
+        "--chemical-subspace-criterion"
+    } else if deck.global.solution.chemical_subspace_criterion.is_some() {
+        "ChemicalSubspaceCriterion in the deck"
+    } else {
+        "default"
     };
     let resolved = merged.resolve()?;
     // Where the number of cores comes from (shown in RUN SETTINGS).
@@ -247,6 +277,25 @@ fn main() -> Result<(), String> {
             (None, None, Some(eigen_solver), None)
         }
         Solution::TimeIntegration(plan) => (None, None, None, Some(plan)),
+    };
+    // Lennard-Jones collision integral: --collision-integral, otherwise CollisionIntegral in the deck, otherwise Neufeld 1972.
+    settings.collision_integral = merged.collision_integral.unwrap_or_default();
+    let collision_integral_source = if command_line.collision_integral.is_some() {
+        "--collision-integral"
+    } else if deck.global.solution.collision_integral.is_some() {
+        "CollisionIntegral in the deck"
+    } else {
+        "default"
+    };
+    // Reduced moment of the internal rotors: --rotor-reduced-moment, otherwise RotorReducedMoment in the deck, otherwise
+    // Pitzer.
+    settings.rotor_reduced_moment = merged.rotor_reduced_moment.unwrap_or_default();
+    let rotor_reduced_moment_source = if command_line.rotor_reduced_moment.is_some() {
+        "--rotor-reduced-moment"
+    } else if deck.global.solution.rotor_reduced_moment.is_some() {
+        "RotorReducedMoment in the deck"
+    } else {
+        "default"
     };
     let model = chemical_activation_model_from_mess(&deck, &settings)?;
     if model.entrance_channels.is_empty() {
@@ -358,12 +407,18 @@ fn main() -> Result<(), String> {
             vec![
                 format!("all eigenpairs of the symmetrized J: {eigen_solver:?}; well-to-well matrix inverted by Gauss-Jordan elimination"),
                 format!(
-                    "species merging (Georgievskii et al. 2013, Sec. IV; criteria as MESS): ChemicalEigenvalueMax {} ({}), \
-                     WellProjectionThreshold {} ({})",
+                    "species merging (Georgievskii et al. 2013, Sec. IV; partition as MESS): ChemicalEigenvalueMax {} ({}), \
+                     WellProjectionThreshold {} ({}); chemical eigenvectors: {} ({criterion_source})",
                     merging.chemical_eigenvalue_max,
                     if deck.global.chemical_eigenvalue_max.is_some() { "deck" } else { "default" },
                     merging.well_projection_threshold,
-                    if deck.global.well_projection_threshold.is_some() { "deck" } else { "default" }
+                    if deck.global.well_projection_threshold.is_some() { "deck" } else { "default" },
+                    match merging.criterion {
+                        ChemicalSubspaceCriterion::RelaxationProjection =>
+                            "relaxational projection 1 - F_ne <= ChemicalEigenvalueMax (MESS direct method)",
+                        ChemicalSubspaceCriterion::EigenvalueRatio =>
+                            "eigenvalue <= ChemicalEigenvalueMax x lowest relaxation eigenvalue",
+                    }
                 ),
             ],
         ),
@@ -457,17 +512,32 @@ fn main() -> Result<(), String> {
     .map_err(io)?;
     // Low-energy reservoirs: where the normalization of eq. 4.16 fails, the lowest grains of a well form one
     // thermalized state (MESMER manual, Sec. 14.2.1; per temperature, the kernel does not depend on the pressure).
+    // With the distance of each reservoir top below the lowest threshold of its well, and a warning where it is less
+    // than RESERVOIR_MARGIN_WARNING_KT k_BT (MESMER manual, Sec. 14.2.1: "more than a few kT below").
     let mut reservoir_lines = Vec::new();
+    let mut reservoir_warnings = Vec::new();
     for &t in &temperatures {
         let reservoirs = low_energy_reservoirs(network, t, model.collision_model)?;
         if !reservoirs.is_empty() {
             let wells: Vec<String> = reservoirs
                 .iter()
-                .map(|r| format!("{} {} grains ({:.0} cm-1)", r.well, r.grains, r.grains as f64 * network.grain_width_cm1))
+                .map(|r| {
+                    let margin = r.margin_kt.map_or("no threshold".to_string(), |m| format!("{m:.1} k_BT below the lowest threshold"));
+                    format!("{} {} grains ({:.0} cm-1, {margin})", r.well, r.grains, r.top_cm1)
+                })
                 .collect();
             reservoir_lines.push(format!("  T = {t} K: {}", wells.join(", ")));
+            for r in &reservoirs {
+                if let Some(w) = r.warning(RESERVOIR_MARGIN_WARNING_KT) {
+                    reservoir_warnings.push(format!("  warning, T = {t} K: {w}"));
+                }
+            }
         }
     }
+    for w in &reservoir_warnings {
+        eprintln!("{}", w.trim_start());
+    }
+    reservoir_lines.extend(reservoir_warnings);
     let mut collision_lines = vec![collisions];
     if matches!(model.collision_model, CollisionModel::ExponentialDown { .. }) {
         if reservoir_lines.is_empty() {
@@ -483,9 +553,49 @@ fn main() -> Result<(), String> {
             collision_lines.extend(reservoir_lines);
         }
     }
-    collision_lines.push("collision frequency: Lennard-Jones (per well, below)".into());
+    collision_lines.push(format!(
+        "collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: {} ({collision_integral_source})",
+        match settings.collision_integral {
+            CollisionIntegral::Troe1977 => "Troe, J. Chem. Phys. 66, 4758 (1977), eq. 3.3",
+            CollisionIntegral::Neufeld1972 => "Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972)",
+        }
+    ));
     field(&mut report, "Collisions:", &collision_lines).map_err(io)?;
     field(&mut report, "Tunneling:", &[tunneling.to_string()]).map_err(io)?;
+    let rotor_count = deck.wells.values().map(|w| w.internal_rotors.len()).sum::<usize>()
+        + deck.barriers.iter().map(|b| b.rrho.internal_rotors.len()).sum::<usize>()
+        + deck.bimolecular.values().map(|b| b.fragment_a.internal_rotors.len() + b.fragment_b.internal_rotors.len()).sum::<usize>();
+    if rotor_count > 0 {
+        let kcal = |cm1: f64| cm1 * MarXus::constants::CM1_TO_KCAL;
+        let mut rotor_lines = vec![format!(
+            "{rotor_count} one-dimensional internal rotors: quantum levels in the Fourier basis of period 2 pi/sigma, \
+             convolved with the other degrees of freedom; reduced moment from a geometry: {} ({rotor_reduced_moment_source})",
+            match settings.rotor_reduced_moment {
+                ReducedMomentModel::Pitzer => "Kilpatrick-Pitzer I(1,3)",
+                ReducedMomentModel::BondAxis => "I_A I_B/(I_A + I_B) about the bond axis",
+            }
+        )];
+        for rotor in &model.internal_rotors {
+            let levels = &rotor.levels;
+            let lowest: Vec<String> =
+                levels.levels_above_ground_cm1.iter().skip(1).take(9).map(|e| format!("{:.6}", kcal(*e))).collect();
+            rotor_lines.push(format!(
+                "  {} rotor {}: B {:.6} cm-1, symmetry {}, potential {:.6} .. {:.6} kcal/mol, ground energy {:.6} kcal/mol, \
+                 {} levels up to {:.1} kcal/mol above the ground; lowest above the ground (kcal/mol): {}",
+                rotor.species,
+                rotor.rotor,
+                levels.rotational_constant_cm1,
+                levels.symmetry_number,
+                kcal(rotor.potential_minimum_cm1),
+                kcal(rotor.potential_maximum_cm1),
+                kcal(levels.ground_energy_cm1),
+                levels.levels_above_ground_cm1.len(),
+                kcal(levels.highest_level_above_ground_cm1()),
+                lowest.join(" ")
+            ));
+        }
+        field(&mut report, "Rotors:", &rotor_lines).map_err(io)?;
+    }
     field(
         &mut report,
         "Source:",

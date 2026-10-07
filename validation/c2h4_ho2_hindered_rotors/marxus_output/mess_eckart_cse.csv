@@ -1,0 +1,335 @@
+# deck validation/c2h4_ho2_hindered_rotors/input/c2h4_ho2.inp: grain 42.000 cm-1
+# solution method: CSE: chemically significant eigenvalues (MK06; G13), all eigenpairs by FullDecompositionLapack
+#   well W2       grains   1455 (absolute -131 .. 1323), channels: B3, B4
+
+# CSE analysis (FullDecompositionLapack)
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 300 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: 8.6242e1; lowest relaxation eigenvalue 4.7214e6 1/s (separation 1.827e-5); relaxational projections 5.3921e-6; loss balance deviation 4.35e-10; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 3.5507e-23 cm3/s, return to the reactant 4.0787e-24 cm3/s
+From\To,W2,P1,P2
+W2,8.624221e1,9.548529e-1,8.528735e1
+P1,2.481314e-24,3.142842e-23,2.894711e-23
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 300 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: 1.8057e2; lowest relaxation eigenvalue 4.6210e7 1/s (separation 3.908e-6); relaxational projections 6.3903e-7; loss balance deviation 6.58e-9; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 3.5507e-23 cm3/s, return to the reactant 3.3053e-24 cm3/s
+From\To,W2,P1,P2
+W2,1.805670e2,4.608522e0,1.759585e2
+P1,1.197592e-23,3.220190e-23,2.022598e-23
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 300 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: 2.5052e2; lowest relaxation eigenvalue 4.5590e8 1/s (separation 5.495e-7); relaxational projections 2.9927e-8; loss balance deviation 7.84e-8; detailed balance deviation 0.00e0; precision floor 1.485e-3 1/s
+# reactant P1: capture 3.5507e-23 cm3/s, return to the reactant 1.5055e-24 cm3/s
+From\To,W2,P1,P2
+W2,2.505160e2,1.030019e1,2.402159e2
+P1,2.676657e-23,3.400166e-23,7.235089e-24
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 300 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: 2.7236e2; lowest relaxation eigenvalue 4.5345e9 1/s (separation 6.006e-8); relaxational projections 5.7490e-10; loss balance deviation 2.24e-6; detailed balance deviation 0.00e0; precision floor 1.500e-3 1/s
+# reactant P1: capture 3.5507e-23 cm3/s, return to the reactant 2.9999e-25 cm3/s
+From\To,W2,P1,P2
+W2,2.723577e2,1.308021e1,2.592769e2
+P1,3.399088e-23,3.520717e-23,1.216283e-24
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 300 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: 2.7570e2; lowest relaxation eigenvalue 4.5291e10 1/s (separation 6.087e-9); relaxational projections 6.6787e-12; loss balance deviation 5.37e-8; detailed balance deviation 0.00e0; precision floor 1.665e-3 1/s
+# reactant P1: capture 3.5507e-23 cm3/s, return to the reactant 3.5267e-26 cm3/s
+From\To,W2,P1,P2
+W2,2.756965e2,1.359785e1,2.620987e2
+P1,3.533603e-23,3.547189e-23,1.358645e-25
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 500 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: 8.9144e4; lowest relaxation eigenvalue 5.0177e6 1/s (separation 1.777e-2); relaxational projections 1.9028e-2; loss balance deviation 1.07e-11; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 4.3169e-19 cm3/s, return to the reactant 1.2275e-19 cm3/s
+From\To,W2,P1,P2
+W2,8.914395e4,2.355275e3,8.678868e4
+P1,1.824960e-21,3.089435e-19,3.071185e-19
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 500 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: 3.8641e5; lowest relaxation eigenvalue 4.1581e7 1/s (separation 9.293e-3); relaxational projections 6.8483e-3; loss balance deviation 3.18e-11; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 4.3169e-19 cm3/s, return to the reactant 1.1944e-19 cm3/s
+From\To,W2,P1,P2
+W2,3.864138e5,2.587447e4,3.605394e5
+P1,2.029748e-20,3.122593e-19,2.919618e-19
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 500 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: 1.1223e6; lowest relaxation eigenvalue 3.4195e8 1/s (separation 3.282e-3); relaxational projections 1.3200e-3; loss balance deviation 2.37e-10; detailed balance deviation 0.00e0; precision floor 1.484e-3 1/s
+# reactant P1: capture 4.3169e-19 cm3/s, return to the reactant 9.9591e-20 cm3/s
+From\To,W2,P1,P2
+W2,1.122323e6,1.425897e5,9.797337e5
+P1,1.124785e-19,3.321030e-19,2.196244e-19
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 500 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: 2.0276e6; lowest relaxation eigenvalue 2.9333e9 1/s (separation 6.912e-4); relaxational projections 1.0403e-4; loss balance deviation 1.95e-11; detailed balance deviation 0.00e0; precision floor 1.497e-3 1/s
+# reactant P1: capture 4.3169e-19 cm3/s, return to the reactant 5.0069e-20 cm3/s
+From\To,W2,P1,P2
+W2,2.027577e6,3.656265e5,1.661950e6
+P1,2.887670e-19,3.816252e-19,9.285824e-20
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 500 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: 2.4799e6; lowest relaxation eigenvalue 2.7090e10 1/s (separation 9.154e-5); relaxational projections 2.8695e-6; loss balance deviation 2.04e-10; detailed balance deviation 0.00e0; precision floor 1.621e-3 1/s
+# reactant P1: capture 4.3169e-19 cm3/s, return to the reactant 1.1182e-20 cm3/s
+From\To,W2,P1,P2
+W2,2.479896e6,5.093977e5,1.970499e6
+P1,4.023563e-19,4.205124e-19,1.815606e-20
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 700 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 8.6860e5 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 3.8432e-17 cm3/s, return to the reactant 1.5959e-17 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 8.6860e5 s-1) have a relaxational projection 1 - F_ne (0.2295) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,2.247361e-17,2.247361e-17
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 700 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: 5.0448e6; lowest relaxation eigenvalue 6.7584e7 1/s (separation 7.465e-2); relaxational projections 1.3857e-1; loss balance deviation 9.31e-12; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 3.8432e-17 cm3/s, return to the reactant 1.5886e-17 cm3/s
+From\To,W2,P1,P2
+W2,5.044813e6,5.266486e5,4.518165e6
+P1,2.740056e-19,2.254675e-17,2.227274e-17
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 700 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: 2.2584e7; lowest relaxation eigenvalue 4.7652e8 1/s (separation 4.739e-2); relaxational projections 5.8432e-2; loss balance deviation 2.02e-11; detailed balance deviation 0.00e0; precision floor 1.484e-3 1/s
+# reactant P1: capture 3.8432e-17 cm3/s, return to the reactant 1.5253e-17 cm3/s
+From\To,W2,P1,P2
+W2,2.258374e7,4.347059e6,1.823668e7
+P1,2.472111e-18,2.317963e-17,2.070752e-17
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 700 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: 6.9911e7; lowest relaxation eigenvalue 3.2460e9 1/s (separation 2.154e-2); relaxational projections 1.3421e-2; loss balance deviation 2.79e-12; detailed balance deviation 0.00e0; precision floor 1.494e-3 1/s
+# reactant P1: capture 3.8432e-17 cm3/s, return to the reactant 1.1971e-17 cm3/s
+From\To,W2,P1,P2
+W2,6.991057e7,1.968675e7,5.022382e7
+P1,1.173078e-17,2.646168e-17,1.473090e-17
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 700 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: 1.3320e8; lowest relaxation eigenvalue 2.3426e10 1/s (separation 5.686e-3); relaxational projections 1.1490e-3; loss balance deviation 2.77e-12; detailed balance deviation 0.00e0; precision floor 1.598e-3 1/s
+# reactant P1: capture 3.8432e-17 cm3/s, return to the reactant 5.2374e-18 cm3/s
+From\To,W2,P1,P2
+W2,1.331998e8,4.566673e7,8.753302e7
+P1,2.755000e-17,3.319489e-17,5.644892e-18
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1000 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 4.0540e6 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 1.5685e-15 cm3/s, return to the reactant 8.4765e-16 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 4.0540e6 s-1) have a relaxational projection 1 - F_ne (0.7001) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.208599e-16,7.208599e-16
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1000 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 2.6985e7 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 1.5685e-15 cm3/s, return to the reactant 8.4741e-16 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.6985e7 s-1) have a relaxational projection 1 - F_ne (0.5797) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.211021e-16,7.211021e-16
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1000 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 1.5054e8 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.484e-3 1/s
+# reactant P1: capture 1.5685e-15 cm3/s, return to the reactant 8.4621e-16 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.5054e8 s-1) have a relaxational projection 1 - F_ne (0.4042) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.222994e-16,7.222994e-16
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1000 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 6.6251e8 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.492e-3 1/s
+# reactant P1: capture 1.5685e-15 cm3/s, return to the reactant 8.4227e-16 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 6.6251e8 s-1) have a relaxational projection 1 - F_ne (0.2029) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.262396e-16,7.262396e-16
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1000 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: 2.0530e9; lowest relaxation eigenvalue 3.1094e10 1/s (separation 6.603e-2); relaxational projections 5.4103e-2; loss balance deviation 5.52e-13; detailed balance deviation 0.00e0; precision floor 1.577e-3 1/s
+# reactant P1: capture 1.5685e-15 cm3/s, return to the reactant 5.8630e-16 cm3/s
+From\To,W2,P1,P2
+W2,2.053025e9,9.349461e8,1.118079e9
+P1,5.441556e-16,9.822114e-16,4.380558e-16
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1500 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 1.4220e7 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 4.0759e-14 cm3/s, return to the reactant 2.6278e-14 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.4220e7 s-1) have a relaxational projection 1 - F_ne (0.9697) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,1.448089e-14,1.448089e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1500 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 1.0325e8 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 4.0759e-14 cm3/s, return to the reactant 2.6278e-14 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.0325e8 s-1) have a relaxational projection 1 - F_ne (0.9401) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,1.448122e-14,1.448122e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1500 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 6.4328e8 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.484e-3 1/s
+# reactant P1: capture 4.0759e-14 cm3/s, return to the reactant 2.6276e-14 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 6.4328e8 s-1) have a relaxational projection 1 - F_ne (0.8685) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,1.448324e-14,1.448324e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1500 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 3.3374e9 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.490e-3 1/s
+# reactant P1: capture 4.0759e-14 cm3/s, return to the reactant 2.6267e-14 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 3.3374e9 s-1) have a relaxational projection 1 - F_ne (0.7074) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,1.449240e-14,1.449240e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 1500 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 1.3565e10 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.557e-3 1/s
+# reactant P1: capture 4.0759e-14 cm3/s, return to the reactant 2.6237e-14 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.3565e10 s-1) have a relaxational projection 1 - F_ne (0.4194) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,1.452219e-14,1.452219e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 2000 K, p = 7.500616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 2.6244e7 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 2.6011e-13 cm3/s, return to the reactant 1.8043e-13 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.6244e7 s-1) have a relaxational projection 1 - F_ne (0.9982) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.968453e-14,7.968453e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 2000 K, p = 75.00616827041698 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 2.1290e8 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 2.6011e-13 cm3/s, return to the reactant 1.8043e-13 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.1290e8 s-1) have a relaxational projection 1 - F_ne (0.9941) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.968472e-14,7.968472e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 2000 K, p = 750.0616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 1.4391e9 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.483e-3 1/s
+# reactant P1: capture 2.6011e-13 cm3/s, return to the reactant 1.8043e-13 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.4391e9 s-1) have a relaxational projection 1 - F_ne (0.9796) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.968605e-14,7.968605e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 2000 K, p = 7500.616827041697 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 7.9757e9 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.489e-3 1/s
+# reactant P1: capture 2.6011e-13 cm3/s, return to the reactant 1.8042e-13 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 7.9757e9 s-1) have a relaxational projection 1 - F_ne (0.9268) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.969364e-14,7.969364e-14
+# Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
+#   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
+#   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
+#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+
+# T = 2000 K, p = 75006.16827041698 Torr: chemical eigenvalues [1/s]: ; lowest relaxation eigenvalue 3.5113e10 1/s (separation NaN); relaxational projections ; loss balance deviation 0.00e0; detailed balance deviation 0.00e0; precision floor 1.545e-3 1/s
+# reactant P1: capture 2.6011e-13 cm3/s, return to the reactant 1.8038e-13 cm3/s
+# warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 3.5113e10 s-1) have a relaxational projection 1 - F_ne (0.7547) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+From\To,P1,P2
+P1,7.972723e-14,7.972723e-14

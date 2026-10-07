@@ -1,0 +1,301 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2_zpe_eckart.inp
+ Method:             DIRECT TIME INTEGRATION of the grained populations, dN/dt = R F - J N, and of the yields of every exit
+                     initial state: pulse N(0) = F (the normalized chemical-activation source)
+                     output times 1e-12 .. 1e2 s, 4 per decade (operator of the final steady state)
+ Solvers:            adaptive L-stable Rosenbrock method Rodas4 (adapted from KPP; Hairer, Wanner, Solving ODEs II, Sec. IV.7)
+                     relative tolerance 1e-6, absolute 1e-14; steps of powers of two, banded Cholesky of s I + S reused
+ Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   298
+ Pressures (torr):   200.72
+ Energy grid:        grains of 100.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 298 K: Int1 1 grains (100 cm-1, 47.3 k_BT below the lowest threshold)
+                     collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (CollisionIntegral in the deck)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant R through B_R1 (R -> Int1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+      Int1      179         -117 .. 61   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+      Int2      168         -106 .. 61   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+      B_R1     Int1        R   barrierless, inverse Laplace transform; entrance of the reactant (source)
+      B_R2     Int1     Int2   rigid transition state, Eckart tunneling
+      B_R4     Int1 P_ketene_HO2   rigid transition state
+      B_R2     Int2     Int1   rigid transition state, Eckart tunneling
+      B_R3     Int2 P_lactone_OH   rigid transition state
+
+Energetics (kcal/mol, relative to R):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+      Int1     -33.34      -5.14
+      Int2     -30.39      -8.49
+
+Bimolecular (G - ground energy):
+      Name          G
+         R       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+      B_R1       0.00     Int1        R   barrierless, inverse Laplace transform
+      B_R2      -5.14     Int1     Int2   rigid transition state, Eckart tunneling
+      B_R4       2.77     Int1 P_ketene_HO2   rigid transition state
+      B_R3      -8.49     Int2 P_lactone_OH   rigid transition state
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+DIRECT TIME INTEGRATION OF THE MASTER EQUATION
+____________________________________________________________________________________________________
+
+dN/dt = R F - J N for the populations of all grains, and dY_x/dt = sum_E k_x(E) N(E) for the yield of every
+exit (product channels, escape sinks), integrated with an adaptive, L-stable Rosenbrock method from the
+initial state above: the early relaxation and the later chemistry in one integration, without a steady-state
+assumption and without a separation of chemical and relaxation modes. For a pulse the total population +
+yields stays 100%, and the yields at long times equal those of the final steady state (k_x^T J^-1 F).
+
+--- Time evolution (populations of the wells and yields of the exits, % of the formed adducts) ---
+
+Temperature = 298 K    Pressure = 200.72 torr
+
+  integrator: 760 steps (760 accepted, 0 rejected), 4560 function evaluations, 116 factorizations computed
+
+t(s)               N(Int1)      N(Int2)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+1.00000e-12    9.99651e+01  2.36546e-03  3.25671e-02         3.57663e-06         6.24853e-06
+1.77828e-12    9.99379e+01  4.19593e-03  5.78719e-02         6.34725e-06         1.97018e-05
+3.16228e-12    9.98897e+01  7.42850e-03  1.02781e-01         1.12464e-05         6.19805e-05
+5.62341e-12    9.98043e+01  1.31068e-02  1.82362e-01         1.98720e-05         1.94219e-04
+1.00000e-11    9.96534e+01  2.29887e-02  3.23004e-01         3.49450e-05         6.04442e-04
+1.77828e-11    9.93878e+01  3.99100e-02  5.70396e-01         6.09481e-05         1.85933e-03
+3.16228e-11    9.89241e+01  6.80968e-02  1.00209e+00         1.04855e-04         5.61004e-03
+5.62341e-11    9.81251e+01  1.12940e-01  1.74536e+00         1.76478e-04         1.64143e-02
+1.00000e-10    9.67772e+01  1.79155e-01  2.99756e+00         2.87297e-04         4.58512e-02
+1.77828e-10    9.45764e+01  2.66055e-01  5.03711e+00         4.46144e-04         1.19970e-01
+3.16228e-10    9.11537e+01  3.60774e-01  8.19680e+00         6.51296e-04         2.88104e-01
+5.62341e-10    8.61840e+01  4.36323e-01  1.27553e+01         8.82784e-04         6.23432e-01
+1.00000e-09    7.96195e+01  4.64830e-01  1.87145e+01         1.10354e-03         1.20011e+00
+1.77828e-09    7.19970e+01  4.41314e-01  2.55142e+01         1.27520e-03         2.04615e+00
+3.16228e-09    6.45765e+01  3.89060e-01  3.19313e+01         1.38012e-03         3.10176e+00
+5.62341e-09    5.88782e+01  3.36568e-01  3.65735e+01         1.42877e-03         4.21024e+00
+1.00000e-08    5.56364e+01  2.98830e-01  3.89199e+01         1.44525e-03         5.14347e+00
+1.77828e-08    5.43549e+01  2.79416e-01  3.96692e+01         1.44910e-03         5.69503e+00
+3.16228e-08    5.40540e+01  2.74644e-01  3.97988e+01         1.44965e-03         5.87112e+00
+5.62341e-08    5.40251e+01  2.74468e-01  3.98077e+01         1.44968e-03         5.89134e+00
+1.00000e-07    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89180e+00
+1.77828e-07    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-07    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-07    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.00000e-06    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.77828e-06    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-06    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-06    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.00000e-05    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.77828e-05    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-05    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-05    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.00000e-04    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.77828e-04    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-04    5.40245e+01  2.74476e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-04    5.40245e+01  2.74475e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.00000e-03    5.40245e+01  2.74475e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.77828e-03    5.40245e+01  2.74475e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-03    5.40245e+01  2.74475e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-03    5.40245e+01  2.74474e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.00000e-02    5.40245e+01  2.74473e-01  3.98078e+01         1.44968e-03         5.89181e+00
+1.77828e-02    5.40245e+01  2.74470e-01  3.98078e+01         1.44968e-03         5.89181e+00
+3.16228e-02    5.40245e+01  2.74466e-01  3.98078e+01         1.44968e-03         5.89181e+00
+5.62341e-02    5.40245e+01  2.74458e-01  3.98078e+01         1.44968e-03         5.89182e+00
+1.00000e-01    5.40245e+01  2.74445e-01  3.98078e+01         1.44968e-03         5.89183e+00
+1.77828e-01    5.40245e+01  2.74420e-01  3.98078e+01         1.44968e-03         5.89186e+00
+3.16228e-01    5.40245e+01  2.74377e-01  3.98078e+01         1.44968e-03         5.89190e+00
+5.62341e-01    5.40245e+01  2.74301e-01  3.98078e+01         1.44968e-03         5.89197e+00
+1.00000e+00    5.40245e+01  2.74165e-01  3.98078e+01         1.44968e-03         5.89209e+00
+1.77828e+00    5.40245e+01  2.73924e-01  3.98078e+01         1.44968e-03         5.89231e+00
+3.16228e+00    5.40245e+01  2.73496e-01  3.98078e+01         1.44968e-03         5.89271e+00
+5.62341e+00    5.40246e+01  2.72737e-01  3.98078e+01         1.44968e-03         5.89341e+00
+1.00000e+01    5.40247e+01  2.71393e-01  3.98078e+01         1.44968e-03         5.89465e+00
+1.77828e+01    5.40248e+01  2.69024e-01  3.98078e+01         1.44968e-03         5.89685e+00
+3.16228e+01    5.40251e+01  2.64872e-01  3.98078e+01         1.44968e-03         5.90070e+00
+5.62341e+01    5.40254e+01  2.57682e-01  3.98078e+01         1.44968e-03         5.90741e+00
+1.00000e+02    5.40260e+01  2.45485e-01  3.98078e+01         1.44968e-03         5.91890e+00
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Yields at the last output time (% of the formed adducts), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   200.72  3.98078e+01         1.44968e-03         5.91890e+00
+
+Populations left in the wells at the last output time (% of the formed adducts), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      N(Int1)      N(Int2)
+   200.72  5.40260e+01  2.45485e-01
+
+Yields without the return to R at the last output time (% of the net reaction; final steady state for a completed pulse), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   200.72         2.44865e-02         9.99755e+01
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal), at the last output time: k(R -> P) = k_inf Y_P (cm^3/s), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)  R->P_ketene_HO2  R->P_lactone_OH
+   200.72      8.71912e-17      3.55992e-13
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal), at the last output time (% of the net reaction of R), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)  R->P_ketene_HO2  R->P_lactone_OH
+   200.72      2.44865e-02      9.99755e+01
+
+Total: populations + yields at the last output time (%; 100 for a pulse), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)        total
+   200.72  9.99996e+01
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Yields at the last output time (% of the formed adducts), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   298  3.98078e+01         1.44968e-03         5.91890e+00
+
+Populations left in the wells at the last output time (% of the formed adducts), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      N(Int1)      N(Int2)
+   298  5.40260e+01  2.45485e-01
+
+Yields without the return to R at the last output time (% of the net reaction; final steady state for a completed pulse), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   298         2.44865e-02         9.99755e+01
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal), at the last output time: k(R -> P) = k_inf Y_P (cm^3/s), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)  R->P_ketene_HO2  R->P_lactone_OH
+   298      8.71912e-17      3.55992e-13
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal), at the last output time (% of the net reaction of R), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)  R->P_ketene_HO2  R->P_lactone_OH
+   298      2.44865e-02      9.99755e+01
+
+Total: populations + yields at the last output time (%; 100 for a pulse), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)        total
+   298  9.99996e+01
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Yields at the last output time (% of the formed adducts), temperature-pressure tables:
+
+Int1->R
+
+P\T               298
+200.72    3.98078e+01
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72    1.44968e-03
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72    5.91890e+00
+
+Populations left in the wells at the last output time (% of the formed adducts), temperature-pressure tables:
+
+N(Int1)
+
+P\T               298
+200.72    5.40260e+01
+
+N(Int2)
+
+P\T               298
+200.72    2.45485e-01
+
+Yields without the return to R at the last output time (% of the net reaction; final steady state for a completed pulse), temperature-pressure tables:
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72    2.44865e-02
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72    9.99755e+01
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal), at the last output time: k(R -> P) = k_inf Y_P (cm^3/s), temperature-pressure tables:
+
+R->P_ketene_HO2
+
+P\T               298
+200.72    8.71912e-17
+
+R->P_lactone_OH
+
+P\T               298
+200.72    3.55992e-13
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal), at the last output time (% of the net reaction of R), temperature-pressure tables:
+
+R->P_ketene_HO2
+
+P\T               298
+200.72    2.44865e-02
+
+R->P_lactone_OH
+
+P\T               298
+200.72    9.99755e+01
+
+Total: populations + yields at the last output time (%; 100 for a pulse), temperature-pressure tables:
+
+total
+
+P\T               298
+200.72    9.99996e+01
+

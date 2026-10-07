@@ -2,6 +2,8 @@
 
 **Date:** 2026-10-06. All MarXus results come from the current working tree (uncommitted) and were run on at most 4 cores.
 
+**Re-run 2026-10-06** with the Neufeld collision integral (the new default); all numbers below are from that run (`../../reports/collision_integral_neufeld.md`).
+
 **Purpose.** Reproduce a published master-equation example with all four MarXus methods:
 - SteadyStateOlzmann, the final steady state with its thermal eigenpair, using all three eigen-solvers;
 - SteadyStateAbsorbingBarrier, the intermediate steady state;
@@ -91,14 +93,14 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 | | MESS | absorbing barrier | SteadyStateOlzmann | CSE |
 |---|---|---|---|---|
 | **no tunneling:** k∞(P1→W1), cm³ s⁻¹ | 3.88e-11 | 3.876e-11 (−0.1%) | | |
-| k(P1→W1, 1 atm) | 2.34e-12 | 2.3100e-12 (−1.3%) | 2.3099e-12 (−1.3%) | 2.3098e-12 (−1.3%) |
-| k(W1→P1, 1 atm), s⁻¹ | 1.46e4 | | 1.43793e4 (−1.5%) | 1.43793e4 (−1.5%) |
+| k(P1→W1, 1 atm) | 2.34e-12 | 2.3290e-12 (−0.5%) | 2.3288e-12 (−0.5%) | 2.3288e-12 (−0.5%) |
+| k(W1→P1, 1 atm), s⁻¹ | 1.46e4 | | 1.44975e4 (−0.7%) | 1.44975e4 (−0.7%) |
 | **Eckart:** k∞(P1→W1) | 4.0860e-11 | 4.145e-11 (+1.4%) | | |
-| k(P1→W1, 1 atm) | 2.5705e-12 | 2.5711e-12 (+0.02%) | 2.5709e-12 (+0.01%) | 2.5708e-12 (+0.01%) |
-| k(W1→P1, 1 atm) | 1.6022e4 | | 1.60043e4 (−0.11%) | 1.60043e4 (−0.11%) |
+| k(P1→W1, 1 atm) | 2.5705e-12 | 2.5918e-12 (+0.83%) | 2.5916e-12 (+0.82%) | 2.5916e-12 (+0.82%) |
+| k(W1→P1, 1 atm) | 1.6022e4 | | 1.61335e4 (+0.69%) | 1.61335e4 (+0.69%) |
 
 - The MESS values without tunneling are printed with three digits only.
-- The three eigen-solvers of SteadyStateOlzmann give the same k_uni to 7 digits, 16004.27 and 14379.33 s⁻¹. Their sum-rule deviations are 4.5·10⁻¹² (inverse iteration), 1.2·10⁻¹⁰ (LAPACK) and 3.1·10⁻¹⁰ (QL) with tunneling.
+- The three eigen-solvers of SteadyStateOlzmann give the same k_uni to 7 digits, 16133.47 and 14497.47 s⁻¹. Their sum-rule deviations are 4.4·10⁻¹² (inverse iteration), 2.9·10⁻¹¹ (LAPACK) and 2.6·10⁻¹⁰ (QL) with tunneling.
 
 ### 4.2 High-pressure limits (full deck, Eckart)
 
@@ -135,41 +137,41 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 | T (K) | p (atm) | MESS k(P1→W1) | MarXus | Δ | MESS k(W1→P1) | MarXus | Δ |
 |---|---|---|---|---|---|---|---|
-| 300 | 0.1 | 1.4421e-13 | 1.5261e-13 | +5.8% | 5.6580e-16 | — | — |
-| 300 | 0.3 | 1.8112e-13 | 1.9113e-13 | +5.5% | 7.1063e-16 | — | — |
-| 300 | 1 | 2.1202e-13 | 2.2310e-13 | +5.2% | 8.3187e-16 | — | — |
-| 300 | 3 | 2.2930e-13 | 2.4083e-13 | +5.0% | 8.9965e-16 | — | — |
-| 300 | 10 | 2.3870e-13 | 2.5039e-13 | +4.9% | 9.3652e-16 | — | — |
-| 500 | 0.1 | 6.9740e-13 | 7.2366e-13 | +3.8% | 5.8116e-05 | — | — |
-| 500 | 0.3 | 1.1408e-12 | 1.1826e-12 | +3.7% | 9.5065e-05 | — | — |
-| 500 | 1 | 1.7523e-12 | 1.8139e-12 | +3.5% | 1.4601e-04 | — | — |
-| 500 | 3 | 2.3395e-12 | 2.4184e-12 | +3.4% | 1.9494e-04 | — | — |
-| 500 | 10 | 2.8901e-12 | 2.9832e-12 | +3.2% | 2.4082e-04 | — | — |
-| 750 | 0.1 | 7.9550e-13 | 8.0713e-13 | +1.5% | 1.1429e+01 | 1.1584e+01 | +1.4% |
-| 750 | 0.3 | 1.5805e-12 | 1.6055e-12 | +1.6% | 2.2704e+01 | 2.3042e+01 | +1.5% |
-| 750 | 1 | 3.0644e-12 | 3.1164e-12 | +1.7% | 4.4016e+01 | 4.4726e+01 | +1.6% |
-| 750 | 3 | 5.1099e-12 | 5.2010e-12 | +1.8% | 7.3391e+01 | 7.4643e+01 | +1.7% |
-| 750 | 10 | 8.0055e-12 | 8.1542e-12 | +1.9% | 1.1497e+02 | 1.1703e+02 | +1.8% |
-| 1000 | 0.1 | 5.1285e-13 | 5.0987e-13 | −0.6% | 3.1993e+03 | 3.1741e+03 | −0.8% |
-| 1000 | 0.3 | 1.1451e-12 | 1.1415e-12 | −0.3% | 7.1401e+03 | 7.1064e+03 | −0.5% |
-| 1000 | 1 | 2.5737e-12 | 2.5735e-12 | −0.0% | 1.6042e+04 | 1.6020e+04 | −0.1% |
-| 1000 | 3 | 4.9976e-12 | 5.0107e-12 | +0.3% | 3.1142e+04 | 3.1193e+04 | +0.2% |
-| 1000 | 10 | 9.3954e-12 | 9.4461e-12 | +0.5% | 5.8533e+04 | 5.8805e+04 | +0.5% |
-| 1250 | 0.1 | 2.7659e-13 | 2.6682e-13 | −3.5% | 6.6421e+04 | 6.3672e+04 | −4.1% |
-| 1250 | 0.3 | 6.6713e-13 | 6.4708e-13 | −3.0% | 1.6000e+05 | 1.5441e+05 | −3.5% |
-| 1250 | 1 | 1.6573e-12 | 1.6175e-12 | −2.4% | 3.9695e+05 | 3.8598e+05 | −2.8% |
-| 1250 | 3 | 3.5798e-12 | 3.5143e-12 | −1.8% | 8.5656e+05 | 8.3863e+05 | −2.1% |
-| 1250 | 10 | 7.6924e-12 | 7.5990e-12 | −1.2% | 1.8389e+06 | 1.8133e+06 | −1.4% |
-| 1500 | 0.1 | 1.4204e-13 | 1.2729e-13 | −10.4% | 3.9042e+05 | 3.4249e+05 | −12.3% |
-| 1500 | 0.3 | 3.6165e-13 | 3.2792e-13 | −9.3% | 9.9060e+05 | 8.8233e+05 | −10.9% |
-| 1500 | 1 | 9.6459e-13 | 8.8707e-13 | −8.0% | 2.6318e+06 | 2.3868e+06 | −9.3% |
-| 1500 | 3 | 2.2504e-12 | 2.0983e-12 | −6.8% | 6.1189e+06 | 5.6458e+06 | −7.7% |
-| 1500 | 10 | 5.3391e-12 | 5.0560e-12 | −5.3% | 1.4469e+07 | 1.3604e+07 | −6.0% |
-| 1750 | 0.1 | 7.4261e-14 | 5.1075e-14 | −31.2% | 1.1890e+06 | 7.6737e+05 | −35.5% |
-| 1750 | 0.3 | 1.9658e-13 | 1.3943e-13 | −29.1% | 3.1213e+06 | 2.0948e+06 | −32.9% |
-| 1750 | 1 | 5.5199e-13 | 4.0698e-13 | −26.3% | 8.6792e+06 | 6.1146e+06 | −29.5% |
-| 1750 | 3 | 1.3623e-12 | 1.0451e-12 | −23.3% | 2.1226e+07 | 1.5702e+07 | −26.0% |
-| 1750 | 10 | 3.4783e-12 | 2.7969e-12 | −19.6% | 5.3670e+07 | 4.2022e+07 | −21.7% |
+| 300 | 0.1 | 1.4421e-13 | 1.5077e-13 | +4.5% | 5.6580e-16 | — | — |
+| 300 | 0.3 | 1.8112e-13 | 1.8955e-13 | +4.7% | 7.1063e-16 | — | — |
+| 300 | 1 | 2.1202e-13 | 2.2205e-13 | +4.7% | 8.3187e-16 | — | — |
+| 300 | 3 | 2.2930e-13 | 2.4024e-13 | +4.8% | 8.9965e-16 | — | — |
+| 300 | 10 | 2.3870e-13 | 2.5015e-13 | +4.8% | 9.3652e-16 | — | — |
+| 500 | 0.1 | 6.9740e-13 | 7.1576e-13 | +2.6% | 5.8116e-05 | — | — |
+| 500 | 0.3 | 1.1408e-12 | 1.1719e-12 | +2.7% | 9.5065e-05 | — | — |
+| 500 | 1 | 1.7523e-12 | 1.8015e-12 | +2.8% | 1.4601e-04 | — | — |
+| 500 | 3 | 2.3395e-12 | 2.4065e-12 | +2.9% | 1.9494e-04 | — | — |
+| 500 | 10 | 2.8901e-12 | 2.9742e-12 | +2.9% | 2.4082e-04 | — | — |
+| 750 | 0.1 | 7.9550e-13 | 8.0704e-13 | +1.4% | 1.1429e+01 | 1.1582e+01 | +1.3% |
+| 750 | 0.3 | 1.5805e-12 | 1.6053e-12 | +1.6% | 2.2704e+01 | 2.3039e+01 | +1.5% |
+| 750 | 1 | 3.0644e-12 | 3.1161e-12 | +1.7% | 4.4016e+01 | 4.4721e+01 | +1.6% |
+| 750 | 3 | 5.1099e-12 | 5.2005e-12 | +1.8% | 7.3391e+01 | 7.4637e+01 | +1.7% |
+| 750 | 10 | 8.0055e-12 | 8.1537e-12 | +1.9% | 1.1497e+02 | 1.1702e+02 | +1.8% |
+| 1000 | 0.1 | 5.1285e-13 | 5.1474e-13 | +0.4% | 3.1993e+03 | 3.2044e+03 | +0.2% |
+| 1000 | 0.3 | 1.1451e-12 | 1.1517e-12 | +0.6% | 7.1401e+03 | 7.1697e+03 | +0.4% |
+| 1000 | 1 | 2.5737e-12 | 2.5942e-12 | +0.8% | 1.6042e+04 | 1.6150e+04 | +0.7% |
+| 1000 | 3 | 4.9976e-12 | 5.0466e-12 | +1.0% | 3.1142e+04 | 3.1416e+04 | +0.9% |
+| 1000 | 10 | 9.3954e-12 | 9.5032e-12 | +1.1% | 5.8533e+04 | 5.9160e+04 | +1.1% |
+| 1250 | 0.1 | 2.7659e-13 | 2.7136e-13 | −1.9% | 6.6421e+04 | 6.4756e+04 | −2.5% |
+| 1250 | 0.3 | 6.6713e-13 | 6.5756e-13 | −1.4% | 1.6000e+05 | 1.5691e+05 | −1.9% |
+| 1250 | 1 | 1.6573e-12 | 1.6420e-12 | −0.9% | 3.9695e+05 | 3.9182e+05 | −1.3% |
+| 1250 | 3 | 3.5798e-12 | 3.5633e-12 | −0.5% | 8.5656e+05 | 8.5031e+05 | −0.7% |
+| 1250 | 10 | 7.6924e-12 | 7.6930e-12 | +0.0% | 1.8389e+06 | 1.8358e+06 | −0.2% |
+| 1500 | 0.1 | 1.4204e-13 | 1.3018e-13 | −8.3% | 3.9042e+05 | 3.5028e+05 | −10.3% |
+| 1500 | 0.3 | 3.6165e-13 | 3.3512e-13 | −7.3% | 9.9060e+05 | 9.0171e+05 | −9.0% |
+| 1500 | 1 | 9.6459e-13 | 9.0561e-13 | −6.1% | 2.6318e+06 | 2.4367e+06 | −7.4% |
+| 1500 | 3 | 2.2504e-12 | 2.1396e-12 | −4.9% | 6.1189e+06 | 5.7571e+06 | −5.9% |
+| 1500 | 10 | 5.3391e-12 | 5.1475e-12 | −3.6% | 1.4469e+07 | 1.3850e+07 | −4.3% |
+| 1750 | 0.1 | 7.4261e-14 | 5.2478e-14 | −29.3% | 1.1890e+06 | 7.8845e+05 | −33.7% |
+| 1750 | 0.3 | 1.9658e-13 | 1.4317e-13 | −27.2% | 3.1213e+06 | 2.1510e+06 | −31.1% |
+| 1750 | 1 | 5.5199e-13 | 4.1755e-13 | −24.4% | 8.6792e+06 | 6.2735e+06 | −27.7% |
+| 1750 | 3 | 1.3623e-12 | 1.0712e-12 | −21.4% | 2.1226e+07 | 1.6094e+07 | −24.2% |
+| 1750 | 10 | 3.4783e-12 | 2.8627e-12 | −17.7% | 5.3670e+07 | 4.3010e+07 | −19.9% |
 | 2000 | 0.1 | 4.1158e-14 | — | — | 2.5837e+06 | — | — |
 | 2000 | 0.3 | 1.1207e-13 | — | — | 6.9238e+06 | — | — |
 | 2000 | 1 | 3.2672e-13 | — | — | 1.9798e+07 | — | — |
@@ -184,22 +186,22 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 | T (K) | dissociation, CSE = SteadyStateOlzmann (k_uni) | association, CSE (G13 eq. 28) | association, SteadyStateOlzmann (k_uni·K) | association, SteadyStateAbsorbingBarrier |
 |---|---|---|---|---|
-| 300 | +4.7 … +5.7% | +4.9 … +5.8% | +4.9 … +5.8% | +4.9 … +5.8% |
-| 500 | +3.1 … +3.7% | +3.2 … +3.8% | +3.2 … +3.8% | +3.2 … +3.8% |
-| 750 | +1.3 … +1.8% | +1.4 … +1.9% | +1.4 … +1.9% | +1.5 … +1.9% |
-| 1000 | −0.8 … +0.5% | −0.6 … +0.5% | −0.6 … +0.5% | −0.6 … +0.5% |
-| 1250 | −2.9 … −1.0% | −2.5 … −0.8% | −2.3 … −0.8% | −3.5 … −1.2% |
-| 1500 | −3.5 … −1.9% | −3.1 … −1.7% | −1.4 … −1.2% | −10.4 … −5.3% |
-| 1750 | −2.5 … −1.8% | −2.4 … −1.8% | +0.8 … +3.9% | −31.2 … −19.6% |
-| 2000 | −2.6 … −2.1% | −2.6 … −2.1% | +5.5 … +13.2% | not defined |
+| 300 | +4.4 … +4.6% | +4.5 … +4.8% | +4.5 … +4.8% | +4.5 … +4.8% |
+| 500 | +2.5 … +2.8% | +2.6 … +2.9% | +2.6 … +2.9% | +2.6 … +2.9% |
+| 750 | +1.3 … +1.8% | +1.4 … +1.8% | +1.4 … +1.8% | +1.4 … +1.9% |
+| 1000 | +0.1 … +1.1% | +0.3 … +1.1% | +0.3 … +1.1% | +0.4 … +1.1% |
+| 1250 | −1.3 … +0.2% | −0.9 … +0.4% | −0.7 … +0.4% | −1.9 … +0.0% |
+| 1500 | −1.4 … −0.1% | −0.9 … +0.0% | +0.6 … +0.8% | −8.3 … −3.6% |
+| 1750 | +0.0 … +0.4% | +0.2 … +0.4% | +3.1 … +6.6% | −29.3 … −17.7% |
+| 2000 | +0.3 … +0.4% | +0.3 … +0.5% | +8.2 … +16.5% | not defined |
 
 **Reading the table:**
 - **CSE's dissociation equals SteadyStateOlzmann's k_uni** at every condition (the one-well identity; Section 4.6).
-- **Up to 1000 K the four associations agree with each other.** CSE vs k_uni·K: 0.00 … −0.01%. Absorbing barrier vs k_uni·K: 0.00 … +0.02%.
+- **Up to 1000 K the four associations agree with each other.** CSE vs k_uni·K: 0.00 … −0.02%. Absorbing barrier vs k_uni·K: 0.00 … +0.02%.
 - **Above 1000 K they separate** (Section 5.4):
   - the absorbing barrier loses its plateau;
   - CSE's association departs from k_uni·K by exactly its departure from detailed balance, which grows with the eigenvalue separation Λ₁/Λ₂, as MESS's does.
-- **MESS, itself a CSE code, and MarXus's CSE agree within −3.5 … −0.8% at 1250–2000 K** (association −3.1 … −0.8%, dissociation −3.5 … −1.0%).
+- **MESS, itself a CSE code, and MarXus's CSE agree within −1.4 … +0.5% at 1250–2000 K** (association −0.9 … +0.5%, dissociation −1.4 … +0.4%).
 
 **TimeIntegration** (pulse of chemically activated C₂H₃, Rodas4, 10⁻¹² … 10² s):
 
@@ -207,13 +209,13 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 - **Late-time decay = k_uni.**
   - Once only the thermal eigenmode is left, N(t) decays at the rate k_uni of SteadyStateOlzmann.
-  - The decay rate from the last two output times with 10⁻⁸ < N < 10⁻³ agrees with k_uni within 3.1·10⁻⁶ at all 30 conditions that decay inside the window (750–2000 K; `time_integration_decay_vs_k_uni.csv`).
+  - The decay rate from the last two output times with 10⁻⁸ < N < 10⁻³ agrees with k_uni within 4.0·10⁻⁶ at all 30 conditions that decay inside the window (750–2000 K; `time_integration_decay_vs_k_uni.csv`).
   - The time integration computes no eigenvector.
 - **Time scales at 1 atm:**
-  - 300 K: 12.9% redissociates within about 10⁻⁹ s, and 87.1% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
+  - 300 K: 13.3% redissociates within about 10⁻⁹ s, and 86.7% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
   - 1000 K: the stabilized C₂H₃ decomposes thermally near 10⁻⁴ s; at 100 s, 100% is back as H + C₂H₂.
   - 2000 K: the same by 10⁻⁷ s.
-- **Cost.** About 620–700 Rosenbrock steps per condition (almost none rejected) and 115–122 factorizations. The full deck takes 11 min on 4 cores, because the collision band reaches 716 grains at 2000 K.
+- **Cost.** 619–977 Rosenbrock steps per condition (22 rejected over all 40 conditions) and 112–132 factorizations. The full deck takes 11 min on 4 cores, because the collision band reaches 716 grains at 2000 K.
 
 **Yields** (`plots/yields.png`; MESS as k/k∞): the stabilization of C₂H₃ and the prompt redissociation to H + C₂H₂, in % of the formed adducts, against pressure.
 
@@ -247,22 +249,22 @@ The figure shows the stationary points of the deck, with the TS and its Eckart p
 
 | T (K) | inverse iteration | LAPACK DSYEVD |
 |---|---|---|
-| 300 | 7·10⁷ … 2·10⁹ (warnings) | 1·10⁸ … 9·10¹¹ (warnings) |
-| 500 | 7·10⁻⁴ … 5·10⁻² (1 warning) | 2·10⁻³ … 3 (warnings) |
-| 750 | 5·10⁻¹⁰ … 3·10⁻⁸ | 7·10⁻⁹ … 3·10⁻⁵ |
-| 1000 | 2·10⁻¹² … 5·10⁻¹¹ | 3·10⁻¹⁰ … 1·10⁻⁸ |
-| 1250–2000 | 4·10⁻¹⁴ … 3·10⁻¹² | 2·10⁻¹² … 2·10⁻⁹ |
+| 300 | 4·10⁷ … 2·10¹⁰ (warnings) | 4·10⁸ … 2·10¹¹ (warnings) |
+| 500 | 1·10⁻⁴ … 3·10⁻² (1 warning) | 2·10⁻⁴ … 2 (warnings) |
+| 750 | 7·10⁻¹² … 5·10⁻⁸ | 7·10⁻⁸ … 1·10⁻⁵ |
+| 1000 | 6·10⁻¹³ … 5·10⁻¹¹ | 6·10⁻¹⁰ … 3·10⁻⁸ |
+| 1250–2000 | 2·10⁻¹⁵ … 2·10⁻¹² | 8·10⁻¹² … 7·10⁻¹⁰ |
 
-Warnings on the full deck: 6 for inverse iteration, 9 for LAPACK.
+Warnings on the full deck: 6 for inverse iteration, 7 for LAPACK.
 
 ![sum rule](plots/sum_rule.png)
 
 **300 K: complete results from the thermal eigenvector, while λ₁ is noise.**
-- λ₁ ≈ 10⁻¹⁵ s⁻¹ lies 13 orders below the double-precision floor (≈ 10⁻² s⁻¹). Its computed values are ±10⁻⁸ … 10⁻⁶ s⁻¹, and the warnings say so.
-- The shifted inverse iteration still gives k_uni at all five pressures. It agrees with LAPACK to 5·10⁻⁵ and with MESS to +4.7 … +5.7% (the tunneling offset).
+- λ₁ ≈ 10⁻¹⁵ s⁻¹ lies 13 orders below the double-precision floor (≈ 10⁻² s⁻¹). Its computed values are ±10⁻⁸ … 10⁻⁵ s⁻¹, and the warnings say so.
+- The shifted inverse iteration still gives k_uni at all five pressures. It agrees with LAPACK to 2·10⁻⁴ and with MESS to +4.4 … +4.6% (the tunneling offset).
 - **Why k_uni survives.** The eigenvector error is of order ε‖S‖/(λ₂ − λ₁), and here λ₂/k_uni = 10²³ … 10²⁵.
 
-**Separation λ₂/k_uni** (thermal decay vs relaxation): 10²³–10²⁵ at 300 K, 10¹²–10¹³ at 500 K, 10³–10⁴ at 1000 K, 68–149 at 1500 K, 15–22 at 2000 K.
+**Separation λ₂/k_uni** (thermal decay vs relaxation): 10²³–10²⁵ at 300 K, 10¹²–10¹³ at 500 K, 10³–10⁴ at 1000 K, 68–150 at 1500 K, 15–22 at 2000 K.
 
 **Association with three barrier distances against SteadyStateOlzmann** (`plots/eigen_vs_absorbing_barrier.png`):
 
@@ -297,13 +299,13 @@ Warnings on the full deck: 6 for inverse iteration, 9 for LAPACK.
   - CSE k(W1 → P1) = k_uni;
   - inverse iteration = LAPACK;
   - CSE capture balance.
-- **Pulse decay = k_uni:** 3.1·10⁻⁶.
-- **CSE loss balance:** 3.0·10⁻⁵.
-- **Sum rule:** 3.2·10⁻⁸.
+- **Pulse decay = k_uni:** 4.0·10⁻⁶.
+- **CSE loss balance:** 1.4·10⁻⁵.
+- **Sum rule:** 5.3·10⁻⁸.
 
-**At 300–500 K (grey crosses in the plot)** the precision floor exceeds k_uni by 40 … 10¹³. Pulse conservation (up to 6·10⁻⁴), CSE's loss balance and λ₁ are rounding-limited there; this is the known double-precision limit for a deep well without a sink.
+**At 300–500 K (grey crosses in the plot)** the precision floor exceeds k_uni by 40 … 10¹³. Pulse conservation (up to 7·10⁻⁴), CSE's loss balance and λ₁ are rounding-limited there; this is the known double-precision limit for a deep well without a sink.
 
-**Run time on 4 cores** (40 conditions): absorbing barrier 7 s, CSE 50 s, SteadyStateOlzmann with LAPACK 68 s, TimeIntegration 658 s.
+**Run time on 4 cores** (40 conditions): absorbing barrier 7 s, CSE 51 s, SteadyStateOlzmann with LAPACK 71 s, TimeIntegration 661 s.
 
 ### 4.7 Low-energy reservoir
 
@@ -320,7 +322,7 @@ The threshold lies 13 591 cm⁻¹ above the bottom.
 
 **Effect.** The reservoir keeps the Boltzmann weight of its grains, so k_uni and the detailed balance of CSE are not affected.
 - **Against MESS-type truncation.** Truncating these grains raised k_uni by 2.5% at 300 K.
-- **Against the former SSUMES-type reduction factors.** Those acted on up to 300 grains at 2000 K and gave k_uni −7.8 … −4.5% and a CSE association −9.1 … −4.9% from MESS there. With the reservoir both are −2.6 … −2.1%.
+- **Against the former SSUMES-type reduction factors.** Those acted on up to 300 grains at 2000 K and gave k_uni −7.8 … −4.5% and a CSE association −9.1 … −4.9% from MESS there. With the reservoir both were −2.6 … −2.1% (Troe collision integral of that comparison). With the reservoir and the Neufeld collision integral they are +0.3 … +0.4% (k_uni) and +0.3 … +0.5% (CSE association) (`../../reports/collision_integral_neufeld.md`).
 
 ### 4.8 The four methods against MESS and against each other
 
@@ -329,20 +331,20 @@ Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.cs
 **Quantities per method.**
 - **Association:** SteadyStateOlzmann k_uni·K; SteadyStateAbsorbingBarrier k_∞·Φ_stab; CSE G13 eq. 28; TimeIntegration k_∞·A, with A the amplitude of the slowest mode of the pulse extrapolated to t = 0.
 - **Dissociation:** k_uni; k_∞,d·Φ_stab; CSE k(W1 → P1); the late decay rate of the pulse (750–2000 K).
-- **TimeIntegration association = CSE association, identically.** For one well A = (Σ f⁽¹⁾)(Σ f⁽¹⁾ k_R)/Σ k_R f⁰ = k(R → W)/k_∞ of G13 eq. 28. Measured: within 4.7·10⁻⁵ at all 40 conditions.
+- **TimeIntegration association = CSE association, identically.** For one well A = (Σ f⁽¹⁾)(Σ f⁽¹⁾ k_R)/Σ k_R f⁰ = k(R → W)/k_∞ of G13 eq. 28. Measured: within 1.9·10⁻⁴ at all 40 conditions (3.3·10⁻⁵ at 750–2000 K).
 
 **Against MESS** (ranges over the pressures):
 
 | method | quantity | 300–500 K | 750–1250 K | 1500–2000 K |
 |---|---|---|---|---|
-| SteadyStateOlzmann | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −2.3 … +1.9% / −2.9 … +1.8% | −1.4 … +13.2% / −3.5 … −1.8% |
-| SteadyStateAbsorbingBarrier | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −3.5 … +1.9% / −4.1 … +1.8% | −31.2 … −5.3% / −35.5 … −6.0% (no 2000 K) |
-| CSE | association / dissociation | +3.2 … +5.8% / +3.1 … +5.7% | −2.5 … +1.9% / −2.9 … +1.8% | −3.1 … −1.7% / −3.5 … −1.8% |
-| TimeIntegration | association / dissociation | +3.2 … +5.8% / not resolved | −2.5 … +1.9% / −2.9 … +1.8% | −3.1 … −1.7% / −3.5 … −1.8% |
+| SteadyStateOlzmann | association / dissociation | +2.6 … +4.8% / +2.5 … +4.6% | −0.7 … +1.8% / −1.3 … +1.8% | +0.6 … +16.5% / −1.4 … +0.4% |
+| SteadyStateAbsorbingBarrier | association / dissociation | +2.6 … +4.8% / +2.5 … +4.6% | −1.9 … +1.9% / −2.5 … +1.8% | −29.3 … −3.6% / −33.7 … −4.3% (no 2000 K) |
+| CSE | association / dissociation | +2.6 … +4.8% / +2.5 … +4.6% | −0.9 … +1.8% / −1.3 … +1.8% | −0.9 … +0.5% / −1.4 … +0.4% |
+| TimeIntegration | association / dissociation | +2.6 … +4.8% / not resolved | −0.9 … +1.8% / −1.3 … +1.8% | −0.9 … +0.5% / −1.4 … +0.4% |
 
 **Yields against MESS** (stabilization = k/k_∞; MESS from its own tables):
-- **Stabilization**, all four methods at 300–500 K: +0.1 … +1.0%. The +3 … +6% of k_∞ (the tunneling model) cancels in k/k_∞.
-- **Prompt redissociation:** −4.7 … −0.2% at 300–500 K, within 0.5% above.
+- **Stabilization**, all four methods at 300–500 K: −0.29 … +0.01%. The +3 … +5% of k_∞ (the tunneling model) cancels in k/k_∞.
+- **Prompt redissociation:** −0.50 … +0.36% at 300–500 K, within 0.5% above.
 
 ![rates of the four methods against MESS](plots/mess_four_methods_rates.png)
 
@@ -353,8 +355,8 @@ Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.cs
 ![yields against MESS](plots/mess_four_methods_yields.png)
 
 **Against each other** (`plots/internal_four_methods_*.png`):
-- **Dissociation:** CSE = SteadyStateOlzmann in all printed digits at 750–2000 K; TimeIntegration decay = k_uni within 3.1·10⁻⁶; SteadyStateAbsorbingBarrier within 1.2% up to 1250 K, −34 … −4% at 1500–1750 K.
-- **Association against SteadyStateOlzmann:** CSE and TimeIntegration within 5·10⁻⁵ at 300–500 K, −0.21 … 0% at 750–1250 K, −13.9 … −0.5% at 1500–2000 K (the CSE pair departs from detailed balance at poor separation, Section 5.4). SteadyStateAbsorbingBarrier −1.2 … +0.02% at 750–1250 K, −33.8 … −4.2% at 1500–1750 K.
+- **Dissociation:** CSE = SteadyStateOlzmann in all printed digits at 750–2000 K; TimeIntegration decay = k_uni within 4.0·10⁻⁶; SteadyStateAbsorbingBarrier within 1.2% up to 1250 K, −34 … −4% at 1500–1750 K.
+- **Association against SteadyStateOlzmann:** CSE and TimeIntegration within 2·10⁻⁴ at 300–500 K, −0.21 … 0% at 750–1250 K, −13.9 … −0.5% at 1500–2000 K (the CSE pair departs from detailed balance at poor separation, Section 5.4). SteadyStateAbsorbingBarrier −1.2 … +0.02% at 750–1250 K, −33.7 … −4.1% at 1500–1750 K.
 - **Prompt redissociation:** all within 0.47% of SteadyStateOlzmann.
 - **Time evolution:**
   - At 300 and 1000 K the pulse reaches a plateau equal to the stabilization yield of every method. It then decays as (k(R → W)/k_∞) exp(−k(W → P) t) of CSE and SteadyStateOlzmann.
@@ -372,16 +374,16 @@ Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.cs
 
 | | deviation from MESS |
 |---|---|
-| association (all four methods) | −3.5 … +1.9% |
-| dissociation (CSE = k_uni; absorbing barrier) | −4.1 … +1.8% |
-| both, at 1000 K | ±0.8% |
+| association (all four methods) | −1.9 … +1.9% |
+| dissociation (CSE = k_uni; absorbing barrier) | −2.5 … +1.8% |
+| both, at 1000 K | +0.1 … +1.1% |
 
 The two codes differ in graining (cell-averaged grains vs nodes), in the collision kernel (exact normalization with a reservoir vs per-pair factor) and in tunneling (exact vs semiclassical). They still agree this closely.
 
-### 5.2 300–500 K: +3% to +6%, from the tunneling model
+### 5.2 300–500 K: +2.5% to +4.8%, from the tunneling model
 
-- **The deviation is already present in k∞** (+4.8% at 300 K, +2.9% at 500 K). The fall-off ratio k/k∞ agrees to within 1%: at 300 K and 0.1 atm it is 0.590 in MESS and 0.596 in MarXus.
-- **MarXus uses the exact Eckart transmission,** as decided; MESS's semiclassical form gives a lower transmission at low T.
+- **The deviation is already present in k∞** (+4.8% at 300 K, +2.9% at 500 K). The fall-off ratio k/k∞ agrees to within 0.3%: at 300 K and 0.1 atm it is 0.590 in MESS and 0.589 in MarXus.
+- **MarXus uses the exact Eckart transmission;** MESS's semiclassical form gives a lower transmission at low T.
 - **Size of the effect.** For a Case 1 H-shift we found 13% at 300 K. Here the barrier is low and broad (4.42 kcal/mol, 872 cm⁻¹), so the difference is smaller.
 
 ### 5.3 1500 K and above: the absorbing-barrier picture breaks down
@@ -393,8 +395,8 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 | 2000 K | 9.8 kT | below the bottom |
 
 **Why it breaks down.** The thermal distribution of C₂H₃ has ⟨E⟩ ≈ 4 kT (2935 cm⁻¹ at 1000 K, from the MarXus final steady state). At these temperatures the barrier therefore cuts through the thermal distribution. Thermalized molecules above the barrier are not counted as stabilized, so k(P1→W1) and k(W1→P1) come out too low:
-- 1500 K: −5.3 … −12.3%;
-- 1750 K: −19.6 … −35.5%.
+- 1500 K: −3.6 … −10.3%;
+- 1750 K: −17.7 … −33.7%.
 
 **At 2000 K** MarXus refuses the intermediate steady state with an explanatory error. The methods without a barrier (SteadyStateOlzmann, CSE) give the rate coefficients at every temperature.
 
@@ -406,16 +408,16 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 
 | T (K) | Λ₁/Λ₂ (CSE) | MarXus CSE | MESS |
 |---|---|---|---|
-| 1000 | 3·10⁻⁵ … 1.4·10⁻⁴ | −0.01% | −0.02 … −0.15% |
-| 1250 | 10⁻³ … 3.4·10⁻³ | −0.05 … −0.21% | −0.13 … −0.58% |
-| 1500 | 8·10⁻³ … 0.019 | −0.5 … −1.7% | −0.7 … −2.1% |
-| 1750 | 0.029 … 0.054 | −2.6 … −6.1% | −2.6 … −6.1% |
-| 2000 | 0.065 … 0.10 | −7.2 … −14.0% | −7.2 … −13.9% |
+| 1000 | 2.6·10⁻⁵ … 1.3·10⁻⁴ | −0.01% | −0.02 … −0.15% |
+| 1250 | 8.9·10⁻⁴ … 2.8·10⁻³ | −0.05 … −0.21% | −0.13 … −0.58% |
+| 1500 | 6.7·10⁻³ … 0.015 | −0.5 … −1.7% | −0.7 … −2.1% |
+| 1750 | 0.022 … 0.038 | −2.5 … −6.0% | −2.6 … −6.1% |
+| 2000 | 0.045 … 0.067 | −7.2 … −13.9% | −7.2 … −13.9% |
 
 **Conclusions:**
 - **The departure is a property of the CSE rate coefficients** at poor separation, not an error of either code. This settles the question left open in the earlier eigen-solver study.
 - **MESS's pressure-dependent pair departs from its own high-pressure ratio** for the same reason.
-- **What it means for SteadyStateOlzmann.** Its association k_uni·K lies above MESS's at 2000 K (+5.5 … +13.2%), while its dissociation agrees within −2.6 … −2.1%.
+- **What it means for SteadyStateOlzmann.** Its association k_uni·K lies above MESS's at 2000 K (+8.2 … +16.5%), while its dissociation agrees within +0.3 … +0.4%.
 - **When the separation is lost** (Λ₁/Λ₂ above `ChemicalEigenvalueMax`), MESS merges species (Georgievskii et al. 2013, Sec. IV). MarXus does not merge yet (planned: `../../reports/cse_species_merging.md`).
 
 ### 5.5 Sensitivity to the absorbing-barrier distance
@@ -426,19 +428,19 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 
 | T (K) | MESS k(P1→W1) | 10 kT (default) | 5 kT | 3 kT |
 |---|---|---|---|---|
-| 300 | 2.1202e-13 | +5.2% | +5.2% | +5.3% |
-| 500 | 1.7523e-12 | +3.5% | +3.6% | +3.8% |
+| 300 | 2.1202e-13 | +4.7% | +4.7% | +4.8% |
+| 500 | 1.7523e-12 | +2.8% | +2.9% | +3.1% |
 | 750 | 3.0644e-12 | +1.7% | +1.9% | +2.5% |
-| 1000 | 2.5737e-12 | −0.0% | +0.6% | +2.0% |
-| 1250 | 1.6573e-12 | −2.4% | −0.8% | +2.0% |
-| 1500 | 9.6459e-13 | −8.0% | −3.4% | +1.5% |
-| 1750 | 5.5199e-13 | −26.3% | −9.6% | −1.7% |
-| 2000 | 3.2672e-13 | not defined | −21.2% | −9.6% |
+| 1000 | 2.5737e-12 | +0.8% | +1.4% | +2.8% |
+| 1250 | 1.6573e-12 | −0.9% | +0.7% | +3.5% |
+| 1500 | 9.6459e-13 | −6.1% | −1.4% | +3.6% |
+| 1750 | 5.5199e-13 | −24.4% | −7.4% | +0.7% |
+| 2000 | 3.2672e-13 | not defined | −19.0% | −7.0% |
 
 **Findings:**
 - **At low T (≤ 750 K) the result does not depend on the barrier distance.** The steady state lies on a plateau: less than 1% change between 10 and 3 kT. The remaining +2 … +5% is the tunneling-model difference (Section 5.2).
-- **At high T a smaller distance recovers MESS.** The barrier then lies above the thermal distribution of the shallow well. With 3 kT the agreement is within 2% up to 1750 K. At 1000–1250 K, 3 kT overshoots slightly (+2%).
-- **At 2000 K** (well depth 9.8 kT) even 3 kT remains 9.6% low. The methods without a barrier apply there.
+- **At high T a smaller distance recovers MESS.** The barrier then lies above the thermal distribution of the shallow well. With 3 kT the agreement is within 3.6% up to 1750 K. At 1000–1500 K, 3 kT overshoots slightly (+2.8 … +3.6%).
+- **At 2000 K** (well depth 9.8 kT) even 3 kT remains 7.0% low. The methods without a barrier apply there.
 
 ## 6. Still open
 
@@ -470,3 +472,4 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
   - **Olzmann figures restored under their former names** (they had been renamed with an `olzmann_` prefix, and `deviation.png` showed only the absorbing barrier). Regenerated with the current data: `pes_olzmann.png` (the former `pes.png`; `pes.png` here is the PES of the absorbing-barrier picture), `falloff_W1_P1.png`, `eigen_vs_absorbing_barrier.png`, `sum_rule.png`. `deviation.png` is now 2×2: SteadyStateOlzmann against MESS on top, the absorbing barrier at the bottom. The former `deviation.png` and `short_decks_1000K.png` of the eigen directory are `olzmann_deviation.png` and `olzmann_solvers_1000K.png`, because both names are taken here.
   - **Low-energy reservoir state.** It replaces the former reduction factors of the collision kernel (`../../reports/low_energy_reservoir_state.md`). It changed the absorbing-barrier rows at 1250–1750 K and the high-T eigenvalue results (Section 4.7). Rows at 300–1000 K are unchanged to the printed digits.
   - **Method comparison.** `method_comparison.csv` and `plots/method_*.png` (Section 4.6).
+  - **Neufeld collision integral.** Re-run 2026-10-06 with the Neufeld collision integral (the new default); all numbers of this README are from that run (`../../reports/collision_integral_neufeld.md`).

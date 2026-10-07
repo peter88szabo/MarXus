@@ -1,0 +1,32 @@
+# intermediate steady state: Yields (% of the formed adducts)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int2->P_lactone_OH,stab(Int1),stab(Int2)
+298,200.72,3.980779e1,1.449685e-3,5.891802e0,5.402456e1,2.743970e-1
+
+# intermediate steady state: Yields without the return to R (% of the net reaction)
+T[K],P[Torr],Int1->P_ketene_HO2,Int2->P_lactone_OH,stab(Int1),stab(Int2)
+298,200.72,2.408426e-3,9.788314e0,8.975341e1,4.558680e-1
+
+# intermediate steady state: Chemical-activation rate coefficients k_ca (1/s)
+T[K],P[Torr],Int1->R,Int1->Int2,Int1->P_ketene_HO2,Int2->Int1,Int2->P_lactone_OH
+298,200.72,2.234786e7,3.546077e6,8.138442e2,1.264935e7,4.956678e8
+
+# intermediate steady state: Bimolecular-to-bimolecular rate coefficients (chemical activation): k(R -> P) = k_inf Phi_P (cm^3/s)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,8.719122e-17,3.543622e-13
+
+# intermediate steady state: Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,2.408426e-3,9.788314e0
+
+# intermediate steady state: Bimolecular-to-well rate coefficients (stabilization): k(R -> W) = k_inf Phi_stab,W (cm^3/s)
+T[K],P[Torr],R->Int1,R->Int2
+298,200.72,3.249305e-12,1.650359e-14
+
+# intermediate steady state: Bimolecular-to-well yields (stabilization) (% of the net reaction of R)
+T[K],P[Torr],R->Int1,R->Int2
+298,200.72,8.975341e1,4.558680e-1
+
+# intermediate steady state: Capture, return and net reaction of R: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s)
+T[K],P[Torr],capture,return,net
+298,200.72,6.014496e-12,2.394238e-12,3.620258e-12
+

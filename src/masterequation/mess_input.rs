@@ -21,9 +21,13 @@
 //!   (`parse_marxus_header`, `solution_method.rs`).
 //!
 //!   - RRHO -> Tunneling Eckart (ImaginaryFrequency, two WellDepth values); other models recorded
-//! Not read: excited electronic levels, hindered rotors and other model types.
+//! Not read: excited electronic levels and other model types. Internal rotors (`Rotor` blocks) are refused with
+//! an error.
 
 use crate::constants::CM1_TO_KCAL;
+use crate::rrkm::internal_rotor::{
+    potential_from_equidistant_points, potential_from_fourier_expansion, TorsionalPotential, DEFAULT_BASIS_SIZE, MAX_BASIS_SIZE,
+};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -33,6 +37,7 @@ use crate::inertia::inertia::get_brot;
 use crate::utils::atomic_masses::mass_vector_from_symbols_amu;
 
 use super::solution_method::{
+    chemical_subspace_criterion_from_keyword, collision_integral_from_keyword, rotor_reduced_moment_from_keyword,
     eigen_solver_from_keyword, initial_state_from_keyword, integrator_from_keyword, SolutionMethod,
     SolutionSettings, STEADY_STATE_KEYWORD_REPLACED,
 };
@@ -80,6 +85,52 @@ pub struct MessSpeciesRrho {
     pub electronic_degeneracy_ground: f64,
     /// Mass of an `Atom` fragment (amu); None for RRHO species (mass from the geometry).
     pub atom_mass_amu: Option<f64>,
+    /// Rotational constants (cm-1) given in place of a geometry (`RotationalConstants[1/cm] N`, N = 3, or 1 for a
+    /// linear rotor; MarXus extension of the deck format for species data given that way).
+    pub rotational_constants_cm1: Option<Vec<f64>>,
+    /// Mass (amu) of an RRHO species given by its rotational constants (`Mass[amu]`).
+    pub mass_amu: Option<f64>,
+    /// One-dimensional internal rotors (`Rotor Hindered`, `Rotor Free`); their torsions are not among the
+    /// Frequencies.
+    pub internal_rotors: Vec<MessInternalRotor>,
+}
+
+/// Kind of an internal rotor of the deck.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MessRotorKind {
+    Hindered,
+    Free,
+}
+
+/// One-dimensional internal rotor of an RRHO species, MESS syntax (one block per rotor, beside the Core):
+///
+///   Rotor Hindered                  (or Free: no potential)
+///     HamiltonSizeMin  999          (optional: smallest Fourier basis, odd; default 999)
+///     HamiltonSizeMax  1999         (optional: largest Fourier basis, odd; default 1999)
+///     Group            5 6 7        (rotating atoms, 1-based in the geometry)
+///     Axis             1 2          (two atoms on the rotation axis)
+///     Symmetry         3            (rotor symmetry number; default 1)
+///     Potential[kcal/mol] N         (N equidistant points on [0, 360/Symmetry), the first a minimum;
+///       V_1 ... V_N                  or FourierExpansion[kcal/mol] n followed by n lines "index value",
+///   End                              the coefficients c_0, a_1, b_1, a_2, ... in that order)
+///
+/// MarXus extension: `RotationalConstant[1/cm] B` gives B of the rotor, in place of the reduced moment from the
+/// geometry; it is required for a species given by its rotational constants. `GridSize` and `ThermalPowerMax` are
+/// accepted and have no effect.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MessInternalRotor {
+    pub kind: MessRotorKind,
+    /// Rotating atoms, 0-based.
+    pub group: Vec<usize>,
+    /// The two atoms on the axis, 0-based.
+    pub axis: (usize, usize),
+    pub symmetry: u32,
+    /// Torsional potential (cm-1) in x = Symmetry phi; zero for a free rotor.
+    pub potential: TorsionalPotential,
+    pub hamilton_size_min: usize,
+    pub hamilton_size_max: usize,
+    /// Rotational constant (cm-1) given in the deck.
+    pub rotational_constant_cm1: Option<f64>,
 }
 
 #[derive(Clone, Debug)]
@@ -167,10 +218,12 @@ pub struct MessDeck {
     pub well_escape_rate_s_inv: HashMap<String, f64>,
     /// Well names in the order of the input deck.
     pub well_order: Vec<String>,
+    /// `Dummy` bimolecular species (as in MESS): products without molecular data, in deck order.
+    pub dummy_bimolecular: Vec<String>,
 }
 
 
-fn strip_comment(mut line: &str) -> &str {
+pub(crate) fn strip_comment(mut line: &str) -> &str {
     if let Some(idx) = line.find('#') {
         line = &line[..idx];
     }
@@ -180,11 +233,11 @@ fn strip_comment(mut line: &str) -> &str {
     line.trim()
 }
 
-fn first_token(line: &str) -> Option<&str> {
+pub(crate) fn first_token(line: &str) -> Option<&str> {
     line.split_whitespace().next()
 }
 
-fn parse_f64(raw: &str) -> Result<f64, String> {
+pub(crate) fn parse_f64(raw: &str) -> Result<f64, String> {
     raw.trim()
         .parse::<f64>()
         .map_err(|_| format!("Invalid float '{}'", raw))
@@ -238,6 +291,7 @@ fn is_block_starter(tok: &str) -> bool {
             | "InverseLaplaceTransform"
             | "MarXus"
             | "Atom"
+            | "Rotor"
     )
 }
 
@@ -427,29 +481,62 @@ fn parse_fragment(block: &[String], name: &str) -> Result<MessSpeciesRrho, Strin
         zero_energy_cm1: 0.0,
         electronic_degeneracy_ground: parse_electronic_degeneracy_ground(block)?,
         atom_mass_amu: Some(mass),
+        rotational_constants_cm1: None,
+        mass_amu: None,
+        internal_rotors: Vec::new(),
     })
 }
 
 fn parse_rrho_species(block: &[String], name: &str) -> Result<MessSpeciesRrho, String> {
-    parse_rrho_species_impl(block, name, true)
+    parse_rrho_species_impl(block, name, true, false)
 }
 
 // `geometry_required = false` for phase-space-theory barriers: their rotational treatment comes
 // from the two fragment geometries of the core, not from a molecular geometry.
+// `frequencies_optional = true` for barriers given by an inverse Laplace transform: their k(E) comes from k_inf(T)
+// and the reactant states, not from the barrier's own RRHO data.
 fn parse_rrho_species_impl(
     block: &[String],
     name: &str,
     geometry_required: bool,
+    frequencies_optional: bool,
 ) -> Result<MessSpeciesRrho, String> {
-    let (symbols, coords) = match parse_geometry(block, "Geometry[angstrom]")? {
-        Some(geometry) => geometry,
-        None if !geometry_required => (Vec::new(), Vec::new()),
-        None => return Err(format!("RRHO species '{}' missing Geometry[angstrom]", name)),
+    let (block, rotor_blocks) = split_rotor_blocks(block, name)?;
+    let block = &block[..];
+    let rotational_constants_cm1 = parse_rotational_constants(block, name)?;
+    let mass_amu = parse_rrho_mass(block, name)?;
+    let (symbols, coords) = match (parse_geometry(block, "Geometry[angstrom]")?, &rotational_constants_cm1) {
+        (Some(_), Some(_)) => {
+            return Err(format!(
+                "RRHO species '{name}': give either Geometry[angstrom] or RotationalConstants[1/cm], not both."
+            ))
+        }
+        (Some(geometry), None) => geometry,
+        (None, Some(_)) => {
+            if mass_amu.is_none() {
+                return Err(format!("RRHO species '{name}': RotationalConstants[1/cm] needs Mass[amu]."));
+            }
+            (Vec::new(), Vec::new())
+        }
+        (None, None) if !geometry_required => (Vec::new(), Vec::new()),
+        (None, None) => {
+            return Err(format!("RRHO species '{}' missing Geometry[angstrom] (or RotationalConstants[1/cm])", name))
+        }
     };
     let symmetry_factor = parse_symmetry_factor(block)?;
-    let vib = parse_frequencies(block)?;
+    let vib = if frequencies_optional && !block.iter().any(|l| l.starts_with("Frequencies")) {
+        Vec::new()
+    } else {
+        parse_frequencies(block)?
+    };
     let zero_energy_cm1 = parse_zero_energy_cm1(block)?;
     let electronic_degeneracy_ground = parse_electronic_degeneracy_ground(block)?;
+    let atoms = (!symbols.is_empty()).then_some(symbols.len());
+    let internal_rotors = rotor_blocks
+        .iter()
+        .enumerate()
+        .map(|(r, rotor)| parse_rotor(rotor, &format!("RRHO species '{name}', Rotor {}", r + 1), atoms))
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(MessSpeciesRrho {
         atom_mass_amu: None,
@@ -460,11 +547,254 @@ fn parse_rrho_species_impl(
         vibrational_frequencies_cm1: vib,
         zero_energy_cm1,
         electronic_degeneracy_ground,
+        rotational_constants_cm1,
+        mass_amu,
+        internal_rotors,
     })
 }
 
+/// The `Rotor ... End` blocks of an RRHO block, and the RRHO block without them.
+fn split_rotor_blocks(block: &[String], name: &str) -> Result<(Vec<String>, Vec<Vec<String>>), String> {
+    let (mut rest, mut rotors) = (Vec::new(), Vec::new());
+    let mut lines = block.iter();
+    while let Some(line) = lines.next() {
+        if first_token(line) != Some("Rotor") {
+            rest.push(line.clone());
+            continue;
+        }
+        let mut rotor = vec![line.clone()];
+        loop {
+            let next = lines.next().ok_or_else(|| format!("RRHO species '{name}': '{line}' without End."))?;
+            rotor.push(next.clone());
+            if first_token(next) == Some("End") {
+                break;
+            }
+        }
+        rotors.push(rotor);
+    }
+    Ok((rest, rotors))
+}
+
+/// The data lines after `block[idx]`: the following lines that start with a number.
+fn data_lines(block: &[String], idx: usize) -> &[String] {
+    let count = block[idx + 1..].iter().take_while(|l| first_token(l).map_or(false, |t| parse_f64(t).is_ok())).count();
+    &block[idx + 1..idx + 1 + count]
+}
+
+/// One `Rotor Hindered` or `Rotor Free` block (`MessInternalRotor`); `atoms` is the size of the species
+/// geometry, None without a geometry.
+fn parse_rotor(block: &[String], context: &str, atoms: Option<usize>) -> Result<MessInternalRotor, String> {
+    let kind = match block[0].split_whitespace().nth(1) {
+        Some("Hindered") => MessRotorKind::Hindered,
+        Some("Free") => MessRotorKind::Free,
+        other => {
+            return Err(format!(
+                "{context}: rotor type '{}' is not supported (Hindered or Free).",
+                other.unwrap_or("")
+            ))
+        }
+    };
+    let index = |token: &str| -> Result<usize, String> {
+        match parse_usize(token) {
+            Ok(i) if i >= 1 => Ok(i - 1),
+            _ => Err(format!("{context}: atom index '{token}' must be a positive integer (1-based).")),
+        }
+    };
+    let (mut group, mut axis, mut symmetry) = (Vec::new(), None, 1_u32);
+    let (mut points, mut fourier) = (None, None);
+    let (mut size_min, mut size_max, mut rotational_constant_cm1) = (DEFAULT_BASIS_SIZE, MAX_BASIS_SIZE, None);
+    let mut idx = 1;
+    while idx < block.len() {
+        let line = &block[idx];
+        let tokens: Vec<&str> = line.split_whitespace().collect();
+        let value = |k: usize| tokens.get(k).copied().ok_or_else(|| format!("{context}: malformed line '{line}'."));
+        let mut data = 0;
+        match tokens[0] {
+            "End" => break,
+            "Group" => {
+                group = tokens[1..].iter().map(|t| index(t)).collect::<Result<Vec<_>, _>>()?;
+                if (1..group.len()).any(|i| group[..i].contains(&group[i])) {
+                    return Err(format!("{context}: an atom appears twice in the Group."));
+                }
+            }
+            "Axis" => {
+                let (a, b) = (index(value(1)?)?, index(value(2)?)?);
+                if a == b {
+                    return Err(format!("{context}: the two Axis atoms must differ."));
+                }
+                axis = Some((a, b));
+            }
+            "Symmetry" => {
+                symmetry = match parse_usize(value(1)?) {
+                    Ok(s) if s >= 1 => s as u32,
+                    _ => return Err(format!("{context}: Symmetry must be a positive integer.")),
+                };
+            }
+            "HamiltonSizeMin" => size_min = parse_usize(value(1)?)?,
+            "HamiltonSizeMax" => size_max = parse_usize(value(1)?)?,
+            "GridSize" | "ThermalPowerMax" => {}
+            "RotationalConstant[1/cm]" => {
+                let b = parse_f64(value(1)?)?;
+                if !(b > 0.0) {
+                    return Err(format!("{context}: RotationalConstant[1/cm] must be positive."));
+                }
+                rotational_constant_cm1 = Some(b);
+            }
+            key if key.starts_with("Potential[") || key.starts_with("FourierExpansion[") => {
+                if kind == MessRotorKind::Free {
+                    return Err(format!("{context}: a Free rotor has no potential ('{key}')."));
+                }
+                if points.is_some() || fourier.is_some() {
+                    return Err(format!("{context}: the potential is given twice."));
+                }
+                let unit = unit_tag(line).unwrap_or("");
+                let n = parse_usize(value(1)?)?;
+                if n == 0 {
+                    return Err(format!("{context}: {key} needs at least one value."));
+                }
+                let lines = data_lines(block, idx);
+                let values = if key.starts_with("Potential[") {
+                    // N values over one or more lines; the rest of the line with the N-th value is not read (as in
+                    // the MESS reader)
+                    let mut values = Vec::with_capacity(n);
+                    for l in lines {
+                        if values.len() == n {
+                            break;
+                        }
+                        data += 1;
+                        for token in l.split_whitespace().take(n - values.len()) {
+                            values.push(parse_f64(token)?);
+                        }
+                    }
+                    values
+                } else {
+                    // n lines "index value": the index is not used, the values are taken in order
+                    data = lines.len().min(n);
+                    lines[..data]
+                        .iter()
+                        .map(|l| match l.split_whitespace().collect::<Vec<_>>()[..] {
+                            [_, v] => parse_f64(v),
+                            _ => Err(format!("{context}: {key} line '{l}' needs 'index value'.")),
+                        })
+                        .collect::<Result<Vec<_>, _>>()?
+                };
+                if values.len() != n {
+                    return Err(format!("{context}: {key} expects {n} values, got {}.", values.len()));
+                }
+                let values = values.iter().map(|v| energy_to_cm1(*v, unit)).collect::<Result<Vec<_>, _>>()?;
+                if key.starts_with("Potential[") {
+                    points = Some(values);
+                } else {
+                    fourier = Some(values);
+                }
+            }
+            key => {
+                return Err(format!(
+                    "{context}: keyword '{key}' is not supported in a Rotor block (Group, Axis, Symmetry, \
+                     Potential[unit], FourierExpansion[kcal/mol], HamiltonSizeMin, HamiltonSizeMax, \
+                     RotationalConstant[1/cm], GridSize, ThermalPowerMax)."
+                ))
+            }
+        }
+        idx += 1 + data;
+    }
+    if group.is_empty() {
+        return Err(format!("{context}: Group (the rotating atoms) is missing."));
+    }
+    let axis = axis.ok_or_else(|| format!("{context}: Axis (two atoms) is missing."))?;
+    if group.contains(&axis.0) || group.contains(&axis.1) {
+        return Err(format!("{context}: the Group must not contain an axis atom."));
+    }
+    if let Some(n) = atoms {
+        if group.iter().chain([&axis.0, &axis.1]).any(|&a| a >= n) {
+            return Err(format!("{context}: Group or Axis atom beyond the {n} atoms of the geometry."));
+        }
+    } else if rotational_constant_cm1.is_none() {
+        return Err(format!(
+            "{context}: the species has no geometry for the reduced moment; give RotationalConstant[1/cm] in the Rotor block."
+        ));
+    }
+    if size_min % 2 == 0 || size_max % 2 == 0 || size_min > size_max {
+        return Err(format!(
+            "{context}: HamiltonSizeMin ({size_min}) and HamiltonSizeMax ({size_max}) must be odd, the minimum not above the maximum."
+        ));
+    }
+    let potential = match (kind, points, fourier) {
+        (MessRotorKind::Free, _, _) => TorsionalPotential { constant: 0.0, cosine: Vec::new(), sine: Vec::new() },
+        (MessRotorKind::Hindered, Some(points), None) => {
+            let n = points.len();
+            if n > 1 && points[1] + points[n - 1] - 2.0 * points[0] < 0.0 {
+                return Err(format!("{context}: the first point of the Potential must be a minimum (it is at angle 0)."));
+            }
+            potential_from_equidistant_points(&points)?
+        }
+        (MessRotorKind::Hindered, None, Some(coefficients)) => potential_from_fourier_expansion(&coefficients)?,
+        _ => {
+            return Err(format!(
+                "{context}: a Hindered rotor needs its potential, Potential[unit] or FourierExpansion[kcal/mol]."
+            ))
+        }
+    };
+    Ok(MessInternalRotor {
+        kind,
+        group,
+        axis,
+        symmetry,
+        potential,
+        hamilton_size_min: size_min,
+        hamilton_size_max: size_max,
+        rotational_constant_cm1,
+    })
+}
+
+/// `RotationalConstants[1/cm] N` followed by N values (3, or 1 for a linear rotor), in place of a geometry.
+fn parse_rotational_constants(block: &[String], name: &str) -> Result<Option<Vec<f64>>, String> {
+    let Some(idx) = block.iter().position(|l| first_token(l).map_or(false, |t| t.starts_with("RotationalConstants")))
+    else {
+        return Ok(None);
+    };
+    let line = &block[idx];
+    if unit_tag(line) != Some("1/cm") {
+        return Err(format!("RRHO species '{name}': RotationalConstants needs the unit [1/cm]: {line}"));
+    }
+    let n = parse_usize(line.split_whitespace().nth(1).ok_or_else(|| format!("Malformed line: {line}"))?)?;
+    if n != 1 && n != 3 {
+        return Err(format!("RRHO species '{name}': RotationalConstants[1/cm] needs 3 values, or 1 for a linear rotor (got {n})."));
+    }
+    let mut values = Vec::with_capacity(n);
+    for l in &block[idx + 1..] {
+        let tokens: Vec<f64> = l.split_whitespace().map_while(|t| parse_f64(t).ok()).collect();
+        if tokens.is_empty() {
+            break;
+        }
+        values.extend(tokens);
+        if values.len() >= n {
+            break;
+        }
+    }
+    if values.len() != n || values.iter().any(|b| !(*b > 0.0)) {
+        return Err(format!("RRHO species '{name}': RotationalConstants[1/cm] expects {n} positive values, got {values:?}."));
+    }
+    Ok(Some(values))
+}
+
+/// `Mass[amu] m` of an RRHO species given by its rotational constants.
+fn parse_rrho_mass(block: &[String], name: &str) -> Result<Option<f64>, String> {
+    let Some(line) = block.iter().find(|l| first_token(l).map_or(false, |t| t.starts_with("Mass["))) else {
+        return Ok(None);
+    };
+    if unit_tag(line) != Some("amu") {
+        return Err(format!("RRHO species '{name}': Mass needs the unit [amu]: {line}"));
+    }
+    let m = parse_f64(line.split_whitespace().nth(1).ok_or_else(|| format!("Malformed line: {line}"))?)?;
+    if !(m > 0.0) {
+        return Err(format!("RRHO species '{name}': Mass[amu] must be positive."));
+    }
+    Ok(Some(m))
+}
+
 /// Unit tag between square brackets of the first token, e.g. "kcal/mol" for "ZeroEnergy[kcal/mol]".
-fn unit_tag(line: &str) -> Option<&str> {
+pub(crate) fn unit_tag(line: &str) -> Option<&str> {
     let first = first_token(line)?;
     first.split('[').nth(1).and_then(|t| t.split(']').next())
 }
@@ -484,6 +814,10 @@ fn unit_tag(line: &str) -> Option<&str> {
 ///     IntegrationTolerance                1e-6               (time integration: relative tolerance)
 ///     NCores                              8                  (cores of the run: the (T, p) conditions are
 ///                                                             computed in batches of up to NCores at a time)
+///     CollisionIntegral                   Neufeld            (Lennard-Jones Omega(2,2)*: Neufeld or Troe)
+///     RotorReducedMoment                  Pitzer             (internal rotors from a geometry: Pitzer or BondAxis)
+///     ChemicalSubspaceCriterion           RelaxationProjection  (CSE merging: RelaxationProjection, as MESS's direct
+///                                                             method, or EigenvalueRatio)
 ///   End
 fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
     let context = |what: &str| format!("MarXus header block: {what}");
@@ -523,11 +857,19 @@ fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
                 }
                 settings.cores = Some(cores);
             }
+            "CollisionIntegral" => settings.collision_integral = Some(collision_integral_from_keyword(value).map_err(|e| context(&e))?),
+            "RotorReducedMoment" => {
+                settings.rotor_reduced_moment = Some(rotor_reduced_moment_from_keyword(value).map_err(|e| context(&e))?)
+            }
+            "ChemicalSubspaceCriterion" => {
+                settings.chemical_subspace_criterion =
+                    Some(chemical_subspace_criterion_from_keyword(value).map_err(|e| context(&e))?)
+            }
             _ => {
                 return Err(context(&format!(
                     "unknown keyword '{key}' (Method, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
                      SumRuleTolerance, Integrator, InitialState, TimeRange[s], TimesPerDecade, IntegrationTolerance, \
-                     NCores)"
+                     NCores, CollisionIntegral, RotorReducedMoment, ChemicalSubspaceCriterion)"
                 )))
             }
         }
@@ -746,6 +1088,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let mut barriers: Vec<MessBarrier> = Vec::new();
     let mut well_escape_rate_s_inv: HashMap<String, f64> = HashMap::new();
     let mut well_order: Vec<String> = Vec::new();
+    let mut dummy_bimolecular: Vec<String> = Vec::new();
     let mut marxus_header_read = false;
 
     let mut i = 0usize;
@@ -860,6 +1203,13 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 return Err(format!("Malformed Bimolecular line: {}", line));
             }
             let name = parts[1].to_string();
+            // `Dummy` (as in MESS): a product without molecular data; the block has no End.
+            let following = (i + 1..lines.len()).find(|&k| !strip_comment(&lines[k]).is_empty());
+            if let Some(k) = following.filter(|&k| first_token(strip_comment(&lines[k])) == Some("Dummy")) {
+                dummy_bimolecular.push(name);
+                i = k + 1;
+                continue;
+            }
             let (block, next) = collect_block(&lines, i);
 
             // Parse the two fragments within the bimolecular block.
@@ -927,8 +1277,10 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let (block, next) = collect_block(&lines, i);
 
             let core = parse_phasespace_core(&block)?.unwrap_or(MessBarrierCore::TightRrho);
-            let geometry_required = matches!(core, MessBarrierCore::TightRrho);
-            let rrho = parse_rrho_species_impl(&block, &name, geometry_required)?;
+            // A barrier given by an inverse Laplace transform takes its k(E) from k_inf(T) and the fragments.
+            let has_ilt = block.iter().any(|l| first_token(l) == Some("InverseLaplaceTransform"));
+            let geometry_required = matches!(core, MessBarrierCore::TightRrho) && !has_ilt;
+            let rrho = parse_rrho_species_impl(&block, &name, geometry_required, has_ilt)?;
             let inverse_laplace_transform = parse_inverse_laplace_transform(&block, &name)?;
             let tunneling = parse_tunneling(&block, &name)?;
 
@@ -963,10 +1315,51 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         barriers,
         well_escape_rate_s_inv,
         well_order,
+        dummy_bimolecular,
     })
 }
 
 /// Convenience wrapper for parsing a MESS input from a file on disk.
+/// `Species NAME` lines at the top level of a deck, each followed by an RRHO or Atom block with the syntax of the
+/// Fragment blocks (MarXus extension, used by the photoionization decks of `photoion::deck`): the molecular data of
+/// species outside a network. ZeroEnergy is optional (0 when absent); names must be unique. The `Species` line inside a
+/// MESS Well block has no name and is not read here.
+pub fn parse_species_blocks(input: &str) -> Result<Vec<MessSpeciesRrho>, String> {
+    let lines: Vec<String> = input.lines().map(|s| s.to_string()).collect();
+    let mut species: Vec<MessSpeciesRrho> = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        let tokens: Vec<&str> = strip_comment(&lines[i]).split_whitespace().collect();
+        let ["Species", name] = tokens[..] else {
+            i += 1;
+            continue;
+        };
+        let mut j = i + 1;
+        while j < lines.len() && strip_comment(&lines[j]).is_empty() {
+            j += 1;
+        }
+        let opener = lines.get(j).and_then(|l| first_token(strip_comment(l))).unwrap_or("");
+        if opener != "RRHO" && opener != "Atom" {
+            return Err(format!("Species '{name}': an RRHO or Atom block must follow the Species line."));
+        }
+        if species.iter().any(|s| s.name == name) {
+            return Err(format!("Species '{name}' is defined twice."));
+        }
+        let (mut block, next) = collect_block(&lines, j);
+        let parsed = if opener == "Atom" {
+            parse_fragment(&block, name)?
+        } else {
+            if !block.iter().any(|l| l.starts_with("ZeroEnergy")) {
+                block.push("ZeroEnergy[1/cm] 0".to_string());
+            }
+            parse_rrho_species(&block, name)?
+        };
+        species.push(parsed);
+        i = next;
+    }
+    Ok(species)
+}
+
 pub fn parse_mess_input_file(path: impl AsRef<Path>) -> Result<MessDeck, String> {
     let text = std::fs::read_to_string(path.as_ref())
         .map_err(|e| format!("Failed to read MESS input file: {e}"))?;
@@ -975,7 +1368,7 @@ pub fn parse_mess_input_file(path: impl AsRef<Path>) -> Result<MessDeck, String>
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_mess_input, MessBarrierCore, PstTstLevel, SolutionSettings};
+    use super::{parse_mess_input, parse_species_blocks, MessBarrierCore, MessRotorKind, PstTstLevel, SolutionSettings, CM1_TO_KCAL};
 
     #[test]
     fn bimolecular_fragment_headers_do_not_require_end_blocks() {
@@ -1257,6 +1650,36 @@ SumRuleTolerance 2e-2\n  AbsorbingBarrierBelowThreshold[kT] 5\nEnd\nModel\nEnd\n
     }
 
     #[test]
+    fn the_marxus_header_block_gives_the_chemical_subspace_criterion() {
+        use crate::masterequation::chemically_significant_eigenvalues::ChemicalSubspaceCriterion;
+        let deck = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  ChemicalSubspaceCriterion EigenvalueRatio");
+        assert_eq!(parse_mess_input(&deck).unwrap().global.solution.chemical_subspace_criterion, Some(ChemicalSubspaceCriterion::EigenvalueRatio));
+        assert_eq!(parse_mess_input(MARXUS_HEADER_DECK).unwrap().global.solution.chemical_subspace_criterion, None);
+        let bad = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  ChemicalSubspaceCriterion Gap");
+        assert!(parse_mess_input(&bad).unwrap_err().contains("ChemicalSubspaceCriterion"));
+    }
+
+    #[test]
+    fn the_marxus_header_block_gives_the_rotor_reduced_moment() {
+        use crate::rrkm::internal_rotor::ReducedMomentModel;
+        let deck = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  RotorReducedMoment BondAxis");
+        assert_eq!(parse_mess_input(&deck).unwrap().global.solution.rotor_reduced_moment, Some(ReducedMomentModel::BondAxis));
+        assert_eq!(parse_mess_input(MARXUS_HEADER_DECK).unwrap().global.solution.rotor_reduced_moment, None);
+        let bad = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  RotorReducedMoment Smith");
+        assert!(parse_mess_input(&bad).unwrap_err().contains("RotorReducedMoment"));
+    }
+
+    #[test]
+    fn the_marxus_header_block_gives_the_collision_integral() {
+        use super::super::collisional_relaxation::CollisionIntegral;
+        let deck = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  CollisionIntegral Neufeld");
+        assert_eq!(parse_mess_input(&deck).unwrap().global.solution.collision_integral, Some(CollisionIntegral::Neufeld1972));
+        assert_eq!(parse_mess_input(MARXUS_HEADER_DECK).unwrap().global.solution.collision_integral, None);
+        let bad = MARXUS_HEADER_DECK.replace("EigenSolver Lapack", "EigenSolver Lapack\n  CollisionIntegral Smith");
+        assert!(parse_mess_input(&bad).unwrap_err().contains("CollisionIntegral"));
+    }
+
+    #[test]
     fn the_marxus_header_block_gives_the_time_integration_settings() {
         use super::super::direct_time_integration::InitialState;
         use super::super::solution_method::SolutionMethod;
@@ -1446,6 +1869,167 @@ Barrier B1 W1 P1
   End
 End
 "#;
+
+    #[test]
+    fn rotational_constants_and_mass_replace_the_geometry_of_an_rrho_species() {
+        let deck = "TemperatureList[K] 300.\nPressureList[torr] 760\nModel\n  Well W1\n    Species\n      RRHO\n        \
+RotationalConstants[1/cm] 3\n          0.1081 0.161\n          0.3105\n        Mass[amu] 75\n        Core RigidRotor\n          \
+SymmetryFactor 1\n        End\n        Frequencies[1/cm] 1\n          500\n        ZeroEnergy[kcal/mol] -30\n      End\n  End\nEnd\n";
+        let w = &parse_mess_input(deck).unwrap().wells["W1"];
+        assert_eq!(w.rotational_constants_cm1, Some(vec![0.1081, 0.161, 0.3105]));
+        assert_eq!(w.mass_amu, Some(75.0));
+        assert!(w.geometry_symbols.is_empty());
+        // One constant: a linear rotor.
+        let linear = deck.replace("RotationalConstants[1/cm] 3\n          0.1081 0.161\n          0.3105", "RotationalConstants[1/cm] 1\n 1.449");
+        assert_eq!(parse_mess_input(&linear).unwrap().wells["W1"].rotational_constants_cm1, Some(vec![1.449]));
+        // Two constants, missing values, no mass, or both a geometry and constants: errors.
+        for bad in [
+            deck.replace("RotationalConstants[1/cm] 3\n          0.1081 0.161\n          0.3105", "RotationalConstants[1/cm] 2\n 1 2"),
+            deck.replace("          0.3105\n", ""),
+            deck.replace("        Mass[amu] 75\n", ""),
+            deck.replace("        Mass[amu] 75\n", "        Mass[amu] 75\n        Geometry[angstrom] 1\n        H 0 0 0\n"),
+        ] {
+            assert!(parse_mess_input(&bad).is_err(), "{bad}");
+        }
+    }
+
+    /// Deck with one well W1 whose RRHO block holds `species` (geometry or rotational constants, rotors).
+    fn rotor_deck(species: &str) -> String {
+        format!(
+            "TemperatureList[K] 300.\nPressureList[torr] 760\nModel\n  Well W1\n    Species\n      RRHO\n{species}\n        \
+             Frequencies[1/cm] 2\n          500 1200\n        ZeroEnergy[kcal/mol] -30\n      End\n  End\nEnd\n"
+        )
+    }
+
+    const ETHANE_CORE: &str = "        Geometry[angstrom] 8\n          C 0 0 -0.765\n          C 0 0 0.765\n          \
+H 1.02 0 -1.16\n          H -0.51 0.883 -1.16\n          H -0.51 -0.883 -1.16\n          H -1.02 0 1.16\n          \
+H 0.51 -0.883 1.16\n          H 0.51 0.883 1.16\n        Core RigidRotor\n          SymmetryFactor 6\n        End";
+
+    #[test]
+    fn species_blocks_give_the_molecular_data_of_a_deck_without_a_network() {
+        // MarXus extension (photoionization decks): `Species NAME` followed by an RRHO or Atom block, the syntax of
+        // the Fragment blocks; ZeroEnergy is optional (0 when absent).
+        let deck = "Photoionization\n  Temperature[K] 298\nEnd\nSpecies EtBr   ! neutral\n  RRHO\n    Geometry[angstrom] 3\n      \
+C 0 0 0\n      C 0 0 1.5\n      Br 1.9 0 0\n    Core RigidRotor\n      SymmetryFactor 1\n    End\n    Frequencies[1/cm] 2\n      \
+290 960\n    ElectronicLevels[1/cm] 1\n      0 1\n  End\nSpecies Br\n  Atom\n    Mass[amu] 78.918\n    \
+ElectronicLevels[1/cm] 1\n      0 4\n  End\nSpecies TS\n  RRHO\n    RotationalConstants[1/cm] 3\n      0.9 0.1 0.09\n    \
+Mass[amu] 108.0\n    Core RigidRotor\n      SymmetryFactor 1\n    End\n    Frequencies[1/cm] 1\n      700\n    \
+ZeroEnergy[kcal/mol] 30\n  End\n";
+        let species = parse_species_blocks(deck).unwrap();
+        let names: Vec<&str> = species.iter().map(|s| s.name.as_str()).collect();
+        assert_eq!(names, ["EtBr", "Br", "TS"]);
+        assert_eq!(species[0].vibrational_frequencies_cm1, vec![290.0, 960.0]);
+        assert_eq!((species[0].zero_energy_cm1, species[0].geometry_symbols.len()), (0.0, 3));
+        assert_eq!((species[1].atom_mass_amu, species[1].electronic_degeneracy_ground), (Some(78.918), 4.0));
+        assert!((species[2].zero_energy_cm1 - 30.0 / CM1_TO_KCAL).abs() < 1e-9);
+        let twice = format!("{deck}Species Br\n  Atom\n    Mass[amu] 79\n  End\n");
+        assert!(parse_species_blocks(&twice).unwrap_err().contains("Br"));
+        assert!(parse_species_blocks("Species X\nPhotoionization\nEnd\n").unwrap_err().contains("X"));
+    }
+
+    #[test]
+    fn hindered_and_free_rotor_blocks_are_read() {
+        use crate::rrkm::internal_rotor::{potential_from_equidistant_points, TorsionalPotential};
+        let deck = rotor_deck(&format!(
+            "{ETHANE_CORE}\n        Rotor Hindered   ! CH3\n          Group 3 4 5\n          Axis 1 2\n          Symmetry 3\n          \
+             Potential[kcal/mol] 2\n          0. 2.45\n        End\n        Rotor Free\n          HamiltonSizeMin 11\n          \
+             HamiltonSizeMax 21\n          Group 6\n          Axis 2 1\n        End"
+        ));
+        let w1 = &parse_mess_input(&deck).unwrap().wells["W1"];
+        assert_eq!(w1.vibrational_frequencies_cm1, vec![500.0, 1200.0]);
+        assert_eq!(w1.symmetry_factor, 6.0);
+        assert_eq!(w1.geometry_symbols.len(), 8);
+        let [hindered, free] = &w1.internal_rotors[..] else { panic!("{:?}", w1.internal_rotors) };
+        assert_eq!(hindered.kind, MessRotorKind::Hindered);
+        assert_eq!((hindered.group.clone(), hindered.axis, hindered.symmetry), (vec![2, 3, 4], (0, 1), 3));
+        assert_eq!(hindered.potential, potential_from_equidistant_points(&[0.0, 2.45 / CM1_TO_KCAL]).unwrap());
+        assert_eq!((hindered.hamilton_size_min, hindered.hamilton_size_max), (999, 1999));
+        assert_eq!(hindered.rotational_constant_cm1, None);
+        assert_eq!(free.kind, MessRotorKind::Free);
+        assert_eq!((free.group.clone(), free.axis, free.symmetry), (vec![5], (1, 0), 1));
+        assert_eq!(free.potential, TorsionalPotential { constant: 0.0, cosine: Vec::new(), sine: Vec::new() });
+        assert_eq!((free.hamilton_size_min, free.hamilton_size_max), (11, 21));
+    }
+
+    #[test]
+    fn potential_values_are_read_over_lines_and_the_rest_of_the_last_line_is_ignored() {
+        // As in the MESS reader: N values over one or more lines; the rest of the line with the N-th value is not read.
+        use crate::rrkm::internal_rotor::potential_from_equidistant_points;
+        let deck = |values: &str| {
+            rotor_deck(&format!(
+                "{ETHANE_CORE}\n        Rotor Hindered\n          Group 3 4 5\n          Axis 1 2\n          Symmetry 3\n          \
+                 Potential[kcal/mol] 4\n{values}\n        End"
+            ))
+        };
+        let expected = potential_from_equidistant_points(&[0.0, 1.0 / CM1_TO_KCAL, 2.0 / CM1_TO_KCAL, 1.0 / CM1_TO_KCAL]).unwrap();
+        for values in ["          0. 1.\n          2. 1.", "          0. 1. 2. 1. 0.5 0.7"] {
+            assert_eq!(parse_mess_input(&deck(values)).unwrap().wells["W1"].internal_rotors[0].potential, expected);
+        }
+        let short = parse_mess_input(&deck("          0. 1. 2.")).unwrap_err();
+        assert!(short.contains("W1") && short.contains("4"), "{short}");
+        let extra_line = parse_mess_input(&deck("          0. 1. 2. 1.\n          0.5")).unwrap_err();
+        assert!(extra_line.contains("W1"), "{extra_line}");
+    }
+
+    #[test]
+    fn fourier_expansion_lines_give_the_coefficients_in_order() {
+        use crate::rrkm::internal_rotor::potential_from_fourier_expansion;
+        let deck = rotor_deck(&format!(
+            "{ETHANE_CORE}\n        Rotor Hindered\n          Group 3 4 5\n          Axis 1 2\n          Symmetry 3\n          \
+             FourierExpansion[kcal/mol] 3\n          0 1.2\n          1 -1.2\n          2 0.3\n        End"
+        ));
+        let w1 = &parse_mess_input(&deck).unwrap().wells["W1"];
+        let expected = potential_from_fourier_expansion(&[1.2 / CM1_TO_KCAL, -1.2 / CM1_TO_KCAL, 0.3 / CM1_TO_KCAL]).unwrap();
+        assert_eq!(w1.internal_rotors[0].potential, expected);
+    }
+
+    #[test]
+    fn a_rotor_of_a_species_given_by_rotational_constants_needs_its_rotational_constant() {
+        // MarXus extension: RotationalConstant[1/cm] of the rotor, for species without a geometry.
+        let constants = "        RotationalConstants[1/cm] 3\n          0.1081 0.161 0.3105\n        Mass[amu] 75\n        \
+Core RigidRotor\n          SymmetryFactor 1\n        End";
+        let rotor = "\n        Rotor Hindered\n          Group 5 6 7\n          Axis 1 2\n          Symmetry 3\n          \
+Potential[kcal/mol] 2\n          0. 2.45";
+        let given = rotor_deck(&format!("{constants}{rotor}\n          RotationalConstant[1/cm] 5.6\n        End"));
+        assert_eq!(parse_mess_input(&given).unwrap().wells["W1"].internal_rotors[0].rotational_constant_cm1, Some(5.6));
+        let err = parse_mess_input(&rotor_deck(&format!("{constants}{rotor}\n        End"))).unwrap_err();
+        assert!(err.contains("W1") && err.contains("RotationalConstant[1/cm]"), "{err}");
+    }
+
+    #[test]
+    fn rotor_blocks_with_errors_are_refused() {
+        let hindered = |body: &str| rotor_deck(&format!("{ETHANE_CORE}\n        Rotor Hindered\n{body}\n        End"));
+        let potential = "          Potential[kcal/mol] 2\n          0. 2.45";
+        for (deck, expected) in [
+            (rotor_deck(&format!("{ETHANE_CORE}\n        Rotor Umbrella\n          Group 3\n          Axis 1 2\n        End")), "Umbrella"),
+            (hindered(&format!("          Group 3 4 5\n          Axis 1 2\n          Symmetry 3\n          Potential[kcal/mol] 3\n          1.0 0.0 0.5")), "minimum"),
+            (hindered(&format!("          Axis 1 2\n{potential}")), "Group"),
+            (hindered(&format!("          Group 3 4 5\n{potential}")), "Axis"),
+            (hindered(&format!("          Group 2 3\n          Axis 1 2\n{potential}")), "axis"),
+            (hindered(&format!("          Group 3 4 9\n          Axis 1 2\n{potential}")), "8 atoms"),
+            (hindered("          Group 3 4 5\n          Axis 1 2"), "potential"),
+            (hindered(&format!("          Group 3 4 5\n          Axis 1 2\n          LevelEnergyMax[kcal/mol] 20\n{potential}")), "LevelEnergyMax"),
+            (hindered(&format!("          HamiltonSizeMin 100\n          Group 3 4 5\n          Axis 1 2\n{potential}")), "odd"),
+            (rotor_deck(&format!("{ETHANE_CORE}\n        Rotor Free\n          Group 3\n          Axis 1 2\n{potential}\n        End")), "Free"),
+        ] {
+            let err = parse_mess_input(&deck).unwrap_err();
+            assert!(err.contains("W1") && err.contains(expected), "expected '{expected}' in: {err}");
+        }
+    }
+
+    #[test]
+    fn a_barrier_given_by_an_inverse_laplace_transform_needs_no_geometry() {
+        // The adapter takes the association k(E) of such a barrier from k_inf(T) and the fragments only.
+        let start = ILT_BARRIER_DECK.find("    Core PhaseSpaceTheory").unwrap();
+        let end = ILT_BARRIER_DECK.find("    InverseLaplaceTransform").unwrap();
+        let deck = format!("{}{}", &ILT_BARRIER_DECK[..start], &ILT_BARRIER_DECK[end..]);
+        let parsed = parse_mess_input(&deck).expect("an ILT barrier without a geometry");
+        assert!(parsed.barriers[0].inverse_laplace_transform.is_some());
+        // Nor frequencies.
+        let deck = deck.replacen("    Frequencies[1/cm] 1\n    1585.0\n", "", 1);
+        let parsed = parse_mess_input(&deck).expect("an ILT barrier without frequencies");
+        assert!(parsed.barriers[0].rrho.vibrational_frequencies_cm1.is_empty());
+    }
 
     #[test]
     fn inverse_laplace_transform_block_is_read_inside_a_barrier() {

@@ -1777,7 +1777,7 @@ mod tests {
         // name and is missing where its species does not exist.
         use crate::masterequation::chemical_activation_operator::assemble_operator;
         use crate::masterequation::chemically_significant_eigenvalues::tests::fast_equilibrium_network;
-        use crate::masterequation::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, CseMerging};
+        use crate::masterequation::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, ChemicalSubspaceCriterion, CseMerging};
         let mut network = fast_equilibrium_network();
         network.wells[0].channels.push(network_entrance_channel());
         let k_capture = 2.0e-11;
@@ -1800,7 +1800,7 @@ mod tests {
             last.rates.relaxation_eigenvalue_s_inv,
         );
         assert!(l2 > 10.0 * l1, "the test needs Lambda_2 well above Lambda_1: {l1:e} {l2:e} {l3:e}");
-        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
+        let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
         let options = ChemicalActivationOptions { collision_model: MODEL, steady_state: SteadyState::Final };
         let op = assemble_operator(&network, &last.conditions, &options).unwrap();
         last.rates =

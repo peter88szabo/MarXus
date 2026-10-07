@@ -112,26 +112,26 @@ All of these come in three views: by temperature, by pressure, and temperature�
 **Identity with the final steady state.** With all eigenpairs, the long-time yields reconstructed from the CSE rate coefficients equal $`k_x^T\,𝐉^{-1} F`$ of [SteadyStateOlzmann](steady_state_olzmann.md).
 - Both are $`\sum_\lambda p^{(x)}_\lambda p^{(R)}_\lambda/(\Lambda_\lambda Q_R)`$ over all eigenpairs, independently of the separation.
 - Test `cse_long_time_yields_equal_the_final_steady_state_yields`: 10⁻⁸.
-- Case 2: IEPOX + OH at 300 K, 760 Torr is 2.32448% from both. Over all 21 conditions P5, the escape and P1 agree to within 6·10⁻⁷, the printed precision. P7, at most 0.008% of the reaction, agrees to 5·10⁻⁴: it is formed through G6, whose CSE entries are at the rounding level.
+- Case 2: IEPOX + OH at 300 K, 760 Torr is 2.45778% from both. Over all 21 conditions P5, the escape and P1 agree to within 6·10⁻⁷, the printed precision. P7, at most 0.008% of the reaction, agrees to 1·10⁻⁴: it is formed through G6, whose CSE entries are at the rounding level.
 
 **One well.** The CSE well → product rate coefficient equals the eigenvector-average $`k_{\mathrm{uni}}`$ (test, 10⁻⁸).
 
 **ZZ-allyl + O₂, four wells** (MESS Eckart model; `validation/ZZAllyl+O2_Gamma_Case2/`):
-- The species tables of MESS are reproduced to a few percent.
-- **Against MESS** (all 21 conditions): R → IEPOX + OH −3.6 … −3.0%; R → G2 +3.0 … +5.2%, R → G3 −1.2 … −0.7%, R → G4 −1.0 … −0.3%; R → P1 and P7 −5.1 … −1.5%; well → well −0.5 … +1.3%.
+- The species tables of MESS are reproduced within 1.3% (entries above the rounding level; Neufeld collision integral, `reports/collision_integral_neufeld.md`).
+- **Against MESS** (all 21 conditions): R → IEPOX + OH +0.28 … +0.50%; R → G2 +0.90 … +1.13%, R → G3 +0.39 … +0.57%, R → G4 +0.43 … +0.60%; R → P1 and P7 +0.17 … +0.46%; well → well −0.3 … +1.3%.
 - **Low-energy reservoir state.** These numbers are with it (`reports/low_energy_reservoir_state.md`). The former reduction rule of the collision kernel had a step at 304.7 K, R → G4 +1.4 … +6.1%.
-- **MESS's negative R → escape entry is reproduced** (−5.5 … −4.5%).
-- **Identities:** capture balance within 6·10⁻⁷, loss balance within 1.1·10⁻⁷ (`reports/method_comparison.md`).
+- **MESS's negative R → escape entry is reproduced** (−0.67 … +0.12%).
+- **Identities:** capture balance within 4·10⁻⁷, loss balance within 1.3·10⁻⁷ (`reports/method_comparison.md`).
 
 **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`, §4.4; 40 conditions, 300–2000 K):
 - **CSE's k(W1 → P1) equals SteadyStateOlzmann's k_uni** in all printed digits wherever λ₁ is resolved (750–2000 K).
-- **Up to 1000 K** the association k(P1 → W1) (eq. 28) equals k_uni·K within 0.01%.
-- **Above that, CSE's own pair departs from detailed balance** as the separation Λ₁/Λ₂ grows: −0.5 … −1.7% at 1500 K (Λ₁/Λ₂ ≤ 0.019), −7.2 … −14.0% at 2000 K (0.065–0.10). **MESS's own pair departs by the same amount** (−7.2 … −13.9% at 2000 K). This is a property of the CSE rate coefficients at poor separation, not an error.
-- **TimeIntegration gives the same association:** k_∞ times the slowest-mode amplitude of a pulse equals eq. 28 within 4.7·10⁻⁵ (`reports/four_methods_figures.md`).
+- **Up to 1000 K** the association k(P1 → W1) (eq. 28) equals k_uni·K within 0.02%.
+- **Above that, CSE's own pair departs from detailed balance** as the separation Λ₁/Λ₂ grows: −0.5 … −1.7% at 1500 K (Λ₁/Λ₂ ≤ 0.015), −7.2 … −13.9% at 2000 K (0.045–0.067). **MESS's own pair departs by the same amount** (−7.2 … −13.9% at 2000 K). This is a property of the CSE rate coefficients at poor separation, not an error.
+- **TimeIntegration gives the same association:** k_∞ times the slowest-mode amplitude of a pulse equals eq. 28 within 1.9·10⁻⁴ (`reports/four_methods_figures.md`).
 - **Deviation from MESS:**
-  - dissociation +4.7 … +5.7% at 300 K (tunneling model), −0.8 … +0.5% at 1000 K, −2.6 … −2.1% at 2000 K;
-  - association −3.1 … −0.8% at 1250–2000 K.
-- **No species are merged** with `ChemicalEigenvalueMax 0.2` (the value of both validation decks). The largest $`\Lambda_N/\Lambda_{N+1}`$ is 0.10 (C₂H₃, 2000 K) and 0.137 (ZZ-allyl + O₂, 330 K, 500 Torr).
+  - dissociation +4.4 … +4.6% at 300 K (tunneling model), +0.1 … +1.1% at 1000 K, +0.3 … +0.4% at 2000 K;
+  - association −0.9 … +0.5% at 1250–2000 K.
+- **No species are merged** with `ChemicalEigenvalueMax 0.2` (the value of both validation decks). The largest $`\Lambda_N/\Lambda_{N+1}`$ is 0.067 (C₂H₃, 2000 K) and 0.107 (ZZ-allyl + O₂, 330 K, 500 Torr).
 
 **Species merging** (`reports/cse_species_merging.md`):
 - tests on a two-well network with a low isomerization barrier: A and B merge into `A+B` when the threshold lies between $`\Lambda_1`$ and $`\Lambda_2`$; $`Q_{A+B} = Q_A + Q_B`$; the merged species decays with $`k_{\mathrm{uni}}`$ of the thermal eigenvector (10⁻⁸);

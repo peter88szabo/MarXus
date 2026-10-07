@@ -12,292 +12,293 @@
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 270 K, p = 500 Torr: chemical eigenvalues [1/s]: 5.2893e2, 3.6937e4, 1.0523e6, 2.5004e7; lowest relaxation eigenvalue 3.3875e8 1/s (separation 7.381e-2); relaxational projections 9.6067e-11, 3.8952e-5, 3.4510e-5, 1.2061e-7; loss balance deviation 1.58e-8; detailed balance deviation 1.40e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.6582e-11 cm3/s
+# T = 270 K, p = 500 Torr: chemical eigenvalues [1/s]: 5.2893e2, 3.6070e4, 1.0518e6, 2.5004e7; lowest relaxation eigenvalue 3.2588e8 1/s (separation 7.673e-2); relaxational projections 1.0232e-10, 3.9673e-5, 3.6966e-5, 1.3035e-7; loss balance deviation 1.59e-9; detailed balance deviation 2.15e-2; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.6725e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.052386e6,3.653872e4,1.013416e6,1.150661e-6,2.268947e3,1.082721e-3,1.623405e2,1.608070e-3,-1.551620e-9
-G3,3.122365e2,5.397786e2,2.272982e2,6.559658e-5,1.889722e-1,4.514142e-7,2.794012e-2,2.689535e-2,8.404351e-14
-G4,3.224470e3,8.476277e1,2.500338e7,1.632430e-9,2.643963e0,2.328280e-4,7.248458e1,4.881051e-6,2.500000e7
-G6,3.347380e-9,2.239320e-5,1.738729e-9,3.693739e4,1.040884e-8,2.284560e-15,1.275908e-11,3.693739e4,4.856900e-22
-R,8.271293e-12,8.062375e-14,3.027146e-12,1.300585e-20,1.149326e-11,1.044956e-17,2.405736e-13,5.733143e-18,-1.263946e-13
+G2,1.051922e6,3.652811e4,1.013010e6,7.845049e-7,2.216490e3,1.091148e-3,1.665609e2,1.653631e-3,-7.758098e-10
+G3,3.121457e2,5.397757e2,2.273821e2,6.287414e-5,1.918554e-1,4.619954e-7,2.901525e-2,2.689608e-2,-7.563915e-13
+G4,3.222973e3,8.479899e1,2.500338e7,1.091314e-8,2.681829e0,2.297369e-4,7.237150e1,5.019790e-6,2.500000e7
+G6,2.278236e-9,2.146378e-5,1.021786e-8,3.606990e4,-1.977155e-9,-9.923894e-15,-6.480195e-11,3.606990e4,-2.286721e-22
+R,8.080048e-12,8.185410e-14,3.070511e-12,-2.470378e-21,1.134953e-11,1.069883e-17,2.495332e-13,5.994409e-18,-1.324312e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 270 K, p = 600 Torr: chemical eigenvalues [1/s]: 5.2893e2, 4.1259e4, 1.0543e6, 2.5004e7; lowest relaxation eigenvalue 4.0649e8 1/s (separation 6.151e-2); relaxational projections 7.1627e-11, 3.5669e-5, 2.4977e-5, 8.3769e-8; loss balance deviation 3.77e-8; detailed balance deviation 1.03e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.5880e-11 cm3/s
+# T = 270 K, p = 600 Torr: chemical eigenvalues [1/s]: 5.2893e2, 4.0307e4, 1.0539e6, 2.5004e7; lowest relaxation eigenvalue 3.9105e8 1/s (separation 6.394e-2); relaxational projections 7.6198e-11, 3.6351e-5, 2.6751e-5, 9.0500e-8; loss balance deviation 7.94e-9; detailed balance deviation 9.13e-2; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.6033e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.054405e6,3.658403e4,1.015155e6,1.227221e-6,2.522320e3,1.037407e-3,1.433588e2,1.403786e-3,-1.551620e-10
-G3,3.126246e2,5.397913e2,2.269409e2,8.011434e-5,1.755354e-1,4.034957e-7,2.337774e-2,2.688840e-2,1.120580e-13
-G4,3.230786e3,8.461074e1,2.500339e7,1.773418e-9,2.466271e0,2.471361e-4,7.298269e1,4.029151e-6,2.500000e7
-G6,3.567990e-9,2.734951e-5,1.812305e-9,4.125876e4,1.478107e-10,-2.079708e-15,2.334381e-12,4.125876e4,2.596381e-23
-R,9.195036e-12,7.489007e-14,2.823661e-12,1.847497e-22,1.219434e-11,9.314130e-18,2.018144e-13,4.642526e-18,-1.010775e-13
+G2,1.053998e6,3.657501e4,1.014808e6,1.210658e-6,2.467637e3,1.047747e-3,1.472648e2,1.444040e-3,-6.051317e-9
+G3,3.125473e2,5.397888e2,2.270119e2,7.677956e-5,1.783675e-1,4.134068e-7,2.428171e-2,2.689022e-2,-1.400725e-13
+G4,3.229538e3,8.464065e1,2.500339e7,1.783280e-9,2.503889e0,2.441336e-4,7.288151e1,4.125469e-6,2.500000e7
+G6,3.520064e-9,2.621102e-5,1.798052e-9,4.030732e4,2.083000e-10,-1.649269e-15,1.963895e-11,4.030732e4,-1.145743e-22
+R,8.995675e-12,7.609858e-14,2.866739e-12,2.603316e-22,1.204207e-11,9.549848e-18,2.095894e-13,4.856321e-18,-1.060485e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 270 K, p = 760 Torr: chemical eigenvalues [1/s]: 5.2894e2, 4.7476e4, 1.0565e6, 2.5004e7; lowest relaxation eigenvalue 5.1488e8 1/s (separation 4.856e-2); relaxational projections 4.9399e-11, 3.1686e-5, 1.6452e-5, 5.2335e-8; loss balance deviation 1.43e-8; detailed balance deviation 7.80e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.4913e-11 cm3/s
+# T = 270 K, p = 760 Torr: chemical eigenvalues [1/s]: 5.2894e2, 4.6408e4, 1.0562e6, 2.5004e7; lowest relaxation eigenvalue 4.9532e8 1/s (separation 5.048e-2); relaxational projections 5.2461e-11, 3.2318e-5, 1.7614e-5, 5.6520e-8; loss balance deviation 2.38e-8; detailed balance deviation 7.31e-2; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8075e-11 cm3/s, return to the reactant 2.5076e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.056652e6,3.663280e4,1.017033e6,1.331199e-6,2.865373e3,9.676253e-4,1.210584e2,1.169163e-3,-1.086134e-9
-G3,3.130421e2,5.398048e2,2.265586e2,1.038563e-4,1.585885e-1,3.462650e-7,1.853310e-2,2.687228e-2,4.202175e-13
-G4,3.237445e3,8.445209e1,2.500340e7,1.926202e-9,2.239406e0,2.649480e-4,7.354887e1,3.161211e-6,2.500000e7
-G6,3.868578e-9,3.545496e-5,1.913999e-9,4.747558e4,-1.726960e-11,1.698014e-15,1.106655e-11,4.747558e4,1.075235e-21
-R,1.044571e-11,6.765894e-14,2.563881e-12,-2.152537e-23,1.316166e-11,7.944732e-18,1.593508e-13,3.521031e-18,-7.495970e-14
+G2,1.056310e6,3.662550e4,1.016752e6,1.314506e-6,2.808125e3,9.797347e-4,1.245284e2,1.207614e-3,-2.948077e-9
+G3,3.129796e2,5.398028e2,2.266156e2,9.954181e-5,1.613202e-1,3.552515e-7,1.925319e-2,2.687543e-2,-8.124206e-13
+G4,3.236457e3,8.447550e1,2.500340e7,1.902180e-9,2.276177e0,2.620953e-4,7.346197e1,3.244677e-6,2.500000e7
+G6,3.820440e-9,3.398201e-5,1.880111e-9,4.640761e4,1.758103e-10,2.196917e-15,1.030608e-11,4.640761e4,-9.215963e-22
+R,1.023701e-11,6.882454e-14,2.605986e-12,2.197303e-22,1.299880e-11,8.160641e-18,1.657455e-13,3.685067e-18,-7.877589e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 280 K, p = 500 Torr: chemical eigenvalues [1/s]: 7.2333e2, 8.2015e4, 1.2929e6, 2.5005e7; lowest relaxation eigenvalue 3.1952e8 1/s (separation 7.826e-2); relaxational projections 2.2824e-10, 9.7902e-5, 6.5349e-5, 2.7775e-7; loss balance deviation 2.25e-8; detailed balance deviation 1.82e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.8378e-11 cm3/s
+# T = 280 K, p = 500 Torr: chemical eigenvalues [1/s]: 7.2333e2, 7.9874e4, 1.2920e6, 2.5005e7; lowest relaxation eigenvalue 3.0652e8 1/s (separation 8.158e-2); relaxational projections 2.4297e-10, 9.9725e-5, 7.0075e-5, 3.0129e-7; loss balance deviation 2.26e-8; detailed balance deviation 2.73e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.8518e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.293118e6,4.342510e4,1.243382e6,2.280349e-6,5.908404e3,3.383099e-3,4.027714e2,4.466735e-3,-1.324284e-9
-G3,4.402942e2,7.381333e2,2.970397e2,1.420565e-4,6.263681e-1,1.868159e-6,8.935433e-2,8.353584e-2,1.250139e-12
-G4,4.873153e3,1.150850e2,2.500519e7,3.851936e-9,8.958848e0,8.875473e-4,1.959947e2,1.816812e-5,2.500000e7
-G6,8.601814e-9,5.308533e-5,4.550028e-9,8.201527e4,-1.426495e-9,-1.021672e-14,1.496007e-11,8.201527e4,1.341159e-21
-R,7.001522e-12,7.321956e-14,2.706082e-12,-4.458602e-22,9.920934e-12,1.241166e-17,2.520678e-13,6.693226e-18,-1.119769e-13
+G2,1.292220e6,4.340643e4,1.242645e6,2.241385e-6,5.754418e3,3.404504e-3,4.133369e2,4.601087e-3,0.000000e0
+G3,4.401043e2,7.381272e2,2.972105e2,1.354932e-4,6.357771e-1,1.911199e-6,9.291199e-2,8.353501e-2,-5.208913e-13
+G4,4.869788e3,1.151621e2,2.500519e7,3.377718e-9,9.081598e0,8.734853e-4,1.955596e2,1.879286e-5,2.500000e7
+G6,8.454441e-9,5.063236e-5,4.486497e-9,7.987372e4,7.906857e-10,2.844068e-14,5.130581e-11,7.987372e4,3.753761e-22
+R,6.819015e-12,7.431978e-14,2.743176e-12,2.473539e-22,9.780629e-12,1.270286e-17,2.615799e-13,7.014095e-18,-1.174811e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 280 K, p = 600 Torr: chemical eigenvalues [1/s]: 7.2335e2, 9.2006e4, 1.2966e6, 2.5005e7; lowest relaxation eigenvalue 3.8342e8 1/s (separation 6.522e-2); relaxational projections 1.7426e-10, 9.0135e-5, 4.8146e-5, 1.9449e-7; loss balance deviation 1.48e-8; detailed balance deviation 1.25e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.7736e-11 cm3/s
+# T = 280 K, p = 600 Torr: chemical eigenvalues [1/s]: 7.2334e2, 8.9644e4, 1.2958e6, 2.5005e7; lowest relaxation eigenvalue 3.6782e8 1/s (separation 6.798e-2); relaxational projections 1.8518e-10, 9.1870e-5, 5.1607e-5, 2.1091e-7; loss balance deviation 5.12e-9; detailed balance deviation 1.35e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.7886e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.296797e6,4.349974e4,1.246333e6,2.449663e-6,6.606294e3,3.269477e-3,3.581477e2,3.912330e-3,2.118854e-9
-G3,4.410532e2,7.381576e2,2.963601e2,1.746216e-4,5.852645e-1,1.684895e-6,7.522207e-2,8.353095e-2,-1.562674e-13
-G4,4.886433e3,1.147833e2,2.500521e7,4.320389e-9,8.416990e0,9.487032e-4,1.977911e2,1.476104e-5,2.500000e7
-G6,9.233992e-9,6.525640e-5,4.770524e-9,9.200634e4,4.572728e-10,-4.762577e-16,3.486873e-11,9.200634e4,-1.723950e-22
-R,7.828663e-12,6.841340e-14,2.542349e-12,1.431035e-22,1.056257e-11,1.116525e-17,2.134742e-13,5.443178e-18,-9.034654e-14
+G2,1.295995e6,4.348374e4,1.245699e6,2.412153e-6,6.444242e3,3.297985e-3,3.680472e2,4.032581e-3,2.913424e-9
+G3,4.408905e2,7.381524e2,2.965053e2,1.666081e-4,5.945876e-1,1.725790e-6,7.823891e-2,8.353314e-2,-9.896934e-13
+G4,4.883608e3,1.148471e2,2.500520e7,4.210119e-9,8.540675e0,9.348708e-4,1.973979e2,1.542325e-5,2.500000e7
+G6,9.093832e-9,6.226138e-5,4.698948e-9,8.964390e4,1.331235e-9,-1.002353e-14,2.969336e-11,8.964390e4,-8.944147e-22
+R,7.636600e-12,6.950350e-14,2.579722e-12,4.163570e-22,1.041274e-11,1.144428e-17,2.218225e-13,5.706668e-18,-9.492693e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 280 K, p = 760 Torr: chemical eigenvalues [1/s]: 7.2337e2, 1.0648e5, 1.3008e6, 2.5005e7; lowest relaxation eigenvalue 4.8565e8 1/s (separation 5.149e-2); relaxational projections 1.2425e-10, 8.0650e-5, 3.2509e-5, 1.2274e-7; loss balance deviation 3.91e-9; detailed balance deviation 8.30e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.6843e-11 cm3/s
+# T = 280 K, p = 760 Torr: chemical eigenvalues [1/s]: 7.2336e2, 1.0381e5, 1.3001e6, 2.5005e7; lowest relaxation eigenvalue 4.6590e8 1/s (separation 5.367e-2); relaxational projections 1.3172e-10, 8.2269e-5, 3.4820e-5, 1.3307e-7; loss balance deviation 6.44e-9; detailed balance deviation 8.12e-2; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8299e-11 cm3/s, return to the reactant 2.7005e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.300998e6,4.358076e4,1.249551e6,2.693050e-6,7.561588e3,3.082654e-3,3.050362e2,3.281075e-3,-3.707994e-9
-G3,4.418768e2,7.381835e2,2.956299e2,2.284369e-4,5.329141e-1,1.462508e-6,6.007462e-2,8.350746e-2,1.198050e-12
-G4,4.900551e3,1.144672e2,2.500522e7,4.849131e-9,7.714439e0,1.025932e-3,1.998559e2,1.153650e-5,2.500000e7
-G6,1.014622e-8,8.537000e-5,5.107735e-9,1.064775e5,5.722493e-11,-7.076208e-15,3.278122e-11,1.064775e5,5.561128e-22
-R,8.960856e-12,6.229265e-14,2.330084e-12,1.801210e-23,1.145613e-11,9.639488e-18,1.706498e-13,4.152553e-18,-6.777044e-14
+G2,1.300302e6,4.356768e4,1.249030e6,2.647939e-6,7.389813e3,3.118164e-3,3.139570e2,3.393531e-3,7.945702e-10
+G3,4.417440e2,7.381793e2,2.957471e2,2.179025e-4,5.420068e-1,1.500256e-6,6.250295e-2,8.351275e-2,1.250139e-12
+G4,4.898293e3,1.145174e2,2.500522e7,4.813338e-9,7.837416e0,1.012574e-3,1.995139e2,1.193258e-5,2.500000e7
+G6,9.977389e-9,8.143271e-5,5.059614e-9,1.038051e5,-8.315106e-10,9.108050e-15,5.795973e-11,1.038051e5,-5.171849e-22
+R,8.757274e-12,6.335572e-14,2.367238e-12,-2.598578e-22,1.129416e-11,9.899420e-18,1.776166e-13,4.355785e-18,-7.133370e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 290 K, p = 500 Torr: chemical eigenvalues [1/s]: 9.8536e2, 1.6860e5, 1.5900e6, 2.5008e7; lowest relaxation eigenvalue 3.0202e8 1/s (separation 8.280e-2); relaxational projections 5.3342e-10, 2.2728e-4, 1.2295e-4, 6.2678e-7; loss balance deviation 3.82e-9; detailed balance deviation 2.15e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 3.0010e-11 cm3/s
+# T = 290 K, p = 500 Torr: chemical eigenvalues [1/s]: 9.8536e2, 1.6378e5, 1.5883e6, 2.5008e7; lowest relaxation eigenvalue 2.8901e8 1/s (separation 8.653e-2); relaxational projections 5.6705e-10, 2.3149e-4, 1.3176e-4, 6.8144e-7; loss balance deviation 1.42e-8; detailed balance deviation 2.33e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 3.0144e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.590434e6,5.160750e4,1.523775e6,4.249078e-6,1.411803e4,9.653555e-3,9.335518e2,1.153754e-2,-2.054195e-9
-G3,6.138966e2,1.005313e3,3.890273e2,2.862675e-4,1.883297e0,6.987831e-6,2.647987e-1,2.404391e-1,1.361409e-12
-G4,7.249199e3,1.561053e2,2.500793e7,8.581020e-9,2.738072e1,3.049663e-3,4.971691e2,6.047400e-5,2.500000e7
-G6,2.041404e-8,1.164133e-4,1.110069e-8,1.686025e5,3.033854e-10,1.836888e-14,1.356853e-10,1.686025e5,3.177470e-22
-R,5.882518e-12,6.598615e-14,2.394815e-12,2.639657e-23,8.506573e-12,1.447833e-17,2.609000e-13,7.772292e-18,-9.766850e-14
+G2,1.588725e6,5.157556e4,1.522481e6,4.169086e-6,1.370996e4,9.697978e-3,9.578662e2,1.189728e-2,-2.282439e-10
+G3,6.135149e2,1.005301e3,3.893587e2,2.719963e-4,1.910747e0,7.143283e-6,2.755182e-1,2.404269e-1,-2.917306e-12
+G4,7.241982e3,1.562608e2,2.500792e7,8.284607e-9,2.773133e1,2.993181e-3,4.956600e2,6.335377e-5,2.500000e7
+G6,2.003581e-8,1.106079e-4,1.096750e-8,1.637785e5,-3.250647e-9,3.017766e-14,2.173410e-10,1.637785e5,-1.976892e-21
+R,5.712437e-12,6.694844e-14,2.425506e-12,-2.794754e-22,8.373118e-12,1.480745e-17,2.707441e-13,8.160363e-18,-1.025395e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 290 K, p = 600 Torr: chemical eigenvalues [1/s]: 9.8540e2, 1.8992e5, 1.5967e6, 2.5008e7; lowest relaxation eigenvalue 3.6241e8 1/s (separation 6.901e-2); relaxational projections 4.1645e-10, 2.1032e-4, 9.2467e-5, 4.4365e-7; loss balance deviation 1.68e-8; detailed balance deviation 1.59e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.9432e-11 cm3/s
+# T = 290 K, p = 600 Torr: chemical eigenvalues [1/s]: 9.8539e2, 1.8457e5, 1.5951e6, 2.5008e7; lowest relaxation eigenvalue 3.4681e8 1/s (separation 7.211e-2); relaxational projections 4.4175e-10, 2.1435e-4, 9.9024e-5, 4.8221e-7; loss balance deviation 6.15e-9; detailed balance deviation 1.71e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.9575e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.597125e6,5.172847e4,1.528688e6,4.593571e-6,1.587315e4,9.408812e-3,8.359449e2,1.013511e-2,-1.825951e-9
-G3,6.153414e2,1.005358e3,3.877818e2,3.539376e-4,1.769584e0,6.358004e-6,2.244458e-1,2.404705e-1,2.868684e-12
-G4,7.276176e3,1.555303e2,2.500796e7,9.612015e-9,2.590628e1,3.283151e-3,5.030805e2,5.004719e-5,2.500000e7
-G6,2.204756e-8,1.439415e-4,1.161582e-8,1.899206e5,3.796250e-10,-2.305574e-14,9.288422e-11,1.899206e5,1.411808e-21
-R,6.614020e-12,6.200009e-14,2.265768e-12,3.294244e-23,9.085293e-12,1.313917e-17,2.229991e-13,6.345376e-18,-7.951448e-14
+G2,1.595564e6,5.170086e4,1.527564e6,4.509078e-6,1.543984e4,9.476376e-3,8.590184e2,1.045979e-2,1.597708e-9
+G3,6.150116e2,1.005348e3,3.880647e2,3.362511e-4,1.797013e0,6.507855e-6,2.336203e-1,2.404657e-1,3.257658e-12
+G4,7.270066e3,1.556596e2,2.500795e7,9.373407e-9,2.626508e1,3.226900e-3,5.017026e2,5.235197e-5,2.500000e7
+G6,2.164620e-8,1.367465e-4,1.148747e-8,1.845700e5,3.778511e-10,1.713185e-14,1.798491e-10,1.845700e5,1.424445e-21
+R,6.433426e-12,6.296155e-14,2.297169e-12,3.279360e-23,8.941700e-12,1.345862e-17,2.317350e-13,6.664981e-18,-8.361191e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 290 K, p = 760 Torr: chemical eigenvalues [1/s]: 9.8544e2, 2.2100e5, 1.6045e6, 2.5008e7; lowest relaxation eigenvalue 4.5904e8 1/s (separation 5.448e-2); relaxational projections 3.0613e-10, 1.8948e-4, 6.4236e-5, 2.8376e-7; loss balance deviation 2.15e-9; detailed balance deviation 8.94e-2; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.8618e-11 cm3/s
+# T = 290 K, p = 760 Torr: chemical eigenvalues [1/s]: 9.8544e2, 2.1490e5, 1.6031e6, 2.5008e7; lowest relaxation eigenvalue 4.3927e8 1/s (separation 5.693e-2); relaxational projections 3.2383e-10, 1.9326e-4, 6.8711e-5, 3.0837e-7; loss balance deviation 2.10e-9; detailed balance deviation 1.11e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8517e-11 cm3/s, return to the reactant 2.8775e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.604981e6,5.186110e4,1.534102e6,5.273750e-6,1.830060e4,8.966675e-3,7.181986e2,8.528671e-3,-6.847318e-10
-G3,6.169249e2,1.005407e3,3.864367e2,4.705604e-4,1.623377e0,5.581346e-6,1.807496e-1,2.404628e-1,1.410031e-12
-G4,7.305142e3,1.549254e2,2.500799e7,1.297283e-8,2.396240e1,3.582182e-3,5.099539e2,3.932169e-5,2.500000e7
-G6,2.530191e-8,1.913867e-4,1.447127e-8,2.209958e5,-4.498158e-8,-8.766929e-14,2.134362e-10,2.209958e5,2.274780e-22
-R,7.625704e-12,5.687563e-14,2.095668e-12,-3.871228e-21,9.898340e-12,1.147574e-17,1.804137e-13,4.866009e-18,-6.033786e-14
+G2,1.603581e6,5.183828e4,1.533168e6,4.975278e-6,1.783586e4,9.058221e-3,7.393001e2,8.818918e-3,-5.249610e-9
+G3,6.166525e2,1.005398e3,3.866664e2,4.427731e-4,1.650417e0,5.722183e-6,1.882194e-1,2.404685e-1,-2.236601e-12
+G4,7.300202e3,1.550275e2,2.500799e7,1.064983e-8,2.432575e1,3.526988e-3,5.087398e2,4.099181e-5,2.500000e7
+G6,2.386586e-8,1.800813e-4,1.216828e-8,2.148990e5,7.368863e-9,-2.567990e-14,9.951427e-11,2.148990e5,-4.665104e-21
+R,7.432016e-12,5.782332e-14,2.127461e-12,6.344725e-22,9.741557e-12,1.177831e-17,1.878087e-13,5.113712e-18,-6.356913e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 300 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.3373e3, 3.2339e5, 1.9570e6, 2.5013e7; lowest relaxation eigenvalue 2.8604e8 1/s (separation 8.745e-2); relaxational projections 1.2121e-9, 4.9085e-4, 2.2857e-4, 1.3899e-6; loss balance deviation 4.96e-11; detailed balance deviation 2.66e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.1479e-11 cm3/s
+# T = 300 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.3373e3, 3.1337e5, 1.9538e6, 2.5013e7; lowest relaxation eigenvalue 2.7312e8 1/s (separation 9.158e-2); relaxational projections 1.2865e-9, 4.9979e-4, 2.4446e-4, 1.5123e-6; loss balance deviation 4.71e-9; detailed balance deviation 2.87e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.1603e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.957853e6,6.129172e4,1.863314e6,7.489766e-6,3.121647e4,2.536546e-2,2.031342e3,2.791822e-2,2.422624e-9
-G3,8.467190e2,1.363872e3,5.105891e2,5.408954e-4,5.185932e0,2.384959e-5,7.309734e-1,6.460868e-1,-1.019640e-12
-G4,1.061833e4,2.116089e2,2.501209e7,1.729900e-8,7.620994e1,9.534698e-3,1.187248e3,1.880374e-4,2.500000e7
-G6,4.504972e-8,2.380247e-4,2.511519e-8,3.233860e5,1.865123e-9,3.229620e-14,5.008695e-10,3.233860e5,1.404117e-21
-R,4.908380e-12,5.905398e-14,2.098941e-12,4.868388e-23,7.249629e-12,1.661310e-17,2.670092e-13,8.987470e-18,-8.377964e-14
+G2,1.954667e6,6.123868e4,1.861115e6,7.329552e-6,3.022934e4,2.543316e-2,2.083148e3,2.881948e-2,0.000000e0
+G3,8.459819e2,1.363848e3,5.112010e2,5.119180e-4,5.258383e0,2.435392e-5,7.606153e-1,6.460233e-1,1.019640e-12
+G4,1.060356e4,2.119064e2,2.501208e7,1.662432e-8,7.710015e1,9.331837e-3,1.182486e3,1.972006e-4,2.500000e7
+G6,4.410505e-8,2.252639e-4,2.485009e-8,3.133686e5,1.498156e-9,-4.928462e-14,3.568404e-10,3.133686e5,4.549053e-22
+R,4.753092e-12,5.987971e-14,2.123493e-12,3.921578e-23,7.125497e-12,1.697428e-17,2.769714e-13,9.451376e-18,-8.796534e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 300 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.3374e3, 3.6570e5, 1.9691e6, 2.5013e7; lowest relaxation eigenvalue 3.4323e8 1/s (separation 7.287e-2); relaxational projections 9.6427e-10, 4.5644e-4, 1.7576e-4, 9.9692e-7; loss balance deviation 1.06e-10; detailed balance deviation 1.93e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.0964e-11 cm3/s
+# T = 300 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.3374e3, 3.5453e5, 1.9661e6, 2.5013e7; lowest relaxation eigenvalue 3.2773e8 1/s (separation 7.632e-2); relaxational projections 1.0209e-9, 4.6503e-4, 1.8780e-4, 1.0845e-6; loss balance deviation 2.58e-9; detailed balance deviation 2.10e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.1098e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.969906e6,6.148398e4,1.871308e6,8.149746e-6,3.528204e4,2.492951e-2,1.831735e3,2.458503e-2,-2.018853e-9
-G3,8.493897e2,1.363954e3,5.083949e2,6.723485e-4,4.898694e0,2.188659e-5,6.241810e-1,6.462825e-1,3.151616e-12
-G4,1.067118e4,2.105599e2,2.501216e7,2.001572e-8,7.260502e1,1.033921e-2,1.205111e3,1.561216e-4,2.500000e7
-G6,4.895731e-8,2.959169e-4,2.644856e-8,3.657007e5,6.212335e-9,2.464898e-13,6.221589e-10,3.657007e5,1.182037e-21
-R,5.547930e-12,5.578071e-14,1.999536e-12,1.608929e-22,7.764700e-12,1.520291e-17,2.302692e-13,7.363183e-18,-6.883812e-14
+G2,1.966923e6,6.143767e4,1.869379e6,7.976709e-6,3.422498e4,2.506443e-2,1.881548e3,2.539754e-2,-6.864100e-9
+G3,8.487465e2,1.363935e3,5.089198e2,6.361838e-4,4.971682e0,2.237989e-5,6.498015e-1,6.462408e-1,4.449340e-12
+G4,1.065855e4,2.108084e2,2.501214e7,1.931832e-8,7.353206e1,1.013473e-2,1.200719e3,1.636076e-4,2.500000e7
+G6,4.793051e-8,2.799893e-4,2.606860e-8,3.545325e5,5.069702e-9,2.596794e-13,6.128248e-10,3.545325e5,-8.954829e-23
+R,5.381647e-12,5.661241e-14,2.025096e-12,1.313991e-22,7.630186e-12,1.555795e-17,2.392065e-13,7.745639e-18,-7.239906e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 300 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.3375e3, 4.2775e5, 1.9836e6, 2.5013e7; lowest relaxation eigenvalue 4.3475e8 1/s (separation 5.753e-2); relaxational projections 7.2678e-10, 4.1388e-4, 1.2581e-4, 6.4839e-7; loss balance deviation 1.08e-7; detailed balance deviation 1.49e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.0234e-11 cm3/s
+# T = 300 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.3375e3, 4.1494e5, 1.9809e6, 2.5013e7; lowest relaxation eigenvalue 4.1511e8 1/s (separation 6.026e-2); relaxational projections 7.6720e-10, 4.2202e-4, 1.3423e-4, 7.0529e-7; loss balance deviation 1.89e-8; detailed balance deviation 1.30e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8729e-11 cm3/s, return to the reactant 3.0383e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,1.984466e6,6.169717e4,1.880221e6,4.049584e-6,4.096026e4,2.401077e-2,1.587578e3,2.077418e-2,2.018853e-9
-G3,8.523499e2,1.364043e3,5.060130e2,7.311495e-4,4.525979e0,1.942637e-5,5.072689e-1,6.464085e-1,-9.269458e-14
-G4,1.072856e4,2.094510e2,2.501223e7,1.938097e-8,6.776334e1,1.138388e-2,1.226125e3,1.233976e-4,2.500000e7
-G6,2.386178e-8,3.217425e-4,2.427624e-8,4.277549e5,2.813470e-9,9.472423e-15,3.373579e-10,4.277549e5,-3.338360e-21
-R,6.441123e-12,5.153413e-14,1.866074e-12,7.310978e-23,8.494371e-12,1.342592e-17,1.884777e-13,5.672498e-18,-5.285604e-14
+G2,1.981703e6,6.165840e4,1.878597e6,9.004906e-6,3.981384e4,2.421831e-2,1.633832e3,2.148593e-2,1.615082e-9
+G3,8.518116e2,1.364028e3,5.064415e2,8.466686e-4,4.598681e0,1.989850e-5,5.283867e-1,6.463939e-1,-2.131975e-12
+G4,1.071821e4,2.096483e2,2.501222e7,2.405533e-8,6.872130e1,1.118007e-2,1.222203e3,1.290441e-4,2.500000e7
+G6,5.406680e-8,3.726964e-4,2.945677e-8,4.149416e5,6.545719e-8,9.453758e-13,1.266732e-9,4.149416e5,8.668275e-22
+R,6.260793e-12,5.236241e-14,1.892477e-12,1.690462e-21,8.346097e-12,1.376772e-17,1.961498e-13,5.970799e-18,-5.570433e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 310 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.8086e3, 5.8272e5, 2.4105e6, 2.5020e7; lowest relaxation eigenvalue 2.7142e8 1/s (separation 9.218e-2); relaxational projections 2.6539e-9, 9.9210e-4, 4.1741e-4, 3.0342e-6; loss balance deviation 9.37e-9; detailed balance deviation 3.19e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2790e-11 cm3/s
+# T = 310 K, p = 500 Torr: chemical eigenvalues [1/s]: 1.8085e3, 5.6338e5, 2.4047e6, 2.5020e7; lowest relaxation eigenvalue 2.5865e8 1/s (separation 9.673e-2); relaxational projections 2.8138e-9, 1.0097e-3, 4.4510e-4, 3.2995e-6; loss balance deviation 5.38e-9; detailed balance deviation 3.46e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2903e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.412029e6,7.268930e4,2.270825e6,1.255787e-5,6.434592e4,6.182190e-2,4.168286e3,6.367120e-2,6.159346e-9
-G3,1.155422e3,1.843475e3,6.713429e2,9.644965e-4,1.318909e1,7.489748e-5,1.888902e0,1.631302e0,1.427619e-12
-G4,1.531504e4,2.866440e2,2.501847e7,3.235099e-8,1.948036e2,2.735004e-2,2.678139e3,5.424372e-4,2.500000e7
-G6,9.297636e-8,4.567314e-4,5.303635e-8,5.827224e5,6.133041e-8,-9.692938e-13,2.959966e-10,5.827224e5,5.341087e-21
-R,4.069778e-12,5.251935e-14,1.822561e-12,5.142023e-22,6.144729e-12,1.877792e-17,2.704153e-13,1.035852e-17,-7.057383e-14
+G2,2.406234e6,7.260389e4,2.267214e6,1.226589e-5,6.214561e4,6.185809e-2,4.271116e3,6.577988e-2,-8.695547e-9
+G3,1.154054e3,1.843432e3,6.724178e2,9.097377e-4,1.336386e1,7.638138e-5,1.964645e0,1.631057e0,2.498334e-12
+G4,1.528617e4,2.871833e2,2.501843e7,3.075675e-8,1.968240e2,2.669143e-2,2.664367e3,5.695171e-4,2.500000e7
+G6,9.086646e-8,4.307617e-4,5.251371e-8,5.633759e5,2.948729e-8,-3.624000e-14,1.165928e-9,5.633759e5,3.436624e-22
+R,3.930503e-12,5.321621e-14,1.841511e-12,2.477140e-22,6.031494e-12,1.916394e-17,2.802982e-13,1.090742e-17,-7.406396e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 310 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.8087e3, 6.6141e5, 2.4318e6, 2.5020e7; lowest relaxation eigenvalue 3.2568e8 1/s (separation 7.682e-2); relaxational projections 2.1410e-9, 9.2684e-4, 3.2825e-4, 2.2104e-6; loss balance deviation 1.95e-9; detailed balance deviation 2.29e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2337e-11 cm3/s
+# T = 310 K, p = 600 Torr: chemical eigenvalues [1/s]: 1.8087e3, 6.3974e5, 2.4263e6, 2.5020e7; lowest relaxation eigenvalue 3.1036e8 1/s (separation 8.062e-2); relaxational projections 2.2638e-9, 9.4387e-4, 3.4962e-4, 2.4034e-6; loss balance deviation 1.67e-9; detailed balance deviation 2.51e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.2461e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.433363e6,7.298801e4,2.283502e6,1.374810e-5,7.308726e4,6.125792e-2,3.784955e3,5.620769e-2,3.623145e-10
-G3,1.160206e3,1.843623e3,6.676369e2,1.204733e-3,1.252099e1,6.930477e-5,1.625627e0,1.632077e0,2.409107e-12
-G4,1.541470e4,2.848160e2,2.501861e7,3.877451e-8,1.868481e2,2.987468e-2,2.728008e3,4.524371e-4,2.500000e7
-G6,1.016350e-7,5.706828e-4,5.616262e-8,6.614117e5,2.425046e-8,5.872174e-13,1.602055e-9,6.614117e5,7.159634e-23
-R,4.623065e-12,4.985597e-14,1.747975e-12,2.038592e-22,6.597615e-12,1.732070e-17,2.352358e-13,8.512073e-18,-5.854241e-14
+G2,2.427808e6,7.291266e4,2.280298e6,1.343656e-5,7.071225e4,6.147037e-2,3.885181e3,5.809603e-2,-3.623145e-10
+G3,1.159000e3,1.843586e3,6.685634e2,1.136163e-3,1.269845e1,7.077785e-5,1.691772e0,1.631895e0,8.030358e-13
+G4,1.538975e4,2.852686e2,2.501858e7,3.725218e-8,1.889956e2,2.920296e-2,2.715171e3,4.746747e-4,2.500000e7
+G6,9.936270e-8,5.381557e-4,5.549626e-8,6.397386e5,1.681835e-8,1.489382e-13,1.400255e-9,6.397386e5,-1.460565e-21
+R,4.472740e-12,5.056334e-14,1.768104e-12,1.416636e-22,6.474084e-12,1.770490e-17,2.441969e-13,8.966657e-18,-6.154740e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 310 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.8090e3, 7.7746e5, 2.4583e6, 2.5020e7; lowest relaxation eigenvalue 4.1251e8 1/s (separation 6.065e-2); relaxational projections 1.6434e-9, 8.4566e-4, 2.4207e-4, 1.4662e-6; loss balance deviation 2.72e-9; detailed balance deviation 1.37e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.1691e-11 cm3/s
+# T = 310 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.8089e3, 7.5244e5, 2.4530e6, 2.5020e7; lowest relaxation eigenvalue 3.9310e8 1/s (separation 6.365e-2); relaxational projections 1.7324e-9, 8.6189e-4, 2.5740e-4, 1.5942e-6; loss balance deviation 1.26e-7; detailed balance deviation 1.89e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.8935e-11 cm3/s, return to the reactant 3.1828e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.459858e6,7.332337e4,2.297816e6,1.566792e-5,8.540916e4,5.961824e-2,3.309322e3,4.762920e-2,-1.449258e-9
-G3,1.165575e3,1.843783e3,6.635932e2,1.615917e-3,1.164641e1,6.217919e-5,1.334071e0,1.632748e0,7.138096e-13
-G4,1.552425e4,2.828742e2,2.501877e7,5.065556e-8,1.759333e2,3.319740e-2,2.787364e3,3.598810e-4,2.500000e7
-G6,1.157696e-7,7.657733e-4,6.554516e-8,7.774641e5,3.548134e-8,-2.713525e-13,1.051312e-9,7.774641e5,3.586977e-21
-R,5.402940e-12,4.637030e-14,1.645701e-12,2.978218e-22,7.244265e-12,1.545834e-17,1.947329e-13,6.585379e-18,-4.550119e-14
+G2,2.454548e6,7.325937e4,2.295078e6,8.144749e-6,8.280622e4,6.002811e-2,3.403850e3,4.927110e-2,4.347774e-9
+G3,1.164550e3,1.843753e3,6.643540e2,1.283168e-3,1.182493e1,6.361528e-5,1.389301e0,1.632640e0,-1.427619e-12
+G4,1.550353e4,2.832354e2,2.501874e7,3.770623e-8,1.782039e2,3.251756e-2,2.775749e3,3.771804e-4,2.500000e7
+G6,5.897661e-8,6.076445e-4,5.191431e-8,7.524377e5,7.407930e-9,2.188107e-14,9.500945e-10,7.524376e5,-7.875597e-22
+R,5.238199e-12,4.708176e-14,1.666973e-12,6.285510e-23,7.106867e-12,1.583419e-17,2.025321e-13,6.940495e-18,-4.794105e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 320 K, p = 500 Torr: chemical eigenvalues [1/s]: 2.4379e3, 9.9265e5, 2.9705e6, 2.5031e7; lowest relaxation eigenvalue 2.5800e8 1/s (separation 9.702e-2); relaxational projections 5.5686e-9, 1.8864e-3, 7.4476e-4, 6.5256e-6; loss balance deviation 1.07e-10; detailed balance deviation 3.71e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3953e-11 cm3/s
+# T = 320 K, p = 500 Torr: chemical eigenvalues [1/s]: 2.4378e3, 9.5763e5, 2.9603e6, 2.5031e7; lowest relaxation eigenvalue 2.4544e8 1/s (separation 1.020e-1); relaxational projections 5.9027e-9, 1.9188e-3, 7.9131e-4, 7.0834e-6; loss balance deviation 2.70e-9; detailed balance deviation 4.06e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.4054e-11 cm3/s
+# warning: the largest chemical eigenvalue 2.503093609763408e7 s-1 is 0.102 of the lowest relaxation eigenvalue 2.454443953191224e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006). Species are merged only above ChemicalEigenvalueMax = 0.2 (Georgievskii et al. 2013, Sec. IV).
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,2.973180e6,8.600537e4,2.754608e6,2.021195e-5,1.244666e5,1.406596e-1,8.099828e3,1.376096e-1,-3.924887e-9
-G3,1.559742e3,2.483115e3,8.836762e2,1.635286e-3,3.121239e1,2.180365e-4,4.590261e0,3.892184e0,4.044056e-12
-G4,2.174590e4,3.878156e2,2.502832e7,5.755355e-8,4.606842e2,7.250857e-2,5.725231e3,1.462871e-3,2.500000e7
-G6,1.810099e-7,8.284025e-4,1.067967e-7,9.926513e5,-1.406265e-8,4.611658e-13,3.532838e-9,9.926513e5,6.301838e-21
-R,3.355189e-12,4.644799e-14,1.568448e-12,-3.939006e-23,5.183055e-12,2.093497e-17,2.712084e-13,1.190733e-17,-5.827145e-14
+G2,2.962950e6,8.587215e4,2.748876e6,1.968550e-5,1.199102e5,1.404345e-1,8.290997e3,1.422735e-1,-4.579034e-9
+G3,1.557301e3,2.483037e3,8.854716e2,1.537173e-3,3.160117e1,2.220286e-4,4.770204e0,3.891371e0,6.109106e-12
+G4,2.169199e4,3.887415e2,2.502823e7,5.354807e-8,4.647907e2,7.055746e-2,5.688458e3,1.536272e-3,2.500000e7
+G6,1.764193e-7,7.785506e-4,1.050991e-7,9.576330e5,-2.868729e-8,1.642685e-12,4.442712e-9,9.576330e5,4.470657e-21
+R,3.232213e-12,4.702764e-14,1.582490e-12,-8.193868e-23,5.081512e-12,2.133774e-17,2.808381e-13,1.255253e-17,-6.108978e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 320 K, p = 600 Torr: chemical eigenvalues [1/s]: 2.4382e3, 1.1306e6, 3.0073e6, 2.5031e7; lowest relaxation eigenvalue 3.0958e8 1/s (separation 8.086e-2); relaxational projections 4.5313e-9, 1.7702e-3, 5.9855e-4, 4.8365e-6; loss balance deviation 2.21e-9; detailed balance deviation 2.67e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3559e-11 cm3/s
+# T = 320 K, p = 600 Torr: chemical eigenvalues [1/s]: 2.4381e3, 1.0912e6, 2.9973e6, 2.5031e7; lowest relaxation eigenvalue 2.9451e8 1/s (separation 8.499e-2); relaxational projections 4.7896e-9, 1.8016e-3, 6.3517e-4, 5.2499e-6; loss balance deviation 1.10e-7; detailed balance deviation 3.50e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3670e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.010053e6,8.645802e4,2.774157e6,2.221688e-5,1.420317e5,1.404914e-1,7.405700e3,1.216747e-1,4.579034e-9
-G3,1.568034e3,2.483374e3,8.776887e2,2.050264e-3,2.977071e1,2.033705e-4,3.982800e0,3.894748e0,1.806919e-12
-G4,2.192666e4,3.847797e2,2.502861e7,7.092969e-8,4.448115e2,7.978226e-2,5.854567e3,1.226654e-3,2.500000e7
-G6,1.986266e-7,1.039316e-3,1.128854e-7,1.130625e6,-5.103111e-8,-5.356842e-12,-1.351689e-9,1.130625e6,5.286105e-21
-R,3.829241e-12,4.429900e-14,1.514212e-12,-1.470525e-22,5.576874e-12,1.945573e-17,2.379141e-13,9.812451e-18,-4.882215e-14
+G2,3.000024e6,8.633918e4,2.769014e6,1.308768e-5,1.370766e5,1.406879e-1,7.594660e3,1.258731e-1,-6.541478e-9
+G3,1.565858e3,2.483307e3,8.792428e2,1.642338e-3,3.016842e1,2.073940e-4,4.141620e0,3.894107e0,5.764931e-12
+G4,2.187955e4,3.855602e2,2.502853e7,5.170025e-8,4.492870e2,7.776943e-2,5.819938e3,1.286792e-3,2.500000e7
+G6,1.142974e-7,8.312331e-4,9.283015e-8,1.091218e6,2.261058e-8,1.057649e-13,2.844057e-9,1.091218e6,4.270372e-21
+R,3.695516e-12,4.489176e-14,1.529499e-12,6.731465e-23,5.465394e-12,1.986153e-17,2.467374e-13,1.034793e-17,-5.128047e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 320 K, p = 760 Torr: chemical eigenvalues [1/s]: 2.4386e3, 1.3352e6, 3.0543e6, 2.5032e7; lowest relaxation eigenvalue 3.9210e8 1/s (separation 6.384e-2); relaxational projections 3.5171e-9, 1.6247e-3, 4.5406e-4, 3.2788e-6; loss balance deviation 9.16e-9; detailed balance deviation 1.57e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.2992e-11 cm3/s
+# T = 320 K, p = 760 Torr: chemical eigenvalues [1/s]: 2.4386e3, 1.2894e6, 3.0444e6, 2.5032e7; lowest relaxation eigenvalue 3.7301e8 1/s (separation 6.711e-2); relaxational projections 3.7060e-9, 1.6549e-3, 4.8101e-4, 3.5596e-6; loss balance deviation 6.03e-9; detailed balance deviation 1.79e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9136e-11 cm3/s, return to the reactant 3.3117e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.057031e6,8.697275e4,2.796519e6,2.544007e-5,1.670078e5,1.381347e-1,6.531699e3,1.034038e-1,-7.195625e-9
-G3,1.577460e3,2.483654e3,8.711242e2,2.766263e-3,2.786746e1,1.843690e-4,3.302009e0,3.897199e0,7.485805e-12
-G4,2.212794e4,3.815395e2,2.502894e7,9.573025e-8,4.224709e2,8.948180e-2,6.010325e3,9.820307e-4,2.500000e7
-G6,2.274218e-7,1.403433e-3,1.324604e-7,1.335193e6,-2.822722e-8,-7.057147e-12,-1.610524e-9,1.335193e6,4.592259e-21
-R,4.503260e-12,4.146297e-14,1.437950e-12,-8.076797e-23,6.143390e-12,1.753876e-17,1.991244e-13,7.620024e-18,-3.843188e-14
+G2,3.047165e6,8.687033e4,2.792058e6,2.473356e-5,1.615233e5,1.388188e-1,6.712791e3,1.070420e-1,-2.616591e-9
+G3,1.575585e3,2.483599e3,8.724071e2,2.594755e-3,2.827141e1,1.883655e-4,3.436420e0,3.896763e0,4.302187e-13
+G4,2.208823e4,3.821658e2,2.502888e7,8.883952e-8,4.273334e2,8.741404e-2,5.978571e3,1.028760e-3,2.500000e7
+G6,2.210837e-7,1.316193e-3,1.261894e-7,1.289413e6,1.514610e-8,-2.974026e-12,1.196677e-9,1.289413e6,5.851196e-21
+R,4.355256e-12,4.206481e-14,1.454543e-12,4.551656e-23,6.018337e-12,1.794204e-17,2.069079e-13,8.039446e-18,-4.046031e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 330 K, p = 500 Torr: chemical eigenvalues [1/s]: 3.2762e3, 1.6077e6, 3.6607e6, 2.5048e7; lowest relaxation eigenvalue 2.4567e8 1/s (separation 1.020e-1); relaxational projections 1.1180e-8, 3.3899e-3, 1.2928e-3, 1.3816e-5; loss balance deviation 7.23e-10; detailed balance deviation 4.18e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4978e-11 cm3/s
-# warning: the largest chemical eigenvalue 2.504827949330227e7 s-1 is 0.102 of the lowest relaxation eigenvalue 2.4567366765610534e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006); wells in fast equilibrium should be merged (Georgievskii et al. 2013, Sec. IV).
+# T = 330 K, p = 500 Torr: chemical eigenvalues [1/s]: 3.2760e3, 1.5479e6, 3.6432e6, 2.5048e7; lowest relaxation eigenvalue 2.3336e8 1/s (separation 1.073e-1); relaxational projections 1.1861e-8, 3.4459e-3, 1.3682e-3, 1.4957e-5; loss balance deviation 1.21e-9; detailed balance deviation 4.61e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.5068e-11 cm3/s
+# warning: the largest chemical eigenvalue 2.5048069803067826e7 s-1 is 0.107 of the lowest relaxation eigenvalue 2.3336269069529402e8 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006). Species are merged only above ChemicalEigenvalueMax = 0.2 (Georgievskii et al. 2013, Sec. IV).
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.665348e6,1.014243e5,3.321685e6,3.141362e-5,2.272753e5,3.004589e-1,1.496254e4,2.831927e-1,0.000000e0
-G3,2.082309e3,3.334016e3,1.163156e3,2.652802e-3,6.919251e1,5.923010e-4,1.053531e1,8.819218e0,7.647926e-12
-G4,3.038604e4,5.235494e2,2.504356e7,9.762382e-8,1.014538e3,1.788264e-1,1.163492e4,3.705400e-3,2.500000e7
-G6,3.339139e-7,1.428028e-3,2.040690e-7,1.607693e6,-8.951009e-8,-6.786099e-12,2.056806e-9,1.607693e6,2.486717e-21
-R,2.751935e-12,4.087903e-14,1.338208e-12,-9.414917e-23,4.353546e-12,2.304826e-17,2.695353e-13,1.365993e-17,-4.704846e-14
+G2,3.647865e6,1.012230e5,3.312899e6,3.052194e-5,2.184462e5,2.993044e-1,1.529699e4,2.929483e-1,1.187782e-9
+G3,2.078121e3,3.333877e3,1.166005e3,2.486396e-3,6.999621e1,6.021882e-4,1.093491e1,8.816762e0,-2.493889e-12
+G4,3.028980e4,5.250539e2,2.504338e7,8.881728e-8,1.021985e3,1.735088e-1,1.154370e4,3.892586e-3,2.500000e7
+G6,3.246683e-7,1.337940e-3,2.004801e-7,1.547878e6,-7.693309e-8,-6.728509e-13,7.887207e-9,1.547878e6,1.500605e-21
+R,2.644831e-12,4.135513e-14,1.348104e-12,-8.056254e-23,4.263849e-12,2.345935e-17,2.787658e-13,1.441282e-17,-4.924492e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 330 K, p = 600 Torr: chemical eigenvalues [1/s]: 3.2768e3, 1.8371e6, 3.7225e6, 2.5049e7; lowest relaxation eigenvalue 2.9478e8 1/s (separation 8.498e-2); relaxational projections 9.1258e-9, 3.1946e-3, 1.0605e-3, 1.0429e-5; loss balance deviation 2.32e-9; detailed balance deviation 2.92e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4639e-11 cm3/s
+# T = 330 K, p = 600 Torr: chemical eigenvalues [1/s]: 3.2766e3, 1.7695e6, 3.7051e6, 2.5049e7; lowest relaxation eigenvalue 2.8000e8 1/s (separation 8.946e-2); relaxational projections 9.6540e-9, 3.2492e-3, 1.1209e-3, 1.1291e-5; loss balance deviation 1.45e-9; detailed balance deviation 3.30e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4738e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.727290e6,1.020921e5,3.350960e6,3.480128e-5,2.604651e5,3.024298e-1,1.377303e4,2.507646e-1,-1.306560e-8
-G3,2.096206e3,3.334462e3,1.153921e3,3.341040e-3,6.628677e1,5.566938e-4,9.217837e0,8.826836e0,6.650370e-13
-G4,3.070124e4,5.187542e2,2.504415e7,1.276128e-7,9.859761e2,1.982042e-1,1.194818e4,3.122240e-3,2.500000e7
-G6,3.694094e-7,1.800846e-3,2.192773e-7,1.837128e6,1.638775e-8,-9.985361e-13,6.699029e-9,1.837128e6,-1.857892e-21
-R,3.154543e-12,3.915823e-14,1.300299e-12,2.002404e-23,4.692567e-12,2.157175e-17,2.383749e-13,1.128549e-17,-3.984014e-14
+G2,3.709802e6,1.019106e5,3.342986e6,3.394379e-5,2.507964e5,3.022025e-1,1.410843e4,2.595828e-1,2.375563e-9
+G3,2.092430e3,3.334343e3,1.156396e3,3.131591e-3,6.711482e1,5.668156e-4,9.574398e0,8.824850e0,-6.650370e-13
+G4,3.061619e4,5.200272e2,2.504399e7,1.182571e-7,9.943639e2,1.926571e-1,1.186141e4,3.275230e-3,2.500000e7
+G6,3.603707e-7,1.687361e-3,2.147630e-7,1.769534e6,-1.703846e-7,-2.963833e-12,2.735727e-8,1.769534e6,8.574885e-21
+R,3.037259e-12,3.964854e-14,1.311425e-12,-1.814751e-22,4.593502e-12,2.199094e-17,2.469194e-13,1.191178e-17,-4.178399e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
 #   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
 #   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
 
-# T = 330 K, p = 760 Torr: chemical eigenvalues [1/s]: 3.2777e3, 2.1790e6, 3.8032e6, 2.5050e7; lowest relaxation eigenvalue 3.7334e8 1/s (separation 6.710e-2); relaxational projections 7.1112e-9, 2.9489e-3, 8.2581e-4, 7.2359e-6; loss balance deviation 1.15e-8; detailed balance deviation 1.71e-1; precision floor 2.057e-2 1/s
-# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4148e-11 cm3/s
+# T = 330 K, p = 760 Torr: chemical eigenvalues [1/s]: 3.2775e3, 2.1000e6, 3.7855e6, 2.5050e7; lowest relaxation eigenvalue 3.5463e8 1/s (separation 7.064e-2); relaxational projections 7.4990e-9, 3.0016e-3, 8.7143e-4, 7.8358e-6; loss balance deviation 7.24e-9; detailed balance deviation 1.93e-1; precision floor 2.057e-2 1/s
+# reactant R: capture 3.9332e-11 cm3/s, return to the reactant 3.4260e-11 cm3/s
 From\To,G2,G3,G4,G6,R,P1,P5,P7,escape(G4)
-G2,3.808048e6,1.028614e5,3.384888e6,4.003195e-5,3.080451e5,3.003369e-1,1.225251e4,2.135590e-1,8.314471e-9
-G3,2.112208e3,3.334945e3,1.143755e3,4.523923e-3,6.241971e1,5.097586e-4,7.723101e0,8.834465e0,-2.992667e-12
-G4,3.105686e4,5.136146e2,2.504485e7,1.726858e-7,9.444523e2,2.243769e-1,1.232986e4,2.516034e-3,2.500000e7
-G6,4.252942e-7,2.442270e-3,2.533931e-7,2.178988e6,1.710972e-7,-5.421421e-13,8.419265e-9,2.178988e6,-2.486717e-21
-R,3.731667e-12,3.686915e-14,1.245278e-12,1.868860e-22,5.183702e-12,1.963194e-17,2.016460e-13,8.793619e-18,-3.178702e-14
+G2,3.790395e6,1.027026e5,3.377869e6,3.880149e-5,2.972434e5,3.012142e-1,1.257926e4,2.212130e-1,-5.938908e-9
+G3,2.108906e3,3.334848e3,1.145808e3,4.233573e-3,6.326843e1,5.200071e-4,8.029073e0,8.833004e0,-3.158926e-12
+G4,3.098409e4,5.146409e2,2.504470e7,1.619235e-7,9.538790e2,2.185951e-1,1.224923e4,2.635784e-3,2.500000e7
+G6,4.120548e-7,2.284765e-3,2.442538e-7,2.100020e6,1.200402e-7,9.956415e-12,1.725501e-8,2.100020e6,-2.386676e-21
+R,3.600651e-12,3.737145e-14,1.257761e-12,1.318028e-22,5.071677e-12,2.005502e-17,2.092843e-13,9.285991e-18,-3.341974e-14

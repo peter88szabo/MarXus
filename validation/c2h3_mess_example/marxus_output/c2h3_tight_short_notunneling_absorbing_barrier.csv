@@ -4,8 +4,8 @@
 
 # intermediate steady state (absorbing barrier 10 k_BT below the lowest threshold)
 T[K],P[Torr],Phi(W1:B1),Phi_stab(W1),Phi_sink(W1),k_ca(W1:B1)[1/s],k_tot[1/s],fpop(W1),<E>(W1)[cm-1],mass_balance,residual
-1000,760,9.404057e-1,5.959434e-2,0.000000e0,1.630040e9,1.733337e9,1.000000e0,1.167427e4,1.000000000000,2.668e-16
+1000,760,9.399161e-1,6.008394e-2,0.000000e0,1.635740e9,1.740304e9,1.000000e0,1.167595e4,1.000000000000,2.749e-16
 
 # bimolecular rate coefficients of P1 [cm3/s], intermediate steady state
 T[K],P[Torr],k_inf,k(P1->W1)
-1000,760,3.876199e-11,2.309995e-12
+1000,760,3.876199e-11,2.328973e-12

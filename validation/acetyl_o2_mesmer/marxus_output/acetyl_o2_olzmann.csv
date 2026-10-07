@@ -1,0 +1,25 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2.inp: grain 100.000 cm-1
+# solution method: SteadyStateOlzmann: final steady state, thermal eigenpair by InverseIteration (sum-rule tolerance 1.5e-2)
+#   well Int1     grains    179 (absolute -117 .. 61), channels: B_R1, B_R2, B_R4
+#   well Int2     grains    168 (absolute -106 .. 61), channels: B_R2, B_R3
+
+# final steady state
+# not available: T = 298 K, p = 200.72 Torr: relative residual 7.98913458494854e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+
+# thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by InverseIteration; sum-rule tolerance 1.5e-2
+# k_uni = sum_j k_th(j) + k_sink: the specific rate coefficients k(E) of the product channels (and the sink)
+#   averaged over the normalized thermal eigenvector of J, the eigenvector of the lowest eigenvalue lambda_1,
+#   "analogous to eqn (9) but with Ns = Ns_th being the normalized eigenvector associated with the lowest
+#   eigenvalue lambda_1" (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12).
+# lambda_1 = lowest eigenvalue of J (same paper, eq. 12). The column sums of J are the loss rates, so
+#   lambda_1 = k_uni exactly; numerically lambda_1 carries an absolute error of order eps*||J|| and is lost when
+#   it lies many orders of magnitude below the collision frequency (deep wells, low T), while the eigenvector,
+#   and with it k_uni, is much less sensitive. k_uni is therefore the reported rate coefficient.
+# precision_floor = eps*max(S_ii), S the symmetrized J: the order of the absolute rounding error of lambda_1.
+#   A lambda_1 near or below it, even a negative one, is rounding noise below the double-precision floor; this
+#   is not a merging of eigenvalues, which would show as a small lambda_2/k_uni (thermal decay no longer
+#   separated from relaxation).
+# sum_rule_deviation = |lambda_1 - k_uni| / k_uni; above the tolerance a warning is listed below.
+# warning: T = 298 K, p = 200.72 Torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.1981333393282917e-6 s-1, k_uni = 1.280656101388907e-6 s-1, relative deviation 6.444e-2 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+T[K],P[Torr],k_uni[1/s],lambda_1[1/s],precision_floor[1/s],sum_rule_deviation,lambda_2/k_uni,k_th(Int1:B_R1)[1/s],k_th(Int1:B_R2)[1/s],k_th(Int1:B_R4)[1/s],k_th(Int2:B_R2)[1/s],k_th(Int2:B_R3)[1/s],k_inf(Int1:B_R1)[1/s],k_inf(Int1:B_R2)[1/s],k_inf(Int1:B_R4)[1/s],k_inf(Int2:B_R2)[1/s],k_inf(Int2:B_R3)[1/s],k_sink(Int1)[1/s],k_sink(Int2)[1/s],fpop(Int1),fpop(Int2)
+298,200.72,1.280656e-6,1.198133e-6,2.298e-5,6.444e-2,1.204297e3,1.473546e-9,1.886601e-6,3.580855e-15,6.090075e-7,1.279183e-6,2.726471e-9,1.889307e-6,4.522802e-14,5.087150e-4,1.282506e-3,0.000000e0,0.000000e0,9.987896e-1,1.210370e-3

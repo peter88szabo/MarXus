@@ -2,6 +2,8 @@
 
 **MarXus, 2026-10-05.** Reproduction of the reference MESS run of this multiwell network. The key quantity is the yield of P5 (IEPOX + OH), a few percent of the total. Most of the reaction ends in the escape channel after stabilization of Gamma-4.
 
+**Re-run 2026-10-06** with the Neufeld collision integral (the new default); all numbers below are from that run (`../../reports/collision_integral_neufeld.md`).
+
 > **Update (2026-10-05, evening): two solution methods.** MarXus has two solution methods: the steady state (GO10 eqs. 7, 8), in the intermediate and final versions, and the CSE method.
 > - The thermal rate coefficients (k_uni, k∞ of every channel) are part of the final steady state, from the lowest eigenpair of its J (GO10 eq. 12). They are now written in the steady-state outputs after the final steady-state table. The separate `case2_tstlevel_E_eigenvalue.out` and `case2_tstlevel_E_mess_eckart_eigenvalue.out` are gone.
 > - The CSE run uses `--method cse`.
@@ -27,22 +29,22 @@ MarXus has four methods in three families, and each is run separately, with its 
 
 | quantity | MESS | SteadyStateAbsorbingBarrier | CSE | SteadyStateOlzmann (overall) | TimeIntegration (overall) |
 |---|---|---|---|---|---|
-| k(R → IEPOX + OH), cm³/s | 1.954e-13 | 1.886e-13 | 1.885e-13 | 1.943e-13 | 1.943e-13 |
-| k(R → G4), cm³/s | 1.883e-12 | 1.656e-12 | 1.866e-12 | – | – |
-| long-time IEPOX + OH, % of the net reaction | 2.47 (fate of its rate tables) | – | 2.32448 | 2.32448 | 2.32448 |
+| k(R → IEPOX + OH), cm³/s | 1.954e-13 | 1.963e-13 | 1.962e-13 | 2.019e-13 | 2.019e-13 |
+| k(R → G4), cm³/s | 1.883e-12 | 1.666e-12 | 1.892e-12 | – | – |
+| long-time IEPOX + OH, % of the net reaction | 2.47 (fate of its rate tables) | – | 2.45778 | 2.45778 | 2.45778 |
 
 All 21 conditions are in `method_comparison.csv` and `../../reports/method_comparison.md`.
 
 **Bimolecular-to-bimolecular R → IEPOX + OH** (chemical activation):
 - The two prompt quantities, the absorbing barrier (k∞Φ_P5) and CSE (G13 eq. 21), agree within 0.44%.
-- Both are below MESS's R → P5: the barrier by 2.6–3.5%, CSE by 3.0–3.6% (the collisional part; see Section 4.4).
-- The overall values (SteadyStateOlzmann, TimeIntegration) include the thermal formation through the stabilized wells, −2.6 … +3.8% from MESS's prompt R → P5. The two are identical.
+- Both are above MESS's R → P5: the barrier by 0.44–0.74%, CSE by 0.28–0.50% (Neufeld collision integral, `../../reports/collision_integral_neufeld.md`; Section 4.4).
+- The overall values (SteadyStateOlzmann, TimeIntegration) include the thermal formation through the stabilized wells, +1.1 … +7.4% from MESS's prompt R → P5. The two are identical.
 
 **Bimolecular-to-well** (stabilization), against MESS:
-- **CSE:** R → G4 −1.0 … −0.3%, R → G3 −1.2 … −0.7%, R → G2 +3.0 … +5.2%.
-- **Absorbing barrier:** R → G4 −19.0 … −9.5%, R → G2 −0.7 … +2.4%.
+- **CSE:** R → G4 +0.43 … +0.60%, R → G3 +0.39 … +0.57%, R → G2 +0.90 … +1.13%.
+- **Absorbing barrier:** R → G4 −18.8 … −9.5%, R → G2 −4.8 … +0.2%.
   - It counts the flux into the grains 10 kT below the lowest threshold of each well, a different definition of stabilization from the chemical eigenmode of CSE.
-  - Its total stabilization is 2.8–9.2% below CSE's.
+  - Its total stabilization is 3.0–9.9% below CSE's.
 
 **Former temperature step at 304.7 K, now removed.** With the former low-energy reduction rule of the collision kernel, all methods had a step between 304 and 305 K: R → G4 +3.2%, R → G2 −0.9%, and the lowest relaxation eigenvalue −5.1%. Its integer window n_ref = ⌊1.5⟨ΔE_down⟩/ΔE⌋ + 1 changed from 8 to 9 there.
 - **The fix.** The low-energy reservoir state (MESMER) replaced it (`../../reports/low_energy_reservoir_state.md`).
@@ -61,17 +63,17 @@ All 21 conditions are in `method_comparison.csv` and `../../reports/method_compa
 
 | IEPOX + OH share at 300 K, 760 Torr | % of the net reaction |
 |---|---|
-| final steady state | 2.32448 |
-| reconstructed from the CSE kinetics | 2.32448 |
+| final steady state | 2.45778 |
+| reconstructed from the CSE kinetics | 2.45778 |
 
 **All 21 conditions.** Largest relative deviation (`cse_vs_final_steady_state.csv`, `plots/cse_vs_final_steady_state.png`):
 
 | channel | largest relative deviation |
 |---|---|
-| IEPOX + OH (P5) | 3.6·10⁻⁷ |
-| escape (G4) | 1.9·10⁻⁸ |
-| P1 | 5.6·10⁻⁷ |
-| P7 (at most 0.008% of the reaction) | 5.3·10⁻⁴ |
+| IEPOX + OH (P5) | 6.4·10⁻⁷ |
+| escape (G4) | 2.3·10⁻⁸ |
+| P1 | 5.5·10⁻⁷ |
+| P7 (at most 0.008% of the reaction) | 1.4·10⁻⁴ |
 
 P5, the escape and P1 agree to the precision of the printed digits. P7 is formed through G6, and the CSE entries on its path (R → G6 ≈ 10⁻²² cm³/s) are at the rounding level.
 
@@ -96,9 +98,9 @@ P5, the escape and P1 agree to the precision of the printed digits. P7 is formed
 - With the CSE identity above, all three methods give the same long-time yields.
 
 **Time scales at 300 K, 760 Torr** (`plots/time_evolution_300K_760torr.png`):
-- **R:** the nascent G2 redissociates within about 10⁻⁹ s (78.4%).
-- **IEPOX + OH:** complete at about 10⁻⁸ s (0.502%), formed by chemically activated G4.
-- **Escape:** from G4 between 10⁻¹⁰ and 10⁻⁵ s (21.1%).
+- **R:** the nascent G2 redissociates within about 10⁻⁹ s (78.8%).
+- **IEPOX + OH:** complete at about 10⁻⁸ s (0.521%), formed by chemically activated G4.
+- **Escape:** from G4 between 10⁻¹⁰ and 10⁻⁵ s (20.7%).
 - **P7:** a prompt part near 10⁻⁹ s and a thermal part near 10⁻⁴ … 10⁻³ s, through stabilized G3 → G6.
 
 ## 1. Files
@@ -229,28 +231,28 @@ The MESS-only output options (HotEnergies, TimeEvolution, PED, eigenvector outpu
 
 After κ, every channel agrees within 0.3–0.7%. This includes the PST channels, which have no tunneling. Partition functions, symmetry factors and energies therefore agree, and the remaining difference is how the Eckart tunneling factor is evaluated.
 
-**Interpretation.** MarXus uses the exact Eckart transmission probability, as decided (`reports/tunneling_ilt_and_energy_graining.md`). MESS's κ is lower: by 2–4% for the moderate barriers, and by 17–21% in the deep-tunneling H-transfers, where κ ≈ 10²–10⁵. This is the same direction as in the C₂H₃ benchmark (`validation/c2h3_mess_example/`). How MESS evaluates its Eckart factor was not examined here.
+**Interpretation.** MarXus uses the exact Eckart transmission probability (`reports/tunneling_ilt_and_energy_graining.md`). MESS's κ is lower: by 2–4% for the moderate barriers, and by 17–21% in the deep-tunneling H-transfers, where κ ≈ 10²–10⁵. This is the same direction as in the C₂H₃ benchmark (`validation/c2h3_mess_example/`). How MESS evaluates its Eckart factor was not examined here.
 
 ### 4.2 The P5 (IEPOX + OH) yield (`net_yields_comparison.csv`, `plots/p5_share.png`, `plots/iepox_oh_yield.png`)
 
 **How the shares are computed.**
-- *Normalization.* All shares are fractions of the net reaction, P1 + P5 + P7 + escape = 1. MarXus normalizes to the capture rate k∞, which includes the prompt redissociation of hot G2 to R (65–89% of k∞); MESS's phenomenological k(R → X) do not.
+- *Normalization.* All shares are fractions of the net reaction, P1 + P5 + P7 + escape = 1. MarXus normalizes to the capture rate k∞, which includes the prompt redissociation of hot G2 to R (66–89% of k∞); MESS's phenomenological k(R → X) do not.
 - *MarXus.* Final steady state (Olzmann, PCCP 4, 3614 (2002)) with the G4 escape as its physical sink. This gives the long-time yields directly.
 - *MESS.* The long-time fate computed from its (T, p) rate tables: R forms each well, and each well then ends in a product or the escape (absorption probabilities of the well network).
 
 | T (K) | P5 share MESS, 500 / 600 / 760 Torr | P5 share MarXus | deviation |
 |---|---|---|---|
-| 270 | 2.22 / 1.76 / 1.29% | 2.48 / 1.97 / 1.45% | +11.5 … +12.0% |
-| 300 | 4.03 / 3.27 / 2.47% | 4.40 / 3.57 / 2.70% | +9.1 … +9.5% |
-| 330 | 7.17 / 5.99 / 4.72% | 7.66 / 6.41 / 5.04% | +6.9% |
+| 270 | 2.22 / 1.76 / 1.29% | 2.60 / 2.07 / 1.52% | +17.0 … +17.8% |
+| 300 | 4.03 / 3.27 / 2.47% | 4.63 / 3.77 / 2.86% | +14.9 … +15.6% |
+| 330 | 7.17 / 5.99 / 4.72% | 8.03 / 6.73 / 5.30% | +12.0 … +12.5% |
 
 **Other channels.**
-- **Escape** agrees within 0.2–0.5%: 92–99% of the net reaction.
-- **P1** is +7 … +11%, and **P7** −9 … −14%. Both are tiny, 10⁻⁶–10⁻⁵ of the net reaction.
+- **Escape** agrees within 0.2–0.9%: 92–98% of the net reaction.
+- **P1** is +10 … +16%, and **P7** −7 … −14%. Both are tiny, 10⁻⁶–10⁻⁵ of the net reaction.
 
 **The P5 offset follows the tunneling difference.** It falls with T exactly as the κ ratios do: B4P5 itself is +4% at 300 K, and the isomerization network that feeds G4 is +17–22%.
 
-**Apparent rate coefficient.** The apparent k(R → IEPOX + OH) of the intermediate steady state (`plots/iepox_oh_yield.png`, right) is +15.0 … +15.7% above MESS at all conditions, more than the long-time share. It contains the prompt (chemically activated) P5 formation, which depends on how the absorbing barrier and MESS's eigenvalue splitting assign the hot G4 population. The long-time share is the quantity that both codes define without such an assignment.
+**Apparent rate coefficient.** The apparent k(R → IEPOX + OH) of the intermediate steady state (`plots/iepox_oh_yield.png`, right) is +19.0 … +20.3% above MESS at all conditions, more than the long-time share. It contains the prompt (chemically activated) P5 formation, which depends on how the absorbing barrier and MESS's eigenvalue splitting assign the hot G4 population. The long-time share is the quantity that both codes define without such an assignment.
 
 ### 4.3 Apparent rate coefficients (`apparent_rates_comparison.csv`, `plots/apparent_rates_760torr.png`)
 
@@ -258,9 +260,9 @@ MarXus intermediate steady state (absorbing barrier 10 kT below the lowest thres
 
 | channel | MESS (cm³/s) | MarXus (cm³/s) |
 |---|---|---|
-| R → G2 | 8.01e-12 | 7.74e-12 |
-| R → G4 | 3.05e-12 | 2.93e-12 |
-| R → P5 | 2.48e-13 | 2.87e-13 |
+| R → G2 | 8.01e-12 | 7.64e-12 |
+| R → G4 | 3.05e-12 | 2.88e-12 |
+| R → P5 | 2.48e-13 | 2.98e-13 |
 
 The MESS escape entry R → G4-escape is **negative**, −1.3·10⁻¹³ cm³/s, and several other MESS entries are negative or tiny (e.g. G2 → G4-escape −2.9·10⁻¹⁰ s⁻¹). The phenomenological splitting of MESS's chemically significant eigenvalues is therefore not resolved for the escape channel at these conditions. The long-time shares of Section 4.2 do not depend on this splitting.
 
@@ -294,15 +296,10 @@ For deep tunneling it is smaller than the exact Eckart factor (Section 4.1).
   - B4P1 +0.6%;
   - B12 +0.3%, B6P7 +0.7%;
   - B34 and B36 within ±0.2%.
-- **IEPOX + OH share of the net reaction:** MarXus is **5.1–5.9% below MESS**. With the exact Eckart it was 7–12% above.
-- **Escape share:** within 0.4%. **P1:** −4.0 … −4.6%. **P7:** −0.3 … −1.6%.
+- **IEPOX + OH share of the net reaction:** MarXus is **0.34–0.55% below MESS**. With the exact Eckart it is 12–18% above.
+- **Escape share:** within 0.04%. **P1:** −0.46 … −0.57%. **P7:** −0.19 … −0.37%.
 
-**Interpretation.** The tunneling model explains most of the original difference. The remaining −5.5% in the IEPOX + OH share is not a high-pressure effect: B4P5's k∞ agrees within 1.1%. P5 is formed almost entirely by chemically activated G4, before stabilization; thermal G4 forms P5 at 72 s⁻¹ against the escape at 2.5·10⁷ s⁻¹. The remainder therefore comes from the collisional part of the master equation, where the codes differ in:
-- the normalization of the exponential-down kernel (`reports/collision_kernel_detailed_balance_and_normalization.md`);
-- the collision frequency;
-- the energy graining.
-
-The MESS log prints neither the collision frequency nor the kernel normalization, so this was not resolved here.
+**Interpretation.** The tunneling model explains the difference; with the MESS model, B4P5's k∞ agrees within 1.1%. P5 is formed almost entirely by chemically activated G4, before stabilization; thermal G4 forms P5 at 72 s⁻¹ against the escape at 2.5·10⁷ s⁻¹. With the former default collision integral (Troe 1977, eq. 3.3) the share was 5.1–5.9% below MESS; with the Neufeld collision integral, which MESS uses as well, it is 0.34–0.55% below (`../../reports/collision_integral_neufeld.md`).
 
 ### 4.5 The CSE method: species-to-species rate coefficients like MESS (`--method cse`)
 
@@ -314,22 +311,22 @@ The MESS log prints neither the collision frequency nor the kernel normalization
 
 | entries | MarXus/MESS − 1 |
 |---|---|
-| **R → P5 (IEPOX + OH)** | **−3.6 … −3.0%** |
-| R → G2 / G3 / G4 | +3.0 … +5.2% / −1.2 … −0.7% / −1.0 … −0.3% |
-| R → P1, P7 | −5.1 … −1.5% |
-| R → escape (negative in both codes, see below) | −5.5 … −4.5% |
-| well → well (entries above the rounding level) | −0.5 … +1.3% |
-| well → R and well → products (entries above the rounding level) | −4.5 … +5.0% |
+| **R → P5 (IEPOX + OH)** | **+0.28 … +0.50%** |
+| R → G2 / G3 / G4 | +0.90 … +1.13% / +0.39 … +0.57% / +0.43 … +0.60% |
+| R → P1, P7 | +0.17 … +0.46% |
+| R → escape (negative in both codes, see below) | −0.67 … +0.12% |
+| well → well (entries above the rounding level) | −0.3 … +1.3% |
+| well → R and well → products (entries above the rounding level) | −0.6 … +0.9% |
 | G4 → escape | +0.6% |
 | entries involving G6 other than G6 → P7, G6 → G3 and the loss of G6 | rounding level in both codes (10⁻²³ … 10⁻⁷), not comparable |
 
 (Re-run with the low-energy reservoir state, 2026-10-06. With the former reduction rule, R → G4 had a step at 304.7 K, +1.4 … +6.1%.)
 
 Two further observations:
-- **MESS's negative R → escape(G4) entry is reproduced** (−1.47·10⁻¹³ against −1.32·10⁻¹³ cm³/s at 270 K, 500 Torr). It belongs to the formulation (G13 eq. 21), not to MESS's numerics.
+- **MESS's negative R → escape(G4) entry is reproduced** (−1.324·10⁻¹³ against −1.323·10⁻¹³ cm³/s at 270 K, 500 Torr). It belongs to the formulation (G13 eq. 21), not to MESS's numerics.
 - **The only large deviations** are entries of 10⁻⁹ to 10⁻²³, which are rounding noise in both codes.
 
-With the same tunneling and TST level as MESS, the remaining differences are a few percent, consistent with the collisional part (Section 4.4).
+With the same tunneling model, TST level and collision integral (Neufeld) as MESS, every rate coefficient of the reactant row agrees within −0.67 … +1.13% (`../../reports/collision_integral_neufeld.md`).
 
 ### 4.6 The four methods against MESS and against each other (MESS Eckart model)
 
@@ -344,22 +341,22 @@ Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.cs
 
 | quantity | SteadyStateOlzmann | SteadyStateAbsorbingBarrier | CSE | TimeIntegration |
 |---|---|---|---|---|
-| direct R → P5 | – | −3.5 … −2.6% | −3.6 … −3.0% | – |
-| overall R → P5 / R → escape | −3.5 … −2.8% / +2.2 … +3.2% | −3.5 … −2.7% / +2.2 … +3.1% | −3.5 … −2.8% / +2.2 … +3.2% | −3.5 … −2.8% / +2.2 … +3.2% |
-| R → G2 / G3 / G4 | – | −0.7 … +2.4 / +2.1 … +9.6 / −19.0 … −9.5% | +3.0 … +5.2 / −1.2 … −0.7 / −1.0 … −0.3% | – |
-| long-time share P5 / escape | −5.9 … −5.1% / +0.07 … +0.42% | −5.8 … −5.1% / +0.07 … +0.40% | −5.9 … −5.1% / +0.07 … +0.42% | −5.9 … −5.1% / +0.07 … +0.42% |
-| long-time share P1 / P7 | −4.6 … −4.0% / −1.6 … −0.3% | −4.6 … −3.9% / −1.6 … −0.3% | −4.6 … −4.0% / −1.5 … −0.3% | −4.6 … −4.0% / −1.6 … −0.3% |
-| prompt branching R → P5 | – | −5.9 … −5.1% | −6.3 … −5.1% | – |
-| thermal fate G4 → P5 / G4 → R | +0.3 … +1.9% / +0.7 … +2.2% | – | +0.2 … +0.9% / +1.7 … +2.7% | – |
-| thermal fate G2 → P5 / G2 → R | −3.7 … −3.4% / +1.9 … +4.7% | – | −3.4 … −2.8% / +1.8 … +3.8% | – |
+| direct R → P5 | – | +0.44 … +0.74% | +0.28 … +0.50% | – |
+| overall R → P5 / R → escape | +0.31 … +0.50% / +0.84 … +0.89% | +0.38 … +0.50% / +0.78 … +0.85% | +0.31 … +0.50% / +0.84 … +0.89% | +0.31 … +0.50% / +0.84 … +0.89% |
+| R → G2 / G3 / G4 | – | −4.8 … +0.2 / +3.8 … +11.0 / −18.8 … −9.5% | +0.90 … +1.13 / +0.39 … +0.57 / +0.43 … +0.60% | – |
+| long-time share P5 / escape | −0.55 … −0.34% / +0.005 … +0.040% | −0.45 … −0.33% / +0.004 … +0.026% | −0.55 … −0.34% / +0.005 … +0.040% | −0.55 … −0.34% / +0.005 … +0.040% |
+| long-time share P1 / P7 | −0.57 … −0.46% / −0.37 … −0.19% | −0.53 … −0.43% / −0.39 … −0.26% | −0.57 … −0.46% / −0.38 … −0.19% | −0.57 … −0.46% / −0.37 … −0.19% |
+| prompt branching R → P5 | – | −0.37 … +0.15% | −0.60 … −0.34% | – |
+| thermal fate G4 → P5 / G4 → R | +0.19 … +1.22% / −0.69 … −0.01% | – | +0.08 … +0.12% / +0.45 … +0.49% | – |
+| thermal fate G2 → P5 / G2 → R | −1.26 … −0.76% / −0.12 … +1.17% | – | −0.67 … −0.42% / −0.20 … +0.34% | – |
 
-The overall R → P5 (−3.5 … −2.8%) and the P5 share (−5.9 … −5.1%) differ by the net reaction, about 2.5% higher in MarXus than in MESS.
+The overall R → P5 (+0.31 … +0.50%) and the P5 share (−0.55 … −0.34%) differ by the net reaction, about 0.85% higher in MarXus than in MESS.
 
 CSE's well rate coefficients against MESS:
-- G4 → P5 +0.8 … +1.5%;
+- G4 → P5 +0.64 … +0.71%;
 - G4 → escape +0.56 … +0.58%;
-- G2 → R +2.7 … +5.0%;
-- G2 → G4 +0.7 … +0.9%, G4 → G2 +1.1 … +1.3%.
+- G2 → R +0.66 … +0.94%;
+- G2 → G4 +0.56 … +0.87%, G4 → G2 +0.95 … +1.28%.
 
 ![rates of the four methods against MESS](plots/mess_four_methods_rates.png)
 
@@ -372,15 +369,15 @@ CSE's well rate coefficients against MESS:
 **Against each other:**
 - **Long-time yields against SteadyStateOlzmann:**
   - TimeIntegration: equal in all printed digits;
-  - CSE: equal in all printed digits for P5, escape and P1; P7 within 5.3·10⁻⁴;
-  - SteadyStateAbsorbingBarrier + thermal fates: P5 +0.003 … +0.19%, escape −0.013 … 0%.
+  - CSE: equal in all printed digits for P5, escape and P1; P7 within 1.4·10⁻⁴;
+  - SteadyStateAbsorbingBarrier + thermal fates: P5 +0.003 … +0.19%, escape −0.014 … 0%.
 - **Total formation of P5:**
   - the prompt part of SteadyStateAbsorbingBarrier is +0.01 … +0.53% above CSE's direct part;
-  - its thermal part is −6.5 … −0.8% below CSE's part through the wells.
-- **Total formation of escape:** CSE's direct R → escape is negative (−1.17 … −0.57% of the eventual net reaction, as MESS's entry); the prompt escape of SteadyStateAbsorbingBarrier is 2.2 … 7.7%. The totals agree.
-- **Direct and stabilization rate coefficients, SteadyStateAbsorbingBarrier against CSE:** R → P5 +0.01 … +0.44%; R → G2 −5.7 … −0.6%, R → G3 +3.2 … +10.6%, R → G4 −18.4 … −9.0%.
-- **Thermal decay against k_uni:** λ₁ within 5.5·10⁻⁷, CSE's lowest chemical eigenvalue within 2.5·10⁻⁵, the TimeIntegration decay within 2.1·10⁻⁶.
-- **Thermal fates, CSE against SteadyStateOlzmann:** G3 within 4.3·10⁻⁶; G2 and G4 into R and P5 within 1.1%.
+  - its thermal part is −6.8 … −0.8% below CSE's part through the wells.
+- **Total formation of escape:** CSE's direct R → escape is negative (−1.25 … −0.61% of the eventual net reaction, as MESS's entry); the prompt escape of SteadyStateAbsorbingBarrier is 2.4 … 8.2%. The totals agree.
+- **Direct and stabilization rate coefficients, SteadyStateAbsorbingBarrier against CSE:** R → P5 +0.01 … +0.44%; R → G2 −5.9 … −0.7%, R → G3 +3.2 … +10.6%, R → G4 −19.2 … −9.9%.
+- **Thermal decay against k_uni:** λ₁ equal in all printed digits, CSE's lowest chemical eigenvalue within 2.0·10⁻⁵, the TimeIntegration decay within 1.2·10⁻⁶.
+- **Thermal fates, CSE against SteadyStateOlzmann:** G3 within 4.5·10⁻⁶; G2 and G4 into R and P5 within 1.15%.
 
 ![long-time yields of the four methods](plots/internal_four_methods_yields.png)
 
@@ -397,12 +394,16 @@ CSE's well rate coefficients against MESS:
 1. **MarXus reproduces the reference MESS run of this four-well network with two phase-space-theory channels and a physical sink.**
    - It needs no change to the deck except stating the TST level that the reference run actually used (E).
    - The capture rate agrees within 0.5%, and every channel's k∞ within 0.3–0.7% once the tunneling factor is accounted for.
-2. **The P5 (IEPOX + OH) share** is 1.3–7.2% (MESS) and 1.4–7.7% (MarXus), rising with T and falling with p. MarXus is 7–12% higher, entirely through its exact Eckart tunneling factors, which are larger by 2–21% than MESS's.
-3. **The escape after stabilization of G4** is 92–99% in both codes, agreeing within 0.5%.
+2. **The P5 (IEPOX + OH) share** is 1.3–7.2% (MESS) and 1.5–8.0% (MarXus), rising with T and falling with p. MarXus is 12–18% higher, through its exact Eckart tunneling factors, which are larger by 2–21% than MESS's; with the MESS Eckart model the share is 0.34–0.55% below MESS (Section 4.4).
+3. **The escape after stabilization of G4** is 92–99% in both codes, agreeing within 0.93%.
 
 ## 6. Open points and decisions
 
 1. **MESS's Eckart factor (done).** MESS uses a semiclassical Eckart model. It is available in MarXus as `mess_eckart_tunneling` (`--tunneling mess-eckart`); the exact Eckart stays the default (Section 4.4). Still open: the ground-state cutoff detail for deep tunneling below 300 K.
-4. **Remaining −5.5% in the IEPOX + OH share with the MESS tunneling model (open).** It lies in the collisional part of the master equation (Section 4.4).
-2. **Default PST level (decided 2026-10-05): EJ.** The deck copy states E explicitly, as the reference run used it.
-3. **Atomic masses (decided and done 2026-10-05): isotopic** (AME2020), Section 3.1a.
+4. **Remaining difference in the IEPOX + OH share with the MESS tunneling model (done).** With the Neufeld collision integral, the default since 2026-10-06, it is −0.55 … −0.34%; with the former Troe form it was −5.9 … −5.1% (Section 4.4, `../../reports/collision_integral_neufeld.md`).
+2. **Default PST level (2026-10-05): EJ.** The deck copy states E explicitly, as the reference run used it.
+3. **Atomic masses (2026-10-05): isotopic** (AME2020), Section 3.1a.
+
+## 7. History
+
+- **2026-10-06.** Re-run with the Neufeld collision integral (the new default); all numbers of this README are from that run (`../../reports/collision_integral_neufeld.md`).

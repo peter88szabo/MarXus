@@ -1,0 +1,8 @@
+# thermal fates: Thermal fate of the molecules thermalized in Int1 (%)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO_2,Int2->P_lactone_OH
+250,37.48,,,
+
+# thermal fates: Thermal fate of the molecules thermalized in Int2 (%)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO_2,Int2->P_lactone_OH
+250,37.48,,,
+

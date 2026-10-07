@@ -1,0 +1,319 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2.inp
+ Method:             STEADY STATE, OLZMANN (final steady state; steady-state family)
+                     J N = R F without an absorbing barrier (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), eqs. 7, 8)
+                     with the thermal rate coefficients of the lowest eigenpair of the same J (eq. 12)
+                     and the thermal fates of the wells (Boltzmann distribution of one well as source)
+ Solvers:            linear systems: banded Cholesky factorization of the symmetrized J, relative residual <= 1e-8
+                     thermal eigenpair: InverseIteration, sum-rule tolerance 1.5e-2 (warning only)
+ Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   298
+ Pressures (torr):   200.72
+ Energy grid:        grains of 100.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 298 K: Int1 1 grains (100 cm-1, 47.3 k_BT below the lowest threshold)
+                     collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (CollisionIntegral in the deck)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant R through B_R1 (R -> Int1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+      Int1      179         -117 .. 61   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+      Int2      168         -106 .. 61   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+      B_R1     Int1        R   barrierless, inverse Laplace transform; entrance of the reactant (source)
+      B_R2     Int1     Int2   rigid transition state, Eckart tunneling
+      B_R4     Int1 P_ketene_HO2   rigid transition state
+      B_R2     Int2     Int1   rigid transition state, Eckart tunneling
+      B_R3     Int2 P_lactone_OH   rigid transition state
+
+Energetics (kcal/mol, relative to R):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+      Int1     -33.34      -5.14
+      Int2     -30.39      -8.49
+
+Bimolecular (G - ground energy):
+      Name          G
+         R       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+      B_R1       0.00     Int1        R   barrierless, inverse Laplace transform
+      B_R2      -5.14     Int1     Int2   rigid transition state, Eckart tunneling
+      B_R4       2.77     Int1 P_ketene_HO2   rigid transition state
+      B_R3      -8.49     Int2 P_lactone_OH   rigid transition state
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+FINAL STEADY STATE (no absorbing barrier)
+____________________________________________________________________________________________________
+
+J N = R F without a barrier: under continuous formation, after the stabilized population has reached its own
+steady state, the yields of every exit, chemical activation and thermal reaction together (GO10 eqs. 7-9).
+
+Not available: T = 298 K, p = 200.72 Torr: relative residual 7.98913458494854e-2 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+____________________________________________________________________________________________________
+THERMAL RATE COEFFICIENTS OF THE FINAL STEADY STATE (lowest eigenpair of J)
+____________________________________________________________________________________________________
+
+k_uni = sum of the specific rate coefficients averaged over the normalized eigenvector of the lowest eigenvalue
+lambda_1 of J (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), text after eq. 12); lambda_1 = k_uni in exact
+arithmetic (eq. 12), checked as the sum rule (warning above 1.5e-2). Eigen-solver: InverseIteration. The thermal branching is
+k_th(channel)/k_uni: the yields of the thermal decay of the network.
+
+Warning, T = 298 K, p = 200.72 torr: sum rule lambda_1 = k_uni violated: lambda_1 = 1.1981333393282917e-6 s-1, k_uni = 1.280656101388907e-6 s-1, relative deviation 6.444e-2 > 1.5e-2. k_uni is the average of the specific rate coefficients over the normalized thermal eigenvector (Gonzalez-Garcia, Olzmann, Phys. Chem. Chem. Phys. 12, 12290 (2010), text after eq. 12), equal to the lowest eigenvalue lambda_1 (eq. 12) in exact arithmetic. Here lambda_1 is not resolved in double precision (it lies far below the collision frequency and the largest k(E)); the eigenvector, and with it k_uni, is much less sensitive. What to do: use k_uni, and confirm it with the inverse iteration (the most accurate solver for the thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision.
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal rate coefficients (1/s), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)        k_uni     lambda_1      Int1->R   Int1->Int2  Int1->P_ketene_HO2   Int2->Int1  Int2->P_lactone_OH
+   200.72  1.28066e-06  1.19813e-06  1.47355e-09  1.88660e-06         3.58085e-15  6.09007e-07         1.27918e-06
+
+Thermal branching (% of the thermal decay k_uni), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   200.72  1.15062e-01         2.79611e-07         9.98849e+01
+
+High-pressure rate coefficients k_inf (1/s), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      Int1->R   Int1->Int2  Int1->P_ketene_HO2   Int2->Int1  Int2->P_lactone_OH
+   200.72  2.72647e-09  1.88931e-06         4.52280e-14  5.08715e-04         1.28251e-03
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+   200.72  6.44379e-02     1.20430e+03  2.29836e-05
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal rate coefficients (1/s), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)        k_uni     lambda_1      Int1->R   Int1->Int2  Int1->P_ketene_HO2   Int2->Int1  Int2->P_lactone_OH
+   298  1.28066e-06  1.19813e-06  1.47355e-09  1.88660e-06         3.58085e-15  6.09007e-07         1.27918e-06
+
+Thermal branching (% of the thermal decay k_uni), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   298  1.15062e-01         2.79611e-07         9.98849e+01
+
+High-pressure rate coefficients k_inf (1/s), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      Int1->R   Int1->Int2  Int1->P_ketene_HO2   Int2->Int1  Int2->P_lactone_OH
+   298  2.72647e-09  1.88931e-06         4.52280e-14  5.08715e-04         1.28251e-03
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   298  6.44379e-02     1.20430e+03  2.29836e-05
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal rate coefficients (1/s), temperature-pressure tables:
+
+k_uni
+
+P\T               298
+200.72    1.28066e-06
+
+lambda_1
+
+P\T               298
+200.72    1.19813e-06
+
+Int1->R
+
+P\T               298
+200.72    1.47355e-09
+
+Int1->Int2
+
+P\T               298
+200.72    1.88660e-06
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72    3.58085e-15
+
+Int2->Int1
+
+P\T               298
+200.72    6.09007e-07
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72    1.27918e-06
+
+Thermal branching (% of the thermal decay k_uni), temperature-pressure tables:
+
+Int1->R
+
+P\T               298
+200.72    1.15062e-01
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72    2.79611e-07
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72    9.98849e+01
+
+High-pressure rate coefficients k_inf (1/s), temperature-pressure tables:
+
+Int1->R
+
+P\T               298
+200.72    2.72647e-09
+
+Int1->Int2
+
+P\T               298
+200.72    1.88931e-06
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72    4.52280e-14
+
+Int2->Int1
+
+P\T               298
+200.72    5.08715e-04
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72    1.28251e-03
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), temperature-pressure tables:
+
+sum rule
+
+P\T               298
+200.72    6.44379e-02
+
+lambda_2/k_uni
+
+P\T               298
+200.72    1.20430e+03
+
+floor (1/s)
+
+P\T               298
+200.72    2.29836e-05
+
+____________________________________________________________________________________________________
+THERMAL FATES OF THE WELLS (final steady state with the Boltzmann distribution of one well as the source)
+____________________________________________________________________________________________________
+
+The probability that a molecule thermalized in a well ends in each exit of the network, k_x^T J^-1 f0_w.
+
+Not available: Thermal fate of well 'Int1': T = 298 K, p = 200.72 Torr: relative residual 1.0199392753842176e-1 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal fate of the molecules thermalized in Int1 (%), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   200.72          ***                 ***                 ***
+
+Thermal fate of the molecules thermalized in Int2 (%), by temperature:
+
+   Temperature = 298 K
+
+  P(torr)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   200.72          ***                 ***                 ***
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal fate of the molecules thermalized in Int1 (%), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   298          ***                 ***                 ***
+
+Thermal fate of the molecules thermalized in Int2 (%), by pressure:
+
+   Pressure = 200.72 torr
+
+  T(K)      Int1->R  Int1->P_ketene_HO2  Int2->P_lactone_OH
+   298          ***                 ***                 ***
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal fate of the molecules thermalized in Int1 (%), temperature-pressure tables:
+
+Int1->R
+
+P\T               298
+200.72            ***
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72            ***
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72            ***
+
+Thermal fate of the molecules thermalized in Int2 (%), temperature-pressure tables:
+
+Int1->R
+
+P\T               298
+200.72            ***
+
+Int1->P_ketene_HO2
+
+P\T               298
+200.72            ***
+
+Int2->P_lactone_OH
+
+P\T               298
+200.72            ***
+

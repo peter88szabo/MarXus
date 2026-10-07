@@ -1,0 +1,67 @@
+deck,reference,quantity,T_K,p_torr,mesmer,marxus,deviation_percent
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int1 loss,298,200.72,1.91065e-06,1.34966e-06,-29.3615
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int2 loss,298,200.72,0.00156425,0.00154386,-1.30375
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",acetyl loss,298,200.72,82779.8,81454.3,-1.60122
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int1 -> Int2,298,200.72,1.88342e-06,1.87963e-06,-0.201336
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int1 -> acetyl,298,200.72,1.50292e-09,1.47288e-09,-1.99911
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int2 -> Int1,298,200.72,0.000509588,0.000506109,-0.68265
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int2 -> acetyl,298,200.72,2.0704e-09,2.02596e-09,-2.14645
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",acetyl -> Int1,298,200.72,74314,73105,-1.62683
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",acetyl -> Int2,298,200.72,378.37,373.456,-1.29865
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int1 -> lactone+OH,298,200.72,2.17185e-08,2.14709e-08,-1.13995
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int2 -> lactone+OH,298,200.72,0.00105573,0.00103914,-1.57236
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",acetyl -> lactone+OH,298,200.72,8073.53,7973.89,-1.23418
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int1 -> ketene+HO2,298,200.72,3.61434e-15,3.57917e-15,-0.972903
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",Int2 -> ketene+HO2,298,200.72,5.02425e-15,4.96765e-15,-1.12642
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (QA run, double-double)",acetyl -> ketene+HO2,298,200.72,1.98707,1.96187,-1.26783
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int1 loss,298,200.72,4.32842e-06,1.34966e-06,-68.8187
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int2 loss,298,200.72,0.00156014,0.00154386,-1.04375
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",acetyl loss,298,200.72,82779.8,81454.3,-1.60122
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int1 -> Int2,298,200.72,1.85327e-06,1.87963e-06,1.42235
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int1 -> acetyl,298,200.72,1.50292e-09,1.47288e-09,-1.99911
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int2 -> Int1,298,200.72,0.00050143,0.000506109,0.933252
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int2 -> acetyl,298,200.72,2.0704e-09,2.02596e-09,-2.14645
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",acetyl -> Int1,298,200.72,74314,73105,-1.62683
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",acetyl -> Int2,298,200.72,378.37,373.456,-1.29865
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int1 -> lactone+OH,298,200.72,2.17185e-08,2.14709e-08,-1.13999
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int2 -> lactone+OH,298,200.72,0.00105573,0.00103914,-1.57236
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",acetyl -> lactone+OH,298,200.72,8073.53,7973.89,-1.23418
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int1 -> ketene+HO2,298,200.72,3.61437e-15,3.57917e-15,-0.973807
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",Int2 -> ketene+HO2,298,200.72,5.02374e-15,4.96765e-15,-1.1165
+acetyl_o2,"298 K, 200.72 Torr, classical Eckart (example run, double)",acetyl -> ketene+HO2,298,200.72,1.98707,1.96187,-1.26783
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int1 loss,298,200.72,3.1634e-06,9.85435e-07,-68.8489
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int2 loss,298,200.72,0.00140209,0.00137941,-1.61751
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",acetyl loss,298,200.72,82781.3,81455.8,-1.60122
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int1 -> Int2,298,200.72,1.27739e-06,1.26505e-06,-0.966733
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int1 -> acetyl,298,200.72,1.50301e-09,1.47296e-09,-1.99912
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int2 -> Int1,298,200.72,0.000345618,0.000340627,-1.44431
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int2 -> acetyl,298,200.72,2.0592e-09,2.01501e-09,-2.14622
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",acetyl -> Int1,298,200.72,74318.3,73109.2,-1.62681
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",acetyl -> Int2,298,200.72,376.324,371.437,-1.29843
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int1 -> lactone+OH,298,200.72,2.14631e-08,2.12185e-08,-1.13963
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int2 -> lactone+OH,298,200.72,0.00105579,0.00103919,-1.57237
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",acetyl -> lactone+OH,298,200.72,8072.8,7973.15,-1.23428
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int1 -> ketene+HO2,298,200.72,3.61442e-15,3.57924e-15,-0.973241
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",Int2 -> ketene+HO2,298,200.72,4.99742e-15,4.94088e-15,-1.13134
+acetyl_o2_zpe_eckart,"298 K, 200.72 Torr, zero-point Eckart (Tunnelling Ex1, double)",acetyl -> ketene+HO2,298,200.72,1.98699,1.9618,-1.26762
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int1 loss,250,37.48,4.11028e-07,-8.23862e-08,-120.044
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int2 loss,250,37.48,9.61618e-07,5.62817e-07,-41.4719
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",acetyl loss,250,37.48,76720.4,74930.5,-2.3331
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int1 -> Int2,250,37.48,1.05233e-09,4.4509e-10,-57.7043
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int1 -> acetyl,250,37.48,2.21996e-14,2.15962e-14,-2.71789
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int2 -> Int1,250,37.48,7.12627e-07,2.99386e-07,-57.9884
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int2 -> acetyl,250,37.48,1.01818e-14,9.99368e-15,-1.84775
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",acetyl -> Int1,250,37.48,66675.3,65100.6,-2.36177
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",acetyl -> Int2,250,37.48,45.1579,44.7866,-0.822264
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int1 -> lactone+OH,250,37.48,4.71414e-13,4.62577e-13,-1.87455
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int2 -> lactone+OH,250,37.48,6.44266e-07,6.2839e-07,-2.46425
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",acetyl -> lactone+OH,250,37.48,9989.69,9784.21,-2.05701
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int1 -> ketene+HO2,250,37.48,5.93713e-21,5.82269e-21,-1.92753
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",Int2 -> ketene+HO2,250,37.48,2.91465e-21,2.69618e-21,-7.49565
+acetyl_o2_250K,"250 K, 37.48 Torr, no tunneling at TS1 (reservoirSink, double)",acetyl -> ketene+HO2,250,37.48,0.880984,0.864285,-1.89543
+acetyl_o2,"canonical rate constants (QA run, double-double)","R + O2 -> Int1 (k_inf, cm3/s)",298,inf,6.12059e-12,6.0145e-12,-1.73339
+acetyl_o2,"canonical rate constants (QA run, double-double)",Int1 -> R (k_inf),298,inf,2.78511e-09,2.72647e-09,-2.10545
+acetyl_o2,"canonical rate constants (QA run, double-double)",Int1 -> Int2 (k_inf),298,inf,1.91019e-06,1.88931e-06,-1.09324
+acetyl_o2,"canonical rate constants (QA run, double-double)",Int2 -> Int1 (k_inf),298,inf,0.00051466,0.000508715,-1.15513
+acetyl_o2,"canonical rate constants (QA run, double-double)",Int2 -> lactone + OH (k_inf),298,inf,0.00130305,0.00128251,-1.57661
+acetyl_o2,"canonical rate constants (QA run, double-double)",Int1 -> ketene + HO2 (k_inf),298,inf,4.59437e-14,4.5228e-14,-1.55773

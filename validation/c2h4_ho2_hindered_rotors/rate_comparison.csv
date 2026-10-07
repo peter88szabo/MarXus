@@ -1,0 +1,181 @@
+T_K,p_bar,variant,status,quantity,mess,marxus,dev_percent
+300,0.01,default,both keep W2,net P1->P2,3.13842e-23,3.19939e-23,1.94267
+300,0.01,default,both keep W2,W2->P1,0.950298,0.970146,2.08859
+300,0.01,default,both keep W2,W2->P2,84.9866,86.333,1.58423
+300,0.01,default,both keep W2,P1->W2,2.48286e-24,2.52105e-24,1.53831
+300,0.01,default,both keep W2,P1->P2,2.89013e-23,2.94728e-23,1.97752
+300,0.01,mess_eckart,both keep W2,net P1->P2,3.13842e-23,3.14284e-23,0.140899
+300,0.01,mess_eckart,both keep W2,W2->P1,0.950298,0.954853,0.479313
+300,0.01,mess_eckart,both keep W2,W2->P2,84.9866,85.2874,0.353879
+300,0.01,mess_eckart,both keep W2,P1->W2,2.48286e-24,2.48131e-24,-0.0622669
+300,0.01,mess_eckart,both keep W2,P1->P2,2.89013e-23,2.89471e-23,0.158505
+300,0.1,default,both keep W2,net P1->P2,3.21562e-23,3.27817e-23,1.9451
+300,0.1,default,both keep W2,W2->P1,4.57621,4.68514,2.38042
+300,0.1,default,both keep W2,W2->P2,174.844,178.297,1.97467
+300,0.1,default,both keep W2,P1->W2,1.19603e-23,1.2175e-23,1.79536
+300,0.1,default,both keep W2,P1->P2,2.01959e-23,2.06066e-23,2.03378
+300,0.1,mess_eckart,both keep W2,net P1->P2,3.21562e-23,3.22019e-23,0.142119
+300,0.1,mess_eckart,both keep W2,W2->P1,4.57621,4.60852,0.706086
+300,0.1,mess_eckart,both keep W2,W2->P2,174.844,175.958,0.637425
+300,0.1,mess_eckart,both keep W2,P1->W2,1.19603e-23,1.19759e-23,0.130599
+300,0.1,mess_eckart,both keep W2,P1->P2,2.01959e-23,2.0226e-23,0.148941
+300,1,default,both keep W2,net P1->P2,3.39535e-23,3.46172e-23,1.95482
+300,1,default,both keep W2,W2->P1,10.2254,10.4813,2.50288
+300,1,default,both keep W2,W2->P2,238.549,243.589,2.11298
+300,1,default,both keep W2,P1->W2,2.67262e-23,2.72373e-23,1.91232
+300,1,default,both keep W2,P1->P2,7.22723e-24,7.37994e-24,2.11294
+300,1,mess_eckart,both keep W2,net P1->P2,3.39535e-23,3.40017e-23,0.141841
+300,1,mess_eckart,both keep W2,W2->P1,10.2254,10.3002,0.731414
+300,1,mess_eckart,both keep W2,W2->P2,238.549,240.216,0.698766
+300,1,mess_eckart,both keep W2,P1->W2,2.67262e-23,2.67666e-23,0.15105
+300,1,mess_eckart,both keep W2,P1->P2,7.22723e-24,7.23509e-24,0.108742
+300,10,default,both keep W2,net P1->P2,3.51579e-23,3.58488e-23,1.96502
+300,10,default,both keep W2,W2->P1,12.9864,13.3173,2.5479
+300,10,default,both keep W2,W2->P2,257.463,262.991,2.14699
+300,10,default,both keep W2,P1->W2,3.39426e-23,3.46069e-23,1.95719
+300,10,default,both keep W2,P1->P2,1.21532e-24,1.24183e-24,2.1814
+300,10,mess_eckart,both keep W2,net P1->P2,3.51579e-23,3.52072e-23,0.140139
+300,10,mess_eckart,both keep W2,W2->P1,12.9864,13.0802,0.722371
+300,10,mess_eckart,both keep W2,W2->P2,257.463,259.277,0.704528
+300,10,mess_eckart,both keep W2,P1->W2,3.39426e-23,3.39909e-23,0.14224
+300,10,mess_eckart,both keep W2,P1->P2,1.21532e-24,1.21628e-24,0.0792384
+300,100,default,both keep W2,net P1->P2,3.54225e-23,3.61195e-23,1.96779
+300,100,default,both keep W2,W2->P1,13.5006,13.846,2.55811
+300,100,default,both keep W2,W2->P2,260.264,265.866,2.15231
+300,100,default,both keep W2,P1->W2,3.52867e-23,3.59808e-23,1.96695
+300,100,default,both keep W2,P1->P2,1.35768e-25,1.38763e-25,2.20582
+300,100,mess_eckart,both keep W2,net P1->P2,3.54225e-23,3.54719e-23,0.139431
+300,100,mess_eckart,both keep W2,W2->P1,13.5006,13.5978,0.720338
+300,100,mess_eckart,both keep W2,W2->P2,260.264,262.099,0.704938
+300,100,mess_eckart,both keep W2,P1->W2,3.52867e-23,3.5336e-23,0.139798
+300,100,mess_eckart,both keep W2,P1->P2,1.35768e-25,1.35864e-25,0.0710771
+500,0.01,default,both keep W2,net P1->P2,3.0862e-19,3.1219e-19,1.15689
+500,0.01,default,both keep W2,W2->P1,2360.78,2373.9,0.555621
+500,0.01,default,both keep W2,W2->P2,87371.6,87248.1,-0.141316
+500,0.01,default,both keep W2,P1->W2,1.82999e-21,1.83919e-21,0.502462
+500,0.01,default,both keep W2,P1->P2,3.0679e-19,3.10351e-19,1.16083
+500,0.01,mess_eckart,both keep W2,net P1->P2,3.0862e-19,3.08943e-19,0.104821
+500,0.01,mess_eckart,both keep W2,W2->P1,2360.78,2355.28,-0.233186
+500,0.01,mess_eckart,both keep W2,W2->P2,87371.6,86788.7,-0.667173
+500,0.01,mess_eckart,both keep W2,P1->W2,1.82999e-21,1.82496e-21,-0.274865
+500,0.01,mess_eckart,both keep W2,P1->P2,3.0679e-19,3.07119e-19,0.107077
+500,0.1,default,both keep W2,net P1->P2,3.11919e-19,3.15537e-19,1.16001
+500,0.1,default,both keep W2,W2->P1,25780.6,26083.9,1.17639
+500,0.1,default,both keep W2,W2->P2,360329,362729,0.666002
+500,0.1,default,both keep W2,P1->W2,2.02792e-20,2.04608e-20,0.895302
+500,0.1,default,both keep W2,P1->P2,2.9164e-19,2.95077e-19,1.17837
+500,0.1,mess_eckart,both keep W2,net P1->P2,3.11919e-19,3.12259e-19,0.109099
+500,0.1,mess_eckart,both keep W2,W2->P1,25780.6,25874.5,0.364111
+500,0.1,mess_eckart,both keep W2,W2->P2,360329,360539,0.0583911
+500,0.1,mess_eckart,both keep W2,P1->W2,2.02792e-20,2.02975e-20,0.0901416
+500,0.1,mess_eckart,both keep W2,P1->P2,2.9164e-19,2.91962e-19,0.110342
+500,1,default,both keep W2,net P1->P2,3.31683e-19,3.35583e-19,1.17588
+500,1,default,both keep W2,W2->P1,141674,143867,1.5482
+500,1,default,both keep W2,W2->P2,975222,986657,1.17258
+500,1,default,both keep W2,P1->W2,1.12185e-19,1.13485e-19,1.1588
+500,1,default,both keep W2,P1->P2,2.19498e-19,2.22098e-19,1.18461
+500,1,mess_eckart,both keep W2,net P1->P2,3.31683e-19,3.32103e-19,0.126627
+500,1,mess_eckart,both keep W2,W2->P1,141674,142590,0.646343
+500,1,mess_eckart,both keep W2,W2->P2,975222,979734,0.462633
+500,1,mess_eckart,both keep W2,P1->W2,1.12185e-19,1.12479e-19,0.261621
+500,1,mess_eckart,both keep W2,P1->P2,2.19498e-19,2.19624e-19,0.0575859
+500,10,default,both keep W2,net P1->P2,3.81099e-19,3.85682e-19,1.2025
+500,10,default,both keep W2,W2->P1,363325,369303,1.64536
+500,10,default,both keep W2,W2->P2,1.65294e+06,1.67526e+06,1.3505
+500,10,default,both keep W2,P1->W2,2.88122e-19,2.9167e-19,1.23153
+500,10,default,both keep W2,P1->P2,9.2977e-20,9.40114e-20,1.11253
+500,10,mess_eckart,both keep W2,net P1->P2,3.81099e-19,3.81625e-19,0.138074
+500,10,mess_eckart,both keep W2,W2->P1,363325,365626,0.633455
+500,10,mess_eckart,both keep W2,W2->P2,1.65294e+06,1.66195e+06,0.545089
+500,10,mess_eckart,both keep W2,P1->W2,2.88122e-19,2.88767e-19,0.223864
+500,10,mess_eckart,both keep W2,P1->P2,9.2977e-20,9.28582e-20,-0.127731
+500,100,default,both keep W2,net P1->P2,4.20021e-19,4.25089e-19,1.20653
+500,100,default,both keep W2,W2->P1,506617,514881,1.63119
+500,100,default,both keep W2,W2->P2,1.96031e+06,1.98726e+06,1.37483
+500,100,default,both keep W2,P1->W2,4.01804e-19,4.06687e-19,1.21534
+500,100,default,both keep W2,P1->P2,1.82163e-20,1.84014e-20,1.01618
+500,100,mess_eckart,both keep W2,net P1->P2,4.20021e-19,4.20512e-19,0.116994
+500,100,mess_eckart,both keep W2,W2->P1,506617,509398,0.548876
+500,100,mess_eckart,both keep W2,W2->P2,1.96031e+06,1.9705e+06,0.519765
+500,100,mess_eckart,both keep W2,P1->W2,4.01804e-19,4.02356e-19,0.137455
+500,100,mess_eckart,both keep W2,P1->P2,1.82163e-20,1.81561e-20,-0.330693
+700,0.01,default,both merge W2,net P1->P2,2.24505e-17,2.26375e-17,0.833033
+700,0.01,mess_eckart,both merge W2,net P1->P2,2.24505e-17,2.24736e-17,0.102938
+700,0.1,default,both keep W2,net P1->P2,2.25222e-17,2.27111e-17,0.83855
+700,0.1,default,both keep W2,W2->P1,510658,529348,3.66006
+700,0.1,default,both keep W2,W2->P2,4.40333e+06,4.534e+06,2.96757
+700,0.1,default,both keep W2,P1->W2,2.65501e-19,2.75265e-19,3.67761
+700,0.1,default,both keep W2,P1->P2,2.22567e-17,2.24358e-17,0.804702
+700,0.1,mess_eckart,both keep W2,net P1->P2,2.25222e-17,2.25468e-17,0.109004
+700,0.1,mess_eckart,both keep W2,W2->P1,510658,526649,3.13137
+700,0.1,mess_eckart,both keep W2,W2->P2,4.40333e+06,4.51816e+06,2.60791
+700,0.1,mess_eckart,both keep W2,P1->W2,2.65501e-19,2.74006e-19,3.20323
+700,0.1,mess_eckart,both keep W2,P1->P2,2.22567e-17,2.22727e-17,0.0720682
+700,1,default,both keep W2,net P1->P2,2.31455e-17,2.33477e-17,0.873734
+700,1,default,both keep W2,W2->P1,4.26443e+06,4.37063e+06,2.49041
+700,1,default,both keep W2,W2->P2,1.7949e+07,1.83101e+07,2.01203
+700,1,default,both keep W2,P1->W2,2.42956e-18,2.48483e-18,2.27502
+700,1,default,both keep W2,P1->P2,2.07159e-17,2.08629e-17,0.7096
+700,1,mess_eckart,both keep W2,net P1->P2,2.31455e-17,2.31796e-17,0.147458
+700,1,mess_eckart,both keep W2,W2->P1,4.26443e+06,4.34706e+06,1.93763
+700,1,mess_eckart,both keep W2,W2->P2,1.7949e+07,1.82367e+07,1.60276
+700,1,mess_eckart,both keep W2,P1->W2,2.42956e-18,2.47211e-18,1.75139
+700,1,mess_eckart,both keep W2,P1->P2,2.07159e-17,2.07075e-17,-0.040452
+700,10,default,both keep W2,net P1->P2,2.64029e-17,2.66526e-17,0.945805
+700,10,default,both keep W2,W2->P1,1.94636e+07,1.98078e+07,1.76848
+700,10,default,both keep W2,W2->P2,4.97477e+07,5.04639e+07,1.4397
+700,10,default,both keep W2,P1->W2,1.16305e-17,1.18019e-17,1.47397
+700,10,default,both keep W2,P1->P2,1.47724e-17,1.48507e-17,0.529975
+700,10,mess_eckart,both keep W2,net P1->P2,2.64029e-17,2.64617e-17,0.222627
+700,10,mess_eckart,both keep W2,W2->P1,1.94636e+07,1.96868e+07,1.1465
+700,10,mess_eckart,both keep W2,W2->P2,4.97477e+07,5.02238e+07,0.957069
+700,10,mess_eckart,both keep W2,P1->W2,1.16305e-17,1.17308e-17,0.862216
+700,10,mess_eckart,both keep W2,P1->P2,1.47724e-17,1.47309e-17,-0.280929
+700,100,default,both keep W2,net P1->P2,3.31297e-17,3.34425e-17,0.944289
+700,100,default,both keep W2,W2->P1,4.53641e+07,4.5991e+07,1.38189
+700,100,default,both keep W2,W2->P2,8.70239e+07,8.80238e+07,1.14899
+700,100,default,both keep W2,P1->W2,2.74509e-17,2.77453e-17,1.07261
+700,100,default,both keep W2,P1->P2,5.6788e-18,5.69719e-18,0.323906
+700,100,mess_eckart,both keep W2,net P1->P2,3.31297e-17,3.31949e-17,0.196772
+700,100,mess_eckart,both keep W2,W2->P1,4.53641e+07,4.56667e+07,0.667113
+700,100,mess_eckart,both keep W2,W2->P2,8.70239e+07,8.7533e+07,0.585035
+700,100,mess_eckart,both keep W2,P1->W2,2.74509e-17,2.755e-17,0.361008
+700,100,mess_eckart,both keep W2,P1->P2,5.6788e-18,5.64489e-18,-0.597098
+1000,0.01,default,both merge W2,net P1->P2,7.20036e-16,7.24418e-16,0.608608
+1000,0.01,mess_eckart,both merge W2,net P1->P2,7.20036e-16,7.2086e-16,0.114425
+1000,0.1,default,both merge W2,net P1->P2,7.20273e-16,7.24661e-16,0.6092
+1000,0.1,mess_eckart,both merge W2,net P1->P2,7.20273e-16,7.21102e-16,0.115109
+1000,1,default,both merge W2,net P1->P2,7.21457e-16,7.25861e-16,0.610404
+1000,1,mess_eckart,both merge W2,net P1->P2,7.21457e-16,7.22299e-16,0.116764
+1000,10,default,both merge W2,net P1->P2,7.25371e-16,7.29811e-16,0.612032
+1000,10,mess_eckart,both merge W2,net P1->P2,7.25371e-16,7.2624e-16,0.119746
+1000,100,default,both keep W2,net P1->P2,9.76952e-16,9.86953e-16,1.02365
+1000,100,default,both keep W2,W2->P1,9.19557e+08,9.38982e+08,2.11243
+1000,100,default,both keep W2,W2->P2,1.10169e+09,1.12178e+09,1.82365
+1000,100,default,both keep W2,P1->W2,5.35098e-16,5.46375e-16,2.10754
+1000,100,default,both keep W2,P1->P2,4.41854e-16,4.40577e-16,-0.288964
+1000,100,mess_eckart,both keep W2,net P1->P2,9.76952e-16,9.82211e-16,0.538348
+1000,100,mess_eckart,both keep W2,W2->P1,9.19557e+08,9.34946e+08,1.67353
+1000,100,mess_eckart,both keep W2,W2->P2,1.10169e+09,1.11808e+09,1.48762
+1000,100,mess_eckart,both keep W2,P1->W2,5.35098e-16,5.44156e-16,1.6927
+1000,100,mess_eckart,both keep W2,P1->P2,4.41854e-16,4.38056e-16,-0.859605
+1500,0.01,default,both merge W2,net P1->P2,1.44612e-14,1.4527e-14,0.455287
+1500,0.01,mess_eckart,both merge W2,net P1->P2,1.44612e-14,1.44809e-14,0.136157
+1500,0.1,default,both merge W2,net P1->P2,1.44614e-14,1.45274e-14,0.45618
+1500,0.1,mess_eckart,both merge W2,net P1->P2,1.44614e-14,1.44812e-14,0.137055
+1500,1,default,both merge W2,net P1->P2,1.44629e-14,1.45294e-14,0.459728
+1500,1,mess_eckart,both merge W2,net P1->P2,1.44629e-14,1.44832e-14,0.140636
+1500,10,default,both merge W2,net P1->P2,1.44717e-14,1.45385e-14,0.461936
+1500,10,mess_eckart,both merge W2,net P1->P2,1.44717e-14,1.44924e-14,0.143038
+1500,100,default,both merge W2,net P1->P2,1.45017e-14,1.45683e-14,0.459601
+1500,100,mess_eckart,both merge W2,net P1->P2,1.45017e-14,1.45222e-14,0.141294
+2000,0.01,default,both merge W2,net P1->P2,7.95629e-14,7.9872e-14,0.38851
+2000,0.01,mess_eckart,both merge W2,net P1->P2,7.95629e-14,7.96845e-14,0.152873
+2000,0.1,default,both merge W2,net P1->P2,7.9563e-14,7.98722e-14,0.388623
+2000,0.1,mess_eckart,both merge W2,net P1->P2,7.9563e-14,7.96847e-14,0.152986
+2000,1,default,both merge W2,net P1->P2,7.95635e-14,7.98735e-14,0.389664
+2000,1,mess_eckart,both merge W2,net P1->P2,7.95635e-14,7.96861e-14,0.154028
+2000,10,default,both merge W2,net P1->P2,7.95683e-14,7.98811e-14,0.393147
+2000,10,mess_eckart,both merge W2,net P1->P2,7.95683e-14,7.96936e-14,0.157525
+2000,100,default,both merge W2,net P1->P2,7.95994e-14,7.99147e-14,0.396083
+2000,100,mess_eckart,both merge W2,net P1->P2,7.95994e-14,7.97272e-14,0.160592

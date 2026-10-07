@@ -1,0 +1,487 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2_250K.inp
+ Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
+                     (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
+ Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
+                     species merging (Georgievskii et al. 2013, Sec. IV; criteria as MESS): ChemicalEigenvalueMax 0.2 (deck), WellProjectionThreshold 0.2 (default)
+ Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
+                     BLAS threads per LAPACK call: 4
+ Temperatures (K):   250
+ Pressures (torr):   37.48
+ Energy grid:        grains of 100.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 250 K: Int1 1 grains (100 cm-1, 56.4 k_BT below the lowest threshold)
+                     collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (CollisionIntegral in the deck)
+ Tunneling:          exact Eckart transmission (Miller, J. Am. Chem. Soc. 101, 6810 (1979), eq. 8)
+ Source:             thermal reactant R through B_R1 (R -> Int1)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+      Int1      171         -117 .. 53   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+      Int2      160         -106 .. 53   <dE_down> = 130 cm-1 (T/300 K)^0; sigma 3.820 A, epsilon 69.47 K, reduced mass 3.797 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+      B_R1     Int1        R   barrierless, inverse Laplace transform; entrance of the reactant (source)
+      B_R2     Int1     Int2   rigid transition state
+      B_R4     Int1 P_ketene_HO_2   rigid transition state
+      B_R2     Int2     Int1   rigid transition state
+      B_R3     Int2 P_lactone_OH   rigid transition state
+
+Energetics (kcal/mol, relative to R):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+      Int1     -33.34      -5.14
+      Int2     -30.39      -8.49
+
+Bimolecular (G - ground energy):
+      Name          G
+         R       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+      B_R1       0.00     Int1        R   barrierless, inverse Laplace transform
+      B_R2      -5.14     Int1     Int2   rigid transition state
+      B_R3      -8.49     Int2 P_lactone_OH   rigid transition state
+      B_R4       2.77     Int1 P_ketene_HO_2   rigid transition state
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)
+____________________________________________________________________________________________________
+
+Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
+coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
+
+--- Species-to-species tables ---
+
+Temperature = 250 K    Pressure = 37.48 torr
+
+  chemical eigenvalues (1/s):          -8.25926e-08  5.63023e-07
+  lowest relaxation eigenvalue (1/s):  2.72351e+07   separation Lambda_N/Lambda_N+1: 2.06727e-14
+  R (cm^3/s): capture 6.56959e-12   return 3.23935e-12   net reaction 3.33024e-12
+  warning: chemical eigenvalue 0 = -8.259262603216463e-8 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.5529581122573358e-5 s-1: the rate coefficients of this mode are not resolved.
+  warning: chemical eigenvalue 1 = 5.630231435855227e-7 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.5529581122573358e-5 s-1: the rate coefficients of this mode are not resolved.
+
+From\To           Int1         Int2            R  P_ketene_HO_2  P_lactone_OH
+Int1      -8.23862e-08  4.45090e-10  2.15962e-14    5.82269e-21   4.62577e-13
+Int2       2.99386e-07  5.62817e-07  9.99368e-15    2.69618e-21   6.28390e-07
+R          2.89336e-12  1.99052e-15  3.33024e-12    3.84127e-17   4.34854e-13
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Rate coefficients from Int1 (1/s), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)   Int1->Int2      Int1->R  Int1->P_ketene_HO_2  Int1->P_lactone_OH    Int1 loss
+    37.48  4.45090e-10  2.15962e-14          5.82269e-21         4.62577e-13 -8.23862e-08
+
+Rate coefficients from Int2 (1/s), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)   Int2->Int1      Int2->R  Int2->P_ketene_HO_2  Int2->P_lactone_OH    Int2 loss
+    37.48  2.99386e-07  9.99368e-15          2.69618e-21         6.28390e-07  5.62817e-07
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)  R->P_ketene_HO_2  R->P_lactone_OH
+    37.48       3.84127e-17      4.34854e-13
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      R->Int1      R->Int2
+    37.48  2.89336e-12  1.99052e-15
+
+Capture, return and net reaction of R (cm^3/s), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      capture       return          net
+    37.48  6.56959e-12  3.23935e-12  3.33024e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)  R->P_ketene_HO_2  R->P_lactone_OH
+    37.48       1.15345e-03      1.30577e+01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      R->Int1      R->Int2
+    37.48  8.68814e+01  5.97709e-02
+
+Thermal fate of Int1 (%), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      Int1->R  Int1->P_ketene_HO_2  Int1->P_lactone_OH
+    37.48  7.15392e-03          1.92881e-09         9.99928e+01
+
+Thermal fate of Int2 (%), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      Int2->R  Int2->P_ketene_HO_2  Int2->P_lactone_OH
+    37.48  2.30959e-03          6.22704e-10         9.99977e+01
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)  R->P_ketene_HO_2  R->P_lactone_OH
+    37.48       1.15352e-03      1.30585e+01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)  R->P_ketene_HO_2  R->P_lactone_OH
+    37.48       1.67625e-09      8.69403e+01
+
+Long-time yields, total (% of the eventual net reaction of R), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)  R->P_ketene_HO_2  R->P_lactone_OH
+    37.48       1.15352e-03      9.99988e+01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
+
+   Temperature = 250 K
+
+  P(torr)      species   separation  loss balance  detailed bal.
+    37.48  2.00000e+00  2.06727e-14   1.00541e+00    1.60545e-15
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Rate coefficients from Int1 (1/s), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)   Int1->Int2      Int1->R  Int1->P_ketene_HO_2  Int1->P_lactone_OH    Int1 loss
+   250  4.45090e-10  2.15962e-14          5.82269e-21         4.62577e-13 -8.23862e-08
+
+Rate coefficients from Int2 (1/s), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)   Int2->Int1      Int2->R  Int2->P_ketene_HO_2  Int2->P_lactone_OH    Int2 loss
+   250  2.99386e-07  9.99368e-15          2.69618e-21         6.28390e-07  5.62817e-07
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)  R->P_ketene_HO_2  R->P_lactone_OH
+   250       3.84127e-17      4.34854e-13
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      R->Int1      R->Int2
+   250  2.89336e-12  1.99052e-15
+
+Capture, return and net reaction of R (cm^3/s), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      capture       return          net
+   250  6.56959e-12  3.23935e-12  3.33024e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)  R->P_ketene_HO_2  R->P_lactone_OH
+   250       1.15345e-03      1.30577e+01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      R->Int1      R->Int2
+   250  8.68814e+01  5.97709e-02
+
+Thermal fate of Int1 (%), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      Int1->R  Int1->P_ketene_HO_2  Int1->P_lactone_OH
+   250  7.15392e-03          1.92881e-09         9.99928e+01
+
+Thermal fate of Int2 (%), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      Int2->R  Int2->P_ketene_HO_2  Int2->P_lactone_OH
+   250  2.30959e-03          6.22704e-10         9.99977e+01
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)  R->P_ketene_HO_2  R->P_lactone_OH
+   250       1.15352e-03      1.30585e+01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)  R->P_ketene_HO_2  R->P_lactone_OH
+   250       1.67625e-09      8.69403e+01
+
+Long-time yields, total (% of the eventual net reaction of R), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)  R->P_ketene_HO_2  R->P_lactone_OH
+   250       1.15352e-03      9.99988e+01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
+
+   Pressure = 37.48 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   250  2.00000e+00  2.06727e-14   1.00541e+00    1.60545e-15
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Rate coefficients from Int1 (1/s), temperature-pressure tables:
+
+Int1->Int2
+
+P\T              250
+37.48    4.45090e-10
+
+Int1->R
+
+P\T              250
+37.48    2.15962e-14
+
+Int1->P_ketene_HO_2
+
+P\T              250
+37.48    5.82269e-21
+
+Int1->P_lactone_OH
+
+P\T              250
+37.48    4.62577e-13
+
+Int1 loss
+
+P\T              250
+37.48   -8.23862e-08
+
+Rate coefficients from Int2 (1/s), temperature-pressure tables:
+
+Int2->Int1
+
+P\T              250
+37.48    2.99386e-07
+
+Int2->R
+
+P\T              250
+37.48    9.99368e-15
+
+Int2->P_ketene_HO_2
+
+P\T              250
+37.48    2.69618e-21
+
+Int2->P_lactone_OH
+
+P\T              250
+37.48    6.28390e-07
+
+Int2 loss
+
+P\T              250
+37.48    5.62817e-07
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s), temperature-pressure tables:
+
+R->P_ketene_HO_2
+
+P\T              250
+37.48    3.84127e-17
+
+R->P_lactone_OH
+
+P\T              250
+37.48    4.34854e-13
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s), temperature-pressure tables:
+
+R->Int1
+
+P\T              250
+37.48    2.89336e-12
+
+R->Int2
+
+P\T              250
+37.48    1.99052e-15
+
+Capture, return and net reaction of R (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T              250
+37.48    6.56959e-12
+
+return
+
+P\T              250
+37.48    3.23935e-12
+
+net
+
+P\T              250
+37.48    3.33024e-12
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R), temperature-pressure tables:
+
+R->P_ketene_HO_2
+
+P\T              250
+37.48    1.15345e-03
+
+R->P_lactone_OH
+
+P\T              250
+37.48    1.30577e+01
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of R), temperature-pressure tables:
+
+R->Int1
+
+P\T              250
+37.48    8.68814e+01
+
+R->Int2
+
+P\T              250
+37.48    5.97709e-02
+
+Thermal fate of Int1 (%), temperature-pressure tables:
+
+Int1->R
+
+P\T              250
+37.48    7.15392e-03
+
+Int1->P_ketene_HO_2
+
+P\T              250
+37.48    1.92881e-09
+
+Int1->P_lactone_OH
+
+P\T              250
+37.48    9.99928e+01
+
+Thermal fate of Int2 (%), temperature-pressure tables:
+
+Int2->R
+
+P\T              250
+37.48    2.30959e-03
+
+Int2->P_ketene_HO_2
+
+P\T              250
+37.48    6.22704e-10
+
+Int2->P_lactone_OH
+
+P\T              250
+37.48    9.99977e+01
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P_ketene_HO_2
+
+P\T              250
+37.48    1.15352e-03
+
+R->P_lactone_OH
+
+P\T              250
+37.48    1.30585e+01
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P_ketene_HO_2
+
+P\T              250
+37.48    1.67625e-09
+
+R->P_lactone_OH
+
+P\T              250
+37.48    8.69403e+01
+
+Long-time yields, total (% of the eventual net reaction of R), temperature-pressure tables:
+
+R->P_ketene_HO_2
+
+P\T              250
+37.48    1.15352e-03
+
+R->P_lactone_OH
+
+P\T              250
+37.48    9.99988e+01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
+
+species
+
+P\T              250
+37.48    2.00000e+00
+
+separation
+
+P\T              250
+37.48    2.06727e-14
+
+loss balance
+
+P\T              250
+37.48    1.00541e+00
+
+detailed bal.
+
+P\T              250
+37.48    1.60545e-15
+

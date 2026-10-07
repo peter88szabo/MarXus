@@ -109,18 +109,18 @@ The method has no physical restriction beyond the master equation itself. The ou
 **ZZ-allyl + O₂, four wells** (pulse, Rodas4, 10⁻¹² … 10² s, MESS Eckart model, 21 conditions; `validation/ZZAllyl+O2_Gamma_Case2/`):
 - At t = 100 s every yield equals SteadyStateOlzmann to all 7 printed digits; the total stays 100.0%.
 - Time scales at 300 K, 760 Torr (`plots/time_evolution_300K_760torr.png`):
-  - redissociation to R within 10⁻⁹ s (78.4%);
-  - IEPOX + OH from chemically activated G4 by 10⁻⁸ s (0.502%);
-  - escape from G4 between 10⁻¹⁰ and 10⁻⁵ s (21.1%);
+  - redissociation to R within 10⁻⁹ s (78.8%);
+  - IEPOX + OH from chemically activated G4 by 10⁻⁸ s (0.521%);
+  - escape from G4 between 10⁻¹⁰ and 10⁻⁵ s (20.7%);
   - a thermal P7 stage near 10⁻⁴ … 10⁻³ s.
-- The integrator needed 851–938 steps per condition, none rejected, and 117–132 factorizations (111 s for 21 conditions on 4 cores).
+- The integrator needed 856–933 steps per condition, none rejected, and 118–133 factorizations (111 s for 21 conditions on 4 cores).
 
 **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`, §4.4; 40 conditions):
-- **Late-time decay.** The decay rate of the pulse, −d ln N/dt from the last two output times with 10⁻⁸ < N < 10⁻³, equals SteadyStateOlzmann's thermal k_uni within 3.1·10⁻⁶. That holds at all 30 conditions that decay inside the window, 750–2000 K (`time_integration_decay_vs_k_uni.csv`). The time integration computes no eigenvector.
-- **Association from the slowest mode.** The amplitude A of the late single-exponential decay, extrapolated to t = 0, times k_∞ equals the CSE association k(R → W) (G13 eq. 28) within 4.7·10⁻⁵ at all 40 conditions. For one well both are (Σ f⁽¹⁾)(Σ f⁽¹⁾ k_R)/Σ k_R f⁰ (`reports/four_methods_figures.md`, Section 2).
-- **Conservation.** Populations + yields stay 100% in all printed digits at 750–2000 K. At 300–500 K, where λ₁ lies below the double-precision floor, the total drifts by up to 6·10⁻⁴ over 100 s (`reports/method_comparison.md`).
-- **At 300 K and 1 atm,** 12.9% redissociates within about 10⁻⁹ s. The remaining 87.1% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
-- **Integrator work:** 620–700 steps per condition and about 115–122 factorizations. The full deck took 11 min on 4 cores: the collision band reaches 716 grains at 2000 K.
+- **Late-time decay.** The decay rate of the pulse, −d ln N/dt from the last two output times with 10⁻⁸ < N < 10⁻³, equals SteadyStateOlzmann's thermal k_uni within 4.0·10⁻⁶. That holds at all 30 conditions that decay inside the window, 750–2000 K (`time_integration_decay_vs_k_uni.csv`). The time integration computes no eigenvector.
+- **Association from the slowest mode.** The amplitude A of the late single-exponential decay, extrapolated to t = 0, times k_∞ equals the CSE association k(R → W) (G13 eq. 28) within 1.9·10⁻⁴ at all 40 conditions. For one well both are (Σ f⁽¹⁾)(Σ f⁽¹⁾ k_R)/Σ k_R f⁰ (`reports/four_methods_figures.md`, Section 2).
+- **Conservation.** Populations + yields stay 100% in all printed digits at 750–2000 K. At 300–500 K, where λ₁ lies below the double-precision floor, the total drifts by up to 7·10⁻⁴ over 100 s (`reports/method_comparison.md`).
+- **At 300 K and 1 atm,** 13.3% redissociates within about 10⁻⁹ s. The remaining 86.7% stays as C₂H₃ until 100 s (k_uni = 8.7·10⁻¹⁶ s⁻¹).
+- **Integrator work:** 619–977 steps per condition and 112–132 factorizations. The full deck took 11 min on 4 cores: the collision band reaches 716 grains at 2000 K.
 
 ## 8. Code
 

@@ -1,0 +1,2 @@
+warning: T = 250 K, p = 37.48 Torr: chemical eigenvalue 0 = -8.259262603216463e-8 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.5529581122573358e-5 s-1: the rate coefficients of this mode are not resolved.
+warning: T = 250 K, p = 37.48 Torr: chemical eigenvalue 1 = 5.630231435855227e-7 s-1 is within a factor 100 of the double-precision floor eps*max(S_ii) = 1.5529581122573358e-5 s-1: the rate coefficients of this mode are not resolved.

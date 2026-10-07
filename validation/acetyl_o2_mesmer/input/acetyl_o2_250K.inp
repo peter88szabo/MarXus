@@ -1,0 +1,159 @@
+# Acetyl + O2, MESMER example reservoirSink: 250 K, 37.48 Torr He, no tunneling at TS1
+# Written by make_deck.py from reference_mesmer/reservoir_sink/reservoirSinkAcetylO2.xml (MESMER 7.1 distribution). Energies in
+# kJ/mol relative to acetyl + O_2 (zero-point levels); frequencies scaled by the XML factor.
+TemperatureList[K]                250
+PressureList[torr]                37.48
+EnergyStepOverTemperature         0.57551136      # 100 cm-1 at 250 K
+ExcessEnergyOverTemperature       25
+ModelEnergyLimit[kcal/mol]        400
+CalculationMethod                 direct
+WellCutoff                        10
+ChemicalEigenvalueMax             0.2
+MarXus
+  CollisionIntegral               Neufeld
+End
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]                130
+      Power                       0
+      ExponentCutoff              15
+    End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm]              7.0894  328.8696   # 10.2 K, 473.17 K
+      Sigmas[angstrom]            2.55  5.09
+      Masses[amu]                 4  75
+    End
+  Well     Int1                 # peroxy acetyl O_2 adduct
+    Species
+      RRHO
+        RotationalConstants[1/cm]      3
+          0.1081  0.161  0.3105
+        Mass[amu]                      75
+        Core RigidRotor
+          SymmetryFactor               1
+        End
+        Frequencies[1/cm]              18   # x 0.9854
+          136.9437  164.2092  320.2294  499.3809  534.7504  542.0534
+          722.9666  967.9805  1032.5040  1113.9725  1177.8474  1382.0042
+          1441.8175  1446.2963  1866.2256  3015.2227  3074.6861  3114.4408
+        ZeroEnergy[kJ/mol]             -139.5000
+        ElectronicLevels[1/cm]         1
+          0   2
+      End
+  End
+  Well     Int2                 # peroxide_isomer_opt
+    Species
+      RRHO
+        RotationalConstants[1/cm]      3
+          0.1089  0.1531  0.3768
+        Mass[amu]                      75
+        Core RigidRotor
+          SymmetryFactor               1
+        End
+        Frequencies[1/cm]              18   # x 0.9854
+          203.2194  317.9559  331.8823  419.7617  492.4597  629.6944
+          673.9705  757.0268  860.7025  993.5349  1014.8432  1230.1762
+          1430.0281  1480.4056  1685.4006  3123.6759  3241.8317  3423.6636
+        ZeroEnergy[kJ/mol]             -127.1700
+        ElectronicLevels[1/cm]         1
+          0   2
+      End
+  End
+  Bimolecular  R                  # acetyl + O_2
+    Fragment   acetyl
+      RRHO
+        RotationalConstants[1/cm]      3
+          1.57314  0.3155  0.333
+        Mass[amu]                      43
+        Core RigidRotor
+          SymmetryFactor               1
+        End
+        Frequencies[1/cm]              12   # x 0.9854
+          109.2409  462.9764  840.5073  941.6160  1034.3585  1339.3038
+          1433.0788  1438.3313  1901.9288  2970.0543  3059.2606  3065.3554
+        ZeroEnergy[kJ/mol]             0.0000
+        ElectronicLevels[1/cm]         1
+          0   2
+      End
+    Fragment   O_2
+      RRHO
+        RotationalConstants[1/cm]      1
+          1.44914
+        Mass[amu]                      32
+        Core RigidRotor
+          SymmetryFactor               2
+        End
+        Frequencies[1/cm]              1   # x 0.9854
+          1641.1139
+        ZeroEnergy[kJ/mol]             0.0000
+        ElectronicLevels[1/cm]         1
+          0   3
+      End
+    GroundEnergy[kJ/mol]           0.0
+  End
+  Bimolecular  P_lactone_OH       # sink; asymptote at -126.50 kJ/mol (not used)
+    Dummy
+  Bimolecular  P_ketene_HO_2       # sink; asymptote at -23.90 kJ/mol (not used)
+    Dummy
+  Barrier  B_R1  Int1  R        # acetyl + O_2 -> Int1: inverse Laplace transform
+    RRHO
+      InverseLaplaceTransform
+        Direction                  Association
+        PreExponential[cm^3/s]     6e-12
+        TemperatureExponent        -0.5
+        ReferenceTemperature[K]    298
+        ActivationEnergy[kJ/mol]   0
+      End
+      ZeroEnergy[kJ/mol]           0.0        # not used: the ILT threshold is the asymptote + E_inf
+    End
+  Barrier  B_R2  Int1  Int2        # TS1a: peroxy -> peroxide
+    RRHO
+      RotationalConstants[1/cm]      3
+        0.1132  0.1635  0.3428
+      Mass[amu]                      75
+      Core RigidRotor
+        SymmetryFactor               1
+      End
+      Frequencies[1/cm]              17   # x 0.9854
+        151.8261  302.7814  483.1812  536.8645  595.2897  674.6556
+        831.7870  933.1764  1019.4076  1022.4058  1090.1267  1132.1876
+        1399.3940  1698.1537  1837.4951  3063.6153  3145.4877
+      ZeroEnergy[kJ/mol]             -21.5000
+      ElectronicLevels[1/cm]         1
+        0   2
+    End
+  Barrier  B_R3  Int2  P_lactone_OH        # TS peroxide -> lactone + OH
+    RRHO
+      RotationalConstants[1/cm]      3
+        0.1001  0.1422  0.3155
+      Mass[amu]                      75
+      Core RigidRotor
+        SymmetryFactor               1
+      End
+      Frequencies[1/cm]              17   # x 0.9854
+        154.4950  184.9443  292.1420  315.4414  372.6333  607.3636
+        624.8184  807.6207  959.1121  993.7905  997.8448  1165.5949
+        1409.5605  1832.7978  3109.8461  3228.4991  3628.7867
+      ZeroEnergy[kJ/mol]             -35.5200
+      ElectronicLevels[1/cm]         1
+        0   2
+    End
+  Barrier  B_R4  Int1  P_ketene_HO_2        # peroxy -> HO_2 + ketene
+    RRHO
+      RotationalConstants[1/cm]      3
+        0.0902  0.1249  0.3048
+      Mass[amu]                      75
+      Core RigidRotor
+        SymmetryFactor               1
+      End
+      Frequencies[1/cm]              17   # x 0.9854
+        58.0576  207.5618  346.0217  464.6443  485.9361  541.8771
+        647.0890  872.5938  1012.6383  1074.0607  1257.7911  1292.0292
+        1368.3477  1676.8495  2149.7873  3046.0761  3118.6535
+      ZeroEnergy[kJ/mol]             11.5900
+      ElectronicLevels[1/cm]         1
+        0   2
+    End
+End

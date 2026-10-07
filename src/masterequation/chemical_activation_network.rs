@@ -22,6 +22,8 @@
 //! well's bottom; on the common (absolute) energy scale it lies at (i + offset) dE with an integer
 //! offset per well, so that grains of different wells at the same absolute energy coincide exactly.
 
+use super::collisional_relaxation::CollisionIntegral;
+
 /// Temperature dependence of the mean energy transferred in deactivating collisions,
 /// <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n.
 #[derive(Debug, Clone)]
@@ -49,6 +51,8 @@ pub struct LennardJonesPair {
     pub sigma_angstrom: f64,
     pub epsilon_kelvin: f64,
     pub reduced_mass_amu: f64,
+    /// Form of the reduced collision integral Omega(2,2)*.
+    pub collision_integral: CollisionIntegral,
 }
 
 /// Where the flux of a unimolecular channel goes.
@@ -279,7 +283,12 @@ pub(crate) mod tests {
                     .map(|i| if i >= threshold { 1.0e6 * ((i - threshold) as f64 + 1.0) } else { 0.0 })
                     .collect(),
             }],
-            lennard_jones: LennardJonesPair { sigma_angstrom: 4.5, epsilon_kelvin: 300.0, reduced_mass_amu: 20.0 },
+            lennard_jones: LennardJonesPair {
+                sigma_angstrom: 4.5,
+                epsilon_kelvin: 300.0,
+                reduced_mass_amu: 20.0,
+                collision_integral: CollisionIntegral::Troe1977,
+            },
             energy_transfer: EnergyTransferParameters {
                 mean_down_at_reference_cm1: 200.0,
                 reference_temperature_kelvin: 300.0,

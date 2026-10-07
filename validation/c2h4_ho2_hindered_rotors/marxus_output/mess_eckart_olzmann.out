@@ -1,0 +1,1653 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h4_ho2_hindered_rotors/input/c2h4_ho2.inp
+ Method:             STEADY STATE, OLZMANN (final steady state; steady-state family)
+                     J N = R F without an absorbing barrier (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), eqs. 7, 8)
+                     with the thermal rate coefficients of the lowest eigenpair of the same J (eq. 12)
+                     and the thermal fates of the wells (Boltzmann distribution of one well as source)
+ Solvers:            linear systems: banded Cholesky factorization of the symmetrized J, relative residual <= 1e-8
+                     thermal eigenpair: InverseIteration, sum-rule tolerance 1.5e-2 (warning only)
+ Parallel:           4 cores (--ncore); the 30 conditions (T, p) in batches of 4 at a time (rayon)
+                     BLAS threads per LAPACK call: 1
+ Temperatures (K):   300, 500, 700, 1000, 1500, 2000
+ Pressures (torr):   7.500616827041697, 75.00616827041698, 750.0616827041697, 7500.616827041697, 75006.16827041698
+ Energy grid:        grains of 42.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 300 K: W2 5 grains (210 cm-1, 22.0 k_BT below the lowest threshold)
+                       T = 500 K: W2 9 grains (378 cm-1, 12.7 k_BT below the lowest threshold)
+                       T = 700 K: W2 15 grains (630 cm-1, 8.5 k_BT below the lowest threshold)
+                       T = 1000 K: W2 28 grains (1176 cm-1, 5.2 k_BT below the lowest threshold)
+                       T = 1500 K: W2 60 grains (2520 cm-1, 2.2 k_BT below the lowest threshold)
+                       T = 2000 K: W2 99 grains (4158 cm-1, 0.5 k_BT below the lowest threshold)
+                       warning, T = 1500 K: the low-energy reservoir of well W2 reaches 2520 cm-1 above the well bottom, 2.18 k_BT below its lowest reaction threshold (4788 cm-1). The reservoir state assumes Boltzmann equilibrium among its grains and "is usually appropriate for grains which are more than a few kT below the lowest reaction threshold" (MESMER manual, Sec. 14.2.1); results for this well should be checked, e.g. with a finer energy grain (the reservoir forms where the normalization of the exponential-down kernel fails at sparse states).
+                       warning, T = 2000 K: the low-energy reservoir of well W2 reaches 4158 cm-1 above the well bottom, 0.45 k_BT below its lowest reaction threshold (4788 cm-1). The reservoir state assumes Boltzmann equilibrium among its grains and "is usually appropriate for grains which are more than a few kT below the lowest reaction threshold" (MESMER manual, Sec. 14.2.1); results for this well should be checked, e.g. with a finer energy grain (the reservoir forms where the normalization of the exponential-down kernel fails at sparse states).
+                     collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (default)
+ Tunneling:          MESS semiclassical Eckart model (option for comparison with MESS)
+ Rotors:             7 one-dimensional internal rotors: quantum levels in the Fourier basis of period 2 pi/sigma, convolved with the other degrees of freedom; reduced moment from a geometry: Kilpatrick-Pitzer I(1,3) (default)
+                       W2 rotor 1: B 9.938402 cm-1, symmetry 2, potential -0.000039 .. 0.830790 kcal/mol, ground energy 0.155905 kcal/mol, 997 levels up to 28188.7 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.253020 0.456715 0.703733 0.770266 1.277130 1.281169 2.065549 2.065682 3.084614
+                       W2 rotor 2: B 1.942945 cm-1, symmetry 1, potential -0.008042 .. 5.969358 kcal/mol, ground energy 0.236392 kcal/mol, 997 levels up to 1379.7 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.235501 0.479277 0.530558 0.563956 0.821328 0.938949 0.990905 1.106612 1.377224
+                       W2 rotor 3: B 19.540222 cm-1, symmetry 1, potential -0.000015 .. 5.357391 kcal/mol, ground energy 0.300510 kcal/mol, 997 levels up to 13857.0 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.406470 0.536281 0.803995 1.040977 1.341724 1.670879 2.023764 2.395398 2.781577
+                       B3 rotor 1: B 1.961023 cm-1, symmetry 1, potential -0.000013 .. 3.198327 kcal/mol, ground energy 0.128274 kcal/mol, 997 levels up to 1392.0 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.252184 0.495483 0.729209 0.952476 1.042829 1.164081 1.254993 1.362266 1.452151
+                       B3 rotor 2: B 19.683031 cm-1, symmetry 1, potential -0.006654 .. 11.648269 kcal/mol, ground energy 0.601209 kcal/mol, 997 levels up to 13960.9 kcal/mol above the ground; lowest above the ground (kcal/mol): 1.062395 1.141376 2.188022 2.231881 3.222394 3.340566 4.276186 4.419624 5.346287
+                       B4 rotor 1: B 1.775474 cm-1, symmetry 1, potential -0.020408 .. 37.141151 kcal/mol, ground energy 0.138660 kcal/mol, 991 levels up to 1261.9 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.320495 0.645613 0.975156 1.308920 1.646705 1.988313 2.333552 2.682234 3.034179
+                       B4 rotor 2: B 19.913176 cm-1, symmetry 1, potential -0.037105 .. 4.804606 kcal/mol, ground energy 0.116406 kcal/mol, 997 levels up to 14121.4 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.114033 0.397770 0.684825 1.019505 1.376859 1.752889 2.141148 2.536921 2.936095
+ Source:             thermal reactant P1 through B3 (P1 -> W2)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W2     1455       -131 .. 1323   <dE_down> = 180 cm-1 (T/300 K)^0.95; sigma 3.360 A, epsilon 52.25 K, reduced mass 3.754 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B3       W2       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+        B4       W2       P2   rigid transition state, Eckart tunneling
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W2      -2.36      11.32
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B3      13.25       W2       P1   rigid transition state, Eckart tunneling
+        B4      11.32       W2       P2   rigid transition state, Eckart tunneling
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+FINAL STEADY STATE (no absorbing barrier)
+____________________________________________________________________________________________________
+
+J N = R F without a barrier: under continuous formation, after the stabilized population has reached its own
+steady state, the yields of every exit, chemical activation and thermal reaction together (GO10 eqs. 7-9).
+
+Not available: T = 300 K, p = 7500.616827041697 Torr: relative residual 4.004465538441496e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+Not available: T = 300 K, p = 75006.16827041698 Torr: relative residual 3.547966344686523e-7 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+--- Tables by temperature (rows: pressure in torr) ---
+
+Yields (% of the formed adducts), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.15645e+01  8.84355e+01
+  75.00616827041698  1.01695e+01  8.98305e+01
+  750.0616827041697  7.33946e+00  9.26605e+01
+  7500.616827041697          ***          ***
+  75006.16827041698          ***          ***
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.84459e+01  7.15541e+01
+  75.00616827041698  2.79814e+01  7.20186e+01
+  750.0616827041697  2.63802e+01  7.36198e+01
+  7500.616827041697  2.36606e+01  7.63394e+01
+  75006.16827041698  2.17354e+01  7.82646e+01
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  4.15241e+01  5.84759e+01
+  75.00616827041698  4.14082e+01  5.85918e+01
+  750.0616827041697  4.09252e+01  5.90748e+01
+  7500.616827041697  3.97426e+01  6.02574e+01
+  75006.16827041698  3.82042e+01  6.17958e+01
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  5.40417e+01  4.59583e+01
+  75.00616827041698  5.40263e+01  4.59737e+01
+  750.0616827041697  5.39499e+01  4.60501e+01
+  7500.616827041697  5.36987e+01  4.63013e+01
+  75006.16827041698  5.31782e+01  4.68218e+01
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.44721e+01  3.55279e+01
+  75.00616827041698  6.44713e+01  3.55287e+01
+  750.0616827041697  6.44663e+01  3.55337e+01
+  7500.616827041697  6.44439e+01  3.55561e+01
+  75006.16827041698  6.43708e+01  3.56292e+01
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.93652e+01  3.06348e+01
+  75.00616827041698  6.93651e+01  3.06349e+01
+  750.0616827041697  6.93646e+01  3.06354e+01
+  7500.616827041697  6.93617e+01  3.06383e+01
+  75006.16827041698  6.93488e+01  3.06512e+01
+
+Yields without the return to P1 (% of the net reaction), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+   Temperature = 500 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 700 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.42716e+02  1.09138e+03
+  75.00616827041698  5.44434e+01  4.80915e+02
+  750.0616827041697  2.43906e+01  3.07931e+02
+  7500.616827041697          ***          ***
+  75006.16827041698          ***          ***
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  5.72984e+06  1.44131e+07
+  75.00616827041698  2.27130e+06  5.84587e+06
+  750.0616827041697  1.13392e+06  3.16447e+06
+  7500.616827041697  7.17069e+05  2.31357e+06
+  75006.16827041698  5.78315e+05  2.08239e+06
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  4.06846e+08  5.72936e+08
+  75.00616827041698  2.24905e+08  3.18236e+08
+  750.0616827041697  1.31654e+08  1.90040e+08
+  7500.616827041697  8.94152e+07  1.35571e+08
+  75006.16827041698  7.08831e+07  1.14655e+08
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.25345e+09  5.31808e+09
+  75.00616827041698  5.37359e+09  4.57267e+09
+  750.0616827041697  4.34676e+09  3.71027e+09
+  7500.616827041697  3.50518e+09  3.02232e+09
+  75006.16827041698  2.94825e+09  2.59584e+09
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.54903e+10  3.60890e+10
+  75.00616827041698  6.45575e+10  3.55763e+10
+  750.0616827041697  6.27628e+10  3.45947e+10
+  7500.616827041697  6.00062e+10  3.31077e+10
+  75006.16827041698  5.65869e+10  3.13209e+10
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.64668e+11  1.16889e+11
+  75.00616827041698  2.64230e+11  1.16696e+11
+  750.0616827041697  2.63187e+11  1.16238e+11
+  7500.616827041697  2.60969e+11  1.15275e+11
+  75006.16827041698  2.56822e+11  1.13512e+11
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal reaction of the stabilized adducts): k(P1 -> P) = k_inf Phi_P (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  3.14009e-23
+  75.00616827041698  3.18962e-23
+  750.0616827041697  3.29011e-23
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  3.08895e-19
+  75.00616827041698  3.10900e-19
+  750.0616827041697  3.17813e-19
+  7500.616827041697  3.29553e-19
+  75006.16827041698  3.37864e-19
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  2.24736e-17
+  75.00616827041698  2.25181e-17
+  750.0616827041697  2.27038e-17
+  7500.616827041697  2.31583e-17
+  75006.16827041698  2.37495e-17
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  7.20860e-16
+  75.00616827041698  7.21102e-16
+  750.0616827041697  7.22299e-16
+  7500.616827041697  7.26240e-16
+  75006.16827041698  7.34403e-16
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.44809e-14
+  75.00616827041698  1.44812e-14
+  750.0616827041697  1.44832e-14
+  7500.616827041697  1.44924e-14
+  75006.16827041698  1.45222e-14
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  7.96845e-14
+  75.00616827041698  7.96847e-14
+  750.0616827041697  7.96860e-14
+  7500.616827041697  7.96936e-14
+  75006.16827041698  7.97272e-14
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal) (% of the net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  3.55072e-23  4.10621e-24  3.14009e-23
+  75.00616827041698  3.55072e-23  3.61091e-24  3.18962e-23
+  750.0616827041697  3.55072e-23  2.60603e-24  3.29011e-23
+  7500.616827041697          ***          ***          ***
+  75006.16827041698          ***          ***          ***
+
+   Temperature = 500 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  4.31694e-19  1.22799e-19  3.08895e-19
+  75.00616827041698  4.31694e-19  1.20794e-19  3.10900e-19
+  750.0616827041697  4.31694e-19  1.13882e-19  3.17813e-19
+  7500.616827041697  4.31694e-19  1.02142e-19  3.29553e-19
+  75006.16827041698  4.31694e-19  9.38304e-20  3.37864e-19
+
+   Temperature = 700 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  3.84323e-17  1.59587e-17  2.24736e-17
+  75.00616827041698  3.84323e-17  1.59141e-17  2.25181e-17
+  750.0616827041697  3.84323e-17  1.57285e-17  2.27038e-17
+  7500.616827041697  3.84323e-17  1.52740e-17  2.31583e-17
+  75006.16827041698  3.84323e-17  1.46827e-17  2.37495e-17
+
+   Temperature = 1000 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  1.56851e-15  8.47649e-16  7.20860e-16
+  75.00616827041698  1.56851e-15  8.47406e-16  7.21102e-16
+  750.0616827041697  1.56851e-15  8.46209e-16  7.22299e-16
+  7500.616827041697  1.56851e-15  8.42269e-16  7.26240e-16
+  75006.16827041698  1.56851e-15  8.34105e-16  7.34403e-16
+
+   Temperature = 1500 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  4.07592e-14  2.62783e-14  1.44809e-14
+  75.00616827041698  4.07592e-14  2.62780e-14  1.44812e-14
+  750.0616827041697  4.07592e-14  2.62760e-14  1.44832e-14
+  7500.616827041697  4.07592e-14  2.62668e-14  1.44924e-14
+  75006.16827041698  4.07592e-14  2.62370e-14  1.45222e-14
+
+   Temperature = 2000 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  2.60111e-13  1.80427e-13  7.96845e-14
+  75.00616827041698  2.60111e-13  1.80427e-13  7.96847e-14
+  750.0616827041697  2.60111e-13  1.80425e-13  7.96860e-14
+  7500.616827041697  2.60111e-13  1.80418e-13  7.96936e-14
+  75006.16827041698  2.60111e-13  1.80384e-13  7.97272e-14
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Yields (% of the formed adducts), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.15645e+01  8.84355e+01
+   500  2.84459e+01  7.15541e+01
+   700  4.15241e+01  5.84759e+01
+  1000  5.40417e+01  4.59583e+01
+  1500  6.44721e+01  3.55279e+01
+  2000  6.93652e+01  3.06348e+01
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.01695e+01  8.98305e+01
+   500  2.79814e+01  7.20186e+01
+   700  4.14082e+01  5.85918e+01
+  1000  5.40263e+01  4.59737e+01
+  1500  6.44713e+01  3.55287e+01
+  2000  6.93651e+01  3.06349e+01
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  7.33946e+00  9.26605e+01
+   500  2.63802e+01  7.36198e+01
+   700  4.09252e+01  5.90748e+01
+  1000  5.39499e+01  4.60501e+01
+  1500  6.44663e+01  3.55337e+01
+  2000  6.93646e+01  3.06354e+01
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  2.36606e+01  7.63394e+01
+   700  3.97426e+01  6.02574e+01
+  1000  5.36987e+01  4.63013e+01
+  1500  6.44439e+01  3.55561e+01
+  2000  6.93617e+01  3.06383e+01
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  2.17354e+01  7.82646e+01
+   700  3.82042e+01  6.17958e+01
+  1000  5.31782e+01  4.68218e+01
+  1500  6.43708e+01  3.56292e+01
+  2000  6.93488e+01  3.06512e+01
+
+Yields without the return to P1 (% of the net reaction), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P2
+   300          ***
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P2
+   300          ***
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.42716e+02  1.09138e+03
+   500  5.72984e+06  1.44131e+07
+   700  4.06846e+08  5.72936e+08
+  1000  6.25345e+09  5.31808e+09
+  1500  6.54903e+10  3.60890e+10
+  2000  2.64668e+11  1.16889e+11
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  5.44434e+01  4.80915e+02
+   500  2.27130e+06  5.84587e+06
+   700  2.24905e+08  3.18236e+08
+  1000  5.37359e+09  4.57267e+09
+  1500  6.45575e+10  3.55763e+10
+  2000  2.64230e+11  1.16696e+11
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  2.43906e+01  3.07931e+02
+   500  1.13392e+06  3.16447e+06
+   700  1.31654e+08  1.90040e+08
+  1000  4.34676e+09  3.71027e+09
+  1500  6.27628e+10  3.45947e+10
+  2000  2.63187e+11  1.16238e+11
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  7.17069e+05  2.31357e+06
+   700  8.94152e+07  1.35571e+08
+  1000  3.50518e+09  3.02232e+09
+  1500  6.00062e+10  3.31077e+10
+  2000  2.60969e+11  1.15275e+11
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  5.78315e+05  2.08239e+06
+   700  7.08831e+07  1.14655e+08
+  1000  2.94825e+09  2.59584e+09
+  1500  5.65869e+10  3.13209e+10
+  2000  2.56822e+11  1.13512e+11
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal reaction of the stabilized adducts): k(P1 -> P) = k_inf Phi_P (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  3.14009e-23
+   500  3.08895e-19
+   700  2.24736e-17
+  1000  7.20860e-16
+  1500  1.44809e-14
+  2000  7.96845e-14
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  3.18962e-23
+   500  3.10900e-19
+   700  2.25181e-17
+  1000  7.21102e-16
+  1500  1.44812e-14
+  2000  7.96847e-14
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  3.29011e-23
+   500  3.17813e-19
+   700  2.27038e-17
+  1000  7.22299e-16
+  1500  1.44832e-14
+  2000  7.96860e-14
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300          ***
+   500  3.29553e-19
+   700  2.31583e-17
+  1000  7.26240e-16
+  1500  1.44924e-14
+  2000  7.96936e-14
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300          ***
+   500  3.37864e-19
+   700  2.37495e-17
+  1000  7.34403e-16
+  1500  1.45222e-14
+  2000  7.97272e-14
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal) (% of the net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300          ***
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300          ***
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  4.10621e-24  3.14009e-23
+   500  4.31694e-19  1.22799e-19  3.08895e-19
+   700  3.84323e-17  1.59587e-17  2.24736e-17
+  1000  1.56851e-15  8.47649e-16  7.20860e-16
+  1500  4.07592e-14  2.62783e-14  1.44809e-14
+  2000  2.60111e-13  1.80427e-13  7.96845e-14
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  3.61091e-24  3.18962e-23
+   500  4.31694e-19  1.20794e-19  3.10900e-19
+   700  3.84323e-17  1.59141e-17  2.25181e-17
+  1000  1.56851e-15  8.47406e-16  7.21102e-16
+  1500  4.07592e-14  2.62780e-14  1.44812e-14
+  2000  2.60111e-13  1.80427e-13  7.96847e-14
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  2.60603e-24  3.29011e-23
+   500  4.31694e-19  1.13882e-19  3.17813e-19
+   700  3.84323e-17  1.57285e-17  2.27038e-17
+  1000  1.56851e-15  8.46209e-16  7.22299e-16
+  1500  4.07592e-14  2.62760e-14  1.44832e-14
+  2000  2.60111e-13  1.80425e-13  7.96860e-14
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)      capture       return          net
+   300          ***          ***          ***
+   500  4.31694e-19  1.02142e-19  3.29553e-19
+   700  3.84323e-17  1.52740e-17  2.31583e-17
+  1000  1.56851e-15  8.42269e-16  7.26240e-16
+  1500  4.07592e-14  2.62668e-14  1.44924e-14
+  2000  2.60111e-13  1.80418e-13  7.96936e-14
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)      capture       return          net
+   300          ***          ***          ***
+   500  4.31694e-19  9.38304e-20  3.37864e-19
+   700  3.84323e-17  1.46827e-17  2.37495e-17
+  1000  1.56851e-15  8.34105e-16  7.34403e-16
+  1500  4.07592e-14  2.62370e-14  1.45222e-14
+  2000  2.60111e-13  1.80384e-13  7.97272e-14
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Yields (% of the formed adducts), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.15645e+01  2.84459e+01  4.15241e+01  5.40417e+01  6.44721e+01  6.93652e+01
+75.00616827041698    1.01695e+01  2.79814e+01  4.14082e+01  5.40263e+01  6.44713e+01  6.93651e+01
+750.0616827041697    7.33946e+00  2.63802e+01  4.09252e+01  5.39499e+01  6.44663e+01  6.93646e+01
+7500.616827041697            ***  2.36606e+01  3.97426e+01  5.36987e+01  6.44439e+01  6.93617e+01
+75006.16827041698            ***  2.17354e+01  3.82042e+01  5.31782e+01  6.43708e+01  6.93488e+01
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.84355e+01  7.15541e+01  5.84759e+01  4.59583e+01  3.55279e+01  3.06348e+01
+75.00616827041698    8.98305e+01  7.20186e+01  5.85918e+01  4.59737e+01  3.55287e+01  3.06349e+01
+750.0616827041697    9.26605e+01  7.36198e+01  5.90748e+01  4.60501e+01  3.55337e+01  3.06354e+01
+7500.616827041697            ***  7.63394e+01  6.02574e+01  4.63013e+01  3.55561e+01  3.06383e+01
+75006.16827041698            ***  7.82646e+01  6.17958e+01  4.68218e+01  3.56292e+01  3.06512e+01
+
+Yields without the return to P1 (% of the net reaction), temperature-pressure tables:
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75.00616827041698    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+750.0616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+7500.616827041697            ***  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75006.16827041698            ***  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Chemical-activation rate coefficients k_ca (1/s), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.42716e+02  5.72984e+06  4.06846e+08  6.25345e+09  6.54903e+10  2.64668e+11
+75.00616827041698    5.44434e+01  2.27130e+06  2.24905e+08  5.37359e+09  6.45575e+10  2.64230e+11
+750.0616827041697    2.43906e+01  1.13392e+06  1.31654e+08  4.34676e+09  6.27628e+10  2.63187e+11
+7500.616827041697            ***  7.17069e+05  8.94152e+07  3.50518e+09  6.00062e+10  2.60969e+11
+75006.16827041698            ***  5.78315e+05  7.08831e+07  2.94825e+09  5.65869e+10  2.56822e+11
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.09138e+03  1.44131e+07  5.72936e+08  5.31808e+09  3.60890e+10  1.16889e+11
+75.00616827041698    4.80915e+02  5.84587e+06  3.18236e+08  4.57267e+09  3.55763e+10  1.16696e+11
+750.0616827041697    3.07931e+02  3.16447e+06  1.90040e+08  3.71027e+09  3.45947e+10  1.16238e+11
+7500.616827041697            ***  2.31357e+06  1.35571e+08  3.02232e+09  3.31077e+10  1.15275e+11
+75006.16827041698            ***  2.08239e+06  1.14655e+08  2.59584e+09  3.13209e+10  1.13512e+11
+
+Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal reaction of the stabilized adducts): k(P1 -> P) = k_inf Phi_P (cm^3/s), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.14009e-23  3.08895e-19  2.24736e-17  7.20860e-16  1.44809e-14  7.96845e-14
+75.00616827041698    3.18962e-23  3.10900e-19  2.25181e-17  7.21102e-16  1.44812e-14  7.96847e-14
+750.0616827041697    3.29011e-23  3.17813e-19  2.27038e-17  7.22299e-16  1.44832e-14  7.96860e-14
+7500.616827041697            ***  3.29553e-19  2.31583e-17  7.26240e-16  1.44924e-14  7.96936e-14
+75006.16827041698            ***  3.37864e-19  2.37495e-17  7.34403e-16  1.45222e-14  7.97272e-14
+
+Bimolecular-to-bimolecular yields, overall (chemical activation + thermal) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75.00616827041698    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+750.0616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+7500.616827041697            ***  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75006.16827041698            ***  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Capture, return and net reaction of P1: k_inf, k_inf Phi_return, k_inf (1 - Phi_return) (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.55072e-23  4.31694e-19  3.84323e-17  1.56851e-15  4.07592e-14  2.60111e-13
+75.00616827041698    3.55072e-23  4.31694e-19  3.84323e-17  1.56851e-15  4.07592e-14  2.60111e-13
+750.0616827041697    3.55072e-23  4.31694e-19  3.84323e-17  1.56851e-15  4.07592e-14  2.60111e-13
+7500.616827041697            ***  4.31694e-19  3.84323e-17  1.56851e-15  4.07592e-14  2.60111e-13
+75006.16827041698            ***  4.31694e-19  3.84323e-17  1.56851e-15  4.07592e-14  2.60111e-13
+
+return
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    4.10621e-24  1.22799e-19  1.59587e-17  8.47649e-16  2.62783e-14  1.80427e-13
+75.00616827041698    3.61091e-24  1.20794e-19  1.59141e-17  8.47406e-16  2.62780e-14  1.80427e-13
+750.0616827041697    2.60603e-24  1.13882e-19  1.57285e-17  8.46209e-16  2.62760e-14  1.80425e-13
+7500.616827041697            ***  1.02142e-19  1.52740e-17  8.42269e-16  2.62668e-14  1.80418e-13
+75006.16827041698            ***  9.38304e-20  1.46827e-17  8.34105e-16  2.62370e-14  1.80384e-13
+
+net
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.14009e-23  3.08895e-19  2.24736e-17  7.20860e-16  1.44809e-14  7.96845e-14
+75.00616827041698    3.18962e-23  3.10900e-19  2.25181e-17  7.21102e-16  1.44812e-14  7.96847e-14
+750.0616827041697    3.29011e-23  3.17813e-19  2.27038e-17  7.22299e-16  1.44832e-14  7.96860e-14
+7500.616827041697            ***  3.29553e-19  2.31583e-17  7.26240e-16  1.44924e-14  7.96936e-14
+75006.16827041698            ***  3.37864e-19  2.37495e-17  7.34403e-16  1.45222e-14  7.97272e-14
+
+____________________________________________________________________________________________________
+THERMAL RATE COEFFICIENTS OF THE FINAL STEADY STATE (lowest eigenpair of J)
+____________________________________________________________________________________________________
+
+k_uni = sum of the specific rate coefficients averaged over the normalized eigenvector of the lowest eigenvalue
+lambda_1 of J (Gonzalez-Garcia, Olzmann, PCCP 12, 12290 (2010), text after eq. 12); lambda_1 = k_uni in exact
+arithmetic (eq. 12), checked as the sum rule (warning above 1.5e-2). Eigen-solver: InverseIteration. The thermal branching is
+k_th(channel)/k_uni: the yields of the thermal decay of the network.
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal rate coefficients (1/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  8.62422e+01  8.62422e+01  9.54853e-01  8.52874e+01
+  75.00616827041698  1.80567e+02  1.80567e+02  4.60852e+00  1.75958e+02
+  750.0616827041697  2.50516e+02  2.50516e+02  1.03002e+01  2.40216e+02
+  7500.616827041697  2.72357e+02  2.72357e+02  1.30802e+01  2.59277e+02
+  75006.16827041698  2.75697e+02  2.75696e+02  1.35978e+01  2.62099e+02
+
+   Temperature = 500 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  8.91440e+04  8.91440e+04  2.35528e+03  8.67887e+04
+  75.00616827041698  3.86414e+05  3.86414e+05  2.58745e+04  3.60539e+05
+  750.0616827041697  1.12232e+06  1.12232e+06  1.42590e+05  9.79734e+05
+  7500.616827041697  2.02758e+06  2.02758e+06  3.65627e+05  1.66195e+06
+  75006.16827041698  2.47990e+06  2.47990e+06  5.09398e+05  1.97050e+06
+
+   Temperature = 700 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  8.68601e+05  8.68601e+05  3.88901e+04  8.29710e+05
+  75.00616827041698  5.04481e+06  5.04481e+06  5.26649e+05  4.51816e+06
+  750.0616827041697  2.25837e+07  2.25837e+07  4.34706e+06  1.82367e+07
+  7500.616827041697  6.99106e+07  6.99106e+07  1.96868e+07  5.02238e+07
+  75006.16827041698  1.33200e+08  1.33200e+08  4.56667e+07  8.75330e+07
+
+   Temperature = 1000 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  4.05403e+06  4.05403e+06  3.13695e+05  3.74033e+06
+  75.00616827041698  2.69846e+07  2.69846e+07  4.15812e+06  2.28264e+07
+  750.0616827041697  1.50543e+08  1.50543e+08  3.93276e+07  1.11215e+08
+  7500.616827041697  6.62511e+08  6.62511e+08  2.45125e+08  4.17386e+08
+  75006.16827041698  2.05302e+09  2.05302e+09  9.34946e+08  1.11808e+09
+
+   Temperature = 1500 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  1.42199e+07  1.42199e+07  2.07750e+06  1.21424e+07
+  75.00616827041698  1.03246e+08  1.03246e+08  2.35107e+07  7.97351e+07
+  750.0616827041697  6.43284e+08  6.43284e+08  2.18392e+08  4.24892e+08
+  7500.616827041697  3.33744e+09  3.33744e+09  1.50579e+09  1.83165e+09
+  75006.16827041698  1.35651e+10  1.35651e+10  7.34011e+09  6.22497e+09
+
+   Temperature = 2000 K
+
+            P(torr)        k_uni     lambda_1       W2->P1       W2->P2
+  7.500616827041697  2.62440e+07  2.62440e+07  6.41113e+06  1.98329e+07
+  75.00616827041698  2.12896e+08  2.12896e+08  6.37992e+07  1.49097e+08
+  750.0616827041697  1.43910e+09  1.43910e+09  5.71030e+08  8.68068e+08
+  7500.616827041697  7.97571e+09  7.97571e+09  3.99331e+09  3.98240e+09
+  75006.16827041698  3.51131e+10  3.51131e+10  2.05681e+10  1.45449e+10
+
+Thermal branching (% of the thermal decay k_uni), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.10718e+00  9.88928e+01
+  75.00616827041698  2.55225e+00  9.74477e+01
+  750.0616827041697  4.11159e+00  9.58884e+01
+  7500.616827041697  4.80260e+00  9.51974e+01
+  75006.16827041698  4.93218e+00  9.50678e+01
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.64210e+00  9.73579e+01
+  75.00616827041698  6.69605e+00  9.33039e+01
+  750.0616827041697  1.27049e+01  8.72951e+01
+  7500.616827041697  1.80327e+01  8.19673e+01
+  75006.16827041698  2.05411e+01  7.94589e+01
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  4.47733e+00  9.55227e+01
+  75.00616827041698  1.04394e+01  8.95606e+01
+  750.0616827041697  1.92486e+01  8.07514e+01
+  7500.616827041697  2.81599e+01  7.18401e+01
+  75006.16827041698  3.42844e+01  6.57156e+01
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  7.73785e+00  9.22621e+01
+  75.00616827041698  1.54092e+01  8.45908e+01
+  750.0616827041697  2.61238e+01  7.38762e+01
+  7500.616827041697  3.69994e+01  6.30006e+01
+  75006.16827041698  4.55399e+01  5.44601e+01
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.46097e+01  8.53903e+01
+  75.00616827041698  2.27716e+01  7.72284e+01
+  750.0616827041697  3.39495e+01  6.60505e+01
+  7500.616827041697  4.51180e+01  5.48820e+01
+  75006.16827041698  5.41103e+01  4.58897e+01
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.44289e+01  7.55711e+01
+  75.00616827041698  2.99673e+01  7.00327e+01
+  750.0616827041697  3.96797e+01  6.03203e+01
+  7500.616827041697  5.00684e+01  4.99316e+01
+  75006.16827041698  5.85769e+01  4.14231e+01
+
+High-pressure rate coefficients k_inf (1/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.36637e+01  2.62438e+02
+  75.00616827041698  1.36637e+01  2.62438e+02
+  750.0616827041697  1.36637e+01  2.62438e+02
+  7500.616827041697  1.36637e+01  2.62438e+02
+  75006.16827041698  1.36637e+01  2.62438e+02
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  5.46539e+05  2.03670e+06
+  75.00616827041698  5.46539e+05  2.03670e+06
+  750.0616827041697  5.46539e+05  2.03670e+06
+  7500.616827041697  5.46539e+05  2.03670e+06
+  75006.16827041698  5.46539e+05  2.03670e+06
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.36319e+07  1.07707e+08
+  75.00616827041698  6.36319e+07  1.07707e+08
+  750.0616827041697  6.36319e+07  1.07707e+08
+  7500.616827041697  6.36319e+07  1.07707e+08
+  75006.16827041698  6.36319e+07  1.07707e+08
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.54914e+09  2.32821e+09
+  75.00616827041698  2.54914e+09  2.32821e+09
+  750.0616827041697  2.54914e+09  2.32821e+09
+  7500.616827041697  2.54914e+09  2.32821e+09
+  75006.16827041698  2.54914e+09  2.32821e+09
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  5.04680e+10  2.84211e+10
+  75.00616827041698  5.04680e+10  2.84211e+10
+  750.0616827041697  5.04680e+10  2.84211e+10
+  7500.616827041697  5.04680e+10  2.84211e+10
+  75006.16827041698  5.04680e+10  2.84211e+10
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.39852e+11  1.06878e+11
+  75.00616827041698  2.39852e+11  1.06878e+11
+  750.0616827041697  2.39852e+11  1.06878e+11
+  7500.616827041697  2.39852e+11  1.06878e+11
+  75006.16827041698  2.39852e+11  1.06878e+11
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  2.26473e-11     5.47462e+04  1.48281e-03
+  75.00616827041698  2.37097e-10     2.55917e+05  1.48297e-03
+  750.0616827041697  5.77219e-09     1.81983e+06  1.48456e-03
+  7500.616827041697  3.69677e-08     1.66492e+07  1.50045e-03
+  75006.16827041698  1.90779e-07     1.64278e+08  1.66490e-03
+
+   Temperature = 500 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  1.64057e-13     5.62878e+01  1.48281e-03
+  75.00616827041698  2.63311e-13     1.07608e+02  1.48293e-03
+  750.0616827041697  4.61585e-13     3.04683e+02  1.48417e-03
+  7500.616827041697  2.82257e-13     1.44668e+03  1.49657e-03
+  75006.16827041698  1.98759e-11     1.09238e+04  1.62075e-03
+
+   Temperature = 700 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  3.72459e-13     1.02073e+01  1.48280e-03
+  75.00616827041698  1.95687e-13     1.33967e+01  1.48291e-03
+  750.0616827041697  5.23731e-13     2.11001e+01  1.48394e-03
+  7500.616827041697  6.60326e-13     4.64307e+01  1.49431e-03
+  75006.16827041698  6.18645e-14     1.75874e+02  1.59797e-03
+
+   Temperature = 1000 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  1.12268e-12     4.40187e+00  1.48280e-03
+  75.00616827041698  3.10563e-12     5.06514e+00  1.48289e-03
+  750.0616827041697  1.01438e-12     6.15654e+00  1.48373e-03
+  7500.616827041697  6.43270e-13     8.43249e+00  1.49221e-03
+  75006.16827041698  7.66228e-13     1.51455e+01  1.57695e-03
+
+   Temperature = 1500 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  1.33136e-12     2.16654e+00  1.48280e-03
+  75.00616827041698  1.70869e-12     2.58449e+00  1.48287e-03
+  750.0616827041697  3.33972e-12     3.07051e+00  1.48353e-03
+  7500.616827041697  5.39839e-12     3.63007e+00  1.49020e-03
+  75006.16827041698  1.43827e-12     4.52606e+00  1.55692e-03
+
+   Temperature = 2000 K
+
+            P(torr)     sum rule  lambda_2/k_uni  floor (1/s)
+  7.500616827041697  2.59339e-13             ***  1.48280e-03
+  75.00616827041698  1.00062e-12             ***  1.48285e-03
+  750.0616827041697  3.01176e-12     1.92604e+00  1.48341e-03
+  7500.616827041697  5.34823e-12     2.47782e+00  1.48902e-03
+  75006.16827041698  5.58194e-12     2.94488e+00  1.54504e-03
+
+Association by detailed balance, k(P1 -> W2) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->W2
+  7.500616827041697  2.24113e-22
+  75.00616827041698  4.69230e-22
+  750.0616827041697  6.51003e-22
+  7500.616827041697  7.07760e-22
+  75006.16827041698  7.16438e-22
+
+   Temperature = 500 K
+
+            P(torr)       P1->W2
+  7.500616827041697  7.04120e-20
+  75.00616827041698  3.05216e-19
+  750.0616827041697  8.86488e-19
+  7500.616827041697  1.60152e-18
+  75006.16827041698  1.95879e-18
+
+   Temperature = 700 K
+
+            P(torr)       P1->W2
+  7.500616827041697  5.24615e-19
+  75.00616827041698  3.04695e-18
+  750.0616827041697  1.36401e-17
+  7500.616827041697  4.22244e-17
+  75006.16827041698  8.04497e-17
+
+   Temperature = 1000 K
+
+            P(torr)       P1->W2
+  7.500616827041697  2.49448e-18
+  75.00616827041698  1.66038e-17
+  750.0616827041697  9.26303e-17
+  7500.616827041697  4.07648e-16
+  75006.16827041698  1.26324e-15
+
+   Temperature = 1500 K
+
+            P(torr)       P1->W2
+  7.500616827041697  1.14844e-17
+  75.00616827041698  8.33839e-17
+  750.0616827041697  5.19532e-16
+  7500.616827041697  2.69540e-15
+  75006.16827041698  1.09555e-14
+
+   Temperature = 2000 K
+
+            P(torr)       P1->W2
+  7.500616827041697  2.84608e-17
+  75.00616827041698  2.30878e-16
+  750.0616827041697  1.56065e-15
+  7500.616827041697  8.64939e-15
+  75006.16827041698  3.80789e-14
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal rate coefficients (1/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)        k_uni     lambda_1       W2->P1       W2->P2
+   300  8.62422e+01  8.62422e+01  9.54853e-01  8.52874e+01
+   500  8.91440e+04  8.91440e+04  2.35528e+03  8.67887e+04
+   700  8.68601e+05  8.68601e+05  3.88901e+04  8.29710e+05
+  1000  4.05403e+06  4.05403e+06  3.13695e+05  3.74033e+06
+  1500  1.42199e+07  1.42199e+07  2.07750e+06  1.21424e+07
+  2000  2.62440e+07  2.62440e+07  6.41113e+06  1.98329e+07
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)        k_uni     lambda_1       W2->P1       W2->P2
+   300  1.80567e+02  1.80567e+02  4.60852e+00  1.75958e+02
+   500  3.86414e+05  3.86414e+05  2.58745e+04  3.60539e+05
+   700  5.04481e+06  5.04481e+06  5.26649e+05  4.51816e+06
+  1000  2.69846e+07  2.69846e+07  4.15812e+06  2.28264e+07
+  1500  1.03246e+08  1.03246e+08  2.35107e+07  7.97351e+07
+  2000  2.12896e+08  2.12896e+08  6.37992e+07  1.49097e+08
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)        k_uni     lambda_1       W2->P1       W2->P2
+   300  2.50516e+02  2.50516e+02  1.03002e+01  2.40216e+02
+   500  1.12232e+06  1.12232e+06  1.42590e+05  9.79734e+05
+   700  2.25837e+07  2.25837e+07  4.34706e+06  1.82367e+07
+  1000  1.50543e+08  1.50543e+08  3.93276e+07  1.11215e+08
+  1500  6.43284e+08  6.43284e+08  2.18392e+08  4.24892e+08
+  2000  1.43910e+09  1.43910e+09  5.71030e+08  8.68068e+08
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)        k_uni     lambda_1       W2->P1       W2->P2
+   300  2.72357e+02  2.72357e+02  1.30802e+01  2.59277e+02
+   500  2.02758e+06  2.02758e+06  3.65627e+05  1.66195e+06
+   700  6.99106e+07  6.99106e+07  1.96868e+07  5.02238e+07
+  1000  6.62511e+08  6.62511e+08  2.45125e+08  4.17386e+08
+  1500  3.33744e+09  3.33744e+09  1.50579e+09  1.83165e+09
+  2000  7.97571e+09  7.97571e+09  3.99331e+09  3.98240e+09
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)        k_uni     lambda_1       W2->P1       W2->P2
+   300  2.75697e+02  2.75696e+02  1.35978e+01  2.62099e+02
+   500  2.47990e+06  2.47990e+06  5.09398e+05  1.97050e+06
+   700  1.33200e+08  1.33200e+08  4.56667e+07  8.75330e+07
+  1000  2.05302e+09  2.05302e+09  9.34946e+08  1.11808e+09
+  1500  1.35651e+10  1.35651e+10  7.34011e+09  6.22497e+09
+  2000  3.51131e+10  3.51131e+10  2.05681e+10  1.45449e+10
+
+Thermal branching (% of the thermal decay k_uni), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.10718e+00  9.88928e+01
+   500  2.64210e+00  9.73579e+01
+   700  4.47733e+00  9.55227e+01
+  1000  7.73785e+00  9.22621e+01
+  1500  1.46097e+01  8.53903e+01
+  2000  2.44289e+01  7.55711e+01
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  2.55225e+00  9.74477e+01
+   500  6.69605e+00  9.33039e+01
+   700  1.04394e+01  8.95606e+01
+  1000  1.54092e+01  8.45908e+01
+  1500  2.27716e+01  7.72284e+01
+  2000  2.99673e+01  7.00327e+01
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.11159e+00  9.58884e+01
+   500  1.27049e+01  8.72951e+01
+   700  1.92486e+01  8.07514e+01
+  1000  2.61238e+01  7.38762e+01
+  1500  3.39495e+01  6.60505e+01
+  2000  3.96797e+01  6.03203e+01
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.80260e+00  9.51974e+01
+   500  1.80327e+01  8.19673e+01
+   700  2.81599e+01  7.18401e+01
+  1000  3.69994e+01  6.30006e+01
+  1500  4.51180e+01  5.48820e+01
+  2000  5.00684e+01  4.99316e+01
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.93218e+00  9.50678e+01
+   500  2.05411e+01  7.94589e+01
+   700  3.42844e+01  6.57156e+01
+  1000  4.55399e+01  5.44601e+01
+  1500  5.41103e+01  4.58897e+01
+  2000  5.85769e+01  4.14231e+01
+
+High-pressure rate coefficients k_inf (1/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.36637e+01  2.62438e+02
+   500  5.46539e+05  2.03670e+06
+   700  6.36319e+07  1.07707e+08
+  1000  2.54914e+09  2.32821e+09
+  1500  5.04680e+10  2.84211e+10
+  2000  2.39852e+11  1.06878e+11
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.36637e+01  2.62438e+02
+   500  5.46539e+05  2.03670e+06
+   700  6.36319e+07  1.07707e+08
+  1000  2.54914e+09  2.32821e+09
+  1500  5.04680e+10  2.84211e+10
+  2000  2.39852e+11  1.06878e+11
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.36637e+01  2.62438e+02
+   500  5.46539e+05  2.03670e+06
+   700  6.36319e+07  1.07707e+08
+  1000  2.54914e+09  2.32821e+09
+  1500  5.04680e+10  2.84211e+10
+  2000  2.39852e+11  1.06878e+11
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.36637e+01  2.62438e+02
+   500  5.46539e+05  2.03670e+06
+   700  6.36319e+07  1.07707e+08
+  1000  2.54914e+09  2.32821e+09
+  1500  5.04680e+10  2.84211e+10
+  2000  2.39852e+11  1.06878e+11
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.36637e+01  2.62438e+02
+   500  5.46539e+05  2.03670e+06
+   700  6.36319e+07  1.07707e+08
+  1000  2.54914e+09  2.32821e+09
+  1500  5.04680e+10  2.84211e+10
+  2000  2.39852e+11  1.06878e+11
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   300  2.26473e-11     5.47462e+04  1.48281e-03
+   500  1.64057e-13     5.62878e+01  1.48281e-03
+   700  3.72459e-13     1.02073e+01  1.48280e-03
+  1000  1.12268e-12     4.40187e+00  1.48280e-03
+  1500  1.33136e-12     2.16654e+00  1.48280e-03
+  2000  2.59339e-13             ***  1.48280e-03
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   300  2.37097e-10     2.55917e+05  1.48297e-03
+   500  2.63311e-13     1.07608e+02  1.48293e-03
+   700  1.95687e-13     1.33967e+01  1.48291e-03
+  1000  3.10563e-12     5.06514e+00  1.48289e-03
+  1500  1.70869e-12     2.58449e+00  1.48287e-03
+  2000  1.00062e-12             ***  1.48285e-03
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   300  5.77219e-09     1.81983e+06  1.48456e-03
+   500  4.61585e-13     3.04683e+02  1.48417e-03
+   700  5.23731e-13     2.11001e+01  1.48394e-03
+  1000  1.01438e-12     6.15654e+00  1.48373e-03
+  1500  3.33972e-12     3.07051e+00  1.48353e-03
+  2000  3.01176e-12     1.92604e+00  1.48341e-03
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   300  3.69677e-08     1.66492e+07  1.50045e-03
+   500  2.82257e-13     1.44668e+03  1.49657e-03
+   700  6.60326e-13     4.64307e+01  1.49431e-03
+  1000  6.43270e-13     8.43249e+00  1.49221e-03
+  1500  5.39839e-12     3.63007e+00  1.49020e-03
+  2000  5.34823e-12     2.47782e+00  1.48902e-03
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)     sum rule  lambda_2/k_uni  floor (1/s)
+   300  1.90779e-07     1.64278e+08  1.66490e-03
+   500  1.98759e-11     1.09238e+04  1.62075e-03
+   700  6.18645e-14     1.75874e+02  1.59797e-03
+  1000  7.66228e-13     1.51455e+01  1.57695e-03
+  1500  1.43827e-12     4.52606e+00  1.55692e-03
+  2000  5.58194e-12     2.94488e+00  1.54504e-03
+
+Association by detailed balance, k(P1 -> W2) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->W2
+   300  2.24113e-22
+   500  7.04120e-20
+   700  5.24615e-19
+  1000  2.49448e-18
+  1500  1.14844e-17
+  2000  2.84608e-17
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->W2
+   300  4.69230e-22
+   500  3.05216e-19
+   700  3.04695e-18
+  1000  1.66038e-17
+  1500  8.33839e-17
+  2000  2.30878e-16
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->W2
+   300  6.51003e-22
+   500  8.86488e-19
+   700  1.36401e-17
+  1000  9.26303e-17
+  1500  5.19532e-16
+  2000  1.56065e-15
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->W2
+   300  7.07760e-22
+   500  1.60152e-18
+   700  4.22244e-17
+  1000  4.07648e-16
+  1500  2.69540e-15
+  2000  8.64939e-15
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->W2
+   300  7.16438e-22
+   500  1.95879e-18
+   700  8.04497e-17
+  1000  1.26324e-15
+  1500  1.09555e-14
+  2000  3.80789e-14
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal rate coefficients (1/s), temperature-pressure tables:
+
+k_uni
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.62422e+01  8.91440e+04  8.68601e+05  4.05403e+06  1.42199e+07  2.62440e+07
+75.00616827041698    1.80567e+02  3.86414e+05  5.04481e+06  2.69846e+07  1.03246e+08  2.12896e+08
+750.0616827041697    2.50516e+02  1.12232e+06  2.25837e+07  1.50543e+08  6.43284e+08  1.43910e+09
+7500.616827041697    2.72357e+02  2.02758e+06  6.99106e+07  6.62511e+08  3.33744e+09  7.97571e+09
+75006.16827041698    2.75697e+02  2.47990e+06  1.33200e+08  2.05302e+09  1.35651e+10  3.51131e+10
+
+lambda_1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.62422e+01  8.91440e+04  8.68601e+05  4.05403e+06  1.42199e+07  2.62440e+07
+75.00616827041698    1.80567e+02  3.86414e+05  5.04481e+06  2.69846e+07  1.03246e+08  2.12896e+08
+750.0616827041697    2.50516e+02  1.12232e+06  2.25837e+07  1.50543e+08  6.43284e+08  1.43910e+09
+7500.616827041697    2.72357e+02  2.02758e+06  6.99106e+07  6.62511e+08  3.33744e+09  7.97571e+09
+75006.16827041698    2.75696e+02  2.47990e+06  1.33200e+08  2.05302e+09  1.35651e+10  3.51131e+10
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.54853e-01  2.35528e+03  3.88901e+04  3.13695e+05  2.07750e+06  6.41113e+06
+75.00616827041698    4.60852e+00  2.58745e+04  5.26649e+05  4.15812e+06  2.35107e+07  6.37992e+07
+750.0616827041697    1.03002e+01  1.42590e+05  4.34706e+06  3.93276e+07  2.18392e+08  5.71030e+08
+7500.616827041697    1.30802e+01  3.65627e+05  1.96868e+07  2.45125e+08  1.50579e+09  3.99331e+09
+75006.16827041698    1.35978e+01  5.09398e+05  4.56667e+07  9.34946e+08  7.34011e+09  2.05681e+10
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.52874e+01  8.67887e+04  8.29710e+05  3.74033e+06  1.21424e+07  1.98329e+07
+75.00616827041698    1.75958e+02  3.60539e+05  4.51816e+06  2.28264e+07  7.97351e+07  1.49097e+08
+750.0616827041697    2.40216e+02  9.79734e+05  1.82367e+07  1.11215e+08  4.24892e+08  8.68068e+08
+7500.616827041697    2.59277e+02  1.66195e+06  5.02238e+07  4.17386e+08  1.83165e+09  3.98240e+09
+75006.16827041698    2.62099e+02  1.97050e+06  8.75330e+07  1.11808e+09  6.22497e+09  1.45449e+10
+
+Thermal branching (% of the thermal decay k_uni), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.10718e+00  2.64210e+00  4.47733e+00  7.73785e+00  1.46097e+01  2.44289e+01
+75.00616827041698    2.55225e+00  6.69605e+00  1.04394e+01  1.54092e+01  2.27716e+01  2.99673e+01
+750.0616827041697    4.11159e+00  1.27049e+01  1.92486e+01  2.61238e+01  3.39495e+01  3.96797e+01
+7500.616827041697    4.80260e+00  1.80327e+01  2.81599e+01  3.69994e+01  4.51180e+01  5.00684e+01
+75006.16827041698    4.93218e+00  2.05411e+01  3.42844e+01  4.55399e+01  5.41103e+01  5.85769e+01
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.88928e+01  9.73579e+01  9.55227e+01  9.22621e+01  8.53903e+01  7.55711e+01
+75.00616827041698    9.74477e+01  9.33039e+01  8.95606e+01  8.45908e+01  7.72284e+01  7.00327e+01
+750.0616827041697    9.58884e+01  8.72951e+01  8.07514e+01  7.38762e+01  6.60505e+01  6.03203e+01
+7500.616827041697    9.51974e+01  8.19673e+01  7.18401e+01  6.30006e+01  5.48820e+01  4.99316e+01
+75006.16827041698    9.50678e+01  7.94589e+01  6.57156e+01  5.44601e+01  4.58897e+01  4.14231e+01
+
+High-pressure rate coefficients k_inf (1/s), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.36637e+01  5.46539e+05  6.36319e+07  2.54914e+09  5.04680e+10  2.39852e+11
+75.00616827041698    1.36637e+01  5.46539e+05  6.36319e+07  2.54914e+09  5.04680e+10  2.39852e+11
+750.0616827041697    1.36637e+01  5.46539e+05  6.36319e+07  2.54914e+09  5.04680e+10  2.39852e+11
+7500.616827041697    1.36637e+01  5.46539e+05  6.36319e+07  2.54914e+09  5.04680e+10  2.39852e+11
+75006.16827041698    1.36637e+01  5.46539e+05  6.36319e+07  2.54914e+09  5.04680e+10  2.39852e+11
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    2.62438e+02  2.03670e+06  1.07707e+08  2.32821e+09  2.84211e+10  1.06878e+11
+75.00616827041698    2.62438e+02  2.03670e+06  1.07707e+08  2.32821e+09  2.84211e+10  1.06878e+11
+750.0616827041697    2.62438e+02  2.03670e+06  1.07707e+08  2.32821e+09  2.84211e+10  1.06878e+11
+7500.616827041697    2.62438e+02  2.03670e+06  1.07707e+08  2.32821e+09  2.84211e+10  1.06878e+11
+75006.16827041698    2.62438e+02  2.03670e+06  1.07707e+08  2.32821e+09  2.84211e+10  1.06878e+11
+
+Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii), temperature-pressure tables:
+
+sum rule
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    2.26473e-11  1.64057e-13  3.72459e-13  1.12268e-12  1.33136e-12  2.59339e-13
+75.00616827041698    2.37097e-10  2.63311e-13  1.95687e-13  3.10563e-12  1.70869e-12  1.00062e-12
+750.0616827041697    5.77219e-09  4.61585e-13  5.23731e-13  1.01438e-12  3.33972e-12  3.01176e-12
+7500.616827041697    3.69677e-08  2.82257e-13  6.60326e-13  6.43270e-13  5.39839e-12  5.34823e-12
+75006.16827041698    1.90779e-07  1.98759e-11  6.18645e-14  7.66228e-13  1.43827e-12  5.58194e-12
+
+lambda_2/k_uni
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    5.47462e+04  5.62878e+01  1.02073e+01  4.40187e+00  2.16654e+00          ***
+75.00616827041698    2.55917e+05  1.07608e+02  1.33967e+01  5.06514e+00  2.58449e+00          ***
+750.0616827041697    1.81983e+06  3.04683e+02  2.11001e+01  6.15654e+00  3.07051e+00  1.92604e+00
+7500.616827041697    1.66492e+07  1.44668e+03  4.64307e+01  8.43249e+00  3.63007e+00  2.47782e+00
+75006.16827041698    1.64278e+08  1.09238e+04  1.75874e+02  1.51455e+01  4.52606e+00  2.94488e+00
+
+floor (1/s)
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.48281e-03  1.48281e-03  1.48280e-03  1.48280e-03  1.48280e-03  1.48280e-03
+75.00616827041698    1.48297e-03  1.48293e-03  1.48291e-03  1.48289e-03  1.48287e-03  1.48285e-03
+750.0616827041697    1.48456e-03  1.48417e-03  1.48394e-03  1.48373e-03  1.48353e-03  1.48341e-03
+7500.616827041697    1.50045e-03  1.49657e-03  1.49431e-03  1.49221e-03  1.49020e-03  1.48902e-03
+75006.16827041698    1.66490e-03  1.62075e-03  1.59797e-03  1.57695e-03  1.55692e-03  1.54504e-03
+
+Association by detailed balance, k(P1 -> W2) = k_uni k_inf,assoc/k_inf,diss (cm^3/s), temperature-pressure tables:
+
+P1->W2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    2.24113e-22  7.04120e-20  5.24615e-19  2.49448e-18  1.14844e-17  2.84608e-17
+75.00616827041698    4.69230e-22  3.05216e-19  3.04695e-18  1.66038e-17  8.33839e-17  2.30878e-16
+750.0616827041697    6.51003e-22  8.86488e-19  1.36401e-17  9.26303e-17  5.19532e-16  1.56065e-15
+7500.616827041697    7.07760e-22  1.60152e-18  4.22244e-17  4.07648e-16  2.69540e-15  8.64939e-15
+75006.16827041698    7.16438e-22  1.95879e-18  8.04497e-17  1.26324e-15  1.09555e-14  3.80789e-14
+
+____________________________________________________________________________________________________
+THERMAL FATES OF THE WELLS (final steady state with the Boltzmann distribution of one well as the source)
+____________________________________________________________________________________________________
+
+The probability that a molecule thermalized in a well ends in each exit of the network, k_x^T J^-1 f0_w.
+
+Not available: Thermal fate of well 'W2': T = 300 K, p = 7500.616827041697 Torr: relative residual 3.6252453959995135e-8 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+Not available: Thermal fate of well 'W2': T = 300 K, p = 75006.16827041698 Torr: relative residual 2.958783270599999e-7 of J N = F exceeds the tolerance 1e-8. In the final steady state this means that J is numerically singular: the thermal rate coefficient of a well without a bimolecular sink is negligible compared with the collision frequency (the final steady state is reached only after about 0.1/k_uni, O02 text after eq. 13); use the intermediate steady state for such conditions.
+--- Tables by temperature (rows: pressure in torr) ---
+
+Thermal fate of the molecules thermalized in W2 (%), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.10718e+00  9.88928e+01
+  75.00616827041698  2.55225e+00  9.74477e+01
+  750.0616827041697  4.11159e+00  9.58884e+01
+  7500.616827041697          ***          ***
+  75006.16827041698          ***          ***
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.71330e+00  9.72867e+01
+  75.00616827041698  6.73313e+00  9.32669e+01
+  750.0616827041697  1.27150e+01  8.72850e+01
+  7500.616827041697  1.80338e+01  8.19662e+01
+  75006.16827041698  2.05411e+01  7.94589e+01
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.49450e+00  9.35055e+01
+  75.00616827041698  1.17156e+01  8.82844e+01
+  750.0616827041697  1.97803e+01  8.02197e+01
+  7500.616827041697  2.82826e+01  7.17174e+01
+  75006.16827041698  3.42960e+01  6.57040e+01
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  2.20295e+01  7.79705e+01
+  75.00616827041698  2.56292e+01  7.43708e+01
+  750.0616827041697  3.16388e+01  6.83612e+01
+  7500.616827041697  3.90524e+01  6.09476e+01
+  75006.16827041698  4.59794e+01  5.40206e+01
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  4.96834e+01  5.03166e+01
+  75.00616827041698  5.04006e+01  4.95994e+01
+  750.0616827041697  5.18378e+01  4.81622e+01
+  7500.616827041697  5.42003e+01  4.57997e+01
+  75006.16827041698  5.74102e+01  4.25898e+01
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  6.28614e+01  3.71386e+01
+  75.00616827041698  6.29656e+01  3.70344e+01
+  750.0616827041697  6.32145e+01  3.67855e+01
+  7500.616827041697  6.37491e+01  3.62509e+01
+  75006.16827041698  6.47665e+01  3.52335e+01
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Thermal fate of the molecules thermalized in W2 (%), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.10718e+00  9.88928e+01
+   500  2.71330e+00  9.72867e+01
+   700  6.49450e+00  9.35055e+01
+  1000  2.20295e+01  7.79705e+01
+  1500  4.96834e+01  5.03166e+01
+  2000  6.28614e+01  3.71386e+01
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  2.55225e+00  9.74477e+01
+   500  6.73313e+00  9.32669e+01
+   700  1.17156e+01  8.82844e+01
+  1000  2.56292e+01  7.43708e+01
+  1500  5.04006e+01  4.95994e+01
+  2000  6.29656e+01  3.70344e+01
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.11159e+00  9.58884e+01
+   500  1.27150e+01  8.72850e+01
+   700  1.97803e+01  8.02197e+01
+  1000  3.16388e+01  6.83612e+01
+  1500  5.18378e+01  4.81622e+01
+  2000  6.32145e+01  3.67855e+01
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  1.80338e+01  8.19662e+01
+   700  2.82826e+01  7.17174e+01
+  1000  3.90524e+01  6.09476e+01
+  1500  5.42003e+01  4.57997e+01
+  2000  6.37491e+01  3.62509e+01
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300          ***          ***
+   500  2.05411e+01  7.94589e+01
+   700  3.42960e+01  6.57040e+01
+  1000  4.59794e+01  5.40206e+01
+  1500  5.74102e+01  4.25898e+01
+  2000  6.47665e+01  3.52335e+01
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Thermal fate of the molecules thermalized in W2 (%), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.10718e+00  2.71330e+00  6.49450e+00  2.20295e+01  4.96834e+01  6.28614e+01
+75.00616827041698    2.55225e+00  6.73313e+00  1.17156e+01  2.56292e+01  5.04006e+01  6.29656e+01
+750.0616827041697    4.11159e+00  1.27150e+01  1.97803e+01  3.16388e+01  5.18378e+01  6.32145e+01
+7500.616827041697            ***  1.80338e+01  2.82826e+01  3.90524e+01  5.42003e+01  6.37491e+01
+75006.16827041698            ***  2.05411e+01  3.42960e+01  4.59794e+01  5.74102e+01  6.47665e+01
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.88928e+01  9.72867e+01  9.35055e+01  7.79705e+01  5.03166e+01  3.71386e+01
+75.00616827041698    9.74477e+01  9.32669e+01  8.82844e+01  7.43708e+01  4.95994e+01  3.70344e+01
+750.0616827041697    9.58884e+01  8.72850e+01  8.02197e+01  6.83612e+01  4.81622e+01  3.67855e+01
+7500.616827041697            ***  8.19662e+01  7.17174e+01  6.09476e+01  4.57997e+01  3.62509e+01
+75006.16827041698            ***  7.94589e+01  6.57040e+01  5.40206e+01  4.25898e+01  3.52335e+01
+

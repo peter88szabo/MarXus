@@ -1,0 +1,52 @@
+# CSE: Rate coefficients from Int1 (1/s)
+T[K],P[Torr],Int1->Int2,Int1->R,Int1->P_ketene_HO2,Int1->P_lactone_OH,Int1 loss
+298,200.72,1.265046e-6,1.472962e-9,3.579241e-15,2.121846e-8,9.854347e-7
+
+# CSE: Rate coefficients from Int2 (1/s)
+T[K],P[Torr],Int2->Int1,Int2->R,Int2->P_ketene_HO2,Int2->P_lactone_OH,Int2 loss
+298,200.72,3.406266e-4,2.015008e-9,4.940878e-15,1.039191e-3,1.379412e-3
+
+# CSE: Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(R -> P) (cm^3/s)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,8.719122e-17,3.543624e-13
+
+# CSE: Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(R -> W) (cm^3/s)
+T[K],P[Torr],R->Int1,R->Int2
+298,200.72,3.249300e-12,1.650832e-14
+
+# CSE: Capture, return and net reaction of R (cm^3/s)
+T[K],P[Torr],capture,return,net
+298,200.72,6.014496e-12,2.394238e-12,3.620258e-12
+
+# CSE: Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,2.408426e-3,9.788320e0
+
+# CSE: Bimolecular-to-well yields (stabilization) (% of the net reaction of R)
+T[K],P[Torr],R->Int1,R->Int2
+298,200.72,8.975327e1,4.559986e-1
+
+# CSE: Thermal fate of Int1 (%)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int1->P_lactone_OH
+298,200.72,1.511936e-1,3.673988e-7,9.984881e1
+
+# CSE: Thermal fate of Int2 (%)
+T[K],P[Torr],Int2->R,Int2->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,3.747016e-2,9.105532e-8,9.996253e1
+
+# CSE: Long-time yields, direct (chemically activated) (% of the eventual net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,2.411703e-3,9.801638e0
+
+# CSE: Long-time yields, through the wells (thermal) (% of the eventual net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,3.306169e-7,9.019595e1
+
+# CSE: Long-time yields, total (% of the eventual net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,2.412033e-3,9.999759e1
+
+# CSE: Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance)
+T[K],P[Torr],species,separation,loss balance,detailed bal.
+298,200.72,2.000000e0,1.533284e-11,3.067712e-1,8.018614e-13
+

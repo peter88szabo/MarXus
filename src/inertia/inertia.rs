@@ -2,6 +2,8 @@ use crate::constants::{INERTIA_AV, INERTIA_PH, INERTIA_SL, PI};
 use crate::numeric::jacobi_diag::jacobi;
 
 const TOCM1: f64 = 1.0e2 * (INERTIA_PH * INERTIA_AV) / (8.0 * PI * PI * INERTIA_SL);
+/// B (cm-1) = this / I, I in amu Angstrom^2.
+pub const ROTATIONAL_CONSTANT_CM1_AMU_ANGSTROM2: f64 = TOCM1;
 const TOMHZ: f64 = 1.0e6 * (INERTIA_PH * INERTIA_AV) / (8.0 * PI * PI);
 
 pub fn get_brot(xyz: &Vec<[f64; 3]>, mass: &Vec<f64>) -> [f64; 3] {

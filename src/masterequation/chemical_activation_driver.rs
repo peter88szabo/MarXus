@@ -781,7 +781,7 @@ mod tests {
         // The identity holds for any invertible group matrix: with A and B merged into one species (one chemical
         // eigenvalue; G13 Sec. IV), the long-time yields from the rate coefficients of the merged species still
         // equal k_x^T J^-1 F of the final steady state.
-        use crate::masterequation::chemically_significant_eigenvalues::{reactant_yields, tests::fast_equilibrium_network, CseMerging};
+        use crate::masterequation::chemically_significant_eigenvalues::{reactant_yields, tests::fast_equilibrium_network, ChemicalSubspaceCriterion, CseMerging};
         let mut network = fast_equilibrium_network();
         network.wells[0].channels.push(crate::masterequation::chemical_activation_network::Channel {
             name: "A->reactants".into(),
@@ -813,8 +813,8 @@ mod tests {
             .sum();
         // One chemical eigenvalue: the species A+B. None: A and B both in equilibrium with the bimolecular
         // species (the bimolecular group), and all yields come from eq. 21 over every eigenstate.
-        let one = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, ..CseMerging::default() };
-        let none = CseMerging { chemical_eigenvalue_max: 0.5 * l1 / l3, ..CseMerging::default() };
+        let one = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
+        let none = CseMerging { chemical_eigenvalue_max: 0.5 * l1 / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
         for (merging, species, bimolecular_group) in [(one, vec!["A+B"], vec![]), (none, vec![], vec!["A", "B"])] {
             let cse = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &merging)
                 .unwrap()

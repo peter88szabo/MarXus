@@ -91,20 +91,20 @@ There is no bimolecular-to-well (stabilization) rate here: in the final steady s
 
 **ZZ-allyl + O₂, four wells** (`validation/ZZAllyl+O2_Gamma_Case2/`):
 - The long-time yields equal CSE (P5, escape, P1 to 6·10⁻⁷) and TimeIntegration (in all printed digits) at all 21 conditions.
-- The overall k(R → IEPOX + OH) = 1.943·10⁻¹³ cm³/s at 300 K and 760 Torr, MESS Eckart model.
-- With the exact Eckart tunneling, the IEPOX + OH share is 6.6–12.0% above MESS's long-time fate; with the MESS Eckart model it is 5.1–5.9% below.
-- The escape share agrees within 0.5%.
+- The overall k(R → IEPOX + OH) = 2.019·10⁻¹³ cm³/s at 300 K and 760 Torr, MESS Eckart model.
+- With the exact Eckart tunneling, the IEPOX + OH share is 12.0–17.8% above MESS's long-time fate; with the MESS Eckart model it is 0.34–0.55% below.
+- The escape share agrees within 0.93% (exact Eckart) and 0.04% (MESS Eckart model).
 
 **H + C₂H₂ ⇌ C₂H₃** (`validation/c2h3_mess_example/`, Section 4.5):
-- **Thermal k_uni against MESS:** +4.7 … +5.7% at 300 K (tunneling model), −2.9 … +1.8% from 750 to 2000 K. It equals CSE's k(W1 → P1) in all printed digits.
-- **The three eigen-solvers** agree to 7 digits at 1000 K. Inverse iteration and LAPACK agree in all printed digits at 750–2000 K, and to 5·10⁻⁵ at 300 K, where λ₁ is 13 orders below the double-precision floor.
+- **Thermal k_uni against MESS:** +4.4 … +4.6% at 300 K (tunneling model), −1.4 … +1.8% from 750 to 2000 K. It equals CSE's k(W1 → P1) in all printed digits.
+- **The three eigen-solvers** agree to 7 digits at 1000 K. Inverse iteration and LAPACK agree in all printed digits at 750–2000 K, and to 2·10⁻⁴ at 300 K, where λ₁ is 13 orders below the double-precision floor.
 - **Association by detailed balance, k_uni·K, all 40 conditions:**
-  - 300–1000 K: equal to the absorbing-barrier association within 0.02% and to CSE within 0.01%;
-  - 300–500 K: +3.2 … +5.8% from MESS (tunneling model). The final steady state itself is singular there, but the thermal eigenpair is not;
-  - 750–1750 K: −2.3 … +3.9%;
-  - 2000 K: +5.5 … +13.2%. MESS's pair departs from K there by −7 … −14% (CSE's by the same amount), while k_uni·K imposes K.
+  - 300–1000 K: equal to the absorbing-barrier association within 0.02% and to CSE within 0.02%;
+  - 300–500 K: +2.6 … +4.8% from MESS (tunneling model). The final steady state itself is singular there, but the thermal eigenpair is not;
+  - 750–1750 K: −0.7 … +6.6%;
+  - 2000 K: +8.2 … +16.5%. MESS's pair departs from K there by −7 … −14% (CSE's by the same amount), while k_uni·K imposes K.
 - **Low-energy reservoir state** at the bottom of the well (`reports/low_energy_reservoir_state.md`): 2 grains at 300 K, 44 at 2000 K. It keeps the thermal population complete, so k_uni is not biased.
-- **Thermal k_uni** = the late-time decay rate of [TimeIntegration](direct_time_integration.md) within 3·10⁻⁶ (30 conditions, 750–2000 K). The time integration uses no eigenvector.
+- **Thermal k_uni** = the late-time decay rate of [TimeIntegration](direct_time_integration.md) within 4·10⁻⁶ (30 conditions, 750–2000 K). The time integration uses no eigenvector.
 
 ## 8. Code
 

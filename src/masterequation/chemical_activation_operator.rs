@@ -182,6 +182,37 @@ pub struct LowEnergyReservoir {
     pub well: String,
     /// Number of reservoir grains, counted from the well bottom.
     pub grains: usize,
+    /// Top of the reservoir above the well bottom (cm-1): grains x grain width.
+    pub top_cm1: f64,
+    /// Lowest classical reaction threshold of the well above its bottom (cm-1), over the channels with an energy
+    /// threshold. None if the well has none: an energy-independent sink acts on every grain alike and does not
+    /// distort the Boltzmann distribution in the reservoir.
+    pub lowest_threshold_cm1: Option<f64>,
+    /// (lowest threshold - reservoir top) / k_BT.
+    pub margin_kt: Option<f64>,
+}
+
+/// Margin below which a reservoir is reported as too close to the lowest threshold of its well (k_BT). The reservoir
+/// state "is usually appropriate for grains which are more than a few kT below the lowest reaction threshold" (MESMER
+/// manual, Sec. 14.2.1); 3 k_BT is the MarXus reading of "a few".
+pub const RESERVOIR_MARGIN_WARNING_KT: f64 = 3.0;
+
+impl LowEnergyReservoir {
+    /// A warning when the reservoir top lies less than `margin_kt` k_BT below the lowest threshold of the well.
+    pub fn warning(&self, margin_kt: f64) -> Option<String> {
+        let (threshold, margin) = (self.lowest_threshold_cm1?, self.margin_kt?);
+        (margin < margin_kt).then(|| {
+            format!(
+                "the low-energy reservoir of well {} reaches {:.0} cm-1 above the well bottom, {margin:.2} k_BT below its \
+                 lowest reaction threshold ({threshold:.0} cm-1). The reservoir state assumes Boltzmann equilibrium among \
+                 its grains and \"is usually appropriate for grains which are more than a few kT below the lowest reaction \
+                 threshold\" (MESMER manual, Sec. 14.2.1); results for this well should be checked, e.g. with a finer \
+                 energy grain (the reservoir forms where the normalization of the exponential-down kernel fails at sparse \
+                 states).",
+                self.well, self.top_cm1
+            )
+        })
+    }
 }
 
 /// The wells with a low-energy reservoir at temperature T (the kernel does not depend on the pressure).
@@ -191,11 +222,21 @@ pub fn low_energy_reservoirs(
     temperature_kelvin: f64,
     collision_model: CollisionModel,
 ) -> Result<Vec<LowEnergyReservoir>, String> {
+    let d_e = network.grain_width_cm1;
+    let kt_cm1 = KB_CM * temperature_kelvin;
     let mut out = Vec::new();
     for well in &network.wells {
-        let kernel = well_collision_kernel(well, network.grain_width_cm1, temperature_kelvin, collision_model)?;
+        let kernel = well_collision_kernel(well, d_e, temperature_kelvin, collision_model)?;
         if kernel.reservoir_grains > 0 {
-            out.push(LowEnergyReservoir { well: well.name.clone(), grains: kernel.reservoir_grains });
+            let top_cm1 = kernel.reservoir_grains as f64 * d_e;
+            let lowest_threshold_cm1 = well.lowest_threshold_grain().map(|g| g as f64 * d_e);
+            out.push(LowEnergyReservoir {
+                well: well.name.clone(),
+                grains: kernel.reservoir_grains,
+                top_cm1,
+                lowest_threshold_cm1,
+                margin_kt: lowest_threshold_cm1.map(|e| (e - top_cm1) / kt_cm1),
+            });
         }
     }
     Ok(out)
@@ -229,6 +270,7 @@ pub fn assemble_operator(
             lj.reduced_mass_amu,
             temperature,
             conditions.pressure_torr,
+            lj.collision_integral,
         )
         .map_err(|e| format!("Well '{}': {e}", well.name))?;
         let mean_down = well.energy_transfer.mean_down_cm1(temperature);
@@ -605,6 +647,39 @@ pub(crate) mod tests {
         assert_eq!(op.wells[0].reservoir_grains, reservoirs[0].grains);
         assert_eq!(op.wells[1].reservoir_grains, 0);
         assert!(low_energy_reservoirs(&network, 300.0, CollisionModel::Stepladder).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_reservoir_within_a_few_kt_of_the_lowest_threshold_is_warned_about() {
+        // MESMER manual, Sec. 14.2.1: the reservoir state "is usually appropriate for grains which are more than a few
+        // kT below the lowest reaction threshold". The margin is (classical threshold - reservoir top) / k_BT.
+        let network = sparse_and_smooth_network();
+        let t = 300.0;
+        let kt = KB_CM * t;
+        let far = low_energy_reservoirs(&network, t, EXPONENTIAL_DOWN).unwrap().remove(0);
+        let n = far.grains;
+        assert_eq!(far.top_cm1, n as f64 * 20.0);
+        assert_eq!(far.lowest_threshold_cm1, Some(150.0 * 20.0));
+        assert!((far.margin_kt.unwrap() - (150 - n) as f64 * 20.0 / kt).abs() < 1e-12);
+        assert!(far.warning(RESERVOIR_MARGIN_WARNING_KT).is_none());
+
+        // The same density of states (the same reservoir) with the threshold two grains above the reservoir top.
+        let mut near = network.clone();
+        near.wells[0] = test_well("Sparse", 200, 0, n + 2);
+        let close = low_energy_reservoirs(&near, t, EXPONENTIAL_DOWN).unwrap().remove(0);
+        assert_eq!(close.grains, n);
+        assert!((close.margin_kt.unwrap() - 2.0 * 20.0 / kt).abs() < 1e-12);
+        let warning = close.warning(RESERVOIR_MARGIN_WARNING_KT).expect("a warning");
+        assert!(warning.contains("Sparse") && warning.contains("MESMER manual, Sec. 14.2.1"), "{warning}");
+
+        // An energy-independent sink acts on every grain alike and does not distort the Boltzmann distribution in the
+        // reservoir: it is no threshold.
+        let mut sink_only = network.clone();
+        sink_only.wells[0].channels.clear();
+        sink_only.wells[0].bimolecular_sink_s_inv = 1.0e7;
+        let sink = low_energy_reservoirs(&sink_only, t, EXPONENTIAL_DOWN).unwrap().remove(0);
+        assert_eq!(sink.lowest_threshold_cm1, None);
+        assert!(sink.warning(RESERVOIR_MARGIN_WARNING_KT).is_none());
     }
 
     #[test]

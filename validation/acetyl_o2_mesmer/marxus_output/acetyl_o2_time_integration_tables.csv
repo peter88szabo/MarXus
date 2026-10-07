@@ -1,0 +1,24 @@
+# time integration: Yields at the last output time (% of the formed adducts)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,3.980889e1,1.449738e-3,5.919540e0
+
+# time integration: Populations left in the wells at the last output time (% of the formed adducts)
+T[K],P[Torr],N(Int1),N(Int2)
+298,200.72,5.402386e1,2.458819e-1
+
+# time integration: Yields without the return to R at the last output time (% of the net reaction; final steady state for a completed pulse)
+T[K],P[Torr],Int1->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,2.448472e-2,9.997552e1
+
+# time integration: Bimolecular-to-bimolecular rate coefficients, overall (chemical activation + thermal), at the last output time: k(R -> P) = k_inf Y_P (cm^3/s)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,8.719442e-17,3.560305e-13
+
+# time integration: Bimolecular-to-bimolecular yields, overall (chemical activation + thermal), at the last output time (% of the net reaction of R)
+T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
+298,200.72,2.448472e-2,9.997552e1
+
+# time integration: Total: populations + yields at the last output time (%; 100 for a pulse)
+T[K],P[Torr],total
+298,200.72,9.999961e1
+

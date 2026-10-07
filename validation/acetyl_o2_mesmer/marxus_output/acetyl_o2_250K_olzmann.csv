@@ -1,0 +1,10 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2_250K.inp: grain 100.000 cm-1
+# solution method: SteadyStateOlzmann: final steady state, thermal eigenpair by InverseIteration (sum-rule tolerance 1.5e-2)
+#   well Int1     grains    171 (absolute -117 .. 53), channels: B_R1, B_R2, B_R4
+#   well Int2     grains    160 (absolute -106 .. 53), channels: B_R2, B_R3
+
+# final steady state
+# not available: T = 250 K, p = 37.48 Torr: Banded Cholesky: non-positive pivot -3.751890902111566e7 in row 177; the matrix is not positive definite. The symmetrized operator must be positive definite; in the final steady state this fails when the thermal rate coefficient is negligible compared with the collision frequency (near-singular J); use the intermediate steady state then.
+
+# thermal rate coefficients of the final steady state: lowest eigenpair of J (GO10 eq. 12) by InverseIteration; sum-rule tolerance 1.5e-2
+# not available: T = 250 K, p = 37.48 Torr: Inverse iteration: eigenpair 0 did not converge in 5000 iterations. (Cholesky factor of S + sigma I with the safety shift sigma = 5.140291351571781e-3 s-1.) What to do: use a full decomposition, which does not need the factor (EigenSolver::FullDecompositionLapack, `--eigen-solver lapack`, or FullDecomposition); it gives k_uni from the thermal eigenvector.

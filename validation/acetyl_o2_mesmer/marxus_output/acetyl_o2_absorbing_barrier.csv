@@ -1,0 +1,12 @@
+# deck /home/peter/Dropbox/Research_Leuven/MarXus/validation/acetyl_o2_mesmer/input/acetyl_o2.inp: grain 100.000 cm-1
+# solution method: SteadyStateAbsorbingBarrier: intermediate steady state, absorbing barrier 10 k_BT below the lowest threshold
+#   well Int1     grains    179 (absolute -117 .. 61), channels: B_R1, B_R2, B_R4
+#   well Int2     grains    168 (absolute -106 .. 61), channels: B_R2, B_R3
+
+# intermediate steady state (absorbing barrier 10 k_BT below the lowest threshold)
+T[K],P[Torr],Phi(Int1:B_R1),Phi(Int1:B_R4),Phi(Int2:B_R3),Phi_stab(Int1),Phi_sink(Int1),Phi_stab(Int2),Phi_sink(Int2),k_ca(Int1:B_R1)[1/s],k_ca(Int1:B_R2)[1/s],k_ca(Int1:B_R4)[1/s],k_ca(Int2:B_R2)[1/s],k_ca(Int2:B_R3)[1/s],k_tot[1/s],fpop(Int1),fpop(Int2),<E>(Int1)[cm-1],<E>(Int2)[cm-1],mass_balance,residual
+298,200.72,3.980888e-1,1.449738e-5,5.892347e-2,5.402145e-1,0.000000e0,2.758796e-3,0.000000e0,2.234924e7,3.547366e6,8.139022e2,1.260922e7,4.939727e8,5.576787e7,9.933477e-1,6.652262e-3,1.032613e4,8.672237e3,1.000000000000,1.572e-15
+
+# bimolecular rate coefficients of R [cm3/s], intermediate steady state
+T[K],P[Torr],k_inf,k(R->Int1),k(R->Int2),k(R->P_ketene_HO2 via B_R4),k(R->P_lactone_OH via B_R3)
+298,200.72,6.014496e-12,3.249118e-12,1.659276e-14,8.719442e-17,3.543949e-13

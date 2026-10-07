@@ -1,7 +1,8 @@
 //! State counting for RRHO species and transition states on a uniform grain grid.
 //!
 //! - rho(E) of a species: rovibrational density of states (per cm-1) by direct count of harmonic
-//!   vibrations convolved with classical rigid rotors (`rrkm::sum_and_density`).
+//!   vibrations convolved with classical rigid rotors (`rrkm::sum_and_density`) and with the quantum
+//!   levels of one-dimensional internal rotors (`rrkm::internal_rotor`).
 //! - W‡(E) of a transition state: rovibrational sum of states of a tight transition state, or the
 //!   cumulative states of a phase-space-theory core combined with harmonic conserved modes.
 //! - Symmetry number, chirality and electronic degeneracy multiply the state counts, so that
@@ -12,6 +13,7 @@
 //! state (`rrkm::sum_and_density`).
 
 use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
+use crate::rrkm::internal_rotor::{convolve_rotor_levels, HinderedRotor};
 use crate::rrkm::sum_and_density::get_rovib_WE_or_rhoE;
 
 /// Minimal microcanonical input model for a species (well or tight TS).
@@ -31,6 +33,9 @@ pub struct SpeciesMicroModel {
     pub chirality_number: f64,
     /// Electronic degeneracy factor (dimensionless).
     pub electronic_degeneracy: f64,
+    /// One-dimensional hindered or free internal rotors, whose quantum levels are stick-convolved
+    /// with the rovibrational counts (`rrkm::internal_rotor`).
+    pub internal_rotors: Vec<HinderedRotor>,
 }
 
 impl SpeciesMicroModel {
@@ -64,6 +69,26 @@ impl SpeciesMicroModel {
             ));
         }
         Ok(())
+    }
+
+    /// Rovibrational counts (densities or sums) combined with the internal-rotor levels, each level
+    /// counted from the rotor ground level (the species zero energy contains the rotor zero-point
+    /// energy). The levels of every rotor must reach the top of the cells.
+    fn convolve_internal_rotors(&self, mut counts: Vec<f64>, cell_cm1: f64) -> Result<Vec<f64>, String> {
+        let top_cm1 = counts.len().saturating_sub(1) as f64 * cell_cm1;
+        for (r, rotor) in self.internal_rotors.iter().enumerate() {
+            if rotor.highest_level_above_ground_cm1() < top_cm1 {
+                return Err(format!(
+                    "Species '{}': the levels of internal rotor {} end at {:.1} cm-1 above its ground, below the top \
+                     of the energy grid at {top_cm1:.0} cm-1; a larger Fourier basis is needed.",
+                    self.name,
+                    r + 1,
+                    rotor.highest_level_above_ground_cm1()
+                ));
+            }
+            counts = convolve_rotor_levels(&counts, &rotor.levels_above_ground_cm1, cell_cm1);
+        }
+        Ok(counts)
     }
 
     fn statistical_weight_factor(&self) -> f64 {
@@ -150,6 +175,7 @@ pub(crate) fn rrho_density_of_states(
     for x in &mut rho {
         *x *= factor;
     }
+    let rho = model.convolve_internal_rotors(rho, d_e)?;
 
     // Ensure non-negative and finite.
     for (i, x) in rho.iter().enumerate() {
@@ -243,6 +269,7 @@ pub(crate) fn rrho_sum_of_states(
     for x in &mut w {
         *x *= factor;
     }
+    let w = model.convolve_internal_rotors(w, d_e)?;
 
     for (i, x) in w.iter().enumerate() {
         if !x.is_finite() || *x < 0.0 {
@@ -269,5 +296,49 @@ fn convolve_vibrational_sum_states_in_place(sum_states: &mut [f64], mode_bins: &
             let add = sum_states[e - bin];
             sum_states[e] += add;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rrkm::internal_rotor::{convolve_rotor_levels, TorsionalPotential, DEFAULT_BASIS_SIZE};
+
+    fn species(internal_rotors: Vec<HinderedRotor>) -> SpeciesMicroModel {
+        SpeciesMicroModel {
+            name: "X".into(),
+            vibrational_frequencies_cm1: vec![812.0, 1430.0, 2950.0],
+            rotational_constants_cm1: vec![1.2, 0.31, 0.27],
+            symmetry_number: 2.0,
+            chirality_number: 1.0,
+            electronic_degeneracy: 2.0,
+            internal_rotors,
+        }
+    }
+
+    #[test]
+    fn a_hindered_rotor_is_convolved_into_the_density_and_the_sum_of_states() {
+        // threefold methyl-like rotor, V = 350 (1 - cos 3 phi) cm-1
+        let potential = TorsionalPotential { constant: 350.0, cosine: vec![-350.0], sine: vec![] };
+        let rotor = HinderedRotor::new(5.6, 3, potential, DEFAULT_BASIS_SIZE).unwrap();
+        let (grains, cell) = (3000, 1.0);
+
+        let rho_without = rrho_density_of_states(grains, cell, &species(vec![])).unwrap();
+        let w_without = rrho_sum_of_states(grains, cell, &species(vec![])).unwrap();
+        let rho = rrho_density_of_states(grains, cell, &species(vec![rotor.clone()])).unwrap();
+        let w = rrho_sum_of_states(grains, cell, &species(vec![rotor.clone()])).unwrap();
+
+        assert_eq!(rho, convolve_rotor_levels(&rho_without, &rotor.levels_above_ground_cm1, cell));
+        assert_eq!(w, convolve_rotor_levels(&w_without, &rotor.levels_above_ground_cm1, cell));
+    }
+
+    #[test]
+    fn a_rotor_whose_levels_end_below_the_top_of_the_grid_is_an_error() {
+        // 5 basis functions: levels up to B (2 sigma)^2 = 201.6 cm-1 only
+        let potential = TorsionalPotential { constant: 350.0, cosine: vec![-350.0], sine: vec![] };
+        let rotor = HinderedRotor::new(5.6, 3, potential, 5).unwrap();
+        let err = rrho_density_of_states(3000, 1.0, &species(vec![rotor.clone()])).unwrap_err();
+        assert!(err.contains("X") && err.contains("2999"), "{err}");
+        assert!(rrho_sum_of_states(3000, 1.0, &species(vec![rotor])).is_err());
     }
 }

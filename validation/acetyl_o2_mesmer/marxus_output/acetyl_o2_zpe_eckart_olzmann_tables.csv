@@ -1,0 +1,24 @@
+# thermal rate coefficients: Thermal rate coefficients (1/s)
+T[K],P[Torr],k_uni,lambda_1,Int1->R,Int1->Int2,Int1->P_ketene_HO2,Int2->Int1,Int2->P_lactone_OH
+298,200.72,9.743303e-7,1.022822e-6,1.473458e-9,1.283941e-6,3.580488e-15,3.120864e-7,9.728568e-7
+
+# thermal rate coefficients: Thermal branching (% of the thermal decay k_uni)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,1.512278e-1,3.674820e-7,9.984877e1
+
+# thermal rate coefficients: High-pressure rate coefficients k_inf (1/s)
+T[K],P[Torr],Int1->R,Int1->Int2,Int1->P_ketene_HO2,Int2->Int1,Int2->P_lactone_OH
+298,200.72,2.726471e-9,1.285542e-6,4.522802e-14,3.461453e-4,1.282506e-3
+
+# thermal rate coefficients: Diagnostics of the thermal eigenpair (sum rule |lambda_1 - k_uni|/k_uni; lambda_2/k_uni; precision floor eps max S_ii)
+T[K],P[Torr],sum rule,lambda_2/k_uni,floor (1/s)
+298,200.72,4.976957e-2,1.415943e3,2.298477e-5
+
+# thermal fates: Thermal fate of the molecules thermalized in Int1 (%)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,,,
+
+# thermal fates: Thermal fate of the molecules thermalized in Int2 (%)
+T[K],P[Torr],Int1->R,Int1->P_ketene_HO2,Int2->P_lactone_OH
+298,200.72,,,
+

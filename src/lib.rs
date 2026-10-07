@@ -6,6 +6,7 @@ pub mod inertia;
 pub mod masterequation;
 pub mod molecule;
 pub mod numeric;
+pub mod photoion;
 pub mod rrkm;
 pub mod thermal;
 pub mod tunneling;

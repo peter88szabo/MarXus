@@ -1,0 +1,19 @@
+rotors: max |B dev| 1.46e-05, max |ground diff| 0.0e+00 kcal/mol, max |level diff| 5.0e-06 kcal/mol, levels equal: True
+k_inf T=  300 K: W2->P1 +2.02% / +0.19%  W2->P2 +1.57% / +0.13%  P1->W2 +1.43% / -0.39%
+k_inf T=  500 K: W2->P1 +1.24% / +0.14%  W2->P2 +0.99% / +0.12%  P1->W2 +0.82% / -0.27%
+k_inf T=  700 K: W2->P1 +0.90% / +0.11%  W2->P2 +0.73% / +0.11%  P1->W2 +0.59% / -0.20%
+k_inf T= 1000 K: W2->P1 +0.64% / +0.09%  W2->P2 +0.54% / +0.11%  P1->W2 +0.42% / -0.12%
+k_inf T= 1500 K: W2->P1 +0.44% / +0.07%  W2->P2 +0.40% / +0.11%  P1->W2 +0.31% / -0.06%
+k_inf T= 2000 K: W2->P1 +0.34% / +0.07%  W2->P2 +0.33% / +0.12%  P1->W2 +0.26% / -0.02%
+      exact Eckart | both keep W2     | net P1->P2:   +0.84 …   +1.97 % (15)
+      exact Eckart | both keep W2     | W2->P1    :   +0.56 …   +3.66 % (15)
+      exact Eckart | both keep W2     | W2->P2    :   -0.14 …   +2.97 % (15)
+      exact Eckart | both keep W2     | P1->W2    :   +0.50 …   +3.68 % (15)
+      exact Eckart | both keep W2     | P1->P2    :   -0.29 …   +2.21 % (15)
+      exact Eckart | both merge W2    | net P1->P2:   +0.39 …   +0.83 % (15)
+ MESS Eckart model | both keep W2     | net P1->P2:   +0.10 …   +0.54 % (15)
+ MESS Eckart model | both keep W2     | W2->P1    :   -0.23 …   +3.13 % (15)
+ MESS Eckart model | both keep W2     | W2->P2    :   -0.67 …   +2.61 % (15)
+ MESS Eckart model | both keep W2     | P1->W2    :   -0.27 …   +3.20 % (15)
+ MESS Eckart model | both keep W2     | P1->P2    :   -0.86 …   +0.16 % (15)
+ MESS Eckart model | both merge W2    | net P1->P2:   +0.10 …   +0.16 % (15)

@@ -71,16 +71,16 @@ The tables come in three views: by temperature, by pressure, and temperature–p
 ## 7. Validation
 
 **ZZ-allyl + O₂, four wells** (MESS Eckart model, 760 Torr, 270–330 K):
-- **Prompt products.** k(R → IEPOX + OH) = k∞Φ_P5 agrees with CSE's G13 eq. 21 within 0.44% (P1 0.11%, P7 0.18%), and is 2.6–3.5% below MESS.
-  - With the exact Eckart tunneling it is +14.8 … +15.7% above MESS: the difference is the tunneling model.
-- **Stabilization, against MESS:** k(R → G4) −19.0 … −9.5%, k(R → G2) −0.7 … +2.4%.
-  - Total stabilization is 2.8–9.2% below CSE's.
+- **Prompt products.** k(R → IEPOX + OH) = k∞Φ_P5 agrees with CSE's G13 eq. 21 within 0.44% (P1 0.11%, P7 0.18%), and is 0.44–0.74% above MESS.
+  - With the exact Eckart tunneling it is +19.0 … +20.3% above MESS: the difference is the tunneling model.
+- **Stabilization, against MESS:** k(R → G4) −18.8 … −9.5%, k(R → G2) −4.8 … +0.2%.
+  - Total stabilization is 3.0–9.9% below CSE's.
   - The barrier counts the flux 10 kT below the lowest threshold, a different definition from CSE's chemical eigenmode.
 - **Decomposition.** The IEPOX + OH prompt yield, plus the stabilization yields × the thermal fates of the wells (from SteadyStateOlzmann), equals the SteadyStateOlzmann total within 1.8·10⁻³ relative (`reports/method_comparison.md`).
 
 **H + C₂H₂ ⇌ C₂H₃** (`validation/c2h3_mess_example/`):
 - **300–1000 K.** The association falloff is within a few % of MESS, with the residual from the tunneling model. It equals SteadyStateOlzmann's k_uni·K within 0.02%.
-- **Above about 1500 K** the result depends on the barrier distance: −10.4% at 1500 K and −31.2% at 1750 K (0.1 atm, 10 kT), and the barrier falls below the well bottom at 2000 K. With 3 kT the agreement is within 2% up to 1750 K.
+- **Above about 1500 K** the result depends on the barrier distance: −8.3% at 1500 K and −29.3% at 1750 K (0.1 atm, 10 kT), and the barrier falls below the well bottom at 2000 K. With 3 kT the agreement at 1 atm is within 3.6% at 1000–1750 K.
 
 ## 8. Code
 

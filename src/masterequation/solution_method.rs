@@ -23,6 +23,9 @@
 //! - G13: Y. Georgievskii, J. A. Miller, M. P. Burke, S. J. Klippenstein, J. Phys. Chem. A 117, 12146 (2013).
 
 use super::chemical_activation_eigen::{EigenSolver, DEFAULT_SUM_RULE_TOLERANCE};
+use super::chemically_significant_eigenvalues::ChemicalSubspaceCriterion;
+use super::collisional_relaxation::CollisionIntegral;
+use crate::rrkm::internal_rotor::ReducedMomentModel;
 use super::direct_time_integration::InitialState;
 use crate::numeric::integrators::rosenbrock_methods::RosenbrockMethod;
 
@@ -76,6 +79,15 @@ pub struct SolutionSettings {
     /// computed in batches of up to this many at a time, and each condition's LAPACK calls get the cores
     /// left over (cores / conditions at a time). Default: RAYON_NUM_THREADS, otherwise all logical cores.
     pub cores: Option<usize>,
+    /// Form of the Lennard-Jones collision integral Omega(2,2)* (`CollisionIntegral`); a model setting of every
+    /// method. Default (None): Neufeld, Janzen, Aziz 1972.
+    pub collision_integral: Option<CollisionIntegral>,
+    /// Reduced moment of the internal rotors computed from a geometry (`RotorReducedMoment`); a model setting of
+    /// every method. Default (None): Kilpatrick-Pitzer I(1,3).
+    pub rotor_reduced_moment: Option<ReducedMomentModel>,
+    /// `ChemicalSubspaceCriterion` (CSE): how ChemicalEigenvalueMax selects the chemical eigenvectors. Default (None):
+    /// the relaxational projection 1 - F_ne, as MESS's direct method.
+    pub chemical_subspace_criterion: Option<ChemicalSubspaceCriterion>,
 }
 
 /// Eigen-solver and sum-rule tolerance of the thermal eigenpair of SteadyStateOlzmann.
@@ -134,6 +146,34 @@ impl SolutionMethod {
             )),
             _ => Err(format!("Method '{value}': unknown; {METHODS}.")),
         }
+    }
+}
+
+/// `Neufeld` (Neufeld, Janzen, Aziz 1972) or `Troe` (Troe 1977, eq. 3.3).
+pub fn collision_integral_from_keyword(value: &str) -> Result<CollisionIntegral, String> {
+    match normalized(value).as_str() {
+        "neufeld" | "neufeld1972" => Ok(CollisionIntegral::Neufeld1972),
+        "troe" | "troe1977" => Ok(CollisionIntegral::Troe1977),
+        _ => Err(format!("CollisionIntegral '{value}': unknown (Neufeld or Troe).")),
+    }
+}
+
+/// `RelaxationProjection` (1 - F_ne <= ChemicalEigenvalueMax, MESS direct method) or `EigenvalueRatio`
+/// (Lambda <= ChemicalEigenvalueMax x Lambda_(N+1)).
+pub fn chemical_subspace_criterion_from_keyword(value: &str) -> Result<ChemicalSubspaceCriterion, String> {
+    match normalized(value).as_str() {
+        "relaxationprojection" | "projection" => Ok(ChemicalSubspaceCriterion::RelaxationProjection),
+        "eigenvalueratio" | "ratio" => Ok(ChemicalSubspaceCriterion::EigenvalueRatio),
+        _ => Err(format!("ChemicalSubspaceCriterion '{value}': unknown (RelaxationProjection or EigenvalueRatio).")),
+    }
+}
+
+/// `Pitzer` (Kilpatrick-Pitzer I(1,3)) or `BondAxis` (I_A I_B/(I_A + I_B) about the bond axis).
+pub fn rotor_reduced_moment_from_keyword(value: &str) -> Result<ReducedMomentModel, String> {
+    match normalized(value).as_str() {
+        "pitzer" => Ok(ReducedMomentModel::Pitzer),
+        "bondaxis" => Ok(ReducedMomentModel::BondAxis),
+        _ => Err(format!("RotorReducedMoment '{value}': unknown (Pitzer or BondAxis).")),
     }
 }
 
@@ -206,6 +246,9 @@ impl SolutionSettings {
             times_per_decade: other.times_per_decade.or(self.times_per_decade),
             integration_tolerance: other.integration_tolerance.or(self.integration_tolerance),
             cores: other.cores.or(self.cores),
+            collision_integral: other.collision_integral.or(self.collision_integral),
+            rotor_reduced_moment: other.rotor_reduced_moment.or(self.rotor_reduced_moment),
+            chemical_subspace_criterion: other.chemical_subspace_criterion.or(self.chemical_subspace_criterion),
         }
     }
 
@@ -268,6 +311,11 @@ impl SolutionSettings {
             EIGEN_SOLVER,
             !(olzmann || cse) && self.eigen_solver.is_some(),
             "SteadyStateOlzmann and CSE",
+        );
+        note(
+            "ChemicalSubspaceCriterion",
+            !cse && self.chemical_subspace_criterion.is_some(),
+            "CSE",
         );
         note(
             SUM_RULE_TOLERANCE,
@@ -512,6 +560,55 @@ mod tests {
         }
         let zero = SolutionSettings { cores: Some(0), ..with(SolutionMethod::SteadyStateOlzmann) };
         assert!(zero.resolve().unwrap_err().contains("NCores"));
+    }
+
+    #[test]
+    fn the_collision_integral_is_a_run_setting_overridden_by_the_command_line() {
+        use super::super::collisional_relaxation::CollisionIntegral;
+        let deck = SolutionSettings {
+            collision_integral: Some(CollisionIntegral::Neufeld1972),
+            ..with(SolutionMethod::ChemicallySignificantEigenvalues)
+        };
+        assert_eq!(deck.overridden_by(&SolutionSettings::default()).collision_integral, Some(CollisionIntegral::Neufeld1972));
+        let command_line = SolutionSettings { collision_integral: Some(CollisionIntegral::Troe1977), ..Default::default() };
+        assert_eq!(deck.overridden_by(&command_line).collision_integral, Some(CollisionIntegral::Troe1977));
+        assert!(deck.resolve().unwrap().unused_settings.is_empty());
+        assert_eq!(collision_integral_from_keyword("neufeld").unwrap(), CollisionIntegral::Neufeld1972);
+        assert_eq!(collision_integral_from_keyword("Troe").unwrap(), CollisionIntegral::Troe1977);
+        assert!(collision_integral_from_keyword("chapman").unwrap_err().contains("CollisionIntegral"));
+    }
+
+    #[test]
+    fn the_rotor_reduced_moment_is_a_run_setting_overridden_by_the_command_line() {
+        use crate::rrkm::internal_rotor::ReducedMomentModel;
+        let deck = SolutionSettings {
+            rotor_reduced_moment: Some(ReducedMomentModel::BondAxis),
+            ..with(SolutionMethod::ChemicallySignificantEigenvalues)
+        };
+        assert_eq!(deck.overridden_by(&SolutionSettings::default()).rotor_reduced_moment, Some(ReducedMomentModel::BondAxis));
+        let command_line = SolutionSettings { rotor_reduced_moment: Some(ReducedMomentModel::Pitzer), ..Default::default() };
+        assert_eq!(deck.overridden_by(&command_line).rotor_reduced_moment, Some(ReducedMomentModel::Pitzer));
+        assert!(deck.resolve().unwrap().unused_settings.is_empty());
+        assert_eq!(rotor_reduced_moment_from_keyword("pitzer").unwrap(), ReducedMomentModel::Pitzer);
+        assert_eq!(rotor_reduced_moment_from_keyword("Bond-Axis").unwrap(), ReducedMomentModel::BondAxis);
+        assert_eq!(rotor_reduced_moment_from_keyword("BondAxis").unwrap(), ReducedMomentModel::BondAxis);
+        assert!(rotor_reduced_moment_from_keyword("eckart").unwrap_err().contains("RotorReducedMoment"));
+    }
+
+    #[test]
+    fn the_chemical_subspace_criterion_is_a_run_setting_overridden_by_the_command_line() {
+        use super::super::chemically_significant_eigenvalues::ChemicalSubspaceCriterion;
+        let deck = SolutionSettings {
+            chemical_subspace_criterion: Some(ChemicalSubspaceCriterion::EigenvalueRatio),
+            ..with(SolutionMethod::ChemicallySignificantEigenvalues)
+        };
+        assert_eq!(deck.overridden_by(&SolutionSettings::default()).chemical_subspace_criterion, Some(ChemicalSubspaceCriterion::EigenvalueRatio));
+        let command_line = SolutionSettings { chemical_subspace_criterion: Some(ChemicalSubspaceCriterion::RelaxationProjection), ..Default::default() };
+        assert_eq!(deck.overridden_by(&command_line).chemical_subspace_criterion, Some(ChemicalSubspaceCriterion::RelaxationProjection));
+        assert_eq!(chemical_subspace_criterion_from_keyword("RelaxationProjection").unwrap(), ChemicalSubspaceCriterion::RelaxationProjection);
+        assert_eq!(chemical_subspace_criterion_from_keyword("projection").unwrap(), ChemicalSubspaceCriterion::RelaxationProjection);
+        assert_eq!(chemical_subspace_criterion_from_keyword("eigenvalue-ratio").unwrap(), ChemicalSubspaceCriterion::EigenvalueRatio);
+        assert!(chemical_subspace_criterion_from_keyword("gap").unwrap_err().contains("ChemicalSubspaceCriterion"));
     }
 
     #[test]
