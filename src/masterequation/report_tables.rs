@@ -66,7 +66,7 @@ fn column_width(name: &str) -> usize {
 
 /// One table: `corner` and the row labels in the first column (right-aligned if `numeric_rows`), the
 /// columns right-aligned, followed by an empty line.
-fn write_table<W: Write>(
+pub(crate) fn write_table<W: Write>(
     out: &mut W,
     corner: &str,
     numeric_rows: bool,

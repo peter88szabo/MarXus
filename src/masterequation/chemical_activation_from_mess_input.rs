@@ -61,9 +61,10 @@ use super::chemical_activation_network::{
 };
 use super::collisional_relaxation::CollisionIntegral;
 use super::energy_graining::{average_over_grains, GrainGrid};
+use super::fragment_partition::{prior_remainder, ExcessPartner, FragmentKernel};
 use super::mess_input::{
-    rotational_constants_from_geometry_cm1, IltDirection, MessBarrierCore, MessDeck, MessSpeciesRrho,
-    TunnelingSpecification,
+    rotational_constants_from_geometry_cm1, FragmentEnergySpecification, IltDirection, MessBarrier, MessBarrierCore,
+    MessBimolecular, MessDeck, MessSpeciesRrho, TunnelingSpecification,
 };
 use super::microcanonical_builder::{
     rrho_density_of_states, rrho_sum_of_states, transition_state_sum_of_states, SpeciesMicroModel,
@@ -362,6 +363,28 @@ pub fn chemical_activation_model_from_mess(
         temperature_exponent: global.alpha_power.ok_or("Input deck: missing Exponential Power.")?,
     };
     let cutoff = global.exponent_cutoff.ok_or("Input deck: missing Exponential ExponentCutoff.")?;
+    // A well with its own MarXus block: each given pair or value replaces the global one.
+    let collision_of = |name: &str| -> (LennardJonesPair, EnergyTransferParameters) {
+        let Some(o) = deck.well_collision.get(name) else {
+            return (lennard_jones.clone(), energy_transfer.clone());
+        };
+        let (e1, e2) = o.epsilons_cm1.unwrap_or((eps_1, eps_2));
+        let (s1, s2) = o.sigmas_angstrom.unwrap_or((sigma_1, sigma_2));
+        let (a, b) = o.masses_amu.unwrap_or((m_1, m_2));
+        (
+            LennardJonesPair {
+                sigma_angstrom: 0.5 * (s1 + s2),
+                epsilon_kelvin: (e1 * e2).sqrt() * CM1_TO_KELVIN,
+                reduced_mass_amu: a * b / (a + b),
+                collision_integral: settings.collision_integral,
+            },
+            EnergyTransferParameters {
+                mean_down_at_reference_cm1: o.factor_cm1.unwrap_or(energy_transfer.mean_down_at_reference_cm1),
+                reference_temperature_kelvin: o.reference_temperature_kelvin.unwrap_or(energy_transfer.reference_temperature_kelvin),
+                temperature_exponent: o.power.unwrap_or(energy_transfer.temperature_exponent),
+            },
+        )
+    };
 
     // Wells: density on the cells from the ground state to the top, averaged over the grains; leading
     // grains without states (the ground-state cell of classical rotors is empty) are dropped.
@@ -431,6 +454,105 @@ pub fn chemical_activation_model_from_mess(
     // Classical threshold of a channel opening at the absolute cell `threshold_cell`, as a well grain.
     let threshold_grain = |w: usize, threshold_cell: isize| -> usize {
         (grid.grain_of_cell(threshold_cell) - grids[w].first_grain).max(0) as usize
+    };
+
+    // The destination of a channel to a bimolecular species with a fragment well (MarXus `FragmentWell`): the well B of the
+    // network, the partner A in excess with its density and concentration, and the energy partitioning of the barrier
+    // (Green, Robertson, Chem. Phys. Lett. 605-606, 44 (2014); reports/nonthermal_sources_design.md, Section 15.1).
+    let fragment_destination = |pair: &MessBimolecular, fragment_well: &str, barrier: &MessBarrier| -> Result<ChannelDestination, String> {
+        let context = |what: String| format!("Barrier '{}' to '{}' (fragment well '{fragment_well}'): {what}", barrier.name, pair.name);
+        let b = *well_index.get(fragment_well).ok_or_else(|| context(format!("'{fragment_well}' is not a Well of the deck.")))?;
+        let (fragment, partner) = if pair.fragment_a.name == fragment_well {
+            (&pair.fragment_a, &pair.fragment_b)
+        } else if pair.fragment_b.name == fragment_well {
+            (&pair.fragment_b, &pair.fragment_a)
+        } else {
+            return Err(context(format!("no Fragment of '{}' is named '{fragment_well}'.", pair.name)));
+        };
+        let well = &grids[b];
+        // The fragment as a well and as a fragment of the pair must be the same species.
+        let as_fragment = rrho_density_of_states(well.rho_cells.len(), cell, &species_model(fragment)?)?;
+        let scale = well.rho_cells.iter().cloned().fold(0.0_f64, f64::max);
+        if let Some(k) = (0..well.rho_cells.len()).find(|&k| (as_fragment[k] - well.rho_cells[k]).abs() > 1e-9 * scale) {
+            return Err(context(format!(
+                "the density of states of '{fragment_well}' as a Fragment differs from the Well at {} cm-1 ({:e} vs {:e} per cm-1): \
+                 give both the same molecular data.",
+                k as f64 * cell,
+                as_fragment[k],
+                well.rho_cells[k]
+            )));
+        }
+        let concentration = pair.partner_concentration_cm3.ok_or_else(|| context("PartnerConcentration[molecule/cm^3] missing.".into()))?;
+        let n = cells_from(grid.cell_of_energy(pair.ground_energy_cm1), &format!("The asymptote of '{}'", pair.name))?;
+        let (mass_f, mass_p) = (species_mass_amu(fragment)?, species_mass_amu(partner)?);
+        let partner_cells = rrho_density_of_states(n, cell, &species_model(partner)?)?;
+        let excess_partner = ExcessPartner {
+            name: partner.name.clone(),
+            concentration_cm3: concentration,
+            ground_energy_cm1: pair.ground_energy_cm1 - deck.wells[fragment_well].zero_energy_cm1,
+            density_cells: partner_cells.clone(),
+            cell_width_cm1: cell,
+            reduced_mass_amu: mass_f * mass_p / (mass_f + mass_p),
+        };
+        // The kernel measures the fragment energy from the centre of grain 0 of the fragment well; its cell densities start
+        // at its ground-state cell.
+        let shift = (well.first_grain as f64 * grid.grain_width_cm1() / cell).round() as isize - well.zero_cell;
+        let fragment_cells: Vec<f64> =
+            (0..n).map(|c| usize::try_from(c as isize + shift).ok().and_then(|k| well.rho_cells.get(k)).copied().unwrap_or(0.0)).collect();
+        let kernel = match barrier.fragment_energy.as_ref().ok_or_else(|| {
+            context("the barrier needs a FragmentEnergy block (Prior, ModifiedPrior or TwoPieceGaussian).".into())
+        })? {
+            FragmentEnergySpecification::Prior => {
+                FragmentKernel::Prior { remainder_cells: prior_remainder(&partner_cells, n, cell)?, fragment_cells, cell_width_cm1: cell }
+            }
+            FragmentEnergySpecification::ModifiedPrior { order, temperature_exponent, reference_temperature_kelvin } => FragmentKernel::ModifiedPrior {
+                remainder_cells: prior_remainder(&partner_cells, n, cell)?,
+                fragment_cells,
+                cell_width_cm1: cell,
+                order: *order,
+                temperature_exponent: *temperature_exponent,
+                reference_temperature_kelvin: *reference_temperature_kelvin,
+            },
+            FragmentEnergySpecification::TwoPieceGaussian { mu, sigma_left, sigma_right } => {
+                FragmentKernel::TwoPieceGaussian { mu: *mu, sigma_left: *sigma_left, sigma_right: *sigma_right }
+            }
+        };
+        Ok(ChannelDestination::Fragment { index: b, partner: excess_partner, kernel })
+    };
+
+    // Lumped reactant states (MarXus `LumpedState`): a bimolecular pair as one thermal state, a well of one grain at its
+    // asymptote after the wells of the deck (Miller et al., J. Phys. Chem. A 120, 306 (2016), SI-VI; Robertson, CCK 43
+    // (2019), eq. 5.187; reports/nonthermal_sources_design.md, Section 15.2).
+    let mut lumped: Vec<&MessBimolecular> = deck.bimolecular.values().filter(|b| b.lumped_state).collect();
+    lumped.sort_by(|a, b| a.name.cmp(&b.name));
+    let lumped_index: HashMap<&str, usize> =
+        lumped.iter().enumerate().map(|(k, b)| (b.name.as_str(), deck.well_order.len() + k)).collect();
+    // The destination of a channel into a lumped pair: its state, with the combined internal density of the two fragments
+    // as the partner at the concentration of the excess fragment (one state of weight Q_pair exp(-E0/kT)/[X]).
+    let lumped_destination = |pair: &MessBimolecular| -> Result<ChannelDestination, String> {
+        let excess = pair.excess_fragment.as_deref().unwrap_or("");
+        if pair.fragment_a.name != excess && pair.fragment_b.name != excess {
+            return Err(format!("Bimolecular '{}': ExcessFragment '{excess}' is not one of its fragments.", pair.name));
+        }
+        let asymptote_cell = grid.cell_of_energy(pair.ground_energy_cm1);
+        let n = cells_from(asymptote_cell, &format!("The asymptote of '{}'", pair.name))?;
+        let rho_a = rrho_density_of_states(n, cell, &species_model(&pair.fragment_a)?)?;
+        let rho_b = rrho_density_of_states(n, cell, &species_model(&pair.fragment_b)?)?;
+        let rho_ab: Vec<f64> = (0..n).map(|i| (0..=i).map(|j| rho_a[j] * rho_b[i - j]).sum::<f64>() * cell).collect();
+        let (mass_a, mass_b) = (species_mass_amu(&pair.fragment_a)?, species_mass_amu(&pair.fragment_b)?);
+        let state_energy = grid.grain_of_cell(asymptote_cell) as f64 * grid.grain_width_cm1();
+        Ok(ChannelDestination::Fragment {
+            index: lumped_index[pair.name.as_str()],
+            partner: ExcessPartner {
+                name: format!("{}+{}", pair.fragment_a.name, pair.fragment_b.name),
+                concentration_cm3: pair.partner_concentration_cm3.unwrap_or(f64::NAN),
+                ground_energy_cm1: pair.ground_energy_cm1 - state_energy,
+                density_cells: rho_ab,
+                cell_width_cm1: cell,
+                reduced_mass_amu: mass_a * mass_b / (mass_a + mass_b),
+            },
+            kernel: FragmentKernel::LowestGrain,
+        })
     };
 
     let reactant = global.reactant_name.as_deref();
@@ -607,12 +729,25 @@ pub fn chemical_activation_model_from_mess(
                         }
                     }
                 };
-                if bimolecular.is_some() {
-                    bimolecular_states.entry(other.clone()).or_default().push((first_cell, w_cells.clone()));
-                }
+                // A bimolecular species with a fragment well: C -> B + A with B a well of the network and A in excess
+                // (reports/nonthermal_sources_design.md, Section 15.1).
+                let destination = match bimolecular.and_then(|b| b.fragment_well.as_ref().map(|f| (b, f))) {
+                    Some((pair, fragment_well)) => fragment_destination(pair, fragment_well, barrier)?,
+                    None if bimolecular.map_or(false, |b| b.lumped_state) => {
+                        // The capture rate of the pair is still computed from its channels.
+                        bimolecular_states.entry(other.clone()).or_default().push((first_cell, w_cells.clone()));
+                        lumped_destination(bimolecular.expect("lumped pair"))?
+                    }
+                    None => {
+                        if bimolecular.is_some() {
+                            bimolecular_states.entry(other.clone()).or_default().push((first_cell, w_cells.clone()));
+                        }
+                        ChannelDestination::Products { name: other.clone() }
+                    }
+                };
                 channels[w].push(Channel {
                     name: name.clone(),
-                    destination: ChannelDestination::Products { name: other.clone() },
+                    destination,
                     threshold_grain: Some(threshold_grain(w, threshold)),
                     rate_constant_s_inv: rates(w, first_cell, &w_cells)?,
                 });
@@ -626,21 +761,37 @@ pub fn chemical_activation_model_from_mess(
         }
     }
 
-    let wells: Vec<Well> = deck
+    let mut wells: Vec<Well> = deck
         .well_order
         .iter()
         .zip(grids)
         .zip(channels)
-        .map(|((name, grid), channels)| Well {
-            name: name.clone(),
-            bottom_offset_grains: grid.first_grain,
-            density_of_states: grid.rho_grains,
-            channels,
-            lennard_jones: lennard_jones.clone(),
-            energy_transfer: energy_transfer.clone(),
-            bimolecular_sink_s_inv: deck.well_escape_rate_s_inv.get(name).copied().unwrap_or(0.0),
+        .map(|((name, grid), channels)| {
+            let (lennard_jones, energy_transfer) = collision_of(name);
+            Well {
+                name: name.clone(),
+                bottom_offset_grains: grid.first_grain,
+                density_of_states: grid.rho_grains,
+                channels,
+                lennard_jones,
+                energy_transfer,
+                bimolecular_sink_s_inv: deck.well_escape_rate_s_inv.get(name).copied().unwrap_or(0.0),
+            }
         })
         .collect();
+    // The lumped reactant states: one grain at the asymptote holding one state (density 1/dE), without channels of their
+    // own; their weight is completed by the partner of the channels into them.
+    for pair in &lumped {
+        wells.push(Well {
+            name: pair.name.clone(),
+            bottom_offset_grains: grid.grain_of_cell(grid.cell_of_energy(pair.ground_energy_cm1)),
+            density_of_states: vec![1.0 / grid.grain_width_cm1()],
+            channels: Vec::new(),
+            lennard_jones: lennard_jones.clone(),
+            energy_transfer: energy_transfer.clone(),
+            bimolecular_sink_s_inv: 0.0,
+        });
+    }
     let network = ChemicalActivationNetwork { grain_width_cm1: grid.grain_width_cm1(), wells };
     network.validate()?;
 
@@ -846,7 +997,7 @@ fn excited_levels(species: &MessSpeciesRrho) -> Vec<(f64, f64)> {
 pub(crate) mod tests {
     use super::*;
     use crate::masterequation::chemical_activation_driver::{run_chemical_activation, ChemicalActivationRun, SourceSpecification};
-    use crate::masterequation::chemical_activation_network::{AbsorbingBarrier, ChemicalActivationOptions, SteadyState};
+    use crate::masterequation::chemical_activation_network::{AbsorbingBarrier, ChemicalActivationOptions, Conditions, SteadyState};
     use crate::masterequation::chemical_activation_operator::isomerization_detailed_balance;
     use crate::masterequation::chemical_activation_steady_state::LinearSolver;
     use crate::masterequation::mess_input::parse_mess_input;
@@ -1713,5 +1864,108 @@ End
         let (name, rate) = &m.bimolecular_high_pressure_rates[0];
         assert_eq!(name, "P1");
         assert_eq!(rate.rate_cm3_s(1000.0), m.entrance_high_pressure_rate.as_ref().unwrap().rate_cm3_s(1000.0));
+    }
+
+    /// DECK with CO2 of P = OH + CO2 as a well of the network: W2 -> CO2 + OH (OH in excess) with the energy partitioning
+    /// `kernel_block` in the barrier B2P (none if empty).
+    fn fragment_deck(kernel_block: &str, co2_frequencies: &str) -> String {
+        let well = format!(
+            "  Well CO2\n    Species\n      RRHO\n        Geometry[angstrom] 3\n        O 0.0 0.0 -1.16\n        C 0.0 0.0 0.0\n        \
+             O 0.0 0.0 1.16\n        Core RigidRotor\n          SymmetryFactor 2\n        End\n        Frequencies[1/cm] 4\n        \
+             {co2_frequencies}\n        ZeroEnergy[kcal/mol] -20\n        ElectronicLevels[1/cm] 1\n          0 1\n      End\n    End\n"
+        );
+        DECK.replace(
+            "    GroundEnergy[kcal/mol] -20.0\n  End\nEnd\n",
+            &format!("    GroundEnergy[kcal/mol] -20.0\n    FragmentWell CO2\n    PartnerConcentration[molecule/cm^3] 1e16\n  End\n{well}End\n"),
+        )
+        .replace("      ZeroEnergy[kcal/mol] -2\n", &format!("      ZeroEnergy[kcal/mol] -2\n{kernel_block}"))
+    }
+
+    const PRIOR_BLOCK: &str = "      FragmentEnergy Prior\n      End\n";
+
+    #[test]
+    fn a_bimolecular_species_with_a_fragment_well_gives_a_fragment_channel() {
+        // Green, Robertson, Chem. Phys. Lett. 605-606, 44 (2014): W2 -> CO2 + OH with CO2 a well of the network and OH in
+        // excess at its concentration; the asymptote is the bimolecular ground energy (here the CO2 well bottom, so the
+        // partner ground energy is 0).
+        use crate::masterequation::fragment_partition::FragmentKernel;
+        let m = build(&fragment_deck(PRIOR_BLOCK, "667 667 1388 2349"), &MessNetworkSettings::default()).unwrap();
+        let network = &m.network;
+        let co2 = network.wells.iter().position(|w| w.name == "CO2").expect("the fragment well");
+        let w2 = network.wells.iter().position(|w| w.name == "W2").unwrap();
+        let channel = network.wells[w2].channels.iter().find(|c| c.name == "B2P").unwrap();
+        match &channel.destination {
+            ChannelDestination::Fragment { index, partner, kernel } => {
+                assert_eq!(*index, co2);
+                assert_eq!(partner.name, "OH");
+                assert_eq!(partner.concentration_cm3, 1e16);
+                assert!(partner.ground_energy_cm1.abs() < 1e-9, "{}", partner.ground_energy_cm1);
+                assert!(matches!(kernel, FragmentKernel::Prior { .. }));
+            }
+            other => panic!("{other:?}"),
+        }
+        let options = ChemicalActivationOptions { collision_model: m.collision_model, steady_state: SteadyState::Final };
+        let op = crate::masterequation::chemical_activation_operator::assemble_operator(network, &Conditions { temperature_kelvin: 500.0, pressure_torr: 760.0 }, &options).unwrap();
+        let symmetrized = crate::masterequation::chemical_activation_steady_state::symmetrize(&op);
+        assert!(symmetrized.max_relative_asymmetry < 1e-10, "{:e}", symmetrized.max_relative_asymmetry);
+    }
+
+    #[test]
+    fn a_fragment_well_needs_an_energy_partitioning_and_the_same_molecular_data() {
+        let missing = build(&fragment_deck("", "667 667 1388 2349"), &MessNetworkSettings::default()).unwrap_err();
+        assert!(missing.contains("FragmentEnergy"), "{missing}");
+        let different = build(&fragment_deck(PRIOR_BLOCK, "700 667 1388 2349"), &MessNetworkSettings::default()).unwrap_err();
+        assert!(different.contains("density of states") && different.contains("CO2"), "{different}");
+    }
+
+    #[test]
+    fn a_lumped_reactant_state_loses_population_at_the_high_pressure_capture_rate() {
+        // Miller et al., J. Phys. Chem. A 120, 306 (2016), SI-VI; Robertson, CCK 43 (2019), eq. 5.187: the reactant
+        // R = HCO + O2 as one thermal state of the master equation, O2 in excess. Its association into W1 follows from the
+        // entrance k(E) by detailed balance, so the initial loss rate of R is the high-pressure capture rate k_inf(T) [O2].
+        use crate::masterequation::fragment_partition::FragmentKernel;
+        let concentration = 1e16;
+        let deck = DECK.replace(
+            "    GroundEnergy[kcal/mol] 0.0\n  End\n  Well W1",
+            &format!("    GroundEnergy[kcal/mol] 0.0\n    LumpedState\n    ExcessFragment O2\n    PartnerConcentration[molecule/cm^3] {concentration:e}\n  End\n  Well W1"),
+        );
+        let m = build(&deck, &MessNetworkSettings::default()).unwrap();
+        let network = &m.network;
+        let r = network.wells.iter().position(|w| w.name == "R").expect("the lumped reactant state");
+        assert_eq!(network.wells[r].grain_count(), 1);
+        let w1 = network.wells.iter().position(|w| w.name == "W1").unwrap();
+        let entrance = network.wells[w1].channels.iter().find(|c| c.name == "B0").unwrap();
+        assert!(matches!(&entrance.destination, ChannelDestination::Fragment { index, kernel: FragmentKernel::LowestGrain, .. } if *index == r));
+        let capture = m.entrance_high_pressure_rate.as_ref().expect("capture rate");
+        for t in [300.0, 500.0] {
+            let options = ChemicalActivationOptions { collision_model: m.collision_model, steady_state: SteadyState::Final };
+            let op = crate::masterequation::chemical_activation_operator::assemble_operator(network, &Conditions { temperature_kelvin: t, pressure_torr: 760.0 }, &options).unwrap();
+            let s = op.index_of[r][0].unwrap();
+            let loss = op.rows[s].iter().find(|(c, _)| *c == s).unwrap().1;
+            let expected = capture.rate_cm3_s(t) * concentration;
+            assert!((loss / expected - 1.0).abs() < 2e-3, "{t} K: {loss:e} vs {expected:e}");
+        }
+    }
+
+    #[test]
+    fn a_well_with_its_own_collision_parameters_keeps_them_and_the_others_keep_the_global_ones() {
+        let deck = DECK.replace(
+            "  Well W2\n",
+            "  Well W2\n    MarXus\n      Factor[1/cm] 150\n      Power 0.5\n      ReferenceTemperature[K] 295\n      Epsilons[1/cm] 33.4 300.0\n    End\n",
+        );
+        let m = build(&deck, &MessNetworkSettings::default()).unwrap();
+        let well = |name: &str| m.network.wells.iter().find(|w| w.name == name).unwrap().clone();
+        let (w1, w2) = (well("W1"), well("W2"));
+        assert_eq!(
+            (w2.energy_transfer.mean_down_at_reference_cm1, w2.energy_transfer.reference_temperature_kelvin, w2.energy_transfer.temperature_exponent),
+            (150.0, 295.0, 0.5)
+        );
+        assert!((w2.lennard_jones.epsilon_kelvin - (33.4_f64 * 300.0).sqrt() * CM1_TO_KELVIN).abs() < 1e-9);
+        // Sigmas and masses not given: the global pair.
+        assert_eq!((w2.lennard_jones.sigma_angstrom, w2.lennard_jones.reduced_mass_amu), (w1.lennard_jones.sigma_angstrom, w1.lennard_jones.reduced_mass_amu));
+        let global = model();
+        let w1_global = global.network.wells.iter().find(|w| w.name == "W1").unwrap();
+        assert_eq!(format!("{:?}", w1.energy_transfer), format!("{:?}", w1_global.energy_transfer));
+        assert_eq!(format!("{:?}", w1.lennard_jones), format!("{:?}", w1_global.lennard_jones));
     }
 }

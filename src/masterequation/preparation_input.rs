@@ -29,14 +29,14 @@
 //!   End
 //!
 //! Distributions (`Distribution <kind>`): `Thermal` (Well, PreparationTemperature[K]); `Gaussian` (Well, Centre[unit],
-//! Width[unit], Representation Density|PerStateWeight); `Tabulated` (Well, File, Representation BinMass|Density|
+//! Width[unit] = the standard deviation, Representation Density|PerStateWeight); `Tabulated` (Well, File, Representation BinMass|Density|
 //! PerStateWeight, EnergyUnit 1/cm|kcal/mol|kJ/mol, Support Complete|Truncate; file lines "lower upper value");
 //! `SingleEnergy` (Well, Energy[unit]); `ThermalEntrance` (the entrance flux of the deck's Reactant at the bath
 //! temperature); `Mixture` (sub-blocks `Component <weight>` with one distribution each). Every distribution may have
 //! `EnergyReference AboveWellGround|Absolute` (default AboveWellGround: above the ZeroEnergy of the well; Absolute: the
 //! energy scale of the deck) and `Shift[unit]` (a shift of the whole distribution, e.g. by a photon energy).
 //! Profiles (`Profile <kind>`): `Impulse` (Time[s], Amount), `Rectangular` (Start[s], Stop[s], Amount), `Gaussian`
-//! (Centre[s], Width[s], Amount), `Feed` (Start[s], optional Stop[s], Rate[1/s]), `PrecursorDecay` (Start[s],
+//! (Centre[s], Width[s] = the standard deviation, Amount), `Feed` (Start[s], optional Stop[s], Rate[1/s]), `PrecursorDecay` (Start[s],
 //! FormationRate[1/s], TotalLossRate[1/s], PrecursorAmount), `Tabulated` (File; lines "time rate"), `Train`
 //! (sub-blocks `Profile <kind>`). Units of energies: [1/cm], [kcal/mol], [kJ/mol]; pressures: [torr], [atm], [bar].
 

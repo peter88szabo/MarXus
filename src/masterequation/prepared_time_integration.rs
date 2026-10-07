@@ -19,6 +19,7 @@
 use super::chemical_activation_network::{
     ChemicalActivationNetwork, ChemicalActivationOptions, CollisionModel, Conditions, SteadyState,
 };
+use super::chemical_activation_eigen::lowest_eigenvector_grain_populations;
 use super::chemical_activation_operator::{assemble_operator, ChemicalActivationOperator};
 use super::direct_time_integration::{exit_definitions, MasterEquationSystem, SourceTerm, TimeIntegrationSettings};
 use super::prepared_distributions::GrainDistribution;
@@ -91,6 +92,29 @@ pub struct TransientPoint {
     pub loss_hazard_s_inv: f64,
     /// (sum n + sum Y - N_0 - sum_a N_a,in) / (N_0 + sum_a N_a,in) (N eq. balance).
     pub balance_deviation: f64,
+    /// Flux coefficient r_wc = sum_i k_wc(E_i) n_wi / C_w of every channel of every well (in the order of
+    /// `Well::channels`: products and isomerization), s-1 (BFG 2015 eq. A5; Miller et al. 2016 eq. 4). NaN for an empty
+    /// well.
+    pub flux_coefficients_s_inv: Vec<Vec<f64>>,
+    /// R_w = sum_c r_wc + k_c[D]_w, s-1: all reactive loss out of the well per molecule in it (BFG 2015 eq. 1).
+    pub loss_coefficients_s_inv: Vec<f64>,
+    /// Standard deviation of the energy of every well (cm-1).
+    pub energy_spread_cm1: Vec<f64>,
+    /// d<E>/dt of every well (cm-1 s-1), exact from dn/dt = -J n + sum_a R_a(t) F_a (continuous sources included).
+    pub mean_energy_rate_cm1_s: Vec<f64>,
+    /// E_f: the mean energy above the bottom of every well in the lowest eigenvector of J of the bath segment, the final
+    /// steady state (Barker, King 1995, eq. 11); the Boltzmann mean for a closed well. NaN in the intermediate variant.
+    pub final_mean_energy_cm1: Vec<f64>,
+    /// tau_vib = -(<E> - E_f)/(d<E>/dt) of every well, s (Barker, King 1995, eq. 11); negative while <E> moves away
+    /// from E_f; NaN once |<E> - E_f| <= 10 rtol E_f (rtol the relative tolerance of the integration), where both are
+    /// rounding and integration error.
+    pub vibrational_relaxation_time_s: Vec<f64>,
+    /// t_inc from the start s of the bath segment: (t - s) + ln(N(t)/N_ref)/k_inst(t), N_ref the population after the
+    /// start plus the impulses since. Its late-time plateau is the back-extrapolation of the first-order decay to
+    /// N/N_ref = 1 (Barker, King 1995, p. 4960 and eq. 9). NaN once a continuous source has injected in the segment.
+    pub incubation_time_s: f64,
+    /// Z_w = integral of omega_w dt from t = 0: the time in collisions of every well (Eng et al. 2001, Fig. 10).
+    pub collision_numbers: Vec<f64>,
 }
 
 /// Result of `integrate_preparation`.
@@ -104,10 +128,12 @@ pub struct TransientResult {
     pub projections: Vec<ProjectionNote>,
     pub statistics: IntegrationStatistics,
     pub factorizations_computed: usize,
+    /// Diagnostics that could not be computed (E_f of a segment), with the reason.
+    pub warnings: Vec<String>,
 }
 
 /// Projection of `amount` x `distribution` onto the states of `op`: (on states, absorbed per well, note).
-fn project(
+pub(crate) fn project(
     network: &ChemicalActivationNetwork,
     op: &ChemicalActivationOperator,
     distribution: &GrainDistribution,
@@ -158,6 +184,10 @@ struct Segment {
     exit_rates: Vec<Vec<(usize, f64)>>,
     /// Per channel: F on the states and the absorbed part per well (amounts per unit of the channel).
     shapes: Vec<(Vec<f64>, Vec<f64>)>,
+    /// Start of the segment (s).
+    start_s: f64,
+    /// E_f of every well (`TransientPoint::final_mean_energy_cm1`).
+    final_mean_energy: Vec<f64>,
 }
 
 /// Integrates `preparation` on `network` with the collision model and the operator variant `steady_state` (final:
@@ -201,7 +231,8 @@ pub fn integrate_preparation(
     let options_of = |_: &Conditions| ChemicalActivationOptions { collision_model, steady_state: steady_state.clone() };
     let absorbing_barrier = matches!(steady_state, SteadyState::Intermediate { .. });
     let mut projections = Vec::new();
-    let build_segment = |k: usize, projections: &mut Vec<ProjectionNote>| -> Result<Segment, String> {
+    let mut warnings = Vec::new();
+    let build_segment = |k: usize, projections: &mut Vec<ProjectionNote>, warnings: &mut Vec<String>| -> Result<Segment, String> {
         let conditions = &bath[k].conditions;
         let op = assemble_operator(network, conditions, &options_of(conditions))?;
         let (exits, exit_rates) = exit_definitions(network, &op, absorbing_barrier);
@@ -211,12 +242,23 @@ pub fn integrate_preparation(
             projections.push(note);
             shapes.push((on_states, absorbed));
         }
-        Ok(Segment { op, exits, exit_rates, shapes })
+        let final_mean_energy = if absorbing_barrier {
+            vec![f64::NAN; network.wells.len()]
+        } else {
+            match lowest_eigenvector_grain_populations(&op) {
+                Ok(grains) => grains.iter().map(|g| mean_and_spread(g, network.grain_width_cm1).0).collect(),
+                Err(e) => {
+                    warnings.push(format!("E_f of bath segment {} not available: {e}", k + 1));
+                    vec![f64::NAN; network.wells.len()]
+                }
+            }
+        };
+        Ok(Segment { op, exits, exit_rates, shapes, start_s: bath[k].start_s, final_mean_energy })
     };
 
     // Global exit list (by name) and the population state carried between segments, on the grains.
     let mut segment_index = 0;
-    let mut segment = build_segment(0, &mut projections)?;
+    let mut segment = build_segment(0, &mut projections, &mut warnings)?;
     let exits = segment.exits.clone();
     let stab_index = |w: usize| exits.iter().position(|e| *e == format!("stab({})", network.wells[w].name));
     let mut y_states = vec![0.0; segment.op.dimension()];
@@ -238,18 +280,24 @@ pub fn integrate_preparation(
         add_absorbed(&mut yields, &absorbed, 1.0)?;
         amount_in += initial.amount;
     }
-    let apply_impulses = |t: f64, segment: &Segment, y_states: &mut Vec<f64>, yields: &mut Vec<f64>| -> Result<(), String> {
+    // Applies the impulses at t; returns the amount put on the states.
+    let apply_impulses = |t: f64, segment: &Segment, y_states: &mut Vec<f64>, yields: &mut Vec<f64>| -> Result<f64, String> {
+        let mut added = 0.0;
         for (channel, (on_states, absorbed)) in preparation.channels.iter().zip(&segment.shapes) {
             for (tp, amount) in channel.profile.impulses() {
                 if tp == t {
                     y_states.iter_mut().zip(on_states).for_each(|(y, x)| *y += amount * x);
+                    added += amount * on_states.iter().sum::<f64>();
                     add_absorbed(yields, absorbed, amount)?;
                 }
             }
         }
-        Ok(())
+        Ok(added)
     };
     apply_impulses(0.0, &segment, &mut y_states, &mut yields)?;
+    // N_ref of the incubation time and the collision numbers at the start of the current segment.
+    let mut reference_population: f64 = y_states.iter().sum();
+    let mut collisions_at_start = vec![0.0; network.wells.len()];
 
     let mut statistics = IntegrationStatistics::default();
     let mut factorizations = 0;
@@ -306,10 +354,14 @@ pub fn integrate_preparation(
         }
         t = t_event;
         // A new bath segment starts here: rebuild the operator and carry the population over the grains.
-        if let Some(k) = bath.iter().position(|b| b.start_s == t) {
+        let switched = bath.iter().position(|b| b.start_s == t);
+        if let Some(k) = switched {
+            for (z, w) in collisions_at_start.iter_mut().zip(&segment.op.wells) {
+                *z += w.collision_frequency_s_inv * (t - segment.start_s);
+            }
             let grains = segment.op.grain_populations(&y_states);
             segment_index = k;
-            segment = build_segment(k, &mut projections)?;
+            segment = build_segment(k, &mut projections, &mut warnings)?;
             let mut moved = 0.0;
             for (w, g) in grains.iter().enumerate() {
                 for (i, &x) in g.iter().enumerate() {
@@ -324,9 +376,19 @@ pub fn integrate_preparation(
             y_states = segment.op.state_populations(&grains);
             segments_used.push((t, bath[k].conditions.clone()));
         }
-        apply_impulses(t, &segment, &mut y_states, &mut yields)?;
+        let added = apply_impulses(t, &segment, &mut y_states, &mut yields)?;
+        if switched.is_some() {
+            reference_population = y_states.iter().sum();
+        } else {
+            reference_population += added;
+        }
         if times.contains(&t) {
-            points.push(observe(network, &segment, &exits, &y_states, &yields, preparation, amount_in, t));
+            let history = History {
+                reference_population,
+                collisions_at_start: &collisions_at_start,
+                energy_resolution: 10.0 * settings.relative_tolerance,
+            };
+            points.push(observe(network, &segment, &exits, &y_states, &yields, preparation, amount_in, t, &history));
         }
     }
     Ok(TransientResult {
@@ -337,6 +399,7 @@ pub fn integrate_preparation(
         projections,
         statistics,
         factorizations_computed: factorizations,
+        warnings,
     })
 }
 
@@ -381,7 +444,28 @@ pub fn steady_source_shape(preparation: &Preparation) -> Result<(GrainDistributi
     Ok((shape, how))
 }
 
-/// The observables of N Sec. observables at time `t`.
+/// What the observables need from the integration so far: N_ref of the incubation time and the collision numbers at the
+/// start of the current segment.
+struct History<'a> {
+    reference_population: f64,
+    collisions_at_start: &'a [f64],
+    /// |<E> - E_f| below this times E_f is not resolved (10 times the relative tolerance of the integration).
+    energy_resolution: f64,
+}
+
+/// Mean energy above the bottom and its standard deviation of populations on the grains of one well (NaN if empty).
+fn mean_and_spread(grains: &[f64], grain_width_cm1: f64) -> (f64, f64) {
+    let total: f64 = grains.iter().sum();
+    if !(total > 0.0) {
+        return (f64::NAN, f64::NAN);
+    }
+    let mean = grains.iter().enumerate().map(|(i, x)| i as f64 * grain_width_cm1 * x).sum::<f64>() / total;
+    let variance = grains.iter().enumerate().map(|(i, x)| (i as f64 * grain_width_cm1 - mean).powi(2) * x).sum::<f64>() / total;
+    (mean, variance.max(0.0).sqrt())
+}
+
+/// The observables of N Sec. observables and the diagnostics of reports/nonthermal_sources_design.md, Section 12, at
+/// time `t`.
 #[allow(clippy::too_many_arguments)]
 fn observe(
     network: &ChemicalActivationNetwork,
@@ -392,9 +476,11 @@ fn observe(
     preparation: &Preparation,
     initial_amount: f64,
     t: f64,
+    history: &History,
 ) -> TransientPoint {
     let op = &segment.op;
-    let mut well_populations = vec![0.0; network.wells.len()];
+    let n_wells = network.wells.len();
+    let mut well_populations = vec![0.0; n_wells];
     for (s, &(w, _)) in op.states.iter().enumerate() {
         well_populations[w] += y_states[s];
     }
@@ -404,35 +490,107 @@ fn observe(
         exit_fluxes[g] = rates.iter().map(|&(s, k)| k * y_states[s]).sum();
     }
     let grains = op.grain_populations(y_states);
+    // dn/dt = -J n + sum_a R_a(t) F_a, on the grains.
+    let mut rate_of_change: Vec<f64> = op.apply(y_states).iter().map(|x| -x).collect();
+    for (channel, (on_states, _)) in preparation.channels.iter().zip(&segment.shapes) {
+        let r = channel.profile.rate(t);
+        if r != 0.0 {
+            rate_of_change.iter_mut().zip(on_states).for_each(|(d, f)| *d += r * f);
+        }
+    }
+    let grains_rate = op.grain_populations(&rate_of_change);
     let de = network.grain_width_cm1;
-    let mut mean_energy = Vec::new();
-    let mut tail = Vec::new();
+    let (mut mean_energy, mut spread, mut tail, mut energy_rate, mut tau_vib) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut flux_coefficients, mut loss_coefficients) = (Vec::new(), Vec::new());
     for (w, g) in grains.iter().enumerate() {
+        let well = &network.wells[w];
         let total: f64 = g.iter().sum();
+        let (mean, sd) = mean_and_spread(g, de);
+        mean_energy.push(mean);
+        spread.push(sd);
         if total > 0.0 {
-            mean_energy.push(g.iter().enumerate().map(|(i, x)| i as f64 * de * x).sum::<f64>() / total);
-            let threshold = network.wells[w].lowest_threshold_grain().unwrap_or(g.len());
+            let threshold = well.lowest_threshold_grain().unwrap_or(g.len());
             tail.push(g.iter().skip(threshold).sum::<f64>() / total);
+            let r: Vec<f64> = well.channels.iter().map(|c| c.rate_constant_s_inv.iter().zip(g).map(|(k, x)| k * x).sum::<f64>() / total).collect();
+            loss_coefficients.push(r.iter().sum::<f64>() + well.bimolecular_sink_s_inv);
+            flux_coefficients.push(r);
+            let d_total: f64 = grains_rate[w].iter().sum();
+            let d_energy: f64 = grains_rate[w].iter().enumerate().map(|(i, x)| i as f64 * de * x).sum();
+            let rate = (d_energy - mean * d_total) / total;
+            energy_rate.push(rate);
+            // Once <E> is at E_f within the resolution, both <E> - E_f and d<E>/dt are rounding and integration error.
+            let excess = mean - segment.final_mean_energy[w];
+            tau_vib.push(if excess.abs() > history.energy_resolution * segment.final_mean_energy[w].abs() { -excess / rate } else { f64::NAN });
         } else {
-            mean_energy.push(f64::NAN);
             tail.push(f64::NAN);
+            loss_coefficients.push(f64::NAN);
+            flux_coefficients.push(vec![f64::NAN; well.channels.len()]);
+            energy_rate.push(f64::NAN);
+            tau_vib.push(f64::NAN);
         }
     }
     let injected: Vec<f64> = preparation.channels.iter().map(|c| c.profile.injected_until(t)).collect();
     let total_in = initial_amount + injected.iter().sum::<f64>();
     let present: f64 = y_states.iter().sum::<f64>() + yields.iter().sum::<f64>();
     let population: f64 = well_populations.iter().sum();
+    let loss_hazard = if population > 0.0 { exit_fluxes.iter().sum::<f64>() / population } else { f64::NAN };
+    // Continuous injection since the segment start: the injected amount less the impulses in (start, t].
+    let start = segment.start_s;
+    let continuous: f64 = preparation
+        .channels
+        .iter()
+        .map(|c| {
+            let impulses: f64 = c.profile.impulses().iter().filter(|&&(tp, _)| tp > start && tp <= t).map(|&(_, a)| a).sum();
+            c.profile.injected_until(t) - c.profile.injected_until(start) - impulses
+        })
+        .sum();
+    let incubation_time = if continuous > 1e-12 * total_in.max(f64::MIN_POSITIVE) || !(loss_hazard > 0.0) || !(history.reference_population > 0.0) {
+        f64::NAN
+    } else {
+        (t - start) + (population / history.reference_population).ln() / loss_hazard
+    };
+    let collision_numbers = op
+        .wells
+        .iter()
+        .zip(history.collisions_at_start)
+        .map(|(w, z)| z + w.collision_frequency_s_inv * (t - start))
+        .collect();
     TransientPoint {
         time_s: t,
         well_populations,
         exit_yields: yields.to_vec(),
-        loss_hazard_s_inv: if population > 0.0 { exit_fluxes.iter().sum::<f64>() / population } else { f64::NAN },
+        loss_hazard_s_inv: loss_hazard,
         exit_fluxes,
         injected,
         mean_energy_above_bottom_cm1: mean_energy,
         tail_fraction: tail,
         balance_deviation: if total_in > 0.0 { (present - total_in) / total_in } else { present },
+        flux_coefficients_s_inv: flux_coefficients,
+        loss_coefficients_s_inv: loss_coefficients,
+        energy_spread_cm1: spread,
+        mean_energy_rate_cm1_s: energy_rate,
+        final_mean_energy_cm1: segment.final_mean_energy.clone(),
+        vibrational_relaxation_time_s: tau_vib,
+        incubation_time_s: incubation_time,
+        collision_numbers,
     }
+}
+
+/// The effective coefficient of BFG 2015 eq. A7, k^e(t_0, t_k) = (t_k - t_0)^-1 integral_{t_0}^{t_k} r dt, of a series r at
+/// the output times, for every t_k after t_0 = the first output time (NaN at t_0, and from the first NaN of r on). Between
+/// two output times r is taken linear in u = ln t, and integral r dt = integral r e^u du is integrated exactly:
+/// integral_{t_k}^{t_k+1} r dt = r_k (t_k+1 - t_k) + (r_k+1 - r_k)/du ((du - 1) t_k+1 + t_k). Exact for a constant r and for
+/// r linear in ln t, second order in the output spacing otherwise.
+pub fn effective_coefficient(times: &[f64], r: &[f64]) -> Vec<f64> {
+    let mut out = vec![f64::NAN; times.len()];
+    let mut integral = 0.0;
+    for k in 1..times.len() {
+        let (t0, t1) = (times[k - 1], times[k]);
+        let du = (t1 / t0).ln();
+        integral += r[k - 1] * (t1 - t0) + (r[k] - r[k - 1]) / du * ((du - 1.0) * t1 + t0);
+        out[k] = integral / (t1 - times[0]);
+    }
+    out
 }
 
 #[cfg(test)]
@@ -446,6 +604,8 @@ mod tests {
     use crate::masterequation::chemical_activation_network::ChemicalActivationOptions;
     use crate::masterequation::prepared_distributions::{gaussian, thermal, EnergyReference, GrainDistribution, Representation};
     use crate::masterequation::source_profiles::TimeProfile;
+    use crate::masterequation::chemical_activation_network::ChannelDestination;
+    use crate::masterequation::chemical_activation_eigen::{thermal_rate_coefficients, EigenSolver, EigenSystem};
 
     const MODEL: CollisionModel = CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 };
 
@@ -817,5 +977,240 @@ mod tests {
         let (shape, how) = steady_source_shape(&prep).unwrap();
         assert!(how.contains("'f'"), "{how}");
         assert!(shape.mass[0].iter().zip(&a.mass[0]).all(|(x, y)| (x - y).abs() < 1e-14));
+    }
+
+    /// Well A of `two_well_network` alone, with its product channel (threshold at grain 300).
+    fn one_reactive_well() -> ChemicalActivationNetwork {
+        let mut network = two_well_network();
+        network.wells.truncate(1);
+        network.wells[0].channels.retain(|c| matches!(c.destination, ChannelDestination::Products { .. }));
+        network
+    }
+
+    fn final_operator(network: &ChemicalActivationNetwork, conditions: &Conditions) -> ChemicalActivationOperator {
+        assemble_operator(network, conditions, &ChemicalActivationOptions { collision_model: MODEL, steady_state: SteadyState::Final }).unwrap()
+    }
+
+    fn pulse(distribution: GrainDistribution, bath: Vec<BathSegment>) -> Preparation {
+        Preparation { initial: Some(InitialPopulation { amount: 1.0, distribution }), channels: Vec::new(), bath }
+    }
+
+    #[test]
+    fn flux_coefficients_add_up_to_the_exit_fluxes_and_end_at_the_thermal_rate_coefficients() {
+        // BFG eqs. A5 and 1, Comment eq. 4: r_wc = sum_i k_wc(E_i) n_wi / C_w, R_w = sum_c r_wc + k_c[D]_w. Once only
+        // the slowest mode is left the populations are the thermal eigenvector, whose average of k_wc is the thermal
+        // rate coefficient (GO10, text after eq. 12; per unit of the whole population there, so divided by the well
+        // fraction here). The lowest eigenvector also gives E_f (Barker, King 1995, eq. 11).
+        // The second mode dies out as exp(-(lambda_2 - lambda_1) t) relative to the first; at t_late its share is
+        // e^-15, while the population, exp(-lambda_1 t), stays far above the absolute tolerance. (This network has
+        // little separation: lambda_2/lambda_1 = 2.1 at 1000 K.)
+        let mut network = two_well_network();
+        network.wells[1].bimolecular_sink_s_inv = 1e3;
+        let bath = Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 };
+        let op = final_operator(&network, &bath);
+        let thermal_eigen = thermal_rate_coefficients(&network, &op, EigenSolver::FullDecomposition, 1.0).unwrap();
+        let (lambda_1, lambda_2) = (thermal_eigen.lambda_1_s_inv, thermal_eigen.lambda_2_s_inv);
+        let t_late = 15.0 / (lambda_2 - lambda_1);
+        assert!(lambda_1 * t_late < 20.0, "{lambda_1:e} {lambda_2:e}");
+        let mut times = log_spaced_times(1e-14, 0.3 * t_late, 2);
+        times.push(t_late);
+        // Start: the Boltzmann distribution of the bath in both wells, with the well fractions of the thermal eigenvector
+        // (so that the second mode starts small). r_wc then goes from the Boltzmann average of k_wc (the high-pressure
+        // value) to the eigenvector average (the fall-off value).
+        let fractions = &thermal_eigen.population_fractions;
+        let start = crate::masterequation::prepared_distributions::mixture(&[
+            (fractions[0], thermal(&network, 0, 1000.0).unwrap()),
+            (fractions[1], thermal(&network, 1, 1000.0).unwrap()),
+        ])
+        .unwrap();
+        let prep = pulse(start, vec![BathSegment { start_s: 0.0, conditions: bath }]);
+        let result = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(times)).unwrap();
+        let first = &result.points[0];
+        for c in &thermal_eigen.channels {
+            let got = first.flux_coefficients_s_inv[c.well][c.channel];
+            assert!(close(got, c.high_pressure_rate_s_inv, 1e-3, 0.0), "{} at 1e-14 s: {got:e} vs {:e}", c.name, c.high_pressure_rate_s_inv);
+        }
+        for p in &result.points {
+            let mut from_coefficients = 0.0;
+            for (w, well) in network.wells.iter().enumerate() {
+                let products: f64 = well
+                    .channels
+                    .iter()
+                    .zip(&p.flux_coefficients_s_inv[w])
+                    .filter(|(c, _)| matches!(c.destination, ChannelDestination::Products { .. }))
+                    .map(|(_, r)| r)
+                    .sum();
+                from_coefficients += p.well_populations[w] * (products + well.bimolecular_sink_s_inv);
+                let total = p.flux_coefficients_s_inv[w].iter().sum::<f64>() + well.bimolecular_sink_s_inv;
+                assert!(close(p.loss_coefficients_s_inv[w], total, 1e-14, 0.0), "t = {:e}", p.time_s);
+            }
+            let fluxes: f64 = p.exit_fluxes.iter().sum();
+            assert!(close(from_coefficients, fluxes, 1e-10, 0.0), "t = {:e}: {from_coefficients:e} vs {fluxes:e}", p.time_s);
+        }
+        let last = result.points.last().unwrap();
+        for c in &thermal_eigen.channels {
+            let expected = c.thermal_rate_s_inv / thermal_eigen.population_fractions[c.well];
+            let got = last.flux_coefficients_s_inv[c.well][c.channel];
+            assert!(close(got, expected, 1e-5, 0.0), "{}: {got:e} vs {expected:e}", c.name);
+        }
+        for (w, d) in thermal_eigen.distributions.iter().enumerate() {
+            let mean: f64 = d.iter().enumerate().map(|(i, x)| i as f64 * network.grain_width_cm1 * x).sum();
+            assert!(close(last.final_mean_energy_cm1[w], mean, 1e-8, 0.0), "well {w}: {} vs {mean}", last.final_mean_energy_cm1[w]);
+        }
+    }
+
+    #[test]
+    fn the_mean_energy_rate_is_the_time_derivative_of_the_mean_energy_also_with_a_source() {
+        // d<E>/dt = (sum E n' - <E> sum n')/C with n' = -J n + sum_a R_a(t) F_a, against a central difference.
+        let mut network = two_well_network();
+        network.wells.truncate(1);
+        network.wells[0].channels.clear();
+        let bath = vec![BathSegment { start_s: 0.0, conditions: Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 } }];
+        let (t, h) = (1e-8, 1e-11);
+        let times = vec![t - h, t, t + h];
+        let mut prep = pulse(thermal(&network, 0, 300.0).unwrap(), bath);
+        prep.channels.push(SourceChannel { name: "feed".into(), distribution: hot_source(&network), profile: TimeProfile::Feed { start_s: 0.0, end_s: None, rate: 1e7 } });
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(times)).unwrap();
+        let difference = (r.points[2].mean_energy_above_bottom_cm1[0] - r.points[0].mean_energy_above_bottom_cm1[0]) / (2.0 * h);
+        let exact = r.points[1].mean_energy_rate_cm1_s[0];
+        assert!(close(exact, difference, 1e-5, 0.0), "{exact:e} vs {difference:e}");
+        assert!(r.points[1].energy_spread_cm1[0] > 0.0);
+    }
+
+    #[test]
+    fn in_a_closed_well_e_f_is_the_bath_mean_and_tau_vib_ends_at_the_slowest_relaxation_time() {
+        // Barker, King 1995, eqs. 11-12: dE/dt = -(E - E_f)/tau_vib. Without reaction E_f is the Boltzmann mean of the
+        // bath; once only the slowest relaxation mode is left, E - E_f decays as exp(-lambda_2 t), so tau_vib = 1/lambda_2.
+        let mut network = two_well_network();
+        network.wells.truncate(1);
+        network.wells[0].channels.clear();
+        let hot = Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 };
+        let eigenvalues = EigenSystem::new(&final_operator(&network, &hot), EigenSolver::FullDecomposition).unwrap().eigenvalues;
+        let (lambda_2, lambda_3) = (eigenvalues[1], eigenvalues[2]);
+        let bath_mean = thermal(&network, 0, 1000.0).unwrap().mean_energy_above_bottom_cm1(&network)[0];
+        let prep = pulse(thermal(&network, 0, 300.0).unwrap(), vec![BathSegment { start_s: 0.0, conditions: hot }]);
+        let times: Vec<f64> = [0.1, 4.0, 8.0, 12.0].iter().map(|x| x / lambda_2).collect();
+        let precise = TimeIntegrationSettings { relative_tolerance: 1e-11, absolute_tolerance: 1e-20, times_s: times, ..TimeIntegrationSettings::default() };
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &precise).unwrap();
+        let last = r.points.last().unwrap();
+        assert!(close(last.final_mean_energy_cm1[0], bath_mean, 1e-9, 0.0), "{} vs {bath_mean}", last.final_mean_energy_cm1[0]);
+        assert!(r.points[0].vibrational_relaxation_time_s[0] > 0.0);
+        // The other modes die out as exp(-(lambda_k - lambda_2) t): the error of tau_vib lambda_2 falls with t.
+        let errors: Vec<f64> = r.points[1..].iter().map(|p| (p.vibrational_relaxation_time_s[0] * lambda_2 - 1.0).abs()).collect();
+        assert!(errors.windows(2).all(|e| e[1] < e[0]) && errors[2] < 1e-3, "{errors:?}; lambda_3/lambda_2 = {}", lambda_3 / lambda_2);
+        // No reaction: no incubation time.
+        assert!(last.incubation_time_s.is_nan());
+    }
+
+    #[test]
+    fn the_incubation_time_reaches_the_back_extrapolation_of_the_long_time_decay() {
+        // Barker, King 1995, p. 4960 and eq. 9: t_inc is where the extrapolated linear long-time ln(N/N_0) is 0. With
+        // N(t) -> a_1 N_0 exp(-lambda_1 t) at late times, t_inc = ln(a_1)/lambda_1; a_1 from a full decomposition.
+        let network = one_reactive_well();
+        let hot = Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 };
+        let op = final_operator(&network, &hot);
+        let cold = thermal(&network, 0, 300.0).unwrap();
+        let symmetrized = crate::masterequation::chemical_activation_steady_state::symmetrize(&op);
+        let (values, vectors) = crate::masterequation::chemical_activation_eigen::full_decomposition(&symmetrized.dense(), EigenSolver::FullDecomposition).unwrap();
+        let n0 = op.state_populations(&cold.mass);
+        let c1: f64 = vectors[0].iter().zip(&n0).zip(&symmetrized.d).map(|((u, n), d)| u * n / d).sum();
+        let a1 = c1 * vectors[0].iter().zip(&symmetrized.d).map(|(u, d)| u * d).sum::<f64>();
+        let (lambda_1, lambda_2) = (values[0], values[1]);
+        let expected = a1.ln() / lambda_1;
+        let late = [20.0 / lambda_2, 30.0 / lambda_2];
+        assert!(lambda_1 * late[1] < 1.0, "{lambda_1:e} {lambda_2:e}");
+        let prep = pulse(cold, vec![BathSegment { start_s: 0.0, conditions: hot }]);
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(vec![0.01 / lambda_2, late[0], late[1]])).unwrap();
+        for p in &r.points[1..] {
+            assert!(close(p.incubation_time_s, expected, 1e-4, 0.0), "t = {:e}: {:e} vs {expected:e}", p.time_s, p.incubation_time_s);
+        }
+        assert!(expected > 0.0, "a cold start is delayed: {expected:e}");
+        // While a continuous source injects, the extrapolation has no reference: NaN.
+        let mut fed = pulse(thermal(&network, 0, 300.0).unwrap(), vec![BathSegment { start_s: 0.0, conditions: Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 } }]);
+        fed.channels.push(SourceChannel { name: "feed".into(), distribution: hot_source(&network), profile: TimeProfile::Feed { start_s: 0.0, end_s: None, rate: 1.0 } });
+        let f = integrate_preparation(&network, MODEL, SteadyState::Final, &fed, &settings(vec![late[0]])).unwrap();
+        assert!(f.points[0].incubation_time_s.is_nan());
+    }
+
+    #[test]
+    fn collision_numbers_add_up_over_the_bath_segments() {
+        // Z_w(t) = integral of omega_w dt; Eng et al. (2001) give incubation as Z_LJ[M] dt_inc.
+        let network = two_well_network();
+        let (first, second) = (conditions(), Conditions { temperature_kelvin: 300.0, pressure_torr: 76.0 });
+        let omega = |c: &Conditions| -> Vec<f64> { final_operator(&network, c).wells.iter().map(|w| w.collision_frequency_s_inv).collect() };
+        let (o1, o2) = (omega(&first), omega(&second));
+        let t1 = 1e-7;
+        let prep = pulse(hot_source(&network), vec![BathSegment { start_s: 0.0, conditions: first }, BathSegment { start_s: t1, conditions: second }]);
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(vec![5e-8, 1e-6])).unwrap();
+        for w in 0..2 {
+            assert!(close(r.points[0].collision_numbers[w], o1[w] * 5e-8, 1e-12, 0.0));
+            assert!(close(r.points[1].collision_numbers[w], o1[w] * t1 + o2[w] * (1e-6 - t1), 1e-12, 0.0));
+        }
+    }
+
+    #[test]
+    fn effective_coefficients_are_exact_for_a_constant_rate_and_converge_with_the_output_density() {
+        // BFG 2015 eq. A7: k^e(t_0, t) = (t - t_0)^-1 integral_{t_0}^{t} r dt, t_0 the first output time.
+        let times = log_spaced_times(1e-9, 1e-3, 2);
+        let constant = effective_coefficient(&times, &vec![7.5; times.len()]);
+        assert!(constant[0].is_nan());
+        assert!(constant[1..].iter().all(|k| close(*k, 7.5, 1e-14, 0.0)), "{constant:?}");
+        // r = a + b exp(-c t): (t - t_0) k^e = a (t - t_0) + (b/c)(exp(-c t_0) - exp(-c t)).
+        let (a, b, c) = (2.0, 50.0, 1e6);
+        let exact = |t0: f64, t: f64| a + b / c * ((-c * t0).exp() - (-c * t).exp()) / (t - t0);
+        let mut errors = Vec::new();
+        for per_decade in [2, 4, 8, 16] {
+            let times = log_spaced_times(1e-9, 1e-3, per_decade);
+            let r: Vec<f64> = times.iter().map(|t| a + b * (-c * t).exp()).collect();
+            let k = effective_coefficient(&times, &r);
+            errors.push((1..times.len()).map(|i| (k[i] / exact(times[0], times[i]) - 1.0).abs()).fold(0.0, f64::max));
+        }
+        assert!(errors.windows(2).all(|e| e[1] < 0.4 * e[0]), "second order: {errors:?}");
+        assert!(errors[3] < 2e-3, "{errors:?}");
+    }
+
+    #[test]
+    fn tau_vib_is_not_given_once_the_mean_energy_is_at_e_f_within_the_tolerance() {
+        // tau_vib = -(<E> - E_f)/(d<E>/dt) is a ratio of two rounding-level numbers once <E> has reached E_f: NaN when
+        // |<E> - E_f| <= 10 rtol E_f.
+        let mut network = two_well_network();
+        network.wells.truncate(1);
+        network.wells[0].channels.clear();
+        let hot = Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 };
+        let lambda_2 = EigenSystem::new(&final_operator(&network, &hot), EigenSolver::FullDecomposition).unwrap().eigenvalues[1];
+        let prep = pulse(thermal(&network, 0, 300.0).unwrap(), vec![BathSegment { start_s: 0.0, conditions: hot }]);
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(vec![0.1 / lambda_2, 60.0 / lambda_2])).unwrap();
+        assert!(r.points[0].vibrational_relaxation_time_s[0] > 0.0);
+        assert!(r.points[1].vibrational_relaxation_time_s[0].is_nan(), "{:e}", r.points[1].vibrational_relaxation_time_s[0]);
+    }
+
+    #[test]
+    fn a_closed_fragment_system_relaxes_to_the_equilibrium_of_its_weights() {
+        // C <-> B + A with the partner in excess (Green, Robertson 2014): from a hot start in C, the populations relax to
+        // [C]/[B] = K_c [A], the ratio of the summed weights of the operator. [A] = 1e25 cm-3 puts both wells in the same
+        // range (at 1e17 cm-3 this shallow C holds 8e-9 of the population at 1000 K).
+        use crate::masterequation::chemical_activation_operator::tests::{fragment_network, prior_kernel};
+        let mut network = fragment_network(prior_kernel(), 1e25);
+        for well in &mut network.wells {
+            well.channels.retain(|ch| !matches!(ch.destination, ChannelDestination::Products { .. }));
+        }
+        let bath = Conditions { temperature_kelvin: 1000.0, pressure_torr: 760.0 };
+        let op = final_operator(&network, &bath);
+        let max = op.log_boltzmann_weight.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let (mut c, mut b) = (0.0, 0.0);
+        for (s, &(w, _)) in op.states.iter().enumerate() {
+            let f = (op.log_boltzmann_weight[s] - max).exp();
+            if w == 0 { c += f } else { b += f }
+        }
+        let hot = gaussian(&network, 0, 3600.0, 100.0, Representation::Density, EnergyReference::AboveWellGround).unwrap();
+        let prep = pulse(hot, vec![BathSegment { start_s: 0.0, conditions: bath }]);
+        let r = integrate_preparation(&network, MODEL, SteadyState::Final, &prep, &settings(vec![1e-9, 1e-2])).unwrap();
+        let last = r.points.last().unwrap();
+        assert!((last.well_populations.iter().sum::<f64>() - 1.0).abs() < 1e-6, "{:?}", last.well_populations);
+        assert!(last.well_populations.iter().all(|c| *c > 0.05), "both populated: {:?}", last.well_populations);
+        let ratio = last.well_populations[0] / last.well_populations[1];
+        assert!((ratio / (c / b) - 1.0).abs() < 1e-6, "{ratio:e} vs {:e}", c / b);
+        // Early on the hot C has formed fragments, which are not yet in equilibrium.
+        assert!((r.points[0].well_populations[0] / r.points[0].well_populations[1] / (c / b) - 1.0).abs() > 1e-3);
     }
 }

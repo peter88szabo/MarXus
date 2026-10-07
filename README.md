@@ -50,9 +50,10 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 | Equilibrium constants: from the thermochemistry (K_p, K_c from ΔG°) and from the deck species (partition functions on the cells; real equilibrium constants as MESS) | implemented, tested; the two routes agree up to the 1 cm⁻¹ cell counting; against MESS (`validation/c2h4_ho2_hindered_rotors/`) K(W2/P1) is 0.9963–0.9995 of MESS, a difference fully explained by that counting, and the effect of electronic levels is identical (`reports/equilibrium_constants.md`) |
 | CSE: rows of the bimolecular products (G13 eqs. 28, 21, 22) and the isomer–bimolecular equilibrium coefficients κ (eq. 34) | implemented, tested, validated against MESS: Case 2 product rows within −0.3 … +0.9% (P7 → G4 −1.4%), κ of the rotor deck within 0.006 (`reports/cse_kappa_and_product_rates.md`) |
 | CSE species merging at poor time-scale separation (Georgievskii et al. 2013, Sec. IV; well partition as MESS) | implemented, tested (`reports/cse_species_merging.md`). Chemical eigenvectors by the relaxational projection 1 − F_ne ≤ `ChemicalEigenvalueMax`, as MESS's direct method (default), or by the eigenvalue ratio (`ChemicalSubspaceCriterion EigenvalueRatio`, `--chemical-subspace-criterion`); in `validation/c2h4_ho2_hindered_rotors/` both codes merge at the same 15 of 30 conditions |
-| Prepared experiments (`Preparation` block of the deck): non-thermal initial populations, time-profiled source channels and piecewise-constant bath histories (design: `reports/nonthermal_sources_design.md`) | implemented, tested. TimeIntegration integrates all of it, with impulses as exact jumps and bath changes as events; the steady-state methods take the shape of the sources; CSE projects every source onto prompt products and post-relaxation species populations (Georgievskii et al. 2013, eqs. 13, 14, 24, 37–41) |
+| [Prepared experiments](docs/features/prepared_experiments.md) (`Preparation` block of the deck): non-thermal initial populations, time-profiled source channels and piecewise-constant bath histories | implemented, tested. TimeIntegration integrates all of it, with impulses as exact jumps and bath changes as events; the steady-state methods take the shape of the sources; CSE projects every source onto prompt products and post-relaxation species populations (Georgievskii et al. 2013, eqs. 13, 14, 24, 37–41). Diagnostics: flux coefficients r(t) and k^e (Barker, Frenklach, Golden 2015), incubation and vibrational relaxation times (Barker, King 1995), and the CSE description propagated in time against the time integration (`CompareWithCse`). C₂H₃ shock heating: τ_inc = 12.47 ns, converged to 0.09% in the grain width (`validation/c2h3_mess_example/`, Section 4.9) |
+| [Fragment wells and lumped reactant states](docs/features/fragment_wells_and_lumped_reactants.md): a dissociation into a fragment well with a partner in excess and an energy-partitioning kernel (prior, modified prior, two-piece Gaussian; Green, Robertson 2014; Shannon et al. 2024); the bimolecular reactant as one thermal state (Miller et al. 2016, SI-VI) | implemented, tested: detailed balance for any kernel, equilibrium [C]/[B] = K_c[A] reached in time, the lumped state's initial loss rate equal to k∞(T)[X] within 7.5·10⁻⁴; OH + glyoxal validation in preparation |
 
-The source contains 318 library unit tests (`cargo test`).
+The source contains 390 library unit tests (`cargo test`).
 
 ---
 
@@ -110,10 +111,13 @@ The energy-grained master equation is $`dN/dt = R\,F - 𝐉 N`$ with $`𝐉 = \o
 - Thermal entrance channels (chemical activation from a bimolecular reactant).
 - A given distribution.
 - **Consecutive chemical activation:** coupled master equations, the output of one feeding the next (PO14 pp. 236–237).
-- **Prepared experiments** (`Preparation` block, below):
-  - **Initial population and any number of source channels**, each a normalized distribution over the grains of the wells. Distributions: thermal at a preparation temperature of its own; Gaussian; single energy; tabulated; the thermal entrance flux; mixtures; shifts.
-  - **Time profiles of the amplitudes:** impulse, rectangular, Gaussian, constant feed, precursor decay, tabulated, trains.
-  - **Bath history:** a piecewise-constant sequence of T and p, e.g. a shock.
+- **Prepared experiments** (`Preparation` block; [overview](docs/features/prepared_experiments.md)):
+  - **Initial population and any number of source channels**, each a normalized distribution over the grains of the wells ([distributions](docs/features/preparation_distributions.md)): thermal at a preparation temperature of its own; Gaussian; single energy; tabulated; the thermal entrance flux; mixtures; shifts.
+  - **[Time profiles](docs/features/source_time_profiles.md) of the amplitudes:** impulse, rectangular, Gaussian, constant feed, precursor decay, tabulated, trains.
+  - **[Bath history](docs/features/bath_history.md):** a piecewise-constant sequence of T and p, e.g. a shock.
+  - **[Transient diagnostics](docs/features/transient_diagnostics.md):** flux coefficients, incubation and vibrational relaxation times.
+  - **CSE:** the [source projection](docs/features/cse_source_projection.md), and the [CSE description in time](docs/features/cse_validity_in_time.md) against the master equation.
+- **[Fragment wells and lumped reactant states](docs/features/fragment_wells_and_lumped_reactants.md):** a fragment that reacts on is formed with an energy distribution from a kernel (prior, modified prior, two-piece Gaussian); a bimolecular reactant can be one state of the master equation, followed in time.
 
 MarXus has **four solution methods in three families**: [SteadyStateOlzmann](docs/methods/steady_state_olzmann.md) and [SteadyStateAbsorbingBarrier](docs/methods/steady_state_absorbing_barrier.md) (steady state), [CSE](docs/methods/chemically_significant_eigenvalues.md) (eigenvalue) and [TimeIntegration](docs/methods/direct_time_integration.md) (time integration). One is chosen per run, in the `MarXus` block of the deck header or on the command line (see Usage); there is no default.
 
@@ -152,6 +156,7 @@ MarXus has **four solution methods in three families**: [SteadyStateOlzmann](doc
 **Input**
 - Decks in the MESS input format (a subset), so existing decks can be used.
 - A MarXus keyword block adds ILT parameters to barriers.
+- A `MarXus ... End` block inside a `Well` gives that well its own collision parameters in place of the global model: `Factor[1/cm]`, `Power`, `ReferenceTemperature[K]`, and the pairs `Epsilons[1/cm]`, `Sigmas[angstrom]`, `Masses[amu]` (bath, complex).
 - A `MarXus ... End` block in the deck header selects the solution method and its settings (see Usage).
 - Exact Eckart tunneling and 1 cm⁻¹ state counting are built from the deck.
 
@@ -404,6 +409,7 @@ MarXus
   TimeRange[s]                        1e-12  1e2         ! time integration: first and last output time
   TimesPerDecade                      4                  ! time integration
   IntegrationTolerance                1e-6               ! time integration: relative tolerance
+  CompareWithCse                      1e-2               ! time integration of a Preparation in a constant bath: CSE in time
   NCores                              8                  ! cores of the run; the (T, p) conditions run in batches of up to 8
   CollisionIntegral                   Neufeld            ! Lennard-Jones Omega(2,2)*: Neufeld (default) | Troe
 End
@@ -417,6 +423,7 @@ End
 | `SumRuleTolerance` | `--sum-rule-tolerance X` | warning threshold of \|λ₁ − k_uni\|/k_uni (1.5e-2) |
 | – | `--csv FILE` | also write the machine-readable tables (CSV with titled blocks) to FILE, and every table of the report to FILE_tables.csv |
 | `Integrator`, `InitialState`, `TimeRange[s]`, `TimesPerDecade`, `IntegrationTolerance` | `--integrator`, `--initial`, `--time-range T1 T2`, `--times-per-decade`, `--integration-tolerance` | time integration: Rosenbrock method (Rodas4), pulse or continuous formation (pulse), output times (1e-12 to 1e2 s, 4 per decade), relative tolerance (1e-6) |
+| `CompareWithCse` | `--compare-with-cse X` | time integration of a `Preparation` in a constant bath: also propagate the CSE description of the same preparation and report where it agrees with the master equation; X is the tolerance of the relative deviation (no comparison without it) |
 | `NCores` | `--ncore N` | number of cores of the run, for every method; `--ncore` overrides `NCores` of the deck, and either may be given alone. The conditions (T, p) are independent and are computed in batches of up to N at a time; LAPACK calls get the cores left over (N / conditions at a time). Default: RAYON_NUM_THREADS, otherwise all logical cores. RUN SETTINGS shows the number and where it came from |
 | `ChemicalEigenvalueMax`, `WellProjectionThreshold` (global section of the deck, MESS's keywords) | – | CSE species merging: the chemical eigenvalues are those ≤ ChemicalEigenvalueMax × the lowest relaxation eigenvalue (0 < value < 1; 0.2, where MESS has no default); wells with a projection on the chemical subspace ≥ WellProjectionThreshold are primary wells of the partition (0.2, as MESS) |
 | `CollisionIntegral` | `--collision-integral neufeld\|troe` | reduced collision integral Ω(2,2)\* of the Lennard-Jones collision frequency: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (default; also used by MESS and MESMER), or Troe, J. Chem. Phys. 66, 4758 (1977), eq. 3.3 (±7%). With Neufeld the remaining few-percent differences from MESS of the validations disappear (`reports/collision_integral_neufeld.md`) |
@@ -429,13 +436,13 @@ The output tables begin with comment lines that explain the quantities, with the
 
 ### Prepared experiments: the `Preparation` block
 
-A top-level `Preparation ... End` block of the deck (a MarXus extension of the MESS format) describes the experiment as an initial population, source channels and a bath history:
+A top-level `Preparation ... End` block of the deck (a MarXus extension of the MESS format) describes an experiment by three parts: an initial population, source channels and a bath history:
 
 ```math
 \frac{d n}{dt} = -𝐉[T(t), p(t)]\, n + \sum_a R_a(t)\, F_a, \qquad n(0) = N_0 F_0, \qquad Y_x(t) = \int_0^t k_x^T n\, dt'
 ```
 
-Every F is normalized over the grains of all wells; the amplitudes R_a(t) carry the amounts.
+Every F is normalized over the grains of all wells; the rates R_a(t) carry the amounts.
 
 ```
 Preparation
@@ -453,16 +460,8 @@ Preparation
     End
     Distribution Gaussian
       Well                      W1
-      Centre[kcal/mol]          45.0      ! above the ground of W1 (EnergyReference AboveWellGround, default)
+      Centre[kcal/mol]          45.0
       Width[1/cm]               300       ! standard deviation
-    End
-  End
-  Source entrance
-    Profile Feed
-      Start[s]                  0
-      Rate[1/s]                 1e3
-    End
-    Distribution ThermalEntrance
     End
   End
   Bath
@@ -472,43 +471,18 @@ Preparation
 End
 ```
 
-| block | keywords |
-|---|---|
-| `Distribution Thermal` | `Well`, `PreparationTemperature[K]` |
-| `Distribution Gaussian` | `Well`, `Centre[unit]`, `Width[unit]` (standard deviation), `Representation Density\|PerStateWeight` (Density: the Gaussian integrated over each grain; PerStateWeight: multiplied by ρ(E)) |
-| `Distribution SingleEnergy` | `Well`, `Energy[unit]` |
-| `Distribution Tabulated` | `Well`, `File` (lines "lower upper value"), `Representation BinMass\|Density\|PerStateWeight`, `EnergyUnit 1/cm\|kcal/mol\|kJ/mol`, `Support Complete\|Truncate` (Complete: probability outside the grid is an error) |
-| `Distribution ThermalEntrance` | the entrance flux of the deck's `Reactant` at the temperature of the first bath segment |
-| `Distribution Mixture` | sub-blocks `Component <weight>`, one distribution each; the weights sum to 1 and set the well fractions |
-| every distribution | `EnergyReference AboveWellGround\|Absolute` (default AboveWellGround: above the ZeroEnergy of the well; Absolute: the energy scale of the deck), `Shift[unit]` |
-| `Profile Impulse` | `Time[s]`, `Amount`: an exact population jump |
-| `Profile Rectangular` | `Start[s]`, `Stop[s]`, `Amount` |
-| `Profile Gaussian` | `Centre[s]`, `Width[s]` (standard deviation), `Amount`; renormalized when it starts before t = 0 |
-| `Profile Feed` | `Start[s]`, optional `Stop[s]`, `Rate[1/s]` |
-| `Profile PrecursorDecay` | `Start[s]`, `FormationRate[1/s]`, `TotalLossRate[1/s]`, `PrecursorAmount`: R = k_f N_prec exp(−k_tot (t − t₀)) |
-| `Profile Tabulated` | `File` (lines "time rate"), linear between the points |
-| `Profile Train` | sub-blocks `Profile <kind>`, summed |
-| `Bath` | `Segment Start[s] … Temperature[K] … Pressure[unit]`, the first at 0 s |
+| feature | purpose | main controls |
+|---|---|---|
+| [Prepared experiments](docs/features/prepared_experiments.md) | the block as a whole; what each method does with it | `InitialPopulation`, `Source <name>`, `Bath` |
+| [Distributions](docs/features/preparation_distributions.md) | the energy distribution of the prepared molecules | `Thermal`, `Gaussian`, `SingleEnergy`, `Tabulated`, `ThermalEntrance`, `Mixture`; `EnergyReference`, `Shift[unit]` |
+| [Time profiles](docs/features/source_time_profiles.md) | when the source molecules are added | `Impulse`, `Rectangular`, `Gaussian`, `Feed`, `PrecursorDecay`, `Tabulated`, `Train` |
+| [Bath history](docs/features/bath_history.md) | shocks and other changes of T and p | `Segment Start[s] Temperature[K] Pressure[unit]` |
+| [Transient diagnostics](docs/features/transient_diagnostics.md) | what an experiment observes: flux coefficients r, k^e (Barker, Frenklach, Golden 2015), E_f, τ_vib, τ_inc (Barker, King 1995), collision numbers | `TimeRange[s]`, `TimesPerDecade`, `IntegrationTolerance` |
+| [CSE source projection](docs/features/cse_source_projection.md) | the species populations after relaxation and the prompt yields of every source (Georgievskii et al. 2013) | `Method CSE` with a `Preparation` |
+| [CSE validity in time](docs/features/cse_validity_in_time.md) | when the rate-coefficient description agrees with the master equation for this preparation | `CompareWithCse X`, `--compare-with-cse X` |
+| [Fragment wells and lumped reactant states](docs/features/fragment_wells_and_lumped_reactants.md) | a dissociation into a fragment that is a well of the network, with its energy partitioning (Green, Robertson 2014; Shannon et al. 2024); the bimolecular reactant as one state followed in time (Miller et al. 2016, SI-VI) | `FragmentWell`, `FragmentEnergy Prior\|ModifiedPrior\|TwoPieceGaussian`, `LumpedState`, `ExcessFragment`, `PartnerConcentration[molecule/cm^3]` |
 
-Energy units: `[1/cm]`, `[kcal/mol]`, `[kJ/mol]`. Pressure units: `[torr]`, `[atm]`, `[bar]`. With a `Preparation` block the deck needs no `Reactant` with an entrance barrier unless `ThermalEntrance` is used.
-
-**What each method does with it:**
-- **TimeIntegration** integrates the whole preparation. Impulses are applied as exact jumps, and rate breakpoints and bath changes are events of the integrator.
-  - **Output per time:**
-    - well populations, cumulative yields and instantaneous fluxes;
-    - the injected amount of every channel;
-    - the mean energy above the well bottom and the fraction above the lowest threshold;
-    - the loss hazard Σq/N;
-    - the balance (Σn + ΣY − injected)/injected.
-  - Without a `Bath` block, one run per (T, p) of the deck.
-- **SteadyStateOlzmann** and **SteadyStateAbsorbingBarrier** use the shape of the sources:
-  - the rate-weighted shape of the open-ended feeds;
-  - otherwise the amount-weighted shape of everything injected.
-- **CSE** projects every source onto the eigenvectors. The result is the species populations after relaxation and the prompt bimolecular products (Georgievskii et al. 2013, eqs. 37–41); prompt + species × their fates = k_x^T 𝐉⁻¹F.
-
-**Low-energy reservoirs.** Where a well has a low-energy reservoir state, the part of a distribution inside it takes the reservoir's Boltzmann shape at the bath temperature. A cold preparation in a hot bath is therefore partly heated at once. The report lists, per bath segment, the fraction of every distribution that lies in a reservoir or below an absorbing barrier, with the mean energy before and after.
-
-Example: `examples/c2h3_prepared_experiment.inp`.
+Examples: `examples/c2h3_prepared_experiment.inp` (laser pulse, entrance feed and shock in one run); `validation/c2h3_mess_example/input/c2h3_shock_incubation.inp` (shock heating with the CSE comparison).
 
 ### Tunneling model (`--tunneling`)
 

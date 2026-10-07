@@ -216,6 +216,26 @@ pub struct SourceProjection {
     pub prompt_bimolecular: Vec<f64>,
 }
 
+/// Check of a source projection with injected total `total`: without a bimolecular group, sum_g n_g + sum_nu prompt_nu =
+/// total within 1e-6. The sum is exact with all eigenpairs: the population of mode lambda is sum_g sqrt(Q_g) M_(g,lambda)
+/// and its loss Lambda_lambda times that is sum_nu p_lambda^(nu) (reports/nonthermal_sources_design.md, Section 12.2);
+/// wells of a bimolecular group carry population of the chemical modes that is in neither sum. A violation is rounding
+/// amplified by the back transformation (Frankcombe, Smith, J. Theor. Comput. Chem. 2, 179 (2003)). Negative parts are
+/// not checked: they are physical for a preparation colder than the steady state, whose products form later than those
+/// of the CSE species decaying from t = 0 (a negative prompt yield; the incubation).
+pub(crate) fn projection_warnings(name: &str, species: &[f64], prompt: &[f64], total: f64, bimolecular_group: bool) -> Vec<String> {
+    let mut warnings = Vec::new();
+    let sum: f64 = species.iter().chain(prompt).sum();
+    if !bimolecular_group && (sum - total).abs() > 1e-6 * total.abs() {
+        warnings.push(format!(
+            "source projection '{name}': species + prompt sum to {sum:.9e}, the source to {total:.9e}; with all eigenpairs \
+             they are equal, so the eigenpairs are not resolved in double precision (Frankcombe, Smith 2003). What to do: \
+             use the direct time integration for this preparation (`Method TimeIntegration`)."
+        ));
+    }
+    warnings
+}
+
 /// Rate coefficients from a bimolecular species, the reactant or a product (cm3 s-1).
 #[derive(Debug, Clone)]
 pub struct ReactantRates {
@@ -580,9 +600,16 @@ pub fn phenomenological_rate_coefficients_with_sources(
                     .sum()
             })
             .collect();
-        let species_populations = (0..n).map(|g| q[g].sqrt() * (0..n).map(|l| m[g][l] * c[l]).sum::<f64>()).collect();
-        let prompt_bimolecular =
+        let species_populations: Vec<f64> = (0..n).map(|g| q[g].sqrt() * (0..n).map(|l| m[g][l] * c[l]).sum::<f64>()).collect();
+        let prompt_bimolecular: Vec<f64> =
             (0..bimolecular.len()).map(|nu| (n..values.len()).map(|l| p[nu][l] * c[l] / values[l]).sum()).collect();
+        warnings.extend(projection_warnings(
+            name,
+            &species_populations,
+            &prompt_bimolecular,
+            on_states.iter().sum(),
+            !partition.bimolecular_group.is_empty(),
+        ));
         source_projections.push(SourceProjection { name: name.to_string(), species_populations, prompt_bimolecular });
     }
 
@@ -1147,5 +1174,20 @@ pub(crate) mod tests {
                 + (0..rates.wells.len()).map(|i| projection.species_populations[i] * fates[i][x]).sum::<f64>();
             assert!((cse - expected).abs() < 1e-7 * expected.max(1e-3), "{name}: CSE {cse:e} vs steady state {expected:e}");
         }
+    }
+
+    #[test]
+    fn a_projection_that_loses_population_or_turns_negative_is_flagged() {
+        // With all eigenpairs, sum_g n_g + sum_nu prompt_nu = sum F exactly (reports/nonthermal_sources_design.md,
+        // Section 12.2); a deviation or a negative part is rounding amplified by the back transformation (Frankcombe,
+        // Smith 2003).
+        assert!(projection_warnings("ok", &[0.6, 0.3], &[0.1], 1.0, false).is_empty());
+        let lost = projection_warnings("lost", &[0.6, 0.3], &[0.05], 1.0, false);
+        assert!(lost.len() == 1 && lost[0].contains("'lost'") && lost[0].contains("sum"), "{lost:?}");
+        // Negative parts are physical: a preparation colder than the steady state forms its products later than the
+        // species of the CSE description, which decay from t = 0 (a negative prompt yield, species > 1; the incubation).
+        assert!(projection_warnings("cold", &[1.0002], &[-0.0002], 1.0, false).is_empty());
+        // With a bimolecular group the sum is not complete and is not checked.
+        assert!(projection_warnings("group", &[0.6, 0.3], &[0.05], 1.0, true).is_empty());
     }
 }

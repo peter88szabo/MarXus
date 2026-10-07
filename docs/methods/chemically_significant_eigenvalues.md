@@ -115,6 +115,15 @@ Eqs. 27, 28 and 30 above hold for the groups with $`\lambda \le n`$; eq. 21 runs
 - **Rate coefficients from every product** P: P → species, P → other channels, capture, return, net (cm³/s).
 - **κ** of every well and bimolecular channel.
 
+**Prepared distributions** (`Preparation` block of the deck; [CSE source projection](../features/cse_source_projection.md)): every source F is projected onto the eigenvectors (G13 eqs. 13, 14, 24, 37–41).
+- **Projection:** c_λ = ⟨f^λ|F⟩.
+- **Species populations after the relaxation:** n_g = √Q_g Σ_chem M_gλ c_λ.
+- **Prompt yields:** Σ_relax p_λ^ν c_λ/Λ_λ, formed during the relaxation.
+- **Identity:** prompt + Σ_g n_g × (fate of g) = k_x^T 𝐉⁻¹F.
+- **Precision check:** Σ n + Σ prompt = ΣF holds exactly with all eigenpairs; a violation is a warning (Frankcombe, Smith, J. Theor. Comput. Chem. 2, 179 (2003)).
+- **Negative prompt yields** are physical: a preparation colder than the steady state reacts later than the species decaying from t = 0. For one well, ln(n)/λ₁ is the incubation time.
+- **CSE validity in time** (`CompareWithCse`, with TimeIntegration): the projected description is propagated in time and compared with the master equation ([CSE validity in time](../features/cse_validity_in_time.md)).
+
 All of these come in three views: by temperature, by pressure, and temperature–pressure. When the species differ between conditions, every species of every condition is a row, empty where it does not exist. The diagnostics table gives the number of species per condition.
 
 ## 6. Validity and limits
@@ -123,7 +132,7 @@ All of these come in three views: by temperature, by pressure, and temperature�
 
 **Rounding noise.** Entries many orders of magnitude below the largest of their row are rounding noise, and may be negative. MESS shows the same.
 
-**What it does not give:** the yields of a continuously fed system, and non-thermal sources. (The long-time yields of a thermal source do come out exactly; see Section 7.)
+**What it does not give:** the time dependence before the relaxation is over, time profiles of sources and bath histories (TimeIntegration gives them). Non-thermal sources are projected onto prompt yields and post-relaxation species populations (Section 5). The long-time yields of a thermal source come out exactly; see Section 7.
 
 ## 7. Validation and identities
 
@@ -167,7 +176,8 @@ All of these come in three views: by temperature, by pressure, and temperature�
 
 - `src/masterequation/chemically_significant_eigenvalues.rs` (`phenomenological_rate_coefficients`, `reactant_yields`, `CseMerging`, `chemical_eigenvalue_count`, `partition_wells`), `chemical_activation_driver.rs` (`run_phenomenological_rates`), `numeric/lapack_interface.rs`, `numeric/dense_inverse.rs`, `report_sections.rs` (`cse_groups`, `write_cse_species_tables`).
 - `chemical_activation_from_mess_input.rs`: `bimolecular_high_pressure_rates`, the capture rate coefficients of all bimolecular species.
-- Reports: `reports/chemically_significant_eigenvalues_method.md`, `reports/cse_species_merging.md`, `reports/cse_kappa_and_product_rates.md`.
+- `phenomenological_rate_coefficients_with_sources` and `projection_warnings` (source projections), `cse_time_evolution.rs` (`compare_cse_with_time_integration`), `report_sections.rs` (`write_cse_source_projections`, `write_cse_time_comparison`).
+- Reports: `reports/chemically_significant_eigenvalues_method.md`, `reports/cse_species_merging.md`, `reports/cse_kappa_and_product_rates.md`, `reports/nonthermal_sources_design.md` (Sections 6, 10.3, 12).
 
 ## 9. References
 

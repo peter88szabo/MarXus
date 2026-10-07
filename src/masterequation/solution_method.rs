@@ -88,6 +88,10 @@ pub struct SolutionSettings {
     /// `ChemicalSubspaceCriterion` (CSE): how ChemicalEigenvalueMax selects the chemical eigenvectors. Default (None):
     /// the relaxational projection 1 - F_ne, as MESS's direct method.
     pub chemical_subspace_criterion: Option<ChemicalSubspaceCriterion>,
+    /// `CompareWithCse` (`--compare-with-cse`): with a Preparation in a constant bath, compare the time integration with
+    /// the CSE description propagated in time; the value is the tolerance of the agreement time
+    /// (`cse_time_evolution.rs`).
+    pub cse_comparison_tolerance: Option<f64>,
 }
 
 /// Eigen-solver and sum-rule tolerance of the thermal eigenpair of SteadyStateOlzmann.
@@ -106,6 +110,8 @@ pub struct TimeIntegrationPlan {
     pub times_per_decade: usize,
     pub relative_tolerance: f64,
     pub absolute_tolerance: f64,
+    /// Tolerance of the CSE comparison in time; None: no comparison.
+    pub cse_comparison_tolerance: Option<f64>,
 }
 
 /// The solver to run, with all its settings.
@@ -225,6 +231,7 @@ const INITIAL_STATE: &str = "InitialState (--initial)";
 const TIME_RANGE: &str = "TimeRange[s] (--time-range)";
 const TIMES_PER_DECADE: &str = "TimesPerDecade (--times-per-decade)";
 const INTEGRATION_TOLERANCE: &str = "IntegrationTolerance (--integration-tolerance)";
+const CSE_COMPARISON: &str = "CompareWithCse (--compare-with-cse)";
 
 /// Explanation for the removed keyword `SteadyState` (`--steady-state`).
 pub const STEADY_STATE_KEYWORD_REPLACED: &str =
@@ -249,6 +256,7 @@ impl SolutionSettings {
             collision_integral: other.collision_integral.or(self.collision_integral),
             rotor_reduced_moment: other.rotor_reduced_moment.or(self.rotor_reduced_moment),
             chemical_subspace_criterion: other.chemical_subspace_criterion.or(self.chemical_subspace_criterion),
+            cse_comparison_tolerance: other.cse_comparison_tolerance.or(self.cse_comparison_tolerance),
         }
     }
 
@@ -265,6 +273,7 @@ impl SolutionSettings {
         for (name, value) in [
             (ABSORBING_BARRIER, self.absorbing_barrier_kt),
             (SUM_RULE_TOLERANCE, self.sum_rule_tolerance),
+            (CSE_COMPARISON, self.cse_comparison_tolerance),
         ] {
             if let Some(v) = value.filter(|v| !(v.is_finite() && *v > 0.0)) {
                 return Err(format!("{name}: {v} is not a positive number."));
@@ -328,6 +337,7 @@ impl SolutionSettings {
             (TIME_RANGE, self.time_range_s.is_some()),
             (TIMES_PER_DECADE, self.times_per_decade.is_some()),
             (INTEGRATION_TOLERANCE, self.integration_tolerance.is_some()),
+            (CSE_COMPARISON, self.cse_comparison_tolerance.is_some()),
         ] {
             note(name, !time && given, "TimeIntegration");
         }
@@ -369,6 +379,7 @@ impl SolutionSettings {
                     .integration_tolerance
                     .unwrap_or(DEFAULT_INTEGRATION_TOLERANCE),
                 absolute_tolerance: INTEGRATION_ABSOLUTE_TOLERANCE,
+                cse_comparison_tolerance: self.cse_comparison_tolerance,
             }),
         };
         Ok(ResolvedSolution { solution, unused_settings })
@@ -662,6 +673,7 @@ mod tests {
                 times_per_decade: DEFAULT_TIMES_PER_DECADE,
                 relative_tolerance: DEFAULT_INTEGRATION_TOLERANCE,
                 absolute_tolerance: INTEGRATION_ABSOLUTE_TOLERANCE,
+                cse_comparison_tolerance: None,
             })
         );
     }
@@ -697,6 +709,13 @@ mod tests {
         .resolve()
         .unwrap_err()
         .contains("IntegrationTolerance"));
+        assert!(SolutionSettings { cse_comparison_tolerance: Some(0.0), ..ti }.resolve().unwrap_err().contains("CompareWithCse"));
+        match (SolutionSettings { cse_comparison_tolerance: Some(1e-3), ..ti }).resolve().unwrap().solution {
+            Solution::TimeIntegration(plan) => assert_eq!(plan.cse_comparison_tolerance, Some(1e-3)),
+            other => panic!("{other:?}"),
+        }
+        let cse = SolutionSettings { cse_comparison_tolerance: Some(1e-3), ..with(SolutionMethod::ChemicallySignificantEigenvalues) };
+        assert!(cse.resolve().unwrap().unused_settings.iter().any(|n| n.contains("CompareWithCse")));
         let unused = SolutionSettings {
             absorbing_barrier_kt: Some(5.0),
             ..ti

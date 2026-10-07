@@ -55,6 +55,9 @@
 //! --time-range T1 T2     time integration: first and last output time in s, default 1e-12 1e2 [TimeRange[s]]
 //! --times-per-decade N   time integration: output times per decade, default 4 [TimesPerDecade]
 //! --integration-tolerance X   time integration: relative tolerance, default 1e-6 [IntegrationTolerance]
+//! --compare-with-cse X   time integration of a Preparation in a constant bath: also propagate the CSE description of
+//!                        the same preparation and report where it agrees with the master equation within X
+//!                        (deviation / injected amount) [CompareWithCse X]
 //! --collision-integral   Lennard-Jones collision integral Omega(2,2)*: `neufeld` (Neufeld, Janzen, Aziz 1972; default)
 //!                        or `troe` (Troe 1977, eq. 3.3, a +-7% approximation) [CollisionIntegral Neufeld | Troe]
 //! --rotor-reduced-moment reduced moment of the internal rotors (`Rotor Hindered`, `Rotor Free`) from the geometry:
@@ -119,13 +122,17 @@ use MarXus::masterequation::direct_time_integration::{
 };
 use MarXus::masterequation::mess_input::parse_mess_input_file;
 use MarXus::masterequation::preparation_input::{parse_preparation_in, preparation_from_deck, PreparationSpec};
-use MarXus::masterequation::prepared_time_integration::{integrate_preparation, steady_source_shape, Preparation, TransientResult};
+use MarXus::masterequation::prepared_time_integration::{
+    effective_coefficient, integrate_preparation, steady_source_shape, Preparation, TransientResult,
+};
+use MarXus::masterequation::chemical_activation_eigen::EigenSolver;
+use MarXus::masterequation::cse_time_evolution::{compare_cse_with_time_integration, CseTimeComparison};
 use MarXus::masterequation::parallel_conditions::ConditionPool;
 use MarXus::masterequation::report_sections::{
     cse_groups, partition_function_groups, steady_state_groups, thermal_groups, time_integration_groups,
     well_fate_groups, write_cse_source_projections, write_cse_species_tables, write_energetics, write_groups,
-    write_network_summary, write_partition_functions, write_preparation_summary, write_time_evolution_tables,
-    write_transient_tables,
+    channel_labels, write_cse_time_comparison, write_network_summary, write_partition_functions,
+    write_preparation_summary, write_time_evolution_tables, write_transient_tables,
 };
 use MarXus::masterequation::report_tables::{write_groups_csv, Quantity, QuantityGroup};
 use MarXus::numeric::lapack_interface::set_blas_threads;
@@ -181,6 +188,7 @@ fn main() -> Result<(), String> {
                         .map_err(|_| format!("--times-per-decade: invalid number '{v}'"))?,
                 );
             }
+            "--compare-with-cse" => command_line.cse_comparison_tolerance = Some(number(value()?)?),
             "--integration-tolerance" => {
                 command_line.integration_tolerance = Some(number(value()?)?)
             }
@@ -211,7 +219,8 @@ fn main() -> Result<(), String> {
             other if other.starts_with("--") => {
                 return Err(format!(
                     "unknown option '{other}' (--method, --barrier-kt, --eigen-solver, --sum-rule-tolerance, \
-                     --integrator, --initial, --time-range, --times-per-decade, --integration-tolerance, --csv, \
+                     --integrator, --initial, --time-range, --times-per-decade, --integration-tolerance, \
+                     --compare-with-cse, --csv, \
                      --ncore, --tunneling, --collision-integral, --rotor-reduced-moment, --chemical-subspace-criterion)"
                 ))
             }
@@ -1001,11 +1010,28 @@ fn main() -> Result<(), String> {
             absolute_tolerance: plan.absolute_tolerance,
             times_s: log_spaced_times(plan.time_range_s.0, plan.time_range_s.1, plan.times_per_decade),
         };
+        // The CSE description propagated in time (CompareWithCse), for a constant bath.
+        let compare = |prep: &Preparation, r: &TransientResult| -> Option<Result<CseTimeComparison, String>> {
+            plan.cse_comparison_tolerance.map(|tolerance| {
+                compare_cse_with_time_integration(
+                    network,
+                    model.collision_model,
+                    prep,
+                    &integration,
+                    EigenSolver::FullDecompositionLapack,
+                    &merging,
+                    r,
+                    tolerance,
+                )
+            })
+        };
         // With a bath history: one run; otherwise one run per condition of the deck.
-        let runs: Vec<(String, Result<(Preparation, TransientResult), String>)> = if spec.bath.is_some() {
+        type Run = (Preparation, TransientResult, Option<Result<CseTimeComparison, String>>);
+        let runs: Vec<(String, Result<Run, String>)> = if spec.bath.is_some() {
             let run = prepared_at(temperatures[0], pressures[0]).and_then(|prep| {
                 let r = integrate_preparation(network, model.collision_model, SteadyState::Final, &prep, &integration)?;
-                Ok((prep, r))
+                let c = compare(&prep, &r);
+                Ok((prep, r, c))
             });
             vec![("bath history of the Preparation block".to_string(), run)]
         } else {
@@ -1018,7 +1044,8 @@ fn main() -> Result<(), String> {
             let outcomes = pool.map_conditions(&temperatures, &pressures, |t, p| {
                 let prep = prepared_at(t, p)?;
                 let r = integrate_preparation(network, model.collision_model, SteadyState::Final, &prep, &integration)?;
-                Ok((prep, r))
+                let c = compare(&prep, &r);
+                Ok((prep, r, c))
             });
             keys.into_iter().zip(outcomes).collect()
         };
@@ -1032,10 +1059,13 @@ fn main() -> Result<(), String> {
         .map_err(io)?;
         for (label, outcome) in &runs {
             match outcome {
-                Ok((prep, result)) => {
+                Ok((prep, result, comparison)) => {
                     writeln!(report, "--- {label} ---\n").map_err(io)?;
                     write_preparation_summary(&mut report, network, prep, &result.projections).map_err(io)?;
                     write_transient_tables(&mut report, network, label, result).map_err(io)?;
+                    for warning in &result.warnings {
+                        writeln!(report, "  note: {warning}").map_err(io)?;
+                    }
                     writeln!(machine, "\n# prepared time integration: {label}").map_err(io)?;
                     let mut header = vec!["t[s]".to_string()];
                     header.extend(network.wells.iter().map(|w| format!("N({})", w.name)));
@@ -1045,8 +1075,24 @@ fn main() -> Result<(), String> {
                     header.extend(network.wells.iter().map(|w| format!("E({})", w.name)));
                     header.extend(network.wells.iter().map(|w| format!("tail({})", w.name)));
                     header.extend(["k_inst".to_string(), "balance".to_string()]);
+                    let labels: Vec<String> = channel_labels(network).into_iter().flatten().collect();
+                    header.extend(labels.iter().map(|l| format!("r({l})")));
+                    header.extend(network.wells.iter().map(|w| format!("R({})", w.name)));
+                    header.extend(labels.iter().map(|l| format!("k^e({l})")));
+                    for q in ["sd", "dE/dt", "E_f", "tau_vib"] {
+                        header.extend(network.wells.iter().map(|w| format!("{q}({})", w.name)));
+                    }
+                    header.push("t_inc".to_string());
+                    header.extend(network.wells.iter().map(|w| format!("Z({})", w.name)));
                     writeln!(machine, "{}", header.join(",")).map_err(io)?;
-                    for point in &result.points {
+                    let times: Vec<f64> = result.points.iter().map(|p| p.time_s).collect();
+                    let effective: Vec<Vec<f64>> = (0..labels.len())
+                        .map(|j| {
+                            let r: Vec<f64> = result.points.iter().map(|p| p.flux_coefficients_s_inv.iter().flatten().nth(j).copied().unwrap_or(f64::NAN)).collect();
+                            effective_coefficient(&times, &r)
+                        })
+                        .collect();
+                    for (k, point) in result.points.iter().enumerate() {
                         let mut row = vec![format!("{:.6e}", point.time_s)];
                         row.extend(
                             point
@@ -1058,9 +1104,61 @@ fn main() -> Result<(), String> {
                                 .chain(&point.mean_energy_above_bottom_cm1)
                                 .chain(&point.tail_fraction)
                                 .chain([point.loss_hazard_s_inv, point.balance_deviation].iter())
+                                .chain(point.flux_coefficients_s_inv.iter().flatten())
+                                .chain(&point.loss_coefficients_s_inv)
+                                .chain(effective.iter().map(|e| &e[k]))
+                                .chain(&point.energy_spread_cm1)
+                                .chain(&point.mean_energy_rate_cm1_s)
+                                .chain(&point.final_mean_energy_cm1)
+                                .chain(&point.vibrational_relaxation_time_s)
+                                .chain(std::iter::once(&point.incubation_time_s))
+                                .chain(&point.collision_numbers)
                                 .map(|v| format!("{v:.6e}")),
                         );
                         writeln!(machine, "{}", row.join(",")).map_err(io)?;
+                    }
+                    match comparison {
+                        None => {}
+                        Some(Ok(c)) => {
+                            writeln!(report, "\nCSE description in time: {label}\n").map_err(io)?;
+                            write_cse_time_comparison(&mut report, c).map_err(io)?;
+                            writeln!(machine, "\n# CSE description in time against the time integration: {label}").map_err(io)?;
+                            writeln!(
+                                machine,
+                                "# tolerance {:e}; agreement time t* [s] {}; t* lambda_relax {}; conversion at t* {}",
+                                c.tolerance,
+                                c.agreement_time_s.map_or("none".to_string(), |t| format!("{t:.6e}")),
+                                c.agreement_time_s.map_or("none".to_string(), |t| format!("{:.6e}", t * c.relaxation_eigenvalue_s_inv)),
+                                format!("{:.6e}", c.conversion_at_agreement)
+                            )
+                            .map_err(io)?;
+                            let mut header = vec!["t[s]".to_string(), "abs_deviation".to_string(), "rel_deviation".to_string()];
+                            for sp in &c.species {
+                                header.push(format!("X({sp})_direct"));
+                                header.push(format!("X({sp})_CSE"));
+                            }
+                            for b in &c.bimolecular {
+                                header.push(format!("Y({b})_direct"));
+                                header.push(format!("Y({b})_CSE"));
+                            }
+                            writeln!(machine, "{}", header.join(",")).map_err(io)?;
+                            for k in 0..c.times_s.len() {
+                                let mut row = vec![format!("{:.6e}", c.times_s[k]), format!("{:.6e}", c.deviation[k]), format!("{:.6e}", c.relative_deviation[k])];
+                                for j in 0..c.species.len() {
+                                    row.push(format!("{:.6e}", c.direct_species[k][j]));
+                                    row.push(format!("{:.6e}", c.cse_species[k][j]));
+                                }
+                                for j in 0..c.bimolecular.len() {
+                                    row.push(format!("{:.6e}", c.direct_yields[k][j]));
+                                    row.push(format!("{:.6e}", c.cse_yields[k][j]));
+                                }
+                                writeln!(machine, "{}", row.join(",")).map_err(io)?;
+                            }
+                        }
+                        Some(Err(e)) => {
+                            writeln!(report, "\nCSE description in time: not available: {e}").map_err(io)?;
+                            writeln!(machine, "# CSE description in time: not available: {e}").map_err(io)?;
+                        }
                     }
                 }
                 Err(e) => {

@@ -28,10 +28,11 @@ use super::chemical_activation_observables::ChemicalActivationResult;
 use super::chemically_significant_eigenvalues::{reactant_yields, ReactantRates, ReactantYields};
 use super::direct_time_integration::{TimeEvolution, TimePoint};
 use super::prepared_distributions::GrainDistribution;
-use super::prepared_time_integration::{Preparation, ProjectionNote, TransientPoint, TransientResult};
+use super::cse_time_evolution::CseTimeComparison;
+use super::prepared_time_integration::{effective_coefficient, Preparation, ProjectionNote, TransientPoint, TransientResult};
 use super::mess_input::{MessBarrier, MessBarrierCore, MessDeck, TunnelingSpecification};
 use super::report_tables::{
-    sci, write_labelled_table, write_tables_by_pressure, write_tables_by_temperature,
+    sci, write_labelled_table, write_table, write_tables_by_pressure, write_tables_by_temperature,
     write_temperature_pressure_tables, Quantity, QuantityGroup,
 };
 
@@ -291,6 +292,7 @@ pub fn write_network_summary<W: Write>(
             let to = match &channel.destination {
                 ChannelDestination::Products { name } => name.clone(),
                 ChannelDestination::Well { index } => network.wells[*index].name.clone(),
+                ChannelDestination::Fragment { index, partner, .. } => format!("{}+{}", network.wells[*index].name, partner.name),
             };
             let model = deck
                 .barriers
@@ -360,7 +362,7 @@ fn channel_name(network: &ChemicalActivationNetwork, well: usize, channel: usize
     let w = &network.wells[well];
     let target = match &w.channels[channel].destination {
         ChannelDestination::Products { name } => name.clone(),
-        ChannelDestination::Well { index } => network.wells[*index].name.clone(),
+        ChannelDestination::Well { index } | ChannelDestination::Fragment { index, .. } => network.wells[*index].name.clone(),
     };
     format!("{}->{target}", w.name)
 }
@@ -411,7 +413,7 @@ fn product_channels(network: &ChemicalActivationNetwork) -> Vec<(usize, usize)> 
 fn product_name(network: &ChemicalActivationNetwork, well: usize, channel: usize) -> Option<&str> {
     match &network.wells[well].channels[channel].destination {
         ChannelDestination::Products { name } => Some(name),
-        ChannelDestination::Well { .. } => None,
+        ChannelDestination::Well { .. } | ChannelDestination::Fragment { .. } => None,
     }
 }
 
@@ -1456,6 +1458,17 @@ pub fn write_transient_tables<W: Write>(
     let rows = |pick: &dyn Fn(&TransientPoint) -> Vec<f64>| -> Vec<(String, Vec<Option<f64>>)> {
         result.points.iter().map(|p| (sci(p.time_s), pick(p).into_iter().map(Some).collect())).collect()
     };
+    let labels = channel_labels(network);
+    let channel_count: usize = labels.iter().map(|l| l.len()).sum();
+    let flux_columns: Vec<String> =
+        labels.iter().flatten().map(|l| format!("r({l})")).chain(wells.iter().map(|w| format!("R({w})"))).collect();
+    // k^e of every channel: per output time, the channels in the order of the flux columns.
+    let times: Vec<f64> = result.points.iter().map(|p| p.time_s).collect();
+    let series: Vec<Vec<f64>> = (0..channel_count)
+        .map(|j| result.points.iter().map(|p| p.flux_coefficients_s_inv.iter().flatten().nth(j).copied().unwrap_or(f64::NAN)).collect())
+        .collect();
+    let per_channel: Vec<Vec<f64>> = series.iter().map(|r| effective_coefficient(&times, r)).collect();
+    let effective: Vec<Vec<f64>> = (0..times.len()).map(|k| per_channel.iter().map(|c| c[k]).collect()).collect();
     let groups: Vec<(&str, Vec<String>, Box<dyn Fn(&TransientPoint) -> Vec<f64>>)> = vec![
         ("Populations C_w and cumulative yields Y_x", wells.iter().cloned().chain(result.exits.iter().cloned()).collect(), Box::new(|p: &TransientPoint| p.well_populations.iter().chain(&p.exit_yields).copied().collect())),
         ("Instantaneous fluxes q_x (1/s)", result.exits.clone(), Box::new(|p: &TransientPoint| p.exit_fluxes.clone())),
@@ -1466,6 +1479,37 @@ pub fn write_transient_tables<W: Write>(
             Box::new(|p: &TransientPoint| p.mean_energy_above_bottom_cm1.iter().chain(&p.tail_fraction).copied().collect()),
         ),
         ("Loss hazard k_inst (1/s) and balance deviation", vec!["k_inst".into(), "balance".into()], Box::new(|p: &TransientPoint| vec![p.loss_hazard_s_inv, p.balance_deviation])),
+        (
+            "Flux coefficients r (1/s) of every channel and the total loss coefficient R of every well (Barker, Frenklach, Golden 2015, eqs. A5, 1)",
+            flux_columns.clone(),
+            Box::new(|p: &TransientPoint| p.flux_coefficients_s_inv.iter().flatten().chain(&p.loss_coefficients_s_inv).copied().collect()),
+        ),
+        (
+            "Effective coefficients k^e(t_1, t) (1/s), t_1 the first output time (Barker, Frenklach, Golden 2015, eq. A7)",
+            flux_columns.iter().take(channel_count).map(|c| c.replacen("r(", "k^e(", 1)).collect(),
+            Box::new(|p: &TransientPoint| {
+                let k = result.points.iter().position(|q| q.time_s == p.time_s).unwrap();
+                effective[k].clone()
+            }),
+        ),
+        (
+            "Energy spread, d<E>/dt and vibrational relaxation (Barker, King 1995, eq. 11)",
+            ["sd", "dE/dt", "E_f", "tau_vib"].iter().flat_map(|q| wells.iter().map(move |w| format!("{q}({w})"))).collect(),
+            Box::new(|p: &TransientPoint| {
+                p.energy_spread_cm1
+                    .iter()
+                    .chain(&p.mean_energy_rate_cm1_s)
+                    .chain(&p.final_mean_energy_cm1)
+                    .chain(&p.vibrational_relaxation_time_s)
+                    .copied()
+                    .collect()
+            }),
+        ),
+        (
+            "Incubation time (Barker, King 1995, eq. 9) and collision numbers",
+            std::iter::once("t_inc".to_string()).chain(wells.iter().map(|w| format!("Z({w})"))).collect(),
+            Box::new(|p: &TransientPoint| std::iter::once(p.incubation_time_s).chain(p.collision_numbers.iter().copied()).collect()),
+        ),
     ];
     for (title, columns, pick) in &groups {
         if columns.is_empty() {
@@ -1475,6 +1519,92 @@ pub fn write_transient_tables<W: Write>(
         write_labelled_table(out, "t[s]", columns, &rows(pick.as_ref()))?;
     }
     Ok(())
+}
+
+/// Labels "well->destination" of the channels of every well (destination: the well or the bimolecular products), with the
+/// channel name in brackets where a well has two channels to the same destination.
+pub fn channel_labels(network: &ChemicalActivationNetwork) -> Vec<Vec<String>> {
+    network
+        .wells
+        .iter()
+        .map(|well| {
+            let plain: Vec<String> = well
+                .channels
+                .iter()
+                .map(|c| match &c.destination {
+                    ChannelDestination::Well { index } | ChannelDestination::Fragment { index, .. } => {
+                        format!("{}->{}", well.name, network.wells[*index].name)
+                    }
+                    ChannelDestination::Products { name } => format!("{}->{name}", well.name),
+                })
+                .collect();
+            plain
+                .iter()
+                .zip(&well.channels)
+                .map(|(l, c)| if plain.iter().filter(|m| *m == l).count() > 1 { format!("{l}[{}]", c.name) } else { l.clone() })
+                .collect()
+        })
+        .collect()
+}
+
+/// The CSE description of a prepared experiment propagated in time against the direct integration
+/// (`cse_time_evolution.rs`): the agreement time t*, t* in units of the slowest relaxation time, the conversion at t*, and per
+/// output time the deviation, where it is largest and the species populations X and bimolecular yields Y of both.
+pub fn write_cse_time_comparison<W: Write>(out: &mut W, c: &CseTimeComparison) -> std::io::Result<()> {
+    writeln!(
+        out,
+        "  CSE description propagated in time (dX/dt = K X + sources, prompt yields at injection) against the direct \
+         integration (Miller et al., J. Phys. Chem. A 120, 306 (2016); Barker, Frenklach, Golden, J. Phys. Chem. A 120, 313 \
+         (2016)).\n  abs. deviation = max |CSE - direct| / injected amount; rel. deviation = max |CSE - direct| / max(|CSE|, \
+         |direct|) over the quantities above 1e-10 of the injected amount (it shows a delayed onset of products);\n  \
+         a negative prompt yield means products later than the CSE species decaying from t = 0 (incubation)."
+    )?;
+    writeln!(
+        out,
+        "  chemical eigenvalues (1/s): {}; lowest relaxation eigenvalue lambda_relax = {} 1/s",
+        c.chemical_eigenvalues_s_inv.iter().map(|x| sci(*x)).collect::<Vec<_>>().join(", "),
+        sci(c.relaxation_eigenvalue_s_inv)
+    )?;
+    match c.agreement_time_s {
+        Some(t) => writeln!(
+            out,
+            "  agreement within {} (rel. deviation) from t* = {} s (every later output time); t* lambda_relax = {}; conversion at t*: {}",
+            sci(c.tolerance),
+            sci(t),
+            sci(t * c.relaxation_eigenvalue_s_inv),
+            sci(c.conversion_at_agreement)
+        )?,
+        None => writeln!(out, "  no agreement within {} up to the last output time", sci(c.tolerance))?,
+    }
+    for note in &c.notes {
+        writeln!(out, "  note: {note}")?;
+    }
+    writeln!(out)?;
+    let mut columns: Vec<String> = vec!["abs. deviation".into(), "rel. deviation".into(), "largest at".into()];
+    for s in &c.species {
+        columns.push(format!("X({s}) direct"));
+        columns.push(format!("X({s}) CSE"));
+    }
+    for b in &c.bimolecular {
+        columns.push(format!("Y({b}) direct"));
+        columns.push(format!("Y({b}) CSE"));
+    }
+    let rows: Vec<(String, Vec<String>)> = (0..c.times_s.len())
+        .map(|k| {
+            let mut values = vec![sci(c.deviation[k]), sci(c.relative_deviation[k]), c.largest[k].clone()];
+            for j in 0..c.species.len() {
+                values.push(sci(c.direct_species[k][j]));
+                values.push(sci(c.cse_species[k][j]));
+            }
+            for j in 0..c.bimolecular.len() {
+                values.push(sci(c.direct_yields[k][j]));
+                values.push(sci(c.cse_yields[k][j]));
+            }
+            (sci(c.times_s[k]), values)
+        })
+        .collect();
+    let columns: Vec<&str> = columns.iter().map(|s| s.as_str()).collect();
+    write_table(out, "t[s]", true, &columns, &rows)
 }
 
 /// The time evolution of every condition: a table with the output times as rows and the population of
@@ -2424,6 +2554,14 @@ mod tests {
             tail_fraction: vec![1e-3, 0.0],
             loss_hazard_s_inv: 3.0,
             balance_deviation: 1e-15,
+            flux_coefficients_s_inv: vec![vec![1.0, 2.0, 0.5], vec![0.25, 0.75]],
+            loss_coefficients_s_inv: vec![3.5, 1.0],
+            energy_spread_cm1: vec![100.0, 50.0],
+            mean_energy_rate_cm1_s: vec![-1e9, 2e8],
+            final_mean_energy_cm1: vec![300.0, 200.0],
+            vibrational_relaxation_time_s: vec![2e-7, 2.5e-7],
+            incubation_time_s: 4e-6,
+            collision_numbers: vec![1e2, 1.2e2],
         };
         let result = TransientResult {
             exits: vec!["B->P".into()],
@@ -2433,6 +2571,7 @@ mod tests {
             projections: vec![],
             statistics: Default::default(),
             factorizations_computed: 0,
+            warnings: vec![],
         };
         let mut out = Vec::new();
         write_transient_tables(&mut out, &network, "run", &result).unwrap();
@@ -2447,7 +2586,50 @@ mod tests {
         }
         assert!(!text.contains("Injected amounts"), "{text}");
         assert!(text.contains("<E>(A)") && text.contains("tail(B)") && text.contains("B->P"), "{text}");
-        assert_eq!(text.matches("1.00000e-08").count(), 4, "one row per table\n{text}");
+        for title in [
+            "Flux coefficients r (1/s) of every channel and the total loss coefficient R of every well (Barker, Frenklach, Golden 2015, eqs. A5, 1):",
+            "Effective coefficients k^e(t_1, t) (1/s), t_1 the first output time (Barker, Frenklach, Golden 2015, eq. A7):",
+            "Energy spread, d<E>/dt and vibrational relaxation (Barker, King 1995, eq. 11):",
+            "Incubation time (Barker, King 1995, eq. 9) and collision numbers:",
+        ] {
+            assert!(text.contains(title), "{title}\n{text}");
+        }
+        // Channels are labelled by well and destination: A has A->A-products, A->B and A->reactants in `network()`.
+        assert!(text.contains("r(A->B)") && text.contains("r(B->A)") && text.contains("R(A)"), "{text}");
+        assert!(text.contains("sd(A)") && text.contains("E_f(B)") && text.contains("tau_vib(A)") && text.contains("t_inc") && text.contains("Z(B)"), "{text}");
+        assert_eq!(text.matches("1.00000e-08").count(), 8, "one row per table\n{text}");
+    }
+
+    #[test]
+    fn the_cse_time_comparison_gives_the_agreement_time_and_the_deviation_per_time() {
+        use crate::masterequation::cse_time_evolution::CseTimeComparison;
+        let c = CseTimeComparison {
+            times_s: vec![1e-9, 1e-6],
+            species: vec!["A".into()],
+            bimolecular: vec!["P".into()],
+            cse_species: vec![vec![0.9], vec![0.5]],
+            cse_yields: vec![vec![0.1], vec![0.5]],
+            direct_species: vec![vec![1.0], vec![0.5]],
+            direct_yields: vec![vec![0.0], vec![0.5]],
+            deviation: vec![0.1, 1e-9],
+            relative_deviation: vec![1.0, 2e-9],
+            largest: vec!["A".into(), "P".into()],
+            tolerance: 1e-2,
+            agreement_time_s: Some(1e-6),
+            conversion_at_agreement: 0.5,
+            relaxation_eigenvalue_s_inv: 1e8,
+            chemical_eigenvalues_s_inv: vec![1e3],
+            notes: vec!["a note".into()],
+        };
+        let mut out = Vec::new();
+        write_cse_time_comparison(&mut out, &c).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains("agreement within 1.00000e-02 (rel. deviation) from t* = 1.00000e-06 s"), "{text}");
+        assert!(text.contains("t* lambda_relax = 1.00000e+02"), "{text}");
+        assert!(text.contains("conversion at t*: 5.00000e-01"), "{text}");
+        assert!(text.contains("a note"), "{text}");
+        assert!(text.contains("X(A) direct") && text.contains("X(A) CSE") && text.contains("Y(P) CSE"), "{text}");
+        assert!(text.contains("abs. deviation") && text.contains("rel. deviation"), "{text}");
     }
 
     #[test]

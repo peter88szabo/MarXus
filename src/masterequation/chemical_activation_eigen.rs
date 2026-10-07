@@ -184,6 +184,7 @@ pub fn thermal_rate_coefficients(
     let mut population: Vec<f64> = u_1.iter().zip(&symmetrized.d).map(|(u, d)| u * d).collect();
     let total: f64 = population.iter().sum();
     population.iter_mut().for_each(|x| *x /= total);
+    let negative_populations = back_transformation_warning(&population);
 
     let n_wells = network.wells.len();
     // On the complete grid of every well (a low-energy reservoir spread over its grains).
@@ -251,6 +252,10 @@ pub fn thermal_rate_coefficients(
              thermal eigenvector); if the solvers give different k_uni, the condition is beyond double precision."
         )
     });
+    let warning = match (warning, negative_populations) {
+        (Some(a), Some(b)) => Some(format!("{a} Also: {b}")),
+        (a, b) => a.or(b),
+    };
     let distributions = per_well
         .iter()
         .zip(&population_fractions)
@@ -269,6 +274,40 @@ pub fn thermal_rate_coefficients(
         population_fractions,
         distributions,
     })
+}
+
+/// A warning if a back-transformed eigenvector E = D u has populations below -1e-12 of its largest one: rounding errors
+/// amplified by the back transformation (Frankcombe, Smith, J. Theor. Comput. Chem. 2, 179 (2003), Fig. 5).
+pub(crate) fn back_transformation_warning(population: &[f64]) -> Option<String> {
+    let max = population.iter().cloned().fold(0.0_f64, f64::max);
+    let (index, min) = population.iter().enumerate().fold((0, 0.0), |(k, m), (i, &x)| if x < m { (i, x) } else { (k, m) });
+    (min < -1e-12 * max).then(|| {
+        format!(
+            "the back-transformed eigenvector has negative populations (lowest {:.3e} of the largest, at state {index}): \
+             rounding errors amplified by the back transformation (Frankcombe, Smith, J. Theor. Comput. Chem. 2, 179 \
+             (2003), Fig. 5). What to do: confirm with the inverse iteration (`EigenSolver InverseIteration`) and with \
+             the direct time integration (`Method TimeIntegration`), which needs no eigenvectors.",
+            min / max
+        )
+    })
+}
+
+/// Grain populations of the lowest eigenvector of J, normalized to a unit total: the final steady-state distribution
+/// (GO10 eq. 12; the Boltzmann distribution for a closed network), by inverse iteration as in
+/// `thermal_rate_coefficients`.
+pub(crate) fn lowest_eigenvector_grain_populations(op: &ChemicalActivationOperator) -> Result<Vec<Vec<f64>>, String> {
+    let symmetrized = symmetrize(op);
+    require_symmetry(symmetrized.max_relative_asymmetry)?;
+    if op.dimension() == 0 {
+        return Err("Eigenvalue analysis: the operator has no states.".into());
+    }
+    let band = symmetrized.band_matrix();
+    let shift = cholesky_safety_shift(&band);
+    let first = lowest_eigenpairs_banded(&band, 1, &symmetrized.d, shift, 1e-11, 5000)?;
+    let mut population: Vec<f64> = first[0].1.iter().zip(&symmetrized.d).map(|(u, d)| u * d).collect();
+    let total: f64 = population.iter().sum();
+    population.iter_mut().for_each(|x| *x /= total);
+    Ok(op.grain_populations(&population))
 }
 
 pub(crate) fn require_symmetry(asymmetry: f64) -> Result<(), String> {
@@ -619,6 +658,19 @@ mod tests {
         assert!(!steady_state_window(1.0e9, 1.0e8, 1.0e-2, lambda_f).sink_within_window);
         assert!(!steady_state_window(1.0e9, 1.0e-2, 1.0e-2, lambda_f).sink_within_window);
     }
+
+    #[test]
+    fn a_negative_back_transformed_population_is_flagged() {
+        // Frankcombe, Smith, J. Theor. Comput. Chem. 2, 179 (2003), Fig. 5: rounding errors amplified by the back
+        // transformation give irregular, partly negative populations at low energy.
+        assert!(back_transformation_warning(&[1.0, 0.5, 1e-20, 0.0]).is_none());
+        assert!(back_transformation_warning(&[1.0, 0.5, -1e-14]).is_none(), "rounding level");
+        let w = back_transformation_warning(&[-0.01, 1.0, 0.5]).expect("negative grain");
+        assert!(w.contains("negative") && w.contains("Frankcombe"), "{w}");
+        // A resolved thermal eigenvector gives no such warning.
+        let network = two_well_network();
+        let op = assemble_operator(&network, &conditions(), &final_options(EXPONENTIAL)).unwrap();
+        let thermal = thermal_rate_coefficients(&network, &op, EigenSolver::InverseIteration, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
+        assert!(thermal.warning.as_ref().map_or(true, |w| !w.contains("negative")), "{:?}", thermal.warning);
+    }
 }
-
-

@@ -38,6 +38,9 @@ The methods are compared with each other and with MESS. Common settings: 1 cm⁻
 | `method_comparison.csv`, `plots/method_*.png` | identities and agreements between the four methods (`../method_comparison.py`, `../../reports/method_comparison.md`) |
 | `four_methods_figures.csv`, `plots/mess_four_methods_*.png`, `plots/internal_four_methods_*.png` | the four methods against MESS and against each other: rates, fall-off, yields, deviations, time evolution (`../four_methods_figures.py`, `../../reports/four_methods_figures.md`; Section 4.8) |
 | `plots/*.png` | the figures below |
+| `input/c2h3_shock_incubation.inp` | shock heating: C₂H₃ thermal at 300 K in a constant 1000 K, 1 atm bath (`Preparation` block, `CompareWithCse 1e-2`; Section 4.9). A MarXus deck, not run by MESS |
+| `run_shock_incubation.sh`, `shock_incubation_summary.py` | the shock deck at four grain widths (`EnergyStepOverTemperature` 0.4, 0.2, 0.1, 0.05), and the summary of their observables |
+| `marxus_output/c2h3_shock_incubation_de<step>.{out,csv,_tables.csv}`, `shock_incubation_grain_convergence.csv` | the four shock runs and their summary |
 
 The decks are byte-identical copies of `MESS_kinetics/Examples_From_Argon/examples/c2h3/*.inp`, and MarXus reads them unchanged. They contain no `Reactant` line, so the reactant P1 (H + C₂H₂) is given on the command line.
 
@@ -368,6 +371,46 @@ Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.cs
 
 ![pulse against the two-state model](plots/internal_four_methods_time.png)
 
+### 4.9 Shock heating: incubation, relaxation and the CSE description in time
+
+**Setup:**
+- **Deck:** `input/c2h3_shock_incubation.inp`, the molecular data of the decks above.
+- **Preparation:** C₂H₃ (W1) thermal at 300 K, put at t = 0 into a constant bath of 1000 K and 1 atm, as behind a shock wave.
+- **Method:** `Method TimeIntegration`, 8 output times per decade, relative tolerance 10⁻⁸; `CompareWithCse 1e-2`.
+- **Design:** `../../reports/nonthermal_sources_design.md`, Section 12.
+
+**Observables:**
+- the incubation time τ_inc (Barker, King, J. Chem. Phys. 103, 4953 (1995), eq. 9);
+- the vibrational relaxation time τ_vib (their eq. 11) and the final steady-state energy E_f;
+- the flux coefficient r(W1→P1) (Barker, Frenklach, Golden, J. Phys. Chem. A 119, 7451 (2015), eq. A5);
+- the CSE description propagated in time (Miller et al., J. Phys. Chem. A 120, 306 (2016)).
+
+**Results** (grain 70 cm⁻¹):
+- τ_inc = 12.47 ns = 62.6 collisions;
+- τ_vib at τ_inc = 4.08 ns;
+- k_uni = 1.44975·10⁴ s⁻¹ (the late flux coefficient), equal to all six printed digits to k_uni of SteadyStateOlzmann in `marxus_output/c2h3_tight_short_notunneling_olzmann.out`. The shock deck has the molecular data of `examples/c2h3_chemical_activation.inp`, which has no Eckart tunneling, and the same grains;
+- the lowest relaxation eigenvalue is 2.34·10⁸ s⁻¹.
+
+**CSE projection.** The projection of the 300 K population gives the species population 1.000181 and the prompt yield −1.81·10⁻⁴.
+- **Why the prompt yield is negative:** the CSE species decays from t = 0, but the master equation first has to activate the cold population.
+- **Incubation time from it:** ln(1.000181)/k_uni = 12.47 ns, the incubation time of the time integration to five digits.
+- **Agreement:** the CSE description agrees within 1% (relative deviation of every species and yield) from t* = 31.6 ns = 2.5 τ_inc = 7.4 relaxation times.
+
+**Grain-width convergence** (`run_shock_incubation.sh` → `shock_incubation_grain_convergence.csv`):
+
+| grain (cm⁻¹) | τ_inc (ns) | collisions | τ_vib at τ_inc (ns) | k_uni (s⁻¹) |
+|---|---|---|---|---|
+| 278 | 12.782 | 64.22 | 4.181 | 1.42824·10⁴ |
+| 139 | 12.510 | 62.85 | 4.102 | 1.44546·10⁴ |
+| 70 | 12.466 | 62.63 | 4.082 | 1.44975·10⁴ |
+| 35 | 12.455 | 62.58 | 4.077 | 1.45087·10⁴ |
+
+- **Convergence:** τ_inc changes by 2.1%, 0.35% and 0.09% per halving of the grain.
+- **Why coarse grains do little harm:** states are counted exactly on 1 cm⁻¹ cells and summed into grains, so coarse grains do not smooth the density of states at low energy. Eng et al. (PCCP 3, 2258 (2001)) found that smoothing to cause drastically shorter incubation times.
+- **E_f** (2825, 2970, 2919, 2919 cm⁻¹) moves by up to half a grain, because the well bottom is rounded onto the grain grid.
+
+**To reproduce:** `./run_shock_incubation.sh` (about 1 min on 8 cores).
+
 ## 5. Interpretation
 
 ### 5.1 750–1250 K: agreement
@@ -463,6 +506,8 @@ The two codes differ in graining (cell-averaged grains vs nodes), in the collisi
 - **Absorbing barrier below the well bottom:** an error instead of a silent clamp.
 
 ## 8. History of this directory
+
+- **2026-10-07.** Shock-heating case added (Section 4.9): `input/c2h3_shock_incubation.inp`, `run_shock_incubation.sh`, `shock_incubation_summary.py` and their outputs. No earlier file was changed.
 
 - **2026-10-05.** First comparison: the absorbing-barrier and final steady states. Re-run after the change to isotopic atomic masses (AME2020); rate coefficients changed by at most 1.3·10⁻⁵ relative.
 - **2026-10-05, evening.** The thermal eigenpair of the final steady state was studied in a separate directory, `../c2h3_mess_example_olzmann_eigen/`.

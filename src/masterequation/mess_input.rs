@@ -143,6 +143,35 @@ pub struct MessBimolecular {
     pub fragment_b: MessSpeciesRrho,
     /// Bimolecular asymptote energy (cm^-1) relative to the same reference used for wells/barriers.
     pub ground_energy_cm1: f64,
+    /// MarXus `FragmentWell <name>`: the fragment (named as the well) that is a well of the network; the other fragment
+    /// is a partner in excess (reports/nonthermal_sources_design.md, Section 15.1).
+    pub fragment_well: Option<String>,
+    /// MarXus `PartnerConcentration[molecule/cm^3]`: the concentration of that partner (or of the excess fragment of a
+    /// lumped state).
+    pub partner_concentration_cm3: Option<f64>,
+    /// MarXus `LumpedState`: the pair is one thermal state of the master equation, pseudo-first-order in its excess
+    /// fragment (reports/nonthermal_sources_design.md, Section 15.2).
+    pub lumped_state: bool,
+    /// MarXus `ExcessFragment <name>`: the fragment in excess of a lumped state.
+    pub excess_fragment: Option<String>,
+}
+
+/// MarXus block `FragmentEnergy <kind> ... End` in a barrier to a bimolecular species with a fragment well: the energy
+/// partitioning P(e | X) of the fragment (`fragment_partition.rs`).
+///
+///   FragmentEnergy TwoPieceGaussian
+///     Mu[1/cm]          -2685.46  0.50158       (intercept [unit], gradient in X)
+///     SigmaLeft[1/cm]   -132.008  0.053485
+///     SigmaRight[1/cm]  -1122.11  0.13401
+///   End
+///   FragmentEnergy ModifiedPrior   (Order, TemperatureExponent, ReferenceTemperature[K])
+///   FragmentEnergy Prior
+#[derive(Clone, Debug, PartialEq)]
+pub enum FragmentEnergySpecification {
+    Prior,
+    ModifiedPrior { order: f64, temperature_exponent: f64, reference_temperature_kelvin: f64 },
+    /// [intercept in cm-1, gradient] of mu, sigma_L and sigma_R.
+    TwoPieceGaussian { mu: [f64; 2], sigma_left: [f64; 2], sigma_right: [f64; 2] },
 }
 
 #[derive(Clone, Debug)]
@@ -196,6 +225,8 @@ pub struct MessBarrier {
     pub core: MessBarrierCore,
     /// ILT parameters of a barrierless channel (MarXus keyword block), if given.
     pub inverse_laplace_transform: Option<IltSpecification>,
+    /// Energy partitioning of the fragment well (MarXus `FragmentEnergy` block), if given.
+    pub fragment_energy: Option<FragmentEnergySpecification>,
     /// `Tunneling` block of the barrier, if given.
     pub tunneling: Option<TunnelingSpecification>,
 }
@@ -219,6 +250,8 @@ pub struct MessDeck {
     pub barriers: Vec<MessBarrier>,
     /// `Escape` pseudo-first-order rate constant of a well (s-1): the bimolecular sink k_c[D].
     pub well_escape_rate_s_inv: HashMap<String, f64>,
+    /// MarXus block in a Well: its own collision parameters in place of the global model.
+    pub well_collision: HashMap<String, WellCollisionOverride>,
     /// Well names in the order of the input deck.
     pub well_order: Vec<String>,
     /// `Dummy` bimolecular species (as in MESS): products without molecular data, in deck order.
@@ -228,6 +261,58 @@ pub struct MessDeck {
     pub preparation_block: Option<Vec<String>>,
 }
 
+
+/// MarXus block `MarXus ... End` in a Well: collision parameters of that well in place of the global ones of the Model
+/// (MESS has one model for all wells). Each given pair replaces the global pair (bath, complex):
+///
+///   MarXus
+///     Factor[1/cm]              98.3      (<dE_down> at the reference temperature)
+///     Power                     1.0       (<dE_down> ~ (T/T_ref)^Power)
+///     ReferenceTemperature[K]   295       (MarXus; the global model refers to 300 K)
+///     Epsilons[1/cm]            57.0 150.2
+///     Sigmas[angstrom]          3.74 4.6
+///     Masses[amu]               28.0 57.0
+///   End
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WellCollisionOverride {
+    pub factor_cm1: Option<f64>,
+    pub power: Option<f64>,
+    pub reference_temperature_kelvin: Option<f64>,
+    pub epsilons_cm1: Option<(f64, f64)>,
+    pub sigmas_angstrom: Option<(f64, f64)>,
+    pub masses_amu: Option<(f64, f64)>,
+}
+
+/// The MarXus block of a Well (its lines removed from the block) and the parameters in it.
+fn split_well_collision_block(block: &[String], well: &str) -> Result<(Vec<String>, Option<WellCollisionOverride>), String> {
+    let Some(start) = block.iter().position(|l| first_token(l) == Some("MarXus")) else {
+        return Ok((block.to_vec(), None));
+    };
+    let end = block[start..].iter().position(|l| first_token(l) == Some("End")).map(|k| start + k).ok_or_else(|| format!("Well '{well}': MarXus block without End."))?;
+    let context = |what: &str| format!("Well '{well}', MarXus block: {what}");
+    let mut o = WellCollisionOverride::default();
+    for line in &block[start + 1..end] {
+        let key = first_token(line).unwrap_or("");
+        let values = line.split_whitespace().skip(1).map(parse_f64).collect::<Result<Vec<f64>, String>>()?;
+        let one = || values.first().copied().ok_or_else(|| context(&format!("{key} needs a value")));
+        let two = || if values.len() == 2 { Ok((values[0], values[1])) } else { Err(context(&format!("{key} needs two values (bath, complex)"))) };
+        match key {
+            "Factor[1/cm]" => o.factor_cm1 = Some(one()?),
+            "Power" => o.power = Some(one()?),
+            "ReferenceTemperature[K]" => o.reference_temperature_kelvin = Some(one()?),
+            "Epsilons[1/cm]" => o.epsilons_cm1 = Some(two()?),
+            "Sigmas[angstrom]" => o.sigmas_angstrom = Some(two()?),
+            "Masses[amu]" => o.masses_amu = Some(two()?),
+            other => {
+                return Err(context(&format!(
+                    "unknown keyword '{other}' (Factor[1/cm], Power, ReferenceTemperature[K], Epsilons[1/cm], Sigmas[angstrom], Masses[amu])"
+                )))
+            }
+        }
+    }
+    let rest = block[..start].iter().chain(&block[end + 1..]).cloned().collect();
+    Ok((rest, Some(o)))
+}
 
 pub(crate) fn strip_comment(mut line: &str) -> &str {
     if let Some(idx) = line.find('#') {
@@ -295,6 +380,7 @@ fn is_block_starter(tok: &str) -> bool {
             | "LennardJones"
             | "TimeEvolution"
             | "InverseLaplaceTransform"
+            | "FragmentEnergy"
             | "MarXus"
             | "Atom"
             | "Rotor"
@@ -853,6 +939,8 @@ pub(crate) fn unit_tag(line: &str) -> Option<&str> {
 ///     TimeRange[s]                        1e-12  1e2         (time integration: first and last output time)
 ///     TimesPerDecade                      4                  (time integration: output times per decade)
 ///     IntegrationTolerance                1e-6               (time integration: relative tolerance)
+///     CompareWithCse                      1e-2               (time integration of a Preparation in a constant bath:
+///                                                             compare with the CSE description in time; tolerance)
 ///     NCores                              8                  (cores of the run: the (T, p) conditions are
 ///                                                             computed in batches of up to NCores at a time)
 ///     CollisionIntegral                   Neufeld            (Lennard-Jones Omega(2,2)*: Neufeld or Troe)
@@ -891,6 +979,7 @@ fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
             }
             "TimesPerDecade" => settings.times_per_decade = Some(parse_usize(value)?),
             "IntegrationTolerance" => settings.integration_tolerance = Some(parse_f64(value)?),
+            "CompareWithCse" => settings.cse_comparison_tolerance = Some(parse_f64(value)?),
             "NCores" => {
                 let cores = parse_usize(value).map_err(|e| context(&format!("NCores: {e}")))?;
                 if cores == 0 {
@@ -910,7 +999,7 @@ fn parse_marxus_header(block: &[String]) -> Result<SolutionSettings, String> {
                 return Err(context(&format!(
                     "unknown keyword '{key}' (Method, AbsorbingBarrierBelowThreshold[kT], EigenSolver, \
                      SumRuleTolerance, Integrator, InitialState, TimeRange[s], TimesPerDecade, IntegrationTolerance, \
-                     NCores, CollisionIntegral, RotorReducedMoment, ChemicalSubspaceCriterion)"
+                     CompareWithCse, NCores, CollisionIntegral, RotorReducedMoment, ChemicalSubspaceCriterion)"
                 )))
             }
         }
@@ -979,6 +1068,64 @@ fn parse_inverse_laplace_transform(block: &[String], barrier: &str) -> Result<Op
             activation_energy_cm1: activation_energy.ok_or_else(|| context("missing ActivationEnergy"))?,
         },
     }))
+}
+
+/// The MarXus `FragmentEnergy <kind> ... End` block inside a barrier, if present.
+fn parse_fragment_energy(block: &[String], barrier: &str) -> Result<Option<FragmentEnergySpecification>, String> {
+    let Some(start) = block.iter().position(|l| first_token(l) == Some("FragmentEnergy")) else {
+        return Ok(None);
+    };
+    let context = |what: &str| format!("Barrier '{barrier}', FragmentEnergy: {what}");
+    let kind = block[start].split_whitespace().nth(1).unwrap_or("").to_string();
+    let mut keys: Vec<(String, Vec<f64>, Option<String>)> = Vec::new();
+    for line in &block[start + 1..] {
+        let key = first_token(line).unwrap_or("");
+        if key == "End" {
+            break;
+        }
+        let values = line.split_whitespace().skip(1).map(parse_f64).collect::<Result<Vec<f64>, String>>()?;
+        keys.push((key.split('[').next().unwrap_or("").to_string(), values, unit_tag(line).map(|u| u.to_string())));
+    }
+    let find = |name: &str| keys.iter().find(|(k, _, _)| k == name).ok_or_else(|| context(&format!("missing {name}")));
+    let allowed = |names: &[&str]| -> Result<(), String> {
+        match keys.iter().find(|(k, _, _)| !names.contains(&k.as_str())) {
+            Some((k, _, _)) => Err(context(&format!("unknown keyword '{k}' for {kind} ({})", names.join(", ")))),
+            None => Ok(()),
+        }
+    };
+    let scalar = |name: &str| -> Result<f64, String> {
+        let (_, v, _) = find(name)?;
+        v.first().copied().ok_or_else(|| context(&format!("{name} needs a value")))
+    };
+    // Intercept in its unit (cm-1 after conversion), gradient without unit.
+    let line = |name: &str| -> Result<[f64; 2], String> {
+        let (_, v, unit) = find(name)?;
+        if v.len() != 2 {
+            return Err(context(&format!("{name} needs an intercept and a gradient")));
+        }
+        let unit = unit.as_deref().ok_or_else(|| context(&format!("{name} needs an energy unit, e.g. {name}[1/cm]")))?;
+        Ok([energy_to_cm1(v[0], unit)?, v[1]])
+    };
+    let spec = match kind.as_str() {
+        "Prior" => {
+            allowed(&[])?;
+            FragmentEnergySpecification::Prior
+        }
+        "ModifiedPrior" => {
+            allowed(&["Order", "TemperatureExponent", "ReferenceTemperature"])?;
+            FragmentEnergySpecification::ModifiedPrior {
+                order: scalar("Order")?,
+                temperature_exponent: scalar("TemperatureExponent")?,
+                reference_temperature_kelvin: scalar("ReferenceTemperature")?,
+            }
+        }
+        "TwoPieceGaussian" => {
+            allowed(&["Mu", "SigmaLeft", "SigmaRight"])?;
+            FragmentEnergySpecification::TwoPieceGaussian { mu: line("Mu")?, sigma_left: line("SigmaLeft")?, sigma_right: line("SigmaRight")? }
+        }
+        other => return Err(context(&format!("unknown kind '{other}' (Prior, ModifiedPrior, TwoPieceGaussian)"))),
+    };
+    Ok(Some(spec))
 }
 
 /// The `Tunneling <model> ... End` block of a barrier, if present.
@@ -1128,6 +1275,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let mut bimolecular: HashMap<String, MessBimolecular> = HashMap::new();
     let mut barriers: Vec<MessBarrier> = Vec::new();
     let mut well_escape_rate_s_inv: HashMap<String, f64> = HashMap::new();
+    let mut well_collision: HashMap<String, WellCollisionOverride> = HashMap::new();
     let mut well_order: Vec<String> = Vec::new();
     let mut dummy_bimolecular: Vec<String> = Vec::new();
     let mut marxus_header_read = false;
@@ -1236,6 +1384,10 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             }
             let name = parts[1].to_string();
             let (block, next) = collect_block(&lines, i);
+            let (block, collision) = split_well_collision_block(&block, &name)?;
+            if let Some(collision) = collision {
+                well_collision.insert(name.clone(), collision);
+            }
             let rrho = parse_rrho_species(&block, &name)?;
             for l in &block {
                 if first_token(l) == Some("PseudoFirstOrderRateConstant[1/sec]") {
@@ -1306,6 +1458,40 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             }
             let ground_energy_cm1 = ground_energy_cm1
                 .ok_or_else(|| format!("Bimolecular '{}' missing GroundEnergy", name))?;
+            let mut fragment_well = None;
+            let mut partner_concentration_cm3 = None;
+            let mut lumped_state = false;
+            let mut excess_fragment = None;
+            for l in &block {
+                let key = first_token(l).unwrap_or("");
+                let value = || l.split_whitespace().nth(1).ok_or_else(|| format!("Bimolecular '{name}': no value in '{l}'"));
+                if key == "LumpedState" {
+                    lumped_state = true;
+                } else if key == "ExcessFragment" {
+                    excess_fragment = Some(value()?.to_string());
+                } else if key == "FragmentWell" {
+                    fragment_well = Some(value()?.to_string());
+                } else if key.starts_with("PartnerConcentration") {
+                    if unit_tag(l) != Some("molecule/cm^3") {
+                        return Err(format!("Bimolecular '{name}': PartnerConcentration needs the unit [molecule/cm^3]."));
+                    }
+                    partner_concentration_cm3 = Some(parse_f64(value()?)?);
+                }
+            }
+            if lumped_state {
+                if fragment_well.is_some() {
+                    return Err(format!("Bimolecular '{name}': LumpedState and FragmentWell exclude each other."));
+                }
+                if excess_fragment.is_none() || partner_concentration_cm3.is_none() {
+                    return Err(format!(
+                        "Bimolecular '{name}': LumpedState needs ExcessFragment <name> and PartnerConcentration[molecule/cm^3]."
+                    ));
+                }
+            } else if excess_fragment.is_some() {
+                return Err(format!("Bimolecular '{name}': ExcessFragment belongs to a LumpedState."));
+            } else if fragment_well.is_some() != partner_concentration_cm3.is_some() {
+                return Err(format!("Bimolecular '{name}': FragmentWell and PartnerConcentration[molecule/cm^3] go together."));
+            }
 
             bimolecular.insert(
                 name.clone(),
@@ -1314,6 +1500,10 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                     fragment_a: frag_a,
                     fragment_b: frag_b,
                     ground_energy_cm1,
+                    fragment_well,
+                    partner_concentration_cm3,
+                    lumped_state,
+                    excess_fragment,
                 },
             );
 
@@ -1337,6 +1527,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let geometry_required = matches!(core, MessBarrierCore::TightRrho) && !has_ilt;
             let rrho = parse_rrho_species_impl(&block, &name, geometry_required, has_ilt)?;
             let inverse_laplace_transform = parse_inverse_laplace_transform(&block, &name)?;
+            let fragment_energy = parse_fragment_energy(&block, &name)?;
             let tunneling = parse_tunneling(&block, &name)?;
 
             barriers.push(MessBarrier {
@@ -1346,6 +1537,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                 rrho,
                 core,
                 inverse_laplace_transform,
+                fragment_energy,
                 tunneling,
             });
 
@@ -1369,6 +1561,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         wells,
         barriers,
         well_escape_rate_s_inv,
+        well_collision,
         well_order,
         dummy_bimolecular,
         preparation_block,
@@ -1753,6 +1946,9 @@ InitialState Continuous\n  TimeRange[s] 1e-10 1e1\n  TimesPerDecade 3\n  Integra
         assert!(parse_mess_input(&one_value)
             .unwrap_err()
             .contains("TimeRange"));
+        assert_eq!(s.cse_comparison_tolerance, None);
+        let compared = deck.replace("TimesPerDecade 3", "TimesPerDecade 3\n  CompareWithCse 1e-3");
+        assert_eq!(parse_mess_input(&compared).unwrap().global.solution.cse_comparison_tolerance, Some(1e-3));
     }
 
     #[test]
@@ -2193,6 +2389,75 @@ Well W1
 End
 "#;
 
+    #[test]
+    fn fragment_wells_and_energy_partitionings_are_read() {
+        // MarXus keywords: `FragmentWell`, `PartnerConcentration[molecule/cm^3]` in a Bimolecular block, and the
+        // `FragmentEnergy <kind> ... End` block in a barrier (reports/nonthermal_sources_design.md, Section 15.1).
+        let deck = "TemperatureList[K] 300.\nPressureList[torr] 760\nModel\n  Bimolecular P\n    Fragment A\n      RRHO\n        \
+Geometry[angstrom] 1\n        H 0 0 0\n        Core RigidRotor\n          SymmetryFactor 1\n        End\n        Frequencies[1/cm] 0\n        \
+ZeroEnergy[1/cm] 0\n        ElectronicLevels[1/cm] 1\n          0 1\n      End\n    Fragment B\n      RRHO\n        Geometry[angstrom] 1\n        \
+H 0 0 0\n        Core RigidRotor\n          SymmetryFactor 1\n        End\n        Frequencies[1/cm] 0\n        ZeroEnergy[1/cm] 0\n        \
+ElectronicLevels[1/cm] 1\n          0 1\n      End\n    GroundEnergy[kcal/mol] 0.0\n    FragmentWell B\n    \
+PartnerConcentration[molecule/cm^3] 2.5e14\n  End\n  Barrier X W P\n    RRHO\n      Geometry[angstrom] 1\n      H 0 0 0\n      Core RigidRotor\n        \
+SymmetryFactor 1\n      End\n      FragmentEnergy TwoPieceGaussian\n        Mu[kJ/mol]          -32.0  0.5\n        SigmaLeft[1/cm]     -132.0  0.05\n        \
+SigmaRight[1/cm]    -1122.0  0.13\n      End\n      Frequencies[1/cm] 0\n      ZeroEnergy[kcal/mol] 5\n      ElectronicLevels[1/cm] 1\n        0 1\n    End\nEnd\n";
+        let parsed = parse_mess_input(deck).unwrap();
+        let p = &parsed.bimolecular["P"];
+        assert_eq!((p.fragment_well.as_deref(), p.partner_concentration_cm3), (Some("B"), Some(2.5e14)));
+        match parsed.barriers[0].fragment_energy.as_ref().expect("FragmentEnergy") {
+            super::FragmentEnergySpecification::TwoPieceGaussian { mu, sigma_left, sigma_right } => {
+                assert!((mu[0] - super::energy_to_cm1(-32.0, "kJ/mol").unwrap()).abs() < 1e-9 && mu[1] == 0.5);
+                assert_eq!((sigma_left, sigma_right), (&[-132.0, 0.05], &[-1122.0, 0.13]));
+            }
+            other => panic!("{other:?}"),
+        }
+        let modified = deck.replace(
+            "FragmentEnergy TwoPieceGaussian\n        Mu[kJ/mol]          -32.0  0.5\n        SigmaLeft[1/cm]     -132.0  0.05\n        SigmaRight[1/cm]    -1122.0  0.13\n",
+            "FragmentEnergy ModifiedPrior\n        Order 0.27\n        TemperatureExponent 0\n        ReferenceTemperature[K] 298\n",
+        );
+        assert_eq!(
+            parse_mess_input(&modified).unwrap().barriers[0].fragment_energy,
+            Some(super::FragmentEnergySpecification::ModifiedPrior { order: 0.27, temperature_exponent: 0.0, reference_temperature_kelvin: 298.0 })
+        );
+        let unknown = deck.replace("FragmentEnergy TwoPieceGaussian", "FragmentEnergy Uniform");
+        assert!(parse_mess_input(&unknown).unwrap_err().contains("FragmentEnergy"));
+    }
+
+    #[test]
+    fn a_well_can_have_its_own_collision_parameters() {
+        let deck = ONE_WELL_DECK.to_string();
+        let with = deck.replace(
+            "\nWell W1\n",
+            "\nWell W1\n  MarXus\n    Factor[1/cm] 98.3\n    Power 1.0\n    ReferenceTemperature[K] 295\n    Epsilons[1/cm] 57.0 150.2\n    Sigmas[angstrom] 3.74 4.6\n    Masses[amu] 28.0 57.0\n  End\n",
+        );
+        assert_ne!(with, deck);
+        let parsed = parse_mess_input(&with).unwrap();
+        let o = &parsed.well_collision["W1"];
+        assert_eq!((o.factor_cm1, o.power, o.reference_temperature_kelvin), (Some(98.3), Some(1.0), Some(295.0)));
+        assert_eq!((o.epsilons_cm1, o.sigmas_angstrom, o.masses_amu), (Some((57.0, 150.2)), Some((3.74, 4.6)), Some((28.0, 57.0))));
+        // The species of the well is read as before (the Masses line is not taken for the species).
+        assert_eq!(parsed.wells["W1"].zero_energy_cm1, parse_mess_input(&deck).unwrap().wells["W1"].zero_energy_cm1);
+        assert!(parse_mess_input(&deck).unwrap().well_collision.is_empty());
+        let bad = with.replace("    Power 1.0\n", "    Exponent 1.0\n");
+        assert_ne!(bad, with);
+        assert!(parse_mess_input(&bad).unwrap_err().contains("Exponent"));
+    }
+
+    #[test]
+    fn a_lumped_reactant_state_is_read_with_its_excess_fragment() {
+        // MarXus keywords in a Bimolecular block: `LumpedState`, `ExcessFragment <name>`, `PartnerConcentration`
+        // (reports/nonthermal_sources_design.md, Section 15.2).
+        let deck = "TemperatureList[K] 300.\nPressureList[torr] 760\nModel\n  Bimolecular R\n    Fragment A\n      RRHO\n        \
+Geometry[angstrom] 1\n        H 0 0 0\n        Core RigidRotor\n          SymmetryFactor 1\n        End\n        Frequencies[1/cm] 0\n        \
+ZeroEnergy[1/cm] 0\n        ElectronicLevels[1/cm] 1\n          0 1\n      End\n    Fragment X\n      RRHO\n        Geometry[angstrom] 1\n        \
+H 0 0 0\n        Core RigidRotor\n          SymmetryFactor 1\n        End\n        Frequencies[1/cm] 0\n        ZeroEnergy[1/cm] 0\n        \
+ElectronicLevels[1/cm] 1\n          0 1\n      End\n    GroundEnergy[kcal/mol] 0.0\n    LumpedState\n    ExcessFragment X\n    \
+PartnerConcentration[molecule/cm^3] 3e15\n  End\nEnd\n";
+        let r = &parse_mess_input(deck).unwrap().bimolecular["R"];
+        assert_eq!((r.lumped_state, r.excess_fragment.as_deref(), r.partner_concentration_cm3), (true, Some("X"), Some(3e15)));
+        let without = deck.replace("    ExcessFragment X\n", "");
+        assert!(parse_mess_input(&without).unwrap_err().contains("ExcessFragment"));
+    }
 }
 
 pub(crate) fn rotational_constants_from_geometry_cm1(

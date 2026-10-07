@@ -243,6 +243,60 @@ pub fn low_energy_reservoirs(
 }
 
 /// Assemble J for the network at temperature T and bath-gas pressure p.
+/// Log weight offsets of the wells. 0 for the first well of every connected group of wells; an isomerization keeps the
+/// offset; a fragment channel C -> B + A gives B the offset of C plus ln phi_A(T) (the partner in excess at its
+/// concentration, `ExcessPartner::log_weight_factor`; Green, Robertson, Chem. Phys. Lett. 605-606, 44 (2014)). An error if
+/// a cycle of couplings gives a well two offsets: the energies or partition functions of the input are inconsistent.
+fn well_log_offsets(network: &ChemicalActivationNetwork, temperature_kelvin: f64) -> Result<Vec<f64>, String> {
+    let n = network.wells.len();
+    let mut edges: Vec<Vec<(usize, f64, &str)>> = vec![Vec::new(); n];
+    for (w, well) in network.wells.iter().enumerate() {
+        for channel in &well.channels {
+            let step = match &channel.destination {
+                ChannelDestination::Well { index } => Some((*index, 0.0)),
+                ChannelDestination::Fragment { index, partner, .. } => Some((*index, partner.log_weight_factor(temperature_kelvin))),
+                ChannelDestination::Products { .. } => None,
+            };
+            if let Some((t, x)) = step {
+                edges[w].push((t, x, channel.name.as_str()));
+                edges[t].push((w, -x, channel.name.as_str()));
+            }
+        }
+    }
+    let mut offset: Vec<Option<f64>> = vec![None; n];
+    for root in 0..n {
+        if offset[root].is_some() {
+            continue;
+        }
+        offset[root] = Some(0.0);
+        let mut stack = vec![root];
+        while let Some(w) = stack.pop() {
+            let o = offset[w].expect("visited");
+            for &(t, x, name) in &edges[w] {
+                let want = o + x;
+                match offset[t] {
+                    None => {
+                        offset[t] = Some(want);
+                        stack.push(t);
+                    }
+                    Some(have) if (have - want).abs() > 1e-9 * (1.0 + have.abs()) => {
+                        return Err(format!(
+                            "Wells '{}' and '{}' (channel '{name}'): their equilibrium weights are inconsistent around a cycle of \
+                             couplings (ln weight offsets {have} and {want} for '{}'): a well connected both by isomerization and \
+                             by a fragment channel, or energies and partition functions that do not close.",
+                            network.wells[w].name,
+                            network.wells[t].name,
+                            network.wells[t].name
+                        ));
+                    }
+                    Some(_) => {}
+                }
+            }
+        }
+    }
+    Ok(offset.into_iter().map(|o| o.expect("every well visited")).collect())
+}
+
 pub fn assemble_operator(
     network: &ChemicalActivationNetwork,
     conditions: &Conditions,
@@ -384,8 +438,25 @@ pub fn assemble_operator(
         }
     }
 
+    // ln f of every state: rho exp(-E/kT) on the absolute scale, plus the offset of its well (a fragment well carries its
+    // partner at its concentration, `well_log_offsets`).
+    let log_offsets = well_log_offsets(network, temperature)?;
+    let log_boltzmann_weight: Vec<f64> = states
+        .iter()
+        .enumerate()
+        .map(|(s, &(w, i))| {
+            log_offsets[w]
+                + match reservoirs[w].as_ref().filter(|r| r.state == s) {
+                    Some(res) => res.log_weight,
+                    None => network.wells[w].density_of_states[i].ln() - network.absolute_energy_cm1(w, i) / kt_cm1,
+                }
+        })
+        .collect();
+
     // Columns of J (source state c = (w, j)), stored by rows.
     let n = states.len();
+    // Fragment gains (fragment state, source state, rate): their reverse association is added after the columns.
+    let mut fragment_gains: Vec<(usize, usize, f64)> = Vec::new();
     let mut rows: Vec<Vec<(usize, f64)>> = vec![Vec::new(); n];
     let mut stabilization: Vec<Vec<(usize, f64)>> = vec![Vec::new(); n];
     for (c, &(w, j)) in states.iter().enumerate() {
@@ -444,6 +515,34 @@ pub fn assemble_operator(
                     continue;
                 }
                 diagonal += k;
+                if let ChannelDestination::Fragment { index: target, partner, kernel } = &channel.destination {
+                    // X: the energy of the grain above the pair asymptote (fragment bottom + partner ground).
+                    let excess = network.absolute_energy_cm1(w, g) - network.absolute_energy_cm1(*target, 0) - partner.ground_energy_cm1;
+                    let shares = kernel
+                        .distribution(excess, d_e, network.wells[*target].grain_count(), temperature)
+                        .map_err(|e| format!("Channel '{}' of well '{}': {e}", channel.name, well.name))?;
+                    if shares.is_empty() {
+                        return Err(format!(
+                            "Channel '{}' of well '{}' is open at grain {g} ({} cm-1 absolute), below the asymptote of '{}' + \
+                             '{}' ({} cm-1).",
+                            channel.name,
+                            well.name,
+                            network.absolute_energy_cm1(w, g),
+                            network.wells[*target].name,
+                            partner.name,
+                            network.absolute_energy_cm1(*target, 0) + partner.ground_energy_cm1
+                        ));
+                    }
+                    for (j, p) in shares {
+                        match index_of[*target][j] {
+                            Some(r) => {
+                                rows[r].push((c, -k * p));
+                                fragment_gains.push((r, c, k * p));
+                            }
+                            None => stabilization[c].push((*target, k * p)),
+                        }
+                    }
+                }
                 if let ChannelDestination::Well { index: target } = channel.destination {
                     let t = network.aligned_grain(w, g, target);
                     let target_well = &network.wells[target];
@@ -472,6 +571,14 @@ pub fn assemble_operator(
         rows[c].push((c, diagonal));
     }
 
+    // Reverse of every fragment gain (association of the fragment with the partner), by detailed balance:
+    // J(c <- r) = J(r <- c) f_c / f_r (Green, Robertson 2014, eq. 15).
+    for &(r, c, gain) in &fragment_gains {
+        let rate = (gain.ln() + log_boltzmann_weight[c] - log_boltzmann_weight[r]).exp();
+        rows[c].push((r, -rate));
+        rows[r].push((r, rate));
+    }
+
     // Sort every row by column and merge repeated entries (several channels into the same grain).
     for row in rows.iter_mut() {
         row.sort_by_key(|&(c, _)| c);
@@ -484,15 +591,6 @@ pub fn assemble_operator(
         }
         *row = merged;
     }
-
-    let log_boltzmann_weight = states
-        .iter()
-        .enumerate()
-        .map(|(s, &(w, i))| match reservoirs[w].as_ref().filter(|r| r.state == s) {
-            Some(res) => res.log_weight,
-            None => network.wells[w].density_of_states[i].ln() - network.absolute_energy_cm1(w, i) / kt_cm1,
-        })
-        .collect();
 
     Ok(ChemicalActivationOperator {
         states,
@@ -944,5 +1042,128 @@ pub(crate) mod tests {
         }
         let options = all_option_combinations().remove(0);
         assert!(assemble_operator(&network, &conditions(), &options).is_err());
+    }
+
+    pub(crate) fn fragment_partner(concentration_cm3: f64) -> crate::masterequation::fragment_partition::ExcessPartner {
+        let mut density_cells = vec![0.0; 6001];
+        for v in 0..=4 {
+            density_cells[v * 1500] = 1.0;
+        }
+        crate::masterequation::fragment_partition::ExcessPartner {
+            name: "A".into(),
+            concentration_cm3,
+            ground_energy_cm1: 0.0,
+            density_cells,
+            cell_width_cm1: 1.0,
+            reduced_mass_amu: 10.0,
+        }
+    }
+
+    pub(crate) fn prior_kernel() -> crate::masterequation::fragment_partition::FragmentKernel {
+        use crate::masterequation::fragment_partition::{prior_remainder, FragmentKernel};
+        let cells = 4000;
+        let fragment_cells: Vec<f64> = (0..cells).map(|c| (1.0 + 0.005 * c as f64).powi(5)).collect();
+        let partner: Vec<f64> = (0..cells).map(|c| if c % 1500 == 0 { 1.0 } else { 0.0 }).collect();
+        FragmentKernel::Prior { remainder_cells: prior_remainder(&partner, cells, 1.0).unwrap(), fragment_cells, cell_width_cm1: 1.0 }
+    }
+
+    pub(crate) fn gaussian_kernel() -> crate::masterequation::fragment_partition::FragmentKernel {
+        crate::masterequation::fragment_partition::FragmentKernel::TwoPieceGaussian {
+            mu: [100.0, 0.4],
+            sigma_left: [50.0, 0.05],
+            sigma_right: [80.0, 0.1],
+        }
+    }
+
+    /// C (400 grains) dissociates above grain 300 into the fragment well B, whose bottom (the pair asymptote with the
+    /// partner at its ground state) lies 40 grains above the bottom of C, plus the partner A in excess.
+    pub(crate) fn fragment_network(kernel: crate::masterequation::fragment_partition::FragmentKernel, concentration_cm3: f64) -> ChemicalActivationNetwork {
+        let mut c = test_well("C", 400, 0, 330);
+        c.density_of_states = (0..400).map(|i| (1.0 + 0.02 * i as f64).powi(8)).collect();
+        let mut b = test_well("B", 300, 40, 280);
+        b.density_of_states = (0..300).map(|i| (1.0 + 0.05 * i as f64).powi(5)).collect();
+        c.channels.push(Channel {
+            name: "C->B+A".into(),
+            destination: ChannelDestination::Fragment { index: 1, partner: fragment_partner(concentration_cm3), kernel },
+            threshold_grain: None,
+            rate_constant_s_inv: (0..400).map(|i| if i >= 300 { 1.0e6 * (i - 299) as f64 } else { 0.0 }).collect(),
+        });
+        ChemicalActivationNetwork { grain_width_cm1: D_E, wells: vec![c, b] }
+    }
+
+    #[test]
+    fn a_fragment_block_is_detailed_balanced_and_conserves_population() {
+        // Green, Robertson 2014, eqs. 15-17: with the reverse association from detailed balance the operator is
+        // symmetrizable for any kernel; the forward gains of a C grain sum to k_C(E), so the column sums are the losses.
+        for kernel in [prior_kernel(), gaussian_kernel()] {
+            let network = fragment_network(kernel, 1e17);
+            for options in all_option_combinations() {
+                let op = assemble_operator(&network, &conditions(), &options).unwrap();
+                let mut fragment_couplings = 0;
+                let mut column_sum = vec![0.0; op.dimension()];
+                for (r, row) in op.rows.iter().enumerate() {
+                    for &(c, v) in row {
+                        column_sum[c] += v;
+                        if c == r {
+                            continue;
+                        }
+                        if op.states[r].0 != op.states[c].0 {
+                            fragment_couplings += 1;
+                        }
+                        let rhs = element(&op, c, r).abs() * (op.log_boltzmann_weight[r] - op.log_boltzmann_weight[c]).exp();
+                        assert!(((v.abs() - rhs) / v.abs().max(rhs)).abs() < 1e-10, "{options:?}: J({r}|{c})");
+                    }
+                }
+                assert!(fragment_couplings > 0);
+                for (c, &(w, _)) in op.states.iter().enumerate() {
+                    let products: f64 = network.wells[w]
+                        .channels
+                        .iter()
+                        .filter(|ch| matches!(ch.destination, ChannelDestination::Products { .. }))
+                        .map(|ch| op.state_rate(c, &ch.rate_constant_s_inv))
+                        .sum();
+                    let stabilization: f64 = op.stabilization[c].iter().map(|(_, k)| k).sum();
+                    let loss = products + network.wells[w].bimolecular_sink_s_inv + stabilization;
+                    assert!((column_sum[c] - loss).abs() <= 1e-10 * element(&op, c, c), "{options:?}: state {c}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_closed_fragment_system_is_stationary_with_the_partner_weight_and_its_ratio_scales_with_the_partner_concentration() {
+        // Without products, J f = 0 for the weights f, and [C]/[B] = K_c [A]: doubling [A] doubles the ratio.
+        let ratio = |concentration_cm3: f64| -> f64 {
+            let mut network = fragment_network(prior_kernel(), concentration_cm3);
+            for well in &mut network.wells {
+                well.channels.retain(|ch| !matches!(ch.destination, ChannelDestination::Products { .. }));
+            }
+            let options = ChemicalActivationOptions { collision_model: EXPONENTIAL_DOWN, steady_state: SteadyState::Final };
+            let op = assemble_operator(&network, &conditions(), &options).unwrap();
+            let max = op.log_boltzmann_weight.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            let f: Vec<f64> = op.log_boltzmann_weight.iter().map(|l| (l - max).exp()).collect();
+            let jf = op.apply(&f);
+            for (r, x) in jf.iter().enumerate() {
+                assert!(x.abs() <= 1e-11 * element(&op, r, r) * f[r].max(1e-300) + 1e-300, "state {r}: {x:e}");
+            }
+            let (mut c, mut b) = (0.0, 0.0);
+            for (s, &(w, _)) in op.states.iter().enumerate() {
+                if w == 0 { c += f[s] } else { b += f[s] }
+            }
+            c / b
+        };
+        let (single, double) = (ratio(1e17), ratio(2e17));
+        assert!((double / single - 2.0).abs() < 1e-12, "{single:e} {double:e}");
+    }
+
+    #[test]
+    fn inconsistent_weights_around_a_cycle_are_refused() {
+        // A fragment edge C -> B + A and an isomerization C <-> B give B two different weights.
+        let mut network = fragment_network(gaussian_kernel(), 1e17);
+        let k: Vec<f64> = (0..300).map(|i| if i >= 280 { 1e5 } else { 0.0 }).collect();
+        network.wells[1].channels.push(Channel { name: "B->C".into(), destination: ChannelDestination::Well { index: 0 }, threshold_grain: None, rate_constant_s_inv: k });
+        let options = ChemicalActivationOptions { collision_model: EXPONENTIAL_DOWN, steady_state: SteadyState::Final };
+        let error = assemble_operator(&network, &conditions(), &options).unwrap_err();
+        assert!(error.contains("inconsistent"), "{error}");
     }
 }

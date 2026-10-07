@@ -71,6 +71,9 @@ the yield of the final steady state ([SteadyStateOlzmann](steady_state_olzmann.m
 | `TimeRange[s]` | `--time-range T1 T2` | 1e-12 1e2 |
 | `TimesPerDecade` | `--times-per-decade N` | 4 |
 | `IntegrationTolerance` | `--integration-tolerance X` | 1e-6 (relative; absolute 1e-14) |
+| `CompareWithCse` | `--compare-with-cse X` | none: with a `Preparation` in a constant bath, also the CSE description in time, agreement within the relative deviation X |
+
+With a `Preparation` block ([prepared experiments](../features/prepared_experiments.md)), the initial population, the source channels and the bath history replace `InitialState`.
 
 ## 5. Output
 
@@ -84,6 +87,15 @@ the yield of the final steady state ([SteadyStateOlzmann](steady_state_olzmann.m
 - the conserved total.
 
 **Machine-readable:** blocks `# time evolution: T = … K, p = … Torr` with t, N(W), exit yields; `FILE_tables.csv`.
+
+**With a `Preparation` block,** the section PREPARED EXPERIMENT gives, per output time:
+- populations, yields, fluxes and the injected amounts;
+- the mean energy, the tail above the threshold, the loss hazard and the balance;
+- flux coefficients r and R, and the effective coefficients k^e (Barker, Frenklach, Golden, J. Phys. Chem. A 119, 7451 (2015), eqs. A5, 1, A7);
+- the energy spread, d⟨E⟩/dt, E_f and τ_vib (Barker, King, J. Chem. Phys. 103, 4953 (1995), eq. 11);
+- the incubation time (their eq. 9) and the collision numbers.
+
+The quantities are explained in [transient diagnostics](../features/transient_diagnostics.md). With `CompareWithCse` the section adds the [CSE description in time](../features/cse_validity_in_time.md), with the agreement time t*. Machine-readable: blocks `# prepared time integration: …` and `# CSE description in time …`.
 
 ## 6. Validity and limits
 
@@ -125,7 +137,8 @@ The method has no physical restriction beyond the master equation itself. The ou
 ## 8. Code
 
 - `src/numeric/integrators/rosenbrock_methods.rs` (coefficients), `src/numeric/integrators/rosenbrock.rs` (`integrate`, `StiffSystem`), `src/masterequation/direct_time_integration.rs` (`integrate_master_equation`), `report_sections.rs` (`write_time_evolution_tables`, `time_integration_groups`).
-- Report: `reports/direct_time_integration.md`.
+- Prepared experiments: `prepared_time_integration.rs` (`integrate_preparation`, `effective_coefficient`), `cse_time_evolution.rs`, `source_profiles.rs`, `prepared_distributions.rs`, `preparation_input.rs`; `report_sections.rs` (`write_preparation_summary`, `write_transient_tables`, `write_cse_time_comparison`).
+- Reports: `reports/direct_time_integration.md`, `reports/nonthermal_sources_design.md`.
 
 ## 9. References
 

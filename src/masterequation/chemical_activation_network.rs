@@ -23,6 +23,7 @@
 //! offset per well, so that grains of different wells at the same absolute energy coincide exactly.
 
 use super::collisional_relaxation::CollisionIntegral;
+use super::fragment_partition::{ExcessPartner, FragmentKernel};
 
 /// Temperature dependence of the mean energy transferred in deactivating collisions,
 /// <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n.
@@ -62,6 +63,11 @@ pub enum ChannelDestination {
     Products { name: String },
     /// Another well of the network (isomerization), entered at the same absolute energy.
     Well { index: usize },
+    /// Dissociation into the fragment well `index` and a partner in excess (pseudo-first-order): the fragment receives the
+    /// energy e <= X above the pair asymptote with the kernel P(e | X), the reverse association follows from detailed
+    /// balance with the partner weight (Green, Robertson, Chem. Phys. Lett. 605-606, 44 (2014), eq. 15;
+    /// `fragment_partition.rs`). The asymptote is the bottom of the fragment grid plus the ground energy of the partner.
+    Fragment { index: usize, partner: ExcessPartner, kernel: FragmentKernel },
 }
 
 /// A unimolecular channel of a well with its microcanonical rate coefficients.
@@ -183,13 +189,19 @@ impl ChemicalActivationNetwork {
                         well.name, channel.name
                     ));
                 }
-                if let ChannelDestination::Well { index } = channel.destination {
-                    if index >= self.wells.len() || index == w {
-                        return Err(format!(
-                            "Well '{}', channel '{}': invalid destination well {}.",
-                            well.name, channel.name, index
-                        ));
+                match &channel.destination {
+                    ChannelDestination::Well { index } | ChannelDestination::Fragment { index, .. } => {
+                        if *index >= self.wells.len() || *index == w {
+                            return Err(format!(
+                                "Well '{}', channel '{}': invalid destination well {}.",
+                                well.name, channel.name, index
+                            ));
+                        }
                     }
+                    ChannelDestination::Products { .. } => {}
+                }
+                if let ChannelDestination::Fragment { partner, .. } = &channel.destination {
+                    partner.validate().map_err(|e| format!("Well '{}', channel '{}': {e}", well.name, channel.name))?;
                 }
             }
         }
