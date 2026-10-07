@@ -1,0 +1,2141 @@
+====================================================================================================
+ MarXus master equation
+====================================================================================================
+ RUN SETTINGS
+ ------------
+ Deck:               validation/c2h4_ho2_hindered_rotors/input/c2h4_ho2_electronic_levels.inp
+ Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
+                     (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
+ Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
+                     species merging (Georgievskii et al. 2013, Sec. IV; partition as MESS): ChemicalEigenvalueMax 0.2 (deck), WellProjectionThreshold 0.2 (default); chemical eigenvectors: relaxational projection 1 - F_ne <= ChemicalEigenvalueMax (MESS direct method) (default)
+ Parallel:           4 cores (--ncore); the 30 conditions (T, p) in batches of 4 at a time (rayon)
+                     BLAS threads per LAPACK call: 1
+ Temperatures (K):   300, 500, 700, 1000, 1500, 2000
+ Pressures (torr):   7.500616827041697, 75.00616827041698, 750.0616827041697, 7500.616827041697, 75006.16827041698
+ Energy grid:        grains of 42.000 cm-1 on a common absolute scale, sums of 1 cm-1 counting cells
+ Collisions:         exponential down, exactly normalized (Robertson (ed.), CCK 43 (2019), eq. 4.16), transitions up to 15 <dE_down>
+                     low-energy reservoirs where eq. 4.16 fails (sparse states, Robertson 2019, p. 294): the grains from the
+                       failing one down form one thermalized state (reservoir state, MESMER manual, Sec. 14.2.1):
+                       T = 300 K: W2 5 grains (210 cm-1, 22.0 k_BT below the lowest threshold)
+                       T = 500 K: W2 9 grains (378 cm-1, 12.7 k_BT below the lowest threshold)
+                       T = 700 K: W2 16 grains (672 cm-1, 8.5 k_BT below the lowest threshold)
+                       T = 1000 K: W2 30 grains (1260 cm-1, 5.1 k_BT below the lowest threshold)
+                       T = 1500 K: W2 63 grains (2646 cm-1, 2.1 k_BT below the lowest threshold)
+                       T = 2000 K: W2 103 grains (4326 cm-1, 0.3 k_BT below the lowest threshold)
+                       warning, T = 1500 K: the low-energy reservoir of well W2 reaches 2646 cm-1 above the well bottom, 2.05 k_BT below its lowest reaction threshold (4788 cm-1). The reservoir state assumes Boltzmann equilibrium among its grains and "is usually appropriate for grains which are more than a few kT below the lowest reaction threshold" (MESMER manual, Sec. 14.2.1); results for this well should be checked, e.g. with a finer energy grain (the reservoir forms where the normalization of the exponential-down kernel fails at sparse states).
+                       warning, T = 2000 K: the low-energy reservoir of well W2 reaches 4326 cm-1 above the well bottom, 0.33 k_BT below its lowest reaction threshold (4788 cm-1). The reservoir state assumes Boltzmann equilibrium among its grains and "is usually appropriate for grains which are more than a few kT below the lowest reaction threshold" (MESMER manual, Sec. 14.2.1); results for this well should be checked, e.g. with a finer energy grain (the reservoir forms where the normalization of the exponential-down kernel fails at sparse states).
+                     collision frequency: Lennard-Jones (per well, below); collision integral Omega(2,2)*: Neufeld, Janzen, Aziz, J. Chem. Phys. 57, 1100 (1972) (default)
+ Tunneling:          MESS semiclassical Eckart model (option for comparison with MESS)
+ Rotors:             7 one-dimensional internal rotors: quantum levels in the Fourier basis of period 2 pi/sigma, convolved with the other degrees of freedom; reduced moment from a geometry: Kilpatrick-Pitzer I(1,3) (default)
+                       W2 rotor 1: B 9.938402 cm-1, symmetry 2, potential -0.000039 .. 0.830790 kcal/mol, ground energy 0.155905 kcal/mol, 997 levels up to 28188.7 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.253020 0.456715 0.703733 0.770266 1.277130 1.281169 2.065549 2.065682 3.084614
+                       W2 rotor 2: B 1.942945 cm-1, symmetry 1, potential -0.008042 .. 5.969358 kcal/mol, ground energy 0.236392 kcal/mol, 997 levels up to 1379.7 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.235501 0.479277 0.530558 0.563956 0.821328 0.938949 0.990905 1.106612 1.377224
+                       W2 rotor 3: B 19.540222 cm-1, symmetry 1, potential -0.000015 .. 5.357391 kcal/mol, ground energy 0.300510 kcal/mol, 997 levels up to 13857.0 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.406470 0.536281 0.803995 1.040977 1.341724 1.670879 2.023764 2.395398 2.781577
+                       B3 rotor 1: B 1.961023 cm-1, symmetry 1, potential -0.000013 .. 3.198327 kcal/mol, ground energy 0.128274 kcal/mol, 997 levels up to 1392.0 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.252184 0.495483 0.729209 0.952476 1.042829 1.164081 1.254993 1.362266 1.452151
+                       B3 rotor 2: B 19.683031 cm-1, symmetry 1, potential -0.006654 .. 11.648269 kcal/mol, ground energy 0.601209 kcal/mol, 997 levels up to 13960.9 kcal/mol above the ground; lowest above the ground (kcal/mol): 1.062395 1.141376 2.188022 2.231881 3.222394 3.340566 4.276186 4.419624 5.346287
+                       B4 rotor 1: B 1.775474 cm-1, symmetry 1, potential -0.020408 .. 37.141151 kcal/mol, ground energy 0.138660 kcal/mol, 991 levels up to 1261.9 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.320495 0.645613 0.975156 1.308920 1.646705 1.988313 2.333552 2.682234 3.034179
+                       B4 rotor 2: B 19.913176 cm-1, symmetry 1, potential -0.037105 .. 4.804606 kcal/mol, ground energy 0.116406 kcal/mol, 997 levels up to 14121.4 kcal/mol above the ground; lowest above the ground (kcal/mol): 0.114033 0.397770 0.684825 1.019505 1.376859 1.752889 2.141148 2.536921 2.936095
+ Source:             thermal reactant P1 through B3 (P1 -> W2)
+                     F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)
+====================================================================================================
+ CHEMICAL NETWORK
+ ----------------
+
+Wells (collisions: <dE_down>(T) = <dE_down>(T_ref) (T/T_ref)^n; Lennard-Jones collision frequency):
+      Name   grains    absolute grains   collisions; sink
+        W2     1455       -131 .. 1323   <dE_down> = 180 cm-1 (T/300 K)^0.95; sigma 3.360 A, epsilon 52.25 K, reduced mass 3.754 amu
+
+Channels (k(E) of every channel; rate model from the deck):
+      Name     From       To   Model
+        B3       W2       P1   rigid transition state, Eckart tunneling; entrance of the reactant (source)
+        B4       W2       P2   rigid transition state, Eckart tunneling
+
+Energetics (kcal/mol, relative to P1):
+
+Wells (G - ground energy, D - lowest barrier out of the well):
+      Name          G          D
+        W2      -2.36      11.32
+
+Bimolecular (G - ground energy):
+      Name          G
+        P1       0.00
+
+Barriers (H - ZeroEnergy of the barrier in the deck):
+      Name          H     From       To   Model
+        B3      13.25       W2       P1   rigid transition state, Eckart tunneling
+        B4      11.32       W2       P2   rigid transition state, Eckart tunneling
+
+====================================================================================================
+ PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS
+ ---------------------------------------------
+
+From the cell densities of states of the master equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO partition function.
+
+Temperature = 300 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   4.72745e+06
+        B3      barrier      -0.1300   1.29970e+06
+        B4      barrier      -2.0600   1.08451e+06
+        P1  bimolecular     -13.3800   8.71845e+31
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  2.84063e-24
+P1     3.52035e+23  1.00000e+00
+
+Temperature = 500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.12415e+08
+        B3      barrier      -0.1300   2.64846e+07
+        B4      barrier      -2.0600   1.46086e+07
+        P1  bimolecular     -13.3800   1.23547e+33
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  9.78430e-25
+P1     1.02205e+24  1.00000e+00
+
+Temperature = 700 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.55628e+09
+        B3      barrier      -0.1300   3.41706e+08
+        B4      barrier      -2.0600   1.46721e+08
+        P1  bimolecular     -13.3800   1.03432e+34
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  8.20812e-25
+P1     1.21831e+24  1.00000e+00
+
+Temperature = 1000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   4.48629e+10
+        B3      barrier      -0.1300   9.11977e+09
+        B4      barrier      -2.0600   3.17740e+09
+        P1  bimolecular     -13.3800   1.60690e+35
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  9.15514e-25
+P1     1.09228e+24  1.00000e+00
+
+Temperature = 1500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   4.50530e+12
+        B3      barrier      -0.1300   8.29560e+11
+        B4      barrier      -2.0600   2.45288e+11
+        P1  bimolecular     -13.3800   7.61096e+36
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  1.30656e-24
+P1     7.65368e+23  1.00000e+00
+
+Temperature = 2000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.99111e+14
+        B3      barrier      -0.1300   3.39324e+13
+        B4      barrier      -2.0600   9.32025e+12
+        P1  bimolecular     -13.3800   1.97005e+38
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  1.83021e-24
+P1     5.46385e+23  1.00000e+00
+
+====================================================================================================
+Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
+Numbers with six significant digits; *** marks a value that is not available.
+====================================================================================================
+
+____________________________________________________________________________________________________
+PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)
+____________________________________________________________________________________________________
+
+Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-34. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant and product rows in cm^3/s (a product row from the capture rate coefficient of its reverse association,
+eqs. 28, 21, 22). Diagonal: total loss of a well; for a bimolecular species its net reaction (capture - return).
+Below each table: kappa (eq. 34), 1 for a well in equilibrium with the bimolecular species, 0 otherwise.
+Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
+coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
+
+--- Species-to-species tables ---
+
+Temperature = 300 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          9.13485e+01
+  lowest relaxation eigenvalue (1/s):  4.62955e+06   separation Lambda_N/Lambda_N+1: 1.97316e-05
+  P1 (cm^3/s): capture 3.55072e-23   return 4.01917e-24   net reaction 3.14880e-23
+
+From\To             W2           P1           P2
+W2         9.13485e+01  1.17817e+00  9.01704e+01
+P1         3.33994e-24  3.14880e-23  2.81481e-23
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 3.77285e-10):
+
+W\P             P1           P2
+W2     1.70825e-07  5.29554e-06
+
+Temperature = 300 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          1.79029e+02
+  lowest relaxation eigenvalue (1/s):  4.53045e+07   separation Lambda_N/Lambda_N+1: 3.95169e-06
+  P1 (cm^3/s): capture 3.55072e-23   return 3.04926e-24   net reaction 3.24579e-23
+
+From\To             W2           P1           P2
+W2         1.79029e+02  5.09379e+00  1.73936e+02
+P1         1.44402e-23  3.24579e-23  1.80177e-23
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.11022e-09):
+
+W\P             P1           P2
+W2     3.95930e-08  5.24404e-07
+
+Temperature = 300 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          2.35472e+02
+  lowest relaxation eigenvalue (1/s):  4.47340e+08   separation Lambda_N/Lambda_N+1: 5.26384e-07
+  P1 (cm^3/s): capture 3.55072e-23   return 1.20297e-24   net reaction 3.43042e-23
+
+From\To             W2           P1           P2
+W2         2.35472e+02  1.01269e+01  2.25345e+02
+P1         2.87086e-23  3.43042e-23  5.59560e-24
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 6.55876e-07):
+
+W\P             P1           P2
+W2     2.66717e-09  1.96869e-08
+
+Temperature = 300 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          2.50718e+02
+  lowest relaxation eigenvalue (1/s):  4.45323e+09   separation Lambda_N/Lambda_N+1: 5.63004e-08
+  P1 (cm^3/s): capture 3.55072e-23   return 2.09697e-25   net reaction 3.52975e-23
+
+From\To             W2           P1           P2
+W2         2.50718e+02  1.21534e+01  2.38565e+02
+P1         3.44532e-23  3.52975e-23  8.44235e-25
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 8.84231e-07):
+
+W\P             P1           P2
+W2     5.71069e-11  3.20544e-10
+
+Temperature = 300 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          2.52843e+02
+  lowest relaxation eigenvalue (1/s):  4.44925e+10   separation Lambda_N/Lambda_N+1: 5.68281e-09
+  P1 (cm^3/s): capture 3.55072e-23   return 2.34918e-26   net reaction 3.54837e-23
+
+From\To             W2           P1           P2
+W2         2.52843e+02  1.24847e+01  2.40359e+02
+P1         3.53925e-23  3.54837e-23  9.11767e-26
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.32248e-06):
+
+W\P             P1           P2
+W2     6.71636e-13  3.52523e-12
+
+Temperature = 500 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          9.32607e+04
+  lowest relaxation eigenvalue (1/s):  4.98622e+06   separation Lambda_N/Lambda_N+1: 1.87037e-02
+  P1 (cm^3/s): capture 4.31694e-19   return 1.22553e-19   net reaction 3.09141e-19
+
+From\To             W2           P1           P2
+W2         9.32607e+04  2.92762e+03  9.03331e+04
+P1         2.80423e-21  3.09141e-19  3.06337e-19
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.25715e-12):
+
+W\P             P1           P2
+W2     1.42627e-03  1.84093e-02
+
+Temperature = 500 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          3.84477e+05
+  lowest relaxation eigenvalue (1/s):  4.07886e+07   separation Lambda_N/Lambda_N+1: 9.42607e-03
+  P1 (cm^3/s): capture 4.31694e-19   return 1.17828e-19   net reaction 3.13866e-19
+
+From\To             W2           P1           P2
+W2         3.84477e+05  2.94358e+04  3.55041e+05
+P1         2.85751e-20  3.13866e-19  2.85291e-19
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 5.31207e-11):
+
+W\P             P1           P2
+W2     8.91374e-04  5.73964e-03
+
+Temperature = 500 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          1.04002e+06
+  lowest relaxation eigenvalue (1/s):  3.32901e+08   separation Lambda_N/Lambda_N+1: 3.12412e-03
+  P1 (cm^3/s): capture 4.31694e-19   return 9.25603e-20   net reaction 3.39134e-19
+
+From\To             W2           P1           P2
+W2         1.04002e+06  1.43614e+05  8.96407e+05
+P1         1.40187e-19  3.39134e-19  1.98947e-19
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.98584e-10):
+
+W\P             P1           P2
+W2     2.46877e-04  8.80684e-04
+
+Temperature = 500 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          1.73892e+06
+  lowest relaxation eigenvalue (1/s):  2.86267e+09   separation Lambda_N/Lambda_N+1: 6.07449e-04
+  P1 (cm^3/s): capture 4.31694e-19   return 4.03840e-20   net reaction 3.91310e-19
+
+From\To             W2           P1           P2
+W2         1.73892e+06  3.25763e+05  1.41316e+06
+P1         3.18325e-19  3.91310e-19  7.29856e-20
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.87594e-11):
+
+W\P             P1           P2
+W2     2.19910e-05  5.17072e-05
+
+Temperature = 500 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          2.03069e+06
+  lowest relaxation eigenvalue (1/s):  2.66575e+10   separation Lambda_N/Lambda_N+1: 7.61771e-05
+  P1 (cm^3/s): capture 4.31694e-19   return 7.72711e-21   net reaction 4.23967e-19
+
+From\To             W2           P1           P2
+W2         2.03069e+06  4.21088e+05  1.60960e+06
+P1         4.11503e-19  4.23967e-19  1.24644e-20
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 4.35240e-10):
+
+W\P             P1           P2
+W2     5.81822e-07  1.10332e-06
+
+Temperature = 700 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  8.94979e+05   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 3.84322e-17   return 1.59552e-17   net reaction 2.24770e-17
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 8.9498e5 s-1) have a relaxational projection 1 - F_ne (0.2348) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         2.24770e-17  2.24770e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 3.61133e-12):
+
+W\P             P1           P2
+W2     7.40511e-02  9.25949e-01
+
+Temperature = 700 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          5.01013e+06
+  lowest relaxation eigenvalue (1/s):  6.63300e+07   separation Lambda_N/Lambda_N+1: 7.55334e-02
+  P1 (cm^3/s): capture 3.84322e-17   return 1.58450e-17   net reaction 2.25872e-17
+
+From\To             W2           P1           P2
+W2         5.01013e+06  5.94499e+05  4.41563e+06
+P1         4.21031e-19  2.25872e-17  2.21662e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.58060e-11):
+
+W\P             P1           P2
+W2     2.90551e-02  1.07376e-01
+
+Temperature = 700 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          2.12399e+07
+  lowest relaxation eigenvalue (1/s):  4.57500e+08   separation Lambda_N/Lambda_N+1: 4.64260e-02
+  P1 (cm^3/s): capture 3.84322e-17   return 1.49376e-17   net reaction 2.34946e-17
+
+From\To             W2           P1           P2
+W2         2.12399e+07  4.45959e+06  1.67803e+07
+P1         3.46201e-18  2.34946e-17  2.00326e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 7.31903e-12):
+
+W\P             P1           P2
+W2     1.61295e-02  3.72691e-02
+
+Temperature = 700 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          6.06790e+07
+  lowest relaxation eigenvalue (1/s):  3.07515e+09   separation Lambda_N/Lambda_N+1: 1.97321e-02
+  P1 (cm^3/s): capture 3.84322e-17   return 1.08310e-17   net reaction 2.76013e-17
+
+From\To             W2           P1           P2
+W2         6.06790e+07  1.79847e+07  4.26943e+07
+P1         1.45925e-17  2.76013e-17  1.30087e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.52722e-12):
+
+W\P             P1           P2
+W2     4.13843e-03  6.48674e-03
+
+Temperature = 700 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          1.05152e+08
+  lowest relaxation eigenvalue (1/s):  2.23955e+10   separation Lambda_N/Lambda_N+1: 4.69523e-03
+  P1 (cm^3/s): capture 3.84322e-17   return 4.00696e-18   net reaction 3.44253e-17
+
+From\To             W2           P1           P2
+W2         1.05152e+08  3.68411e+07  6.83106e+07
+P1         3.01915e-17  3.44253e-17  4.23375e-18
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.45359e-12):
+
+W\P             P1           P2
+W2     3.26982e-04  3.93491e-04
+
+Temperature = 1000 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  4.14069e+06   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 1.56844e-15   return 8.47596e-16   net reaction 7.20849e-16
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 4.1407e6 s-1) have a relaxational projection 1 - F_ne (0.7050) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.20849e-16  7.20849e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.63789e-13):
+
+W\P             P1           P2
+W2     2.33416e-01  7.66584e-01
+
+Temperature = 1000 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  2.67223e+07   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 1.56844e-15   return 8.47257e-16   net reaction 7.21188e-16
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.6722e7 s-1) have a relaxational projection 1 - F_ne (0.5747) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.21188e-16  7.21188e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.72862e-12):
+
+W\P             P1           P2
+W2     2.72044e-01  7.27956e-01
+
+Temperature = 1000 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  1.42867e+08   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 1.56844e-15   return 8.45686e-16   net reaction 7.22759e-16
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.4287e8 s-1) have a relaxational projection 1 - F_ne (0.3861) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.22759e-16  7.22759e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 7.49178e-13):
+
+W\P             P1           P2
+W2     3.33809e-01  6.66191e-01
+
+Temperature = 1000 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          5.90521e+08
+  lowest relaxation eigenvalue (1/s):  5.14380e+09   separation Lambda_N/Lambda_N+1: 1.14803e-01
+  P1 (cm^3/s): capture 1.56844e-15   return 7.73407e-16   net reaction 7.95038e-16
+  warning: the largest chemical eigenvalue 5.90520959731152e8 s-1 is 0.115 of the lowest relaxation eigenvalue 5.143796001397122e9 s-1: the chemical eigenstates are not well separated (the method requires |lambda_N| << |lambda_(N+1)|, Miller, Klippenstein 2006). Species are merged only above ChemicalEigenvalueMax = 0.2 (Georgievskii et al. 2013, Sec. IV).
+
+From\To             W2           P1           P2
+W2         5.90521e+08  2.30197e+08  3.60324e+08
+P1         1.73141e-16  7.95038e-16  6.21897e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 4.70735e-14):
+
+W\P             P1           P2
+W2     8.66939e-02  9.12530e-02
+
+Temperature = 1000 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          1.66332e+09
+  lowest relaxation eigenvalue (1/s):  2.80042e+10   separation Lambda_N/Lambda_N+1: 5.93953e-02
+  P1 (cm^3/s): capture 1.56844e-15   return 5.10357e-16   net reaction 1.05809e-15
+
+From\To             W2           P1           P2
+W2         1.66332e+09  7.80201e+08  8.83121e+08
+P1         6.85630e-16  1.05809e-15  3.72458e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.28146e-14):
+
+W\P             P1           P2
+W2     2.17179e-02  1.78141e-02
+
+Temperature = 1500 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  1.44721e+07   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 4.07112e-14   return 2.62473e-14   net reaction 1.44638e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.4472e7 s-1) have a relaxational projection 1 - F_ne (0.9703) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         1.44638e-14  1.44638e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 3.33067e-13):
+
+W\P             P1           P2
+W2     5.04503e-01  4.95497e-01
+
+Temperature = 1500 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  1.02102e+08   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 4.07112e-14   return 2.62468e-14   net reaction 1.44643e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.0210e8 s-1) have a relaxational projection 1 - F_ne (0.9377) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         1.44643e-14  1.44643e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.04361e-13):
+
+W\P             P1           P2
+W2     5.12057e-01  4.87943e-01
+
+Temperature = 1500 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  6.11835e+08   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 4.07112e-14   return 2.62440e-14   net reaction 1.44672e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 6.1183e8 s-1) have a relaxational projection 1 - F_ne (0.8563) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         1.44672e-14  1.44672e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 7.72715e-14):
+
+W\P             P1           P2
+W2     5.26955e-01  4.73045e-01
+
+Temperature = 1500 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  3.00940e+09   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 4.07112e-14   return 2.62318e-14   net reaction 1.44794e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 3.0094e9 s-1) have a relaxational projection 1 - F_ne (0.6715) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         1.44794e-14  1.44794e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.88738e-14):
+
+W\P             P1           P2
+W2     5.51140e-01  4.48860e-01
+
+Temperature = 1500 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  1.13203e+10   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 4.07112e-14   return 2.61949e-14   net reaction 1.45163e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.1320e10 s-1) have a relaxational projection 1 - F_ne (0.3571) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         1.45163e-14  1.45163e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.59872e-14):
+
+W\P             P1           P2
+W2     5.83250e-01  4.16750e-01
+
+Temperature = 2000 K    Pressure = 7.500616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  2.67201e+07   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 2.58466e-13   return 1.79285e-13   net reaction 7.91804e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.6720e7 s-1) have a relaxational projection 1 - F_ne (0.9983) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.91804e-14  7.91804e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.35447e-14):
+
+W\P             P1           P2
+W2     6.31851e-01  3.68149e-01
+
+Temperature = 2000 K    Pressure = 75.00616827041698 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  2.11615e+08   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 2.58466e-13   return 1.79285e-13   net reaction 7.91807e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.1162e8 s-1) have a relaxational projection 1 - F_ne (0.9936) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.91807e-14  7.91807e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.84217e-14):
+
+W\P             P1           P2
+W2     6.32953e-01  3.67047e-01
+
+Temperature = 2000 K    Pressure = 750.0616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  1.37273e+09   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 2.58466e-13   return 1.79283e-13   net reaction 7.91826e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 1.3727e9 s-1) have a relaxational projection 1 - F_ne (0.9762) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.91826e-14  7.91826e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.99840e-14):
+
+W\P             P1           P2
+W2     6.35606e-01  3.64394e-01
+
+Temperature = 2000 K    Pressure = 7500.616827041697 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  7.19958e+09   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 2.58466e-13   return 1.79272e-13   net reaction 7.91935e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 7.1996e9 s-1) have a relaxational projection 1 - F_ne (0.9097) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.91935e-14  7.91935e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.11022e-15):
+
+W\P             P1           P2
+W2     6.41354e-01  3.58646e-01
+
+Temperature = 2000 K    Pressure = 75006.16827041698 torr
+
+  chemical eigenvalues (1/s):          
+  lowest relaxation eigenvalue (1/s):  2.94665e+10   separation Lambda_N/Lambda_N+1: ***
+  P1 (cm^3/s): capture 2.58466e-13   return 1.79227e-13   net reaction 7.92386e-14
+  warning: species merged (Georgievskii et al. 2013, Sec. IV; MESS partition): only 0 of the 1 lowest eigenvectors (eigenvalues 2.9467e10 s-1) have a relaxational projection 1 - F_ne (0.6958) of at most ChemicalEigenvalueMax = 0.2 (relaxation projection threshold of the MESS direct method), so the wells are not all kinetically distinct. Species: none; in equilibrium with the bimolecular species (no rate coefficients): W2. Partition projection error 0.000e0. Rate coefficients are given for the merged species only; their wells cannot be distinguished at this condition.
+
+From\To             P1           P2
+P1         7.92386e-14  7.92386e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 6.66134e-16):
+
+W\P             P1           P2
+W2     6.52221e-01  3.47779e-01
+
+--- Tables by temperature (rows: pressure in torr) ---
+
+Rate coefficients from W2 (1/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697  1.17817e+00  9.01704e+01  9.13485e+01
+  75.00616827041698  5.09379e+00  1.73936e+02  1.79029e+02
+  750.0616827041697  1.01269e+01  2.25345e+02  2.35472e+02
+  7500.616827041697  1.21534e+01  2.38565e+02  2.50718e+02
+  75006.16827041698  1.24847e+01  2.40359e+02  2.52843e+02
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697  2.92762e+03  9.03331e+04  9.32607e+04
+  75.00616827041698  2.94358e+04  3.55041e+05  3.84477e+05
+  750.0616827041697  1.43614e+05  8.96407e+05  1.04002e+06
+  7500.616827041697  3.25763e+05  1.41316e+06  1.73892e+06
+  75006.16827041698  4.21088e+05  1.60960e+06  2.03069e+06
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697          ***          ***          ***
+  75.00616827041698  5.94499e+05  4.41563e+06  5.01013e+06
+  750.0616827041697  4.45959e+06  1.67803e+07  2.12399e+07
+  7500.616827041697  1.79847e+07  4.26943e+07  6.06790e+07
+  75006.16827041698  3.68411e+07  6.83106e+07  1.05152e+08
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697          ***          ***          ***
+  75.00616827041698          ***          ***          ***
+  750.0616827041697          ***          ***          ***
+  7500.616827041697  2.30197e+08  3.60324e+08  5.90521e+08
+  75006.16827041698  7.80201e+08  8.83121e+08  1.66332e+09
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697          ***          ***          ***
+  75.00616827041698          ***          ***          ***
+  750.0616827041697          ***          ***          ***
+  7500.616827041697          ***          ***          ***
+  75006.16827041698          ***          ***          ***
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2      W2 loss
+  7.500616827041697          ***          ***          ***
+  75.00616827041698          ***          ***          ***
+  750.0616827041697          ***          ***          ***
+  7500.616827041697          ***          ***          ***
+  75006.16827041698          ***          ***          ***
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(P1 -> P) (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  2.81481e-23
+  75.00616827041698  1.80177e-23
+  750.0616827041697  5.59560e-24
+  7500.616827041697  8.44235e-25
+  75006.16827041698  9.11767e-26
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  3.06337e-19
+  75.00616827041698  2.85291e-19
+  750.0616827041697  1.98947e-19
+  7500.616827041697  7.29856e-20
+  75006.16827041698  1.24644e-20
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  2.24770e-17
+  75.00616827041698  2.21662e-17
+  750.0616827041697  2.00326e-17
+  7500.616827041697  1.30087e-17
+  75006.16827041698  4.23375e-18
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  7.20849e-16
+  75.00616827041698  7.21188e-16
+  750.0616827041697  7.22759e-16
+  7500.616827041697  6.21897e-16
+  75006.16827041698  3.72458e-16
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.44638e-14
+  75.00616827041698  1.44643e-14
+  750.0616827041697  1.44672e-14
+  7500.616827041697  1.44794e-14
+  75006.16827041698  1.45163e-14
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  7.91804e-14
+  75.00616827041698  7.91807e-14
+  750.0616827041697  7.91826e-14
+  7500.616827041697  7.91935e-14
+  75006.16827041698  7.92386e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->W2
+  7.500616827041697  3.33994e-24
+  75.00616827041698  1.44402e-23
+  750.0616827041697  2.87086e-23
+  7500.616827041697  3.44532e-23
+  75006.16827041698  3.53925e-23
+
+   Temperature = 500 K
+
+            P(torr)       P1->W2
+  7.500616827041697  2.80423e-21
+  75.00616827041698  2.85751e-20
+  750.0616827041697  1.40187e-19
+  7500.616827041697  3.18325e-19
+  75006.16827041698  4.11503e-19
+
+   Temperature = 700 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698  4.21031e-19
+  750.0616827041697  3.46201e-18
+  7500.616827041697  1.45925e-17
+  75006.16827041698  3.01915e-17
+
+   Temperature = 1000 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697  1.73141e-16
+  75006.16827041698  6.85630e-16
+
+   Temperature = 1500 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+   Temperature = 2000 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+Capture, return and net reaction of P1 (cm^3/s), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  3.55072e-23  4.01917e-24  3.14880e-23
+  75.00616827041698  3.55072e-23  3.04926e-24  3.24579e-23
+  750.0616827041697  3.55072e-23  1.20297e-24  3.43042e-23
+  7500.616827041697  3.55072e-23  2.09697e-25  3.52975e-23
+  75006.16827041698  3.55072e-23  2.34918e-26  3.54837e-23
+
+   Temperature = 500 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  4.31694e-19  1.22553e-19  3.09141e-19
+  75.00616827041698  4.31694e-19  1.17828e-19  3.13866e-19
+  750.0616827041697  4.31694e-19  9.25603e-20  3.39134e-19
+  7500.616827041697  4.31694e-19  4.03840e-20  3.91310e-19
+  75006.16827041698  4.31694e-19  7.72711e-21  4.23967e-19
+
+   Temperature = 700 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  3.84322e-17  1.59552e-17  2.24770e-17
+  75.00616827041698  3.84322e-17  1.58450e-17  2.25872e-17
+  750.0616827041697  3.84322e-17  1.49376e-17  2.34946e-17
+  7500.616827041697  3.84322e-17  1.08310e-17  2.76013e-17
+  75006.16827041698  3.84322e-17  4.00696e-18  3.44253e-17
+
+   Temperature = 1000 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  1.56844e-15  8.47596e-16  7.20849e-16
+  75.00616827041698  1.56844e-15  8.47257e-16  7.21188e-16
+  750.0616827041697  1.56844e-15  8.45686e-16  7.22759e-16
+  7500.616827041697  1.56844e-15  7.73407e-16  7.95038e-16
+  75006.16827041698  1.56844e-15  5.10357e-16  1.05809e-15
+
+   Temperature = 1500 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  4.07112e-14  2.62473e-14  1.44638e-14
+  75.00616827041698  4.07112e-14  2.62468e-14  1.44643e-14
+  750.0616827041697  4.07112e-14  2.62440e-14  1.44672e-14
+  7500.616827041697  4.07112e-14  2.62318e-14  1.44794e-14
+  75006.16827041698  4.07112e-14  2.61949e-14  1.45163e-14
+
+   Temperature = 2000 K
+
+            P(torr)      capture       return          net
+  7.500616827041697  2.58466e-13  1.79285e-13  7.91804e-14
+  75.00616827041698  2.58466e-13  1.79285e-13  7.91807e-14
+  750.0616827041697  2.58466e-13  1.79283e-13  7.91826e-14
+  7500.616827041697  2.58466e-13  1.79272e-13  7.91935e-14
+  75006.16827041698  2.58466e-13  1.79227e-13  7.92386e-14
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  8.93930e+01
+  75.00616827041698  5.55109e+01
+  750.0616827041697  1.63117e+01
+  7500.616827041697  2.39177e+00
+  75006.16827041698  2.56954e-01
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  9.90929e+01
+  75.00616827041698  9.08958e+01
+  750.0616827041697  5.86634e+01
+  7500.616827041697  1.86516e+01
+  75006.16827041698  2.93994e+00
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  9.81360e+01
+  750.0616827041697  8.52647e+01
+  7500.616827041697  4.71309e+01
+  75006.16827041698  1.22984e+01
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  7.82223e+01
+  75006.16827041698  3.52010e+01
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->W2
+  7.500616827041697  1.06070e+01
+  75.00616827041698  4.44891e+01
+  750.0616827041697  8.36883e+01
+  7500.616827041697  9.76082e+01
+  75006.16827041698  9.97430e+01
+
+   Temperature = 500 K
+
+            P(torr)       P1->W2
+  7.500616827041697  9.07104e-01
+  75.00616827041698  9.10421e+00
+  750.0616827041697  4.13366e+01
+  7500.616827041697  8.13484e+01
+  75006.16827041698  9.70601e+01
+
+   Temperature = 700 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698  1.86402e+00
+  750.0616827041697  1.47353e+01
+  7500.616827041697  5.28691e+01
+  75006.16827041698  8.77016e+01
+
+   Temperature = 1000 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697  2.17777e+01
+  75006.16827041698  6.47990e+01
+
+   Temperature = 1500 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+   Temperature = 2000 K
+
+            P(torr)       P1->W2
+  7.500616827041697          ***
+  75.00616827041698          ***
+  750.0616827041697          ***
+  7500.616827041697          ***
+  75006.16827041698          ***
+
+Thermal fate of W2 (%), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  1.28975e+00  9.87102e+01
+  75.00616827041698  2.84522e+00  9.71548e+01
+  750.0616827041697  4.30069e+00  9.56993e+01
+  7500.616827041697  4.84741e+00  9.51526e+01
+  75006.16827041698  4.93771e+00  9.50623e+01
+
+   Temperature = 500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697  3.13917e+00  9.68608e+01
+  75.00616827041698  7.65606e+00  9.23439e+01
+  750.0616827041697  1.38087e+01  8.61913e+01
+  7500.616827041697  1.87336e+01  8.12664e+01
+  75006.16827041698  2.07362e+01  7.92638e+01
+
+   Temperature = 700 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697          ***          ***
+  75.00616827041698  1.18659e+01  8.81341e+01
+  750.0616827041697  2.09963e+01  7.90037e+01
+  7500.616827041697  2.96391e+01  7.03609e+01
+  75006.16827041698  3.50361e+01  6.49639e+01
+
+   Temperature = 1000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697          ***          ***
+  75.00616827041698          ***          ***
+  750.0616827041697          ***          ***
+  7500.616827041697  3.89821e+01  6.10179e+01
+  75006.16827041698  4.69062e+01  5.30938e+01
+
+   Temperature = 1500 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697          ***          ***
+  75.00616827041698          ***          ***
+  750.0616827041697          ***          ***
+  7500.616827041697          ***          ***
+  75006.16827041698          ***          ***
+
+   Temperature = 2000 K
+
+            P(torr)       W2->P1       W2->P2
+  7.500616827041697          ***          ***
+  75.00616827041698          ***          ***
+  750.0616827041697          ***          ***
+  7500.616827041697          ***          ***
+  75006.16827041698          ***          ***
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  8.95154e+01
+  75.00616827041698  5.62225e+01
+  750.0616827041697  1.69207e+01
+  7500.616827041697  2.51056e+00
+  75006.16827041698  2.70265e-01
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  9.91211e+01
+  75.00616827041698  9.15338e+01
+  750.0616827041697  6.22146e+01
+  7500.616827041697  2.20050e+01
+  75006.16827041698  3.68074e+00
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  9.83535e+01
+  750.0616827041697  8.79869e+01
+  7500.616827041697  5.58886e+01
+  75006.16827041698  1.77535e+01
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  8.54789e+01
+  75006.16827041698  5.05723e+01
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.04846e+01
+  75.00616827041698  4.37775e+01
+  750.0616827041697  8.30793e+01
+  7500.616827041697  9.74894e+01
+  75006.16827041698  9.97297e+01
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  8.78879e-01
+  75.00616827041698  8.46620e+00
+  750.0616827041697  3.77854e+01
+  7500.616827041697  7.79950e+01
+  75006.16827041698  9.63193e+01
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697 -0.00000e+00
+  75.00616827041698  1.64648e+00
+  750.0616827041697  1.20131e+01
+  7500.616827041697  4.41114e+01
+  75006.16827041698  8.22465e+01
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697 -0.00000e+00
+  75.00616827041698 -0.00000e+00
+  750.0616827041697 -0.00000e+00
+  7500.616827041697  1.45211e+01
+  75006.16827041698  4.94277e+01
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697 -0.00000e+00
+  75.00616827041698 -0.00000e+00
+  750.0616827041697 -0.00000e+00
+  7500.616827041697 -0.00000e+00
+  75006.16827041698 -0.00000e+00
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697 -0.00000e+00
+  75.00616827041698 -0.00000e+00
+  750.0616827041697 -0.00000e+00
+  7500.616827041697 -0.00000e+00
+  75006.16827041698 -0.00000e+00
+
+Long-time yields, total (% of the eventual net reaction of P1), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 700 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 1500 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+   Temperature = 2000 K
+
+            P(torr)       P1->P2
+  7.500616827041697  1.00000e+02
+  75.00616827041698  1.00000e+02
+  750.0616827041697  1.00000e+02
+  7500.616827041697  1.00000e+02
+  75006.16827041698  1.00000e+02
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   1.70825e-07   5.29554e-06
+  75.00616827041698   3.95930e-08   5.24404e-07
+  750.0616827041697   2.66717e-09   1.96869e-08
+  7500.616827041697   5.71069e-11   3.20544e-10
+  75006.16827041698   6.71636e-13   3.52523e-12
+
+   Temperature = 500 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   1.42627e-03   1.84093e-02
+  75.00616827041698   8.91374e-04   5.73964e-03
+  750.0616827041697   2.46877e-04   8.80684e-04
+  7500.616827041697   2.19910e-05   5.17072e-05
+  75006.16827041698   5.81822e-07   1.10332e-06
+
+   Temperature = 700 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   7.40511e-02   9.25949e-01
+  75.00616827041698   2.90551e-02   1.07376e-01
+  750.0616827041697   1.61295e-02   3.72691e-02
+  7500.616827041697   4.13843e-03   6.48674e-03
+  75006.16827041698   3.26982e-04   3.93491e-04
+
+   Temperature = 1000 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   2.33416e-01   7.66584e-01
+  75.00616827041698   2.72044e-01   7.27956e-01
+  750.0616827041697   3.33809e-01   6.66191e-01
+  7500.616827041697   8.66939e-02   9.12530e-02
+  75006.16827041698   2.17179e-02   1.78141e-02
+
+   Temperature = 1500 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   5.04503e-01   4.95497e-01
+  75.00616827041698   5.12057e-01   4.87943e-01
+  750.0616827041697   5.26955e-01   4.73045e-01
+  7500.616827041697   5.51140e-01   4.48860e-01
+  75006.16827041698   5.83250e-01   4.16750e-01
+
+   Temperature = 2000 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   6.31851e-01   3.68149e-01
+  75.00616827041698   6.32953e-01   3.67047e-01
+  750.0616827041697   6.35606e-01   3.64394e-01
+  7500.616827041697   6.41354e-01   3.58646e-01
+  75006.16827041698   6.52221e-01   3.47779e-01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  1.00000e+00  1.97316e-05   3.77285e-10    0.00000e+00
+  75.00616827041698  1.00000e+00  3.95169e-06   2.11023e-09    0.00000e+00
+  750.0616827041697  1.00000e+00  5.26384e-07   6.55876e-07    0.00000e+00
+  7500.616827041697  1.00000e+00  5.63004e-08   8.84231e-07    0.00000e+00
+  75006.16827041698  1.00000e+00  5.68281e-09   2.32248e-06    0.00000e+00
+
+   Temperature = 500 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  1.00000e+00  1.87037e-02   9.32449e-12    0.00000e+00
+  75.00616827041698  1.00000e+00  9.42607e-03   5.34688e-11    0.00000e+00
+  750.0616827041697  1.00000e+00  3.12412e-03   1.98812e-10    0.00000e+00
+  7500.616827041697  1.00000e+00  6.07449e-04   9.87602e-11    0.00000e+00
+  75006.16827041698  1.00000e+00  7.61771e-05   4.35240e-10    0.00000e+00
+
+   Temperature = 700 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75.00616827041698  1.00000e+00  7.55334e-02   1.84109e-11    0.00000e+00
+  750.0616827041697  1.00000e+00  4.64260e-02   7.71370e-12    0.00000e+00
+  7500.616827041697  1.00000e+00  1.97321e-02   1.53827e-12    0.00000e+00
+  75006.16827041698  1.00000e+00  4.69523e-03   2.45344e-12    0.00000e+00
+
+   Temperature = 1000 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75.00616827041698  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  750.0616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  7500.616827041697  1.00000e+00  1.14803e-01   5.71296e-14    0.00000e+00
+  75006.16827041698  1.00000e+00  5.93953e-02   1.01914e-13    0.00000e+00
+
+   Temperature = 1500 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75.00616827041698  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  750.0616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  7500.616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75006.16827041698  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+   Temperature = 2000 K
+
+            P(torr)      species   separation  loss balance  detailed bal.
+  7.500616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75.00616827041698  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  750.0616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  7500.616827041697  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  75006.16827041698  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+--- Tables by pressure (rows: temperature in K) ---
+
+Rate coefficients from W2 (1/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2      W2 loss
+   300  1.17817e+00  9.01704e+01  9.13485e+01
+   500  2.92762e+03  9.03331e+04  9.32607e+04
+   700          ***          ***          ***
+  1000          ***          ***          ***
+  1500          ***          ***          ***
+  2000          ***          ***          ***
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2      W2 loss
+   300  5.09379e+00  1.73936e+02  1.79029e+02
+   500  2.94358e+04  3.55041e+05  3.84477e+05
+   700  5.94499e+05  4.41563e+06  5.01013e+06
+  1000          ***          ***          ***
+  1500          ***          ***          ***
+  2000          ***          ***          ***
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2      W2 loss
+   300  1.01269e+01  2.25345e+02  2.35472e+02
+   500  1.43614e+05  8.96407e+05  1.04002e+06
+   700  4.45959e+06  1.67803e+07  2.12399e+07
+  1000          ***          ***          ***
+  1500          ***          ***          ***
+  2000          ***          ***          ***
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2      W2 loss
+   300  1.21534e+01  2.38565e+02  2.50718e+02
+   500  3.25763e+05  1.41316e+06  1.73892e+06
+   700  1.79847e+07  4.26943e+07  6.06790e+07
+  1000  2.30197e+08  3.60324e+08  5.90521e+08
+  1500          ***          ***          ***
+  2000          ***          ***          ***
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2      W2 loss
+   300  1.24847e+01  2.40359e+02  2.52843e+02
+   500  4.21088e+05  1.60960e+06  2.03069e+06
+   700  3.68411e+07  6.83106e+07  1.05152e+08
+  1000  7.80201e+08  8.83121e+08  1.66332e+09
+  1500          ***          ***          ***
+  2000          ***          ***          ***
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(P1 -> P) (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  2.81481e-23
+   500  3.06337e-19
+   700  2.24770e-17
+  1000  7.20849e-16
+  1500  1.44638e-14
+  2000  7.91804e-14
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  1.80177e-23
+   500  2.85291e-19
+   700  2.21662e-17
+  1000  7.21188e-16
+  1500  1.44643e-14
+  2000  7.91807e-14
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  5.59560e-24
+   500  1.98947e-19
+   700  2.00326e-17
+  1000  7.22759e-16
+  1500  1.44672e-14
+  2000  7.91826e-14
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300  8.44235e-25
+   500  7.29856e-20
+   700  1.30087e-17
+  1000  6.21897e-16
+  1500  1.44794e-14
+  2000  7.91935e-14
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300  9.11767e-26
+   500  1.24644e-20
+   700  4.23375e-18
+  1000  3.72458e-16
+  1500  1.45163e-14
+  2000  7.92386e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->W2
+   300  3.33994e-24
+   500  2.80423e-21
+   700          ***
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->W2
+   300  1.44402e-23
+   500  2.85751e-20
+   700  4.21031e-19
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->W2
+   300  2.87086e-23
+   500  1.40187e-19
+   700  3.46201e-18
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->W2
+   300  3.44532e-23
+   500  3.18325e-19
+   700  1.45925e-17
+  1000  1.73141e-16
+  1500          ***
+  2000          ***
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->W2
+   300  3.53925e-23
+   500  4.11503e-19
+   700  3.01915e-17
+  1000  6.85630e-16
+  1500          ***
+  2000          ***
+
+Capture, return and net reaction of P1 (cm^3/s), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  4.01917e-24  3.14880e-23
+   500  4.31694e-19  1.22553e-19  3.09141e-19
+   700  3.84322e-17  1.59552e-17  2.24770e-17
+  1000  1.56844e-15  8.47596e-16  7.20849e-16
+  1500  4.07112e-14  2.62473e-14  1.44638e-14
+  2000  2.58466e-13  1.79285e-13  7.91804e-14
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  3.04926e-24  3.24579e-23
+   500  4.31694e-19  1.17828e-19  3.13866e-19
+   700  3.84322e-17  1.58450e-17  2.25872e-17
+  1000  1.56844e-15  8.47257e-16  7.21188e-16
+  1500  4.07112e-14  2.62468e-14  1.44643e-14
+  2000  2.58466e-13  1.79285e-13  7.91807e-14
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  1.20297e-24  3.43042e-23
+   500  4.31694e-19  9.25603e-20  3.39134e-19
+   700  3.84322e-17  1.49376e-17  2.34946e-17
+  1000  1.56844e-15  8.45686e-16  7.22759e-16
+  1500  4.07112e-14  2.62440e-14  1.44672e-14
+  2000  2.58466e-13  1.79283e-13  7.91826e-14
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  2.09697e-25  3.52975e-23
+   500  4.31694e-19  4.03840e-20  3.91310e-19
+   700  3.84322e-17  1.08310e-17  2.76013e-17
+  1000  1.56844e-15  7.73407e-16  7.95038e-16
+  1500  4.07112e-14  2.62318e-14  1.44794e-14
+  2000  2.58466e-13  1.79272e-13  7.91935e-14
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)      capture       return          net
+   300  3.55072e-23  2.34918e-26  3.54837e-23
+   500  4.31694e-19  7.72711e-21  4.23967e-19
+   700  3.84322e-17  4.00696e-18  3.44253e-17
+  1000  1.56844e-15  5.10357e-16  1.05809e-15
+  1500  4.07112e-14  2.61949e-14  1.45163e-14
+  2000  2.58466e-13  1.79227e-13  7.92386e-14
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  8.93930e+01
+   500  9.90929e+01
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  5.55109e+01
+   500  9.08958e+01
+   700  9.81360e+01
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  1.63117e+01
+   500  5.86634e+01
+   700  8.52647e+01
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300  2.39177e+00
+   500  1.86516e+01
+   700  4.71309e+01
+  1000  7.82223e+01
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300  2.56954e-01
+   500  2.93994e+00
+   700  1.22984e+01
+  1000  3.52010e+01
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->W2
+   300  1.06070e+01
+   500  9.07104e-01
+   700          ***
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->W2
+   300  4.44891e+01
+   500  9.10421e+00
+   700  1.86402e+00
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->W2
+   300  8.36883e+01
+   500  4.13366e+01
+   700  1.47353e+01
+  1000          ***
+  1500          ***
+  2000          ***
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->W2
+   300  9.76082e+01
+   500  8.13484e+01
+   700  5.28691e+01
+  1000  2.17777e+01
+  1500          ***
+  2000          ***
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->W2
+   300  9.97430e+01
+   500  9.70601e+01
+   700  8.77016e+01
+  1000  6.47990e+01
+  1500          ***
+  2000          ***
+
+Thermal fate of W2 (%), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  1.28975e+00  9.87102e+01
+   500  3.13917e+00  9.68608e+01
+   700          ***          ***
+  1000          ***          ***
+  1500          ***          ***
+  2000          ***          ***
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  2.84522e+00  9.71548e+01
+   500  7.65606e+00  9.23439e+01
+   700  1.18659e+01  8.81341e+01
+  1000          ***          ***
+  1500          ***          ***
+  2000          ***          ***
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.30069e+00  9.56993e+01
+   500  1.38087e+01  8.61913e+01
+   700  2.09963e+01  7.90037e+01
+  1000          ***          ***
+  1500          ***          ***
+  2000          ***          ***
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.84741e+00  9.51526e+01
+   500  1.87336e+01  8.12664e+01
+   700  2.96391e+01  7.03609e+01
+  1000  3.89821e+01  6.10179e+01
+  1500          ***          ***
+  2000          ***          ***
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       W2->P1       W2->P2
+   300  4.93771e+00  9.50623e+01
+   500  2.07362e+01  7.92638e+01
+   700  3.50361e+01  6.49639e+01
+  1000  4.69062e+01  5.30938e+01
+  1500          ***          ***
+  2000          ***          ***
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  8.95154e+01
+   500  9.91211e+01
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  5.62225e+01
+   500  9.15338e+01
+   700  9.83535e+01
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  1.69207e+01
+   500  6.22146e+01
+   700  8.79869e+01
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300  2.51056e+00
+   500  2.20050e+01
+   700  5.58886e+01
+  1000  8.54789e+01
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300  2.70265e-01
+   500  3.68074e+00
+   700  1.77535e+01
+  1000  5.05723e+01
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  1.04846e+01
+   500  8.78879e-01
+   700 -0.00000e+00
+  1000 -0.00000e+00
+  1500 -0.00000e+00
+  2000 -0.00000e+00
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  4.37775e+01
+   500  8.46620e+00
+   700  1.64648e+00
+  1000 -0.00000e+00
+  1500 -0.00000e+00
+  2000 -0.00000e+00
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  8.30793e+01
+   500  3.77854e+01
+   700  1.20131e+01
+  1000 -0.00000e+00
+  1500 -0.00000e+00
+  2000 -0.00000e+00
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300  9.74894e+01
+   500  7.79950e+01
+   700  4.41114e+01
+  1000  1.45211e+01
+  1500 -0.00000e+00
+  2000 -0.00000e+00
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300  9.97297e+01
+   500  9.63193e+01
+   700  8.22465e+01
+  1000  4.94277e+01
+  1500 -0.00000e+00
+  2000 -0.00000e+00
+
+Long-time yields, total (% of the eventual net reaction of P1), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)       P1->P2
+   300  1.00000e+02
+   500  1.00000e+02
+   700  1.00000e+02
+  1000  1.00000e+02
+  1500  1.00000e+02
+  2000  1.00000e+02
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   1.70825e-07   5.29554e-06
+   500   1.42627e-03   1.84093e-02
+   700   7.40511e-02   9.25949e-01
+  1000   2.33416e-01   7.66584e-01
+  1500   5.04503e-01   4.95497e-01
+  2000   6.31851e-01   3.68149e-01
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   3.95930e-08   5.24404e-07
+   500   8.91374e-04   5.73964e-03
+   700   2.90551e-02   1.07376e-01
+  1000   2.72044e-01   7.27956e-01
+  1500   5.12057e-01   4.87943e-01
+  2000   6.32953e-01   3.67047e-01
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   2.66717e-09   1.96869e-08
+   500   2.46877e-04   8.80684e-04
+   700   1.61295e-02   3.72691e-02
+  1000   3.33809e-01   6.66191e-01
+  1500   5.26955e-01   4.73045e-01
+  2000   6.35606e-01   3.64394e-01
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   5.71069e-11   3.20544e-10
+   500   2.19910e-05   5.17072e-05
+   700   4.13843e-03   6.48674e-03
+  1000   8.66939e-02   9.12530e-02
+  1500   5.51140e-01   4.48860e-01
+  2000   6.41354e-01   3.58646e-01
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   6.71636e-13   3.52523e-12
+   500   5.81822e-07   1.10332e-06
+   700   3.26982e-04   3.93491e-04
+  1000   2.17179e-02   1.78141e-02
+  1500   5.83250e-01   4.16750e-01
+  2000   6.52221e-01   3.47779e-01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   300  1.00000e+00  1.97316e-05   3.77285e-10    0.00000e+00
+   500  1.00000e+00  1.87037e-02   9.32449e-12    0.00000e+00
+   700  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  1000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  1500  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  2000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   300  1.00000e+00  3.95169e-06   2.11023e-09    0.00000e+00
+   500  1.00000e+00  9.42607e-03   5.34688e-11    0.00000e+00
+   700  1.00000e+00  7.55334e-02   1.84109e-11    0.00000e+00
+  1000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  1500  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  2000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   300  1.00000e+00  5.26384e-07   6.55876e-07    0.00000e+00
+   500  1.00000e+00  3.12412e-03   1.98812e-10    0.00000e+00
+   700  1.00000e+00  4.64260e-02   7.71370e-12    0.00000e+00
+  1000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  1500  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  2000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   300  1.00000e+00  5.63004e-08   8.84231e-07    0.00000e+00
+   500  1.00000e+00  6.07449e-04   9.87602e-11    0.00000e+00
+   700  1.00000e+00  1.97321e-02   1.53827e-12    0.00000e+00
+  1000  1.00000e+00  1.14803e-01   5.71296e-14    0.00000e+00
+  1500  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  2000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)      species   separation  loss balance  detailed bal.
+   300  1.00000e+00  5.68281e-09   2.32248e-06    0.00000e+00
+   500  1.00000e+00  7.61771e-05   4.35240e-10    0.00000e+00
+   700  1.00000e+00  4.69523e-03   2.45344e-12    0.00000e+00
+  1000  1.00000e+00  5.93953e-02   1.01914e-13    0.00000e+00
+  1500  0.00000e+00          ***   0.00000e+00    0.00000e+00
+  2000  0.00000e+00          ***   0.00000e+00    0.00000e+00
+
+--- Temperature-pressure tables (rows: pressure in torr; columns: temperature in K) ---
+
+Rate coefficients from W2 (1/s), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.17817e+00  2.92762e+03          ***          ***          ***          ***
+75.00616827041698    5.09379e+00  2.94358e+04  5.94499e+05          ***          ***          ***
+750.0616827041697    1.01269e+01  1.43614e+05  4.45959e+06          ***          ***          ***
+7500.616827041697    1.21534e+01  3.25763e+05  1.79847e+07  2.30197e+08          ***          ***
+75006.16827041698    1.24847e+01  4.21088e+05  3.68411e+07  7.80201e+08          ***          ***
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.01704e+01  9.03331e+04          ***          ***          ***          ***
+75.00616827041698    1.73936e+02  3.55041e+05  4.41563e+06          ***          ***          ***
+750.0616827041697    2.25345e+02  8.96407e+05  1.67803e+07          ***          ***          ***
+7500.616827041697    2.38565e+02  1.41316e+06  4.26943e+07  3.60324e+08          ***          ***
+75006.16827041698    2.40359e+02  1.60960e+06  6.83106e+07  8.83121e+08          ***          ***
+
+W2 loss
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.13485e+01  9.32607e+04          ***          ***          ***          ***
+75.00616827041698    1.79029e+02  3.84477e+05  5.01013e+06          ***          ***          ***
+750.0616827041697    2.35472e+02  1.04002e+06  2.12399e+07          ***          ***          ***
+7500.616827041697    2.50718e+02  1.73892e+06  6.06790e+07  5.90521e+08          ***          ***
+75006.16827041698    2.52843e+02  2.03069e+06  1.05152e+08  1.66332e+09          ***          ***
+
+Bimolecular-to-bimolecular rate coefficients (chemical activation; G13 eq. 21): k(P1 -> P) (cm^3/s), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    2.81481e-23  3.06337e-19  2.24770e-17  7.20849e-16  1.44638e-14  7.91804e-14
+75.00616827041698    1.80177e-23  2.85291e-19  2.21662e-17  7.21188e-16  1.44643e-14  7.91807e-14
+750.0616827041697    5.59560e-24  1.98947e-19  2.00326e-17  7.22759e-16  1.44672e-14  7.91826e-14
+7500.616827041697    8.44235e-25  7.29856e-20  1.30087e-17  6.21897e-16  1.44794e-14  7.91935e-14
+75006.16827041698    9.11767e-26  1.24644e-20  4.23375e-18  3.72458e-16  1.45163e-14  7.92386e-14
+
+Bimolecular-to-well rate coefficients (stabilization; G13 eq. 28): k(P1 -> W) (cm^3/s), temperature-pressure tables:
+
+P1->W2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.33994e-24  2.80423e-21          ***          ***          ***          ***
+75.00616827041698    1.44402e-23  2.85751e-20  4.21031e-19          ***          ***          ***
+750.0616827041697    2.87086e-23  1.40187e-19  3.46201e-18          ***          ***          ***
+7500.616827041697    3.44532e-23  3.18325e-19  1.45925e-17  1.73141e-16          ***          ***
+75006.16827041698    3.53925e-23  4.11503e-19  3.01915e-17  6.85630e-16          ***          ***
+
+Capture, return and net reaction of P1 (cm^3/s), temperature-pressure tables:
+
+capture
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.55072e-23  4.31694e-19  3.84322e-17  1.56844e-15  4.07112e-14  2.58466e-13
+75.00616827041698    3.55072e-23  4.31694e-19  3.84322e-17  1.56844e-15  4.07112e-14  2.58466e-13
+750.0616827041697    3.55072e-23  4.31694e-19  3.84322e-17  1.56844e-15  4.07112e-14  2.58466e-13
+7500.616827041697    3.55072e-23  4.31694e-19  3.84322e-17  1.56844e-15  4.07112e-14  2.58466e-13
+75006.16827041698    3.55072e-23  4.31694e-19  3.84322e-17  1.56844e-15  4.07112e-14  2.58466e-13
+
+return
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    4.01917e-24  1.22553e-19  1.59552e-17  8.47596e-16  2.62473e-14  1.79285e-13
+75.00616827041698    3.04926e-24  1.17828e-19  1.58450e-17  8.47257e-16  2.62468e-14  1.79285e-13
+750.0616827041697    1.20297e-24  9.25603e-20  1.49376e-17  8.45686e-16  2.62440e-14  1.79283e-13
+7500.616827041697    2.09697e-25  4.03840e-20  1.08310e-17  7.73407e-16  2.62318e-14  1.79272e-13
+75006.16827041698    2.34918e-26  7.72711e-21  4.00696e-18  5.10357e-16  2.61949e-14  1.79227e-13
+
+net
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.14880e-23  3.09141e-19  2.24770e-17  7.20849e-16  1.44638e-14  7.91804e-14
+75.00616827041698    3.24579e-23  3.13866e-19  2.25872e-17  7.21188e-16  1.44643e-14  7.91807e-14
+750.0616827041697    3.43042e-23  3.39134e-19  2.34946e-17  7.22759e-16  1.44672e-14  7.91826e-14
+7500.616827041697    3.52975e-23  3.91310e-19  2.76013e-17  7.95038e-16  1.44794e-14  7.91935e-14
+75006.16827041698    3.54837e-23  4.23967e-19  3.44253e-17  1.05809e-15  1.45163e-14  7.92386e-14
+
+Bimolecular-to-bimolecular yields (chemical activation) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.93930e+01  9.90929e+01  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75.00616827041698    5.55109e+01  9.08958e+01  9.81360e+01  1.00000e+02  1.00000e+02  1.00000e+02
+750.0616827041697    1.63117e+01  5.86634e+01  8.52647e+01  1.00000e+02  1.00000e+02  1.00000e+02
+7500.616827041697    2.39177e+00  1.86516e+01  4.71309e+01  7.82223e+01  1.00000e+02  1.00000e+02
+75006.16827041698    2.56954e-01  2.93994e+00  1.22984e+01  3.52010e+01  1.00000e+02  1.00000e+02
+
+Bimolecular-to-well yields (stabilization) (% of the net reaction of P1), temperature-pressure tables:
+
+P1->W2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.06070e+01  9.07104e-01          ***          ***          ***          ***
+75.00616827041698    4.44891e+01  9.10421e+00  1.86402e+00          ***          ***          ***
+750.0616827041697    8.36883e+01  4.13366e+01  1.47353e+01          ***          ***          ***
+7500.616827041697    9.76082e+01  8.13484e+01  5.28691e+01  2.17777e+01          ***          ***
+75006.16827041698    9.97430e+01  9.70601e+01  8.77016e+01  6.47990e+01          ***          ***
+
+Thermal fate of W2 (%), temperature-pressure tables:
+
+W2->P1
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.28975e+00  3.13917e+00          ***          ***          ***          ***
+75.00616827041698    2.84522e+00  7.65606e+00  1.18659e+01          ***          ***          ***
+750.0616827041697    4.30069e+00  1.38087e+01  2.09963e+01          ***          ***          ***
+7500.616827041697    4.84741e+00  1.87336e+01  2.96391e+01  3.89821e+01          ***          ***
+75006.16827041698    4.93771e+00  2.07362e+01  3.50361e+01  4.69062e+01          ***          ***
+
+W2->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    9.87102e+01  9.68608e+01          ***          ***          ***          ***
+75.00616827041698    9.71548e+01  9.23439e+01  8.81341e+01          ***          ***          ***
+750.0616827041697    9.56993e+01  8.61913e+01  7.90037e+01          ***          ***          ***
+7500.616827041697    9.51526e+01  8.12664e+01  7.03609e+01  6.10179e+01          ***          ***
+75006.16827041698    9.50623e+01  7.92638e+01  6.49639e+01  5.30938e+01          ***          ***
+
+Long-time yields, direct (chemically activated) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    8.95154e+01  9.91211e+01  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75.00616827041698    5.62225e+01  9.15338e+01  9.83535e+01  1.00000e+02  1.00000e+02  1.00000e+02
+750.0616827041697    1.69207e+01  6.22146e+01  8.79869e+01  1.00000e+02  1.00000e+02  1.00000e+02
+7500.616827041697    2.51056e+00  2.20050e+01  5.58886e+01  8.54789e+01  1.00000e+02  1.00000e+02
+75006.16827041698    2.70265e-01  3.68074e+00  1.77535e+01  5.05723e+01  1.00000e+02  1.00000e+02
+
+Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.04846e+01  8.78879e-01 -0.00000e+00 -0.00000e+00 -0.00000e+00 -0.00000e+00
+75.00616827041698    4.37775e+01  8.46620e+00  1.64648e+00 -0.00000e+00 -0.00000e+00 -0.00000e+00
+750.0616827041697    8.30793e+01  3.77854e+01  1.20131e+01 -0.00000e+00 -0.00000e+00 -0.00000e+00
+7500.616827041697    9.74894e+01  7.79950e+01  4.41114e+01  1.45211e+01 -0.00000e+00 -0.00000e+00
+75006.16827041698    9.97297e+01  9.63193e+01  8.22465e+01  4.94277e+01 -0.00000e+00 -0.00000e+00
+
+Long-time yields, total (% of the eventual net reaction of P1), temperature-pressure tables:
+
+P1->P2
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75.00616827041698    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+750.0616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+7500.616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+75006.16827041698    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), temperature-pressure tables:
+
+kappa(W2/P1)
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.70825e-07  1.42627e-03  7.40511e-02  2.33416e-01  5.04503e-01  6.31851e-01
+75.00616827041698    3.95930e-08  8.91374e-04  2.90551e-02  2.72044e-01  5.12057e-01  6.32953e-01
+750.0616827041697    2.66717e-09  2.46877e-04  1.61295e-02  3.33809e-01  5.26955e-01  6.35606e-01
+7500.616827041697    5.71069e-11  2.19910e-05  4.13843e-03  8.66939e-02  5.51140e-01  6.41354e-01
+75006.16827041698    6.71636e-13  5.81822e-07  3.26982e-04  2.17179e-02  5.83250e-01  6.52221e-01
+
+kappa(W2/P2)
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    5.29554e-06  1.84093e-02  9.25949e-01  7.66584e-01  4.95497e-01  3.68149e-01
+75.00616827041698    5.24404e-07  5.73964e-03  1.07376e-01  7.27956e-01  4.87943e-01  3.67047e-01
+750.0616827041697    1.96869e-08  8.80684e-04  3.72691e-02  6.66191e-01  4.73045e-01  3.64394e-01
+7500.616827041697    3.20544e-10  5.17072e-05  6.48674e-03  9.12530e-02  4.48860e-01  3.58646e-01
+75006.16827041698    3.52523e-12  1.10332e-06  3.93491e-04  1.78141e-02  4.16750e-01  3.47779e-01
+
+Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
+
+species
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.00000e+00  1.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+75.00616827041698    1.00000e+00  1.00000e+00  1.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+750.0616827041697    1.00000e+00  1.00000e+00  1.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+7500.616827041697    1.00000e+00  1.00000e+00  1.00000e+00  1.00000e+00  0.00000e+00  0.00000e+00
+75006.16827041698    1.00000e+00  1.00000e+00  1.00000e+00  1.00000e+00  0.00000e+00  0.00000e+00
+
+separation
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.97316e-05  1.87037e-02          ***          ***          ***          ***
+75.00616827041698    3.95169e-06  9.42607e-03  7.55334e-02          ***          ***          ***
+750.0616827041697    5.26384e-07  3.12412e-03  4.64260e-02          ***          ***          ***
+7500.616827041697    5.63004e-08  6.07449e-04  1.97321e-02  1.14803e-01          ***          ***
+75006.16827041698    5.68281e-09  7.61771e-05  4.69523e-03  5.93953e-02          ***          ***
+
+loss balance
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    3.77285e-10  9.32449e-12  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+75.00616827041698    2.11023e-09  5.34688e-11  1.84109e-11  0.00000e+00  0.00000e+00  0.00000e+00
+750.0616827041697    6.55876e-07  1.98812e-10  7.71370e-12  0.00000e+00  0.00000e+00  0.00000e+00
+7500.616827041697    8.84231e-07  9.87602e-11  1.53827e-12  5.71296e-14  0.00000e+00  0.00000e+00
+75006.16827041698    2.32248e-06  4.35240e-10  2.45344e-12  1.01914e-13  0.00000e+00  0.00000e+00
+
+detailed bal.
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+75.00616827041698    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+750.0616827041697    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+7500.616827041697    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+75006.16827041698    0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+

@@ -203,15 +203,15 @@ pub fn partition_wells(pop_chem: &[Vec<f64>], q: &[f64], chem_size: usize, well_
     WellPartition { groups, bimolecular_group: rest, projection_error }
 }
 
-/// Rate coefficients from the bimolecular reactant (cm3 s-1).
+/// Rate coefficients from a bimolecular species, the reactant or a product (cm3 s-1).
 #[derive(Debug, Clone)]
 pub struct ReactantRates {
     pub name: String,
     /// Capture (high-pressure association) rate coefficient k^(c).
     pub capture_cm3_s: f64,
-    /// k_(R->i) for every well (G13 eq. 28).
+    /// k_(R->i) for every species (G13 eq. 28).
     pub to_well_cm3_s: Vec<f64>,
-    /// k_(R->nu) for every bimolecular channel (G13 eq. 21); the entry of the reactant itself is the return
+    /// k_(R->nu) for every bimolecular channel (G13 eq. 21); the entry of the species itself is the return
     /// k_(R->R) from the capture balance (eq. 22).
     pub to_bimolecular_cm3_s: Vec<f64>,
 }
@@ -246,6 +246,18 @@ pub struct PhenomenologicalRates {
     /// [i][nu] = k_(i->nu) (s-1).
     pub well_to_bimolecular_s_inv: Vec<Vec<f64>>,
     pub reactant: Option<ReactantRates>,
+    /// The rows of the bimolecular products given with a capture rate coefficient, in the order given.
+    pub products: Vec<ReactantRates>,
+    /// The wells of the network, in its order: the rows of `kappa`.
+    pub network_wells: Vec<String>,
+    /// [w][nu] = kappa_(w,nu) of every well (not merged) and bimolecular channel (G13 eqs. 33-34): close to 1 if the well
+    /// is in equilibrium with the bimolecular species nu, close to 0 otherwise; the sum runs over the eigenstates that
+    /// are not chemical.
+    pub kappa: Vec<Vec<f64>>,
+    /// max_w |(1/sqrt(Q_w)) sum_(all lambda) M_(w,lambda) sum_nu p_lambda^(nu) / Lambda_lambda - 1|: the sum rule of eq. 34
+    /// extended over every eigenstate and loss channel (the collisions conserve the Boltzmann distribution, so
+    /// G f0 = -sum_nu K_nu f0).
+    pub kappa_sum_rule_max_deviation: f64,
     /// eps max S_ii (s-1): absolute rounding error of the eigenvalues.
     pub precision_floor_s_inv: f64,
     /// max_i |k_i - sum_j k_(i->j) - sum_nu k_(i->nu)| / k_i (eq. 29).
@@ -257,13 +269,16 @@ pub struct PhenomenologicalRates {
 
 /// Phenomenological rate coefficients from the chemically significant eigenpairs of the operator `op`
 /// (assembled without absorbing barrier). `reactant`: name of the bimolecular channel that is the reactant
-/// and its capture rate coefficient k^(c) (cm3 s-1). `solver`: a full decomposition (all eigenpairs).
+/// and its capture rate coefficient k^(c) (cm3 s-1); `products`: the same for bimolecular products whose rows
+/// (k_(P->i), k_(P->nu)) are wanted, with the capture rate coefficient of the reverse association (1/Q_P =
+/// k^(c)/sum k_(->P) f0, eq. 23). `solver`: a full decomposition (all eigenpairs).
 /// `merging`: when fewer eigenvalues than wells are chemical, the wells are merged into species (G13 Sec. IV,
 /// with the criteria of MESS; `CseMerging`).
 pub fn phenomenological_rate_coefficients(
     network: &ChemicalActivationNetwork,
     op: &ChemicalActivationOperator,
     reactant: Option<(&str, f64)>,
+    products: &[(&str, f64)],
     solver: EigenSolver,
     merging: &CseMerging,
 ) -> Result<PhenomenologicalRates, String> {
@@ -325,17 +340,19 @@ pub fn phenomenological_rate_coefficients(
         }
     }
 
-    // M (G13 eq. 25) of the wells over the N lowest eigenstates.
+    // M (G13 eq. 25) of the wells over all eigenstates (kappa, eq. 34, needs the relaxational ones), and over the
+    // N lowest.
     let n_wells_all = n_wells;
-    let mut m_wells = vec![vec![0.0; n_wells_all]; n_wells_all];
-    for (lambda, u) in vectors.iter().take(n_wells_all).enumerate() {
+    let mut m_all = vec![vec![0.0; vectors.len()]; n_wells_all];
+    for (lambda, u) in vectors.iter().enumerate() {
         for (k, &(w, _)) in op.states.iter().enumerate() {
-            m_wells[w][lambda] += d[k] * u[k];
+            m_all[w][lambda] += d[k] * u[k];
         }
     }
-    for (w, row) in m_wells.iter_mut().enumerate() {
+    for (w, row) in m_all.iter_mut().enumerate() {
         row.iter_mut().for_each(|x| *x /= q[w].sqrt());
     }
+    let m_wells: Vec<Vec<f64>> = m_all.iter().map(|row| row[..n_wells_all].to_vec()).collect();
 
     // Chemical eigenvalues and the species (G13 Sec. IV; MESS direct method and threshold_well_partition).
     // 1 - F_ne of the N lowest eigenvectors (MESS: relaxation_projection[l] = 1 - |eigen_pop row l|^2)
@@ -365,6 +382,7 @@ pub fn phenomenological_rate_coefficients(
         .zip(&q_species)
         .map(|(g, &qg)| (0..n).map(|l| g.iter().map(|&w| (q[w] / qg).sqrt() * m_wells[w][l]).sum()).collect())
         .collect();
+    let q_wells = q;
     let q = q_species;
 
     // Its inverse and K = M Lambda M^-1.
@@ -386,6 +404,16 @@ pub fn phenomenological_rate_coefficients(
         .iter()
         .map(|k_nu| vectors.iter().map(|u| (0..n_states).map(|k| d[k] * u[k] * k_nu[k]).sum()).collect())
         .collect();
+    // kappa_(w,nu) (eq. 34) over the eigenstates that are not chemical, and its sum rule over all eigenstates.
+    let kappa_sum = |w: usize, nu: usize, modes: std::ops::Range<usize>| -> f64 {
+        modes.map(|l| m_all[w][l] * p[nu][l] / values[l]).sum::<f64>() / q_wells[w].sqrt()
+    };
+    let kappa: Vec<Vec<f64>> =
+        (0..n_wells_all).map(|w| (0..bimolecular.len()).map(|nu| kappa_sum(w, nu, n..values.len())).collect()).collect();
+    let kappa_sum_rule_max_deviation = (0..n_wells_all)
+        .map(|w| ((0..bimolecular.len()).map(|nu| kappa_sum(w, nu, 0..values.len())).sum::<f64>() - 1.0).abs())
+        .fold(0.0, f64::max);
+
     // k_(i->nu) (eq. 30).
     let well_to_bimolecular: Vec<Vec<f64>> = (0..n)
         .map(|i| (0..bimolecular.len()).map(|nu| (0..n).map(|l| m_inv[l][i] * p[nu][l]).sum::<f64>() / q[i].sqrt()).collect())
@@ -473,34 +501,36 @@ pub fn phenomenological_rate_coefficients(
         }
     }
 
-    // Reactant rates (eqs. 28, 21, 22). Eq. 21 runs over every eigenstate that is not chemical.
-    let reactant = match reactant {
-        None => None,
-        Some((name, capture)) => {
-            let r = bimolecular
-                .iter()
-                .position(|b| b == name)
-                .ok_or_else(|| format!("CSE analysis: no channel leads to the reactant '{name}'."))?;
-            let denominator: f64 = (0..n_states).map(|k| k_into[r][k] * d[k] * d[k]).sum();
-            if !(denominator > 0.0) {
-                return Err(format!("CSE analysis: the reactant '{name}' has no association flux."));
-            }
-            let to_well: Vec<f64> = (0..n)
-                .map(|i| capture * q[i].sqrt() * (0..n).map(|l| m[i][l] * p[r][l]).sum::<f64>() / denominator)
-                .collect();
-            let mut to_bimolecular: Vec<f64> = (0..bimolecular.len())
-                .map(|mu| {
-                    if mu == r {
-                        0.0
-                    } else {
-                        capture * (n..values.len()).map(|l| p[mu][l] * p[r][l] / values[l]).sum::<f64>() / denominator
-                    }
-                })
-                .collect();
-            to_bimolecular[r] = capture - to_well.iter().sum::<f64>() - to_bimolecular.iter().sum::<f64>();
-            Some(ReactantRates { name: name.to_string(), capture_cm3_s: capture, to_well_cm3_s: to_well, to_bimolecular_cm3_s: to_bimolecular })
+    // Rows of a bimolecular species with capture rate coefficient k^(c) (eqs. 28, 21, 22); 1/Q_nu = k^(c)/sum k_(->nu) f0 (eq. 23).
+    // Eq. 21 runs over every eigenstate that is not chemical.
+    let source_rates = |name: &str, capture: f64, role: &str| -> Result<ReactantRates, String> {
+        let r = bimolecular
+            .iter()
+            .position(|b| b == name)
+            .ok_or_else(|| format!("CSE analysis: no channel leads to the {role} '{name}'."))?;
+        let denominator: f64 = (0..n_states).map(|k| k_into[r][k] * d[k] * d[k]).sum();
+        if !(denominator > 0.0) {
+            return Err(format!("CSE analysis: the {role} '{name}' has no association flux."));
         }
+        let to_well: Vec<f64> =
+            (0..n).map(|i| capture * q[i].sqrt() * (0..n).map(|l| m[i][l] * p[r][l]).sum::<f64>() / denominator).collect();
+        let mut to_bimolecular: Vec<f64> = (0..bimolecular.len())
+            .map(|mu| {
+                if mu == r {
+                    0.0
+                } else {
+                    capture * (n..values.len()).map(|l| p[mu][l] * p[r][l] / values[l]).sum::<f64>() / denominator
+                }
+            })
+            .collect();
+        to_bimolecular[r] = capture - to_well.iter().sum::<f64>() - to_bimolecular.iter().sum::<f64>();
+        Ok(ReactantRates { name: name.to_string(), capture_cm3_s: capture, to_well_cm3_s: to_well, to_bimolecular_cm3_s: to_bimolecular })
     };
+    let reactant = reactant.map(|(name, capture)| source_rates(name, capture, "reactant")).transpose()?;
+    let products = products
+        .iter()
+        .map(|&(name, capture)| source_rates(name, capture, "bimolecular product"))
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(PhenomenologicalRates {
         wells: species_names,
@@ -515,6 +545,10 @@ pub fn phenomenological_rate_coefficients(
         well_to_well_s_inv: well_to_well,
         well_to_bimolecular_s_inv: well_to_bimolecular,
         reactant,
+        products,
+        network_wells: well_names,
+        kappa,
+        kappa_sum_rule_max_deviation,
         precision_floor_s_inv: precision_floor,
         loss_balance_max_deviation,
         detailed_balance_max_deviation,
@@ -750,7 +784,7 @@ pub(crate) mod tests {
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
         let rates = |threshold: f64| {
             let merging = CseMerging { chemical_eigenvalue_max: threshold, ..CseMerging::default() };
-            phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &merging).unwrap()
+            phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &merging).unwrap()
         };
         let separate = rates(0.999);
         let p = separate.relaxational_projection.clone();
@@ -767,7 +801,7 @@ pub(crate) mod tests {
         let network = fast_equilibrium_network();
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
         let no_merging = CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() };
-        let separate = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &no_merging).unwrap();
+        let separate = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &no_merging).unwrap();
         assert_eq!(separate.wells, vec!["A".to_string(), "B".to_string()]);
         let (l1, l2, l3) = (
             separate.chemical_eigenvalues_s_inv[0],
@@ -777,7 +811,7 @@ pub(crate) mod tests {
         assert!(l2 > 10.0 * l1, "the test needs Lambda_2 well above Lambda_1: {l1:e} {l2:e} {l3:e}");
         // A threshold between the two leaves one chemical eigenvalue: A and B are merged.
         let merging = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
-        let merged = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &merging).unwrap();
+        let merged = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &merging).unwrap();
         assert_eq!(merged.wells, vec!["A+B".to_string()]);
         assert_eq!(merged.well_groups, vec![vec!["A".to_string(), "B".to_string()]]);
         assert!(merged.bimolecular_group.is_empty());
@@ -798,7 +832,7 @@ pub(crate) mod tests {
     fn separated_wells_are_not_merged_with_the_default_threshold() {
         let network = two_well_network();
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         assert_eq!(rates.wells, vec!["A".to_string(), "B".to_string()]);
         assert!(rates.bimolecular_group.is_empty());
         assert!(!rates.warnings.iter().any(|w| w.contains("merged")));
@@ -811,7 +845,7 @@ pub(crate) mod tests {
         let network = ChemicalActivationNetwork { grain_width_cm1: 10.0, wells: vec![test_well("A", 400, 0, 300)] };
         let cond = Conditions { temperature_kelvin: 600.0, pressure_torr: 760.0 };
         let op = assemble_operator(&network, &cond, &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let olzmann = thermal_rate_coefficients(&network, &op, EigenSolver::FullDecomposition, DEFAULT_SUM_RULE_TOLERANCE).unwrap();
         assert_eq!(rates.chemical_eigenvalues_s_inv.len(), 1);
         assert!((rates.well_to_bimolecular_s_inv[0][0] / olzmann.k_uni_s_inv - 1.0).abs() < 1e-8);
@@ -823,7 +857,7 @@ pub(crate) mod tests {
         // Two wells A <-> B, products P from both, an escape sink in B (300 K, 760 Torr).
         let network = two_well_network();
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         assert_eq!(rates.wells, vec!["A".to_string(), "B".to_string()]);
         assert!(rates.bimolecular.contains(&"P".to_string()) && rates.bimolecular.contains(&"escape(B)".to_string()));
         // Georgievskii et al. (2013) eq. 29: k_i = sum_j k_(i->j) + sum_nu k_(i->nu) (an identity, because the
@@ -841,7 +875,7 @@ pub(crate) mod tests {
         let network = two_well_network();
         let high = Conditions { temperature_kelvin: 300.0, pressure_torr: 1.0e9 };
         let op = assemble_operator(&network, &high, &final_options()).unwrap();
-        let rates = phenomenological_rate_coefficients(&network, &op, None, EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let kt = KB_CM * 300.0;
         let isomerization = network.wells[0].channels.iter().position(|c| c.name == "A->B").unwrap();
         let products = network.wells[0].channels.iter().position(|c| matches!(c.destination, ChannelDestination::Products { .. })).unwrap();
@@ -862,7 +896,7 @@ pub(crate) mod tests {
         network.wells[0].channels[entrance].destination = ChannelDestination::Products { name: "R".into() };
         let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
         let k_capture = 3.0e-11;
-        let rates = phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
         let reactant = rates.reactant.as_ref().unwrap();
         let r = rates.bimolecular.iter().position(|n| n == "R").unwrap();
         let kt = KB_CM * conditions().temperature_kelvin;
@@ -878,5 +912,103 @@ pub(crate) mod tests {
         let total: f64 = reactant.to_well_cm3_s.iter().sum::<f64>() + reactant.to_bimolecular_cm3_s.iter().sum::<f64>();
         assert!((total / k_capture - 1.0).abs() < 1e-12);
         assert!(reactant.to_bimolecular_cm3_s[r] >= 0.0);
+    }
+
+
+    // ---- Product rows (G13 eqs. 28, 21, 22 for every bimolecular species) and kappa (eqs. 33-34) ----
+
+    /// The two-well network with A's products relabelled as the reactant R; B's products P are then formed from B only.
+    fn reactant_and_product_network() -> ChemicalActivationNetwork {
+        let mut network = two_well_network();
+        network.wells[0].channels[0].destination = ChannelDestination::Products { name: "R".into() };
+        network
+    }
+
+    #[test]
+    fn product_rows_satisfy_detailed_balance_and_the_capture_balance() {
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let (k_r, k_p) = (3.0e-11, 2.0e-12);
+        let rates = phenomenological_rate_coefficients(
+            &network,
+            &op,
+            Some(("R", k_r)),
+            &[("P", k_p)],
+            EigenSolver::FullDecomposition,
+            &CseMerging::default(),
+        )
+        .unwrap();
+        assert_eq!(rates.products.len(), 1);
+        let product = &rates.products[0];
+        assert_eq!(product.name, "P");
+        assert_eq!(product.capture_cm3_s, k_p);
+        let (r, p) = (
+            rates.bimolecular.iter().position(|n| n == "R").unwrap(),
+            rates.bimolecular.iter().position(|n| n == "P").unwrap(),
+        );
+        let kt = KB_CM * conditions().temperature_kelvin;
+        let (k_diss_a, k_diss_b) = (high_pressure_rate(&network, 0, 0, kt), high_pressure_rate(&network, 1, 0, kt));
+        // k_(P->B) / k_(B->P) = Q_B/Q_P = k_p / k_inf(B->P), B forming P directly.
+        assert!((product.to_well_cm3_s[1] / rates.well_to_bimolecular_s_inv[1][p] / (k_p / k_diss_b) - 1.0).abs() < 1e-3);
+        // Capture balance (eq. 22): the return to P closes it and is not negative.
+        let total: f64 = product.to_well_cm3_s.iter().sum::<f64>() + product.to_bimolecular_cm3_s.iter().sum::<f64>();
+        assert!((total / k_p - 1.0).abs() < 1e-12);
+        assert!(product.to_bimolecular_cm3_s[p] >= 0.0);
+        // Bimolecular-to-bimolecular (eq. 21, symmetric in nu and mu): k_(R->P) Q_R = k_(P->R) Q_P with
+        // Q_R = Q_A k_inf(A->R)/k_r and Q_P = Q_B k_inf(B->P)/k_p.
+        let reactant = rates.reactant.as_ref().unwrap();
+        let (q_a, q_b) = (rates.partition_functions[0], rates.partition_functions[1]);
+        let (q_r, q_p) = (q_a * k_diss_a / k_r, q_b * k_diss_b / k_p);
+        assert!((reactant.to_bimolecular_cm3_s[p] * q_r / (product.to_bimolecular_cm3_s[r] * q_p) - 1.0).abs() < 1e-9);
+        // The reactant row is the same as without products.
+        let alone = phenomenological_rate_coefficients(&network, &op, Some(("R", k_r)), &[], EigenSolver::FullDecomposition, &CseMerging::default())
+            .unwrap();
+        assert!(alone.products.is_empty());
+        assert_eq!(alone.reactant.as_ref().unwrap().to_well_cm3_s, reactant.to_well_cm3_s);
+    }
+
+    #[test]
+    fn a_product_without_a_channel_is_an_error() {
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let e = phenomenological_rate_coefficients(&network, &op, None, &[("Q", 1.0e-12)], EigenSolver::FullDecomposition, &CseMerging::default())
+            .unwrap_err();
+        assert!(e.contains("'Q'"), "{e}");
+    }
+
+    #[test]
+    fn kappa_satisfies_the_sum_rule_and_vanishes_for_chemically_distinct_wells() {
+        // G13 eq. 34 over the relaxational eigenstates; with the chemical ones the sum over every loss channel is 1
+        // for every well (the collisions conserve the Boltzmann distribution).
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        assert_eq!(rates.wells, vec!["A", "B"]);
+        assert!(rates.kappa_sum_rule_max_deviation < 1e-8, "{}", rates.kappa_sum_rule_max_deviation);
+        assert_eq!((rates.kappa.len(), rates.kappa[0].len()), (2, rates.bimolecular.len()));
+        for row in &rates.kappa {
+            for &kappa in row {
+                assert!(kappa.abs() < 0.05, "{:?}", rates.kappa);
+            }
+        }
+    }
+
+    #[test]
+    fn wells_in_equilibrium_with_the_bimolecular_species_have_kappas_summing_to_one() {
+        // No chemical eigenvalue (both wells in the bimolecular group): every eigenstate is relaxational, so the
+        // sum rule is the sum of the kappas themselves.
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let separate = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &CseMerging::default()).unwrap();
+        let none = CseMerging {
+            chemical_eigenvalue_max: 0.5 * separate.chemical_eigenvalues_s_inv[0] / separate.relaxation_eigenvalue_s_inv,
+            criterion: ChemicalSubspaceCriterion::EigenvalueRatio,
+            ..CseMerging::default()
+        };
+        let rates = phenomenological_rate_coefficients(&network, &op, None, &[], EigenSolver::FullDecomposition, &none).unwrap();
+        assert_eq!(rates.bimolecular_group, vec!["A", "B"]);
+        for row in &rates.kappa {
+            assert!((row.iter().sum::<f64>() - 1.0).abs() < 1e-8, "{:?}", rates.kappa);
+        }
     }
 }

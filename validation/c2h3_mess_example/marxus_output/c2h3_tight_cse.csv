@@ -6,8 +6,10 @@
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 300 K, p = 76 Torr: chemical eigenvalues [1/s]: 2.1297e-7; lowest relaxation eigenvalue 8.2519e7 1/s (separation 2.581e-15); relaxational projections 1.1102e-15; loss balance deviation 1.00e0; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 2.5602e-13 cm3/s, return to the reactant 1.0528e-13 cm3/s
@@ -15,11 +17,16 @@
 From\To,W1,P1
 W1,2.129653e-7,5.904778e-16
 P1,1.507381e-13,1.507381e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.00e0
+W\P,P1
+W1,1.160357e-24
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 300 K, p = 228 Torr: chemical eigenvalues [1/s]: -6.5653e-7; lowest relaxation eigenvalue 2.4756e8 1/s (separation -2.652e-15); relaxational projections -2.6645e-15; loss balance deviation 1.00e0; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 2.5602e-13 cm3/s, return to the reactant 6.6466e-14 cm3/s
@@ -27,11 +34,16 @@ P1,1.507381e-13,1.507381e-13
 From\To,W1,P1
 W1,-6.565269e-7,7.425206e-16
 P1,1.895518e-13,1.895518e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.00e0
+W\P,P1
+W1,3.423051e-25
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 300 K, p = 760 Torr: chemical eigenvalues [1/s]: -4.4924e-6; lowest relaxation eigenvalue 8.2519e8 1/s (separation -5.444e-15); relaxational projections 6.6613e-16; loss balance deviation 1.00e0; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 2.5602e-13 cm3/s, return to the reactant 3.3965e-14 cm3/s
@@ -39,11 +51,16 @@ P1,1.895518e-13,1.895518e-13
 From\To,W1,P1
 W1,-4.492365e-6,8.698349e-16
 P1,2.220528e-13,2.220528e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.00e0
+W\P,P1
+W1,7.092955e-26
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 300 K, p = 2280 Torr: chemical eigenvalues [1/s]: 6.5968e-6; lowest relaxation eigenvalue 2.4756e9 1/s (separation 2.665e-15); relaxational projections 1.5543e-15; loss balance deviation 1.00e0; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 2.5602e-13 cm3/s, return to the reactant 1.5775e-14 cm3/s
@@ -51,11 +68,16 @@ P1,2.220528e-13,2.220528e-13
 From\To,W1,P1
 W1,6.596802e-6,9.410886e-16
 P1,2.402426e-13,2.402426e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.00e0
+W\P,P1
+W1,1.354906e-26
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 300 K, p = 7600 Torr: chemical eigenvalues [1/s]: 1.7010e-4; lowest relaxation eigenvalue 8.2519e9 1/s (separation 2.061e-14); relaxational projections 0.0000e0; loss balance deviation 1.00e0; detailed balance deviation 0.00e0; precision floor 1.007e-2 1/s
 # reactant P1: capture 2.5602e-13 cm3/s, return to the reactant 5.8720e-15 cm3/s
@@ -63,11 +85,16 @@ P1,2.402426e-13,2.402426e-13
 From\To,W1,P1
 W1,1.700985e-4,9.798813e-16
 P1,2.501456e-13,2.501456e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.00e0
+W\P,P1
+W1,1.773659e-27
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 500 K, p = 76 Torr: chemical eigenvalues [1/s]: 5.9572e-5; lowest relaxation eigenvalue 4.6891e7 1/s (separation 1.270e-12); relaxational projections 3.6304e-13; loss balance deviation 1.55e-4; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 3.6855e-12 cm3/s, return to the reactant 2.9697e-12 cm3/s
@@ -75,11 +102,16 @@ P1,2.501456e-13,2.501456e-13
 From\To,W1,P1
 W1,5.957195e-5,5.958116e-5
 P1,7.157323e-13,7.157323e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.55e-4
+W\P,P1
+W1,3.639535e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 500 K, p = 228 Torr: chemical eigenvalues [1/s]: 9.7508e-5; lowest relaxation eigenvalue 1.4067e8 1/s (separation 6.932e-13); relaxational projections 1.7164e-13; loss balance deviation 4.77e-4; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 3.6855e-12 cm3/s, return to the reactant 2.5136e-12 cm3/s
@@ -87,11 +119,16 @@ P1,7.157323e-13,7.157323e-13
 From\To,W1,P1
 W1,9.750843e-5,9.755494e-5
 P1,1.171901e-12,1.171901e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 4.77e-4
+W\P,P1
+W1,1.699686e-13
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 500 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.4910e-4; lowest relaxation eigenvalue 4.6889e8 1/s (separation 3.180e-13); relaxational projections 6.5503e-14; loss balance deviation 5.83e-3; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 3.6855e-12 cm3/s, return to the reactant 1.8840e-12 cm3/s
@@ -99,11 +136,16 @@ P1,1.171901e-12,1.171901e-12
 From\To,W1,P1
 W1,1.490955e-4,1.499644e-4
 P1,1.801482e-12,1.801482e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 5.83e-3
+W\P,P1
+W1,6.168751e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 500 K, p = 2280 Torr: chemical eigenvalues [1/s]: -1.5835e-4; lowest relaxation eigenvalue 1.4067e9 1/s (separation -1.126e-13); relaxational projections 2.1316e-14; loss balance deviation 2.27e0; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 3.6855e-12 cm3/s, return to the reactant 1.2790e-12 cm3/s
@@ -111,11 +153,16 @@ P1,1.801482e-12,1.801482e-12
 From\To,W1,P1
 W1,-1.583536e-4,2.003290e-4
 P1,2.406498e-12,2.406498e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 2.27e0
+W\P,P1
+W1,2.026723e-14
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 500 K, p = 7600 Torr: chemical eigenvalues [1/s]: 6.8812e-4; lowest relaxation eigenvalue 4.6888e9 1/s (separation 1.468e-13); relaxational projections 4.6629e-15; loss balance deviation 6.40e-1; detailed balance deviation 0.00e0; precision floor 1.006e-2 1/s
 # reactant P1: capture 3.6855e-12 cm3/s, return to the reactant 7.1123e-13 cm3/s
@@ -123,333 +170,486 @@ P1,2.406498e-12,2.406498e-12
 From\To,W1,P1
 W1,6.881214e-4,2.475903e-4
 P1,2.974235e-12,2.974235e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.40e-1
+W\P,P1
+W1,4.747993e-15
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 750 K, p = 76 Torr: chemical eigenvalues [1/s]: 1.1580e1; lowest relaxation eigenvalue 3.0347e7 1/s (separation 3.816e-7); relaxational projections 1.4459e-7; loss balance deviation 7.28e-8; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.7316e-11 cm3/s, return to the reactant 1.6509e-11 cm3/s
 From\To,W1,P1
 W1,1.158033e1,1.158033e1
 P1,8.068942e-13,8.068942e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 7.28e-8
+W\P,P1
+W1,1.445853e-7
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 750 K, p = 228 Torr: chemical eigenvalues [1/s]: 2.3036e1; lowest relaxation eigenvalue 9.0894e7 1/s (separation 2.534e-7); relaxational projections 8.8547e-8; loss balance deviation 1.32e-6; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.7316e-11 cm3/s, return to the reactant 1.5710e-11 cm3/s
 From\To,W1,P1
 W1,2.303642e1,2.303645e1
 P1,1.605134e-12,1.605134e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.32e-6
+W\P,P1
+W1,8.854696e-8
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 750 K, p = 760 Torr: chemical eigenvalues [1/s]: 4.4719e1; lowest relaxation eigenvalue 3.0244e8 1/s (separation 1.479e-7); relaxational projections 4.5677e-8; loss balance deviation 3.64e-6; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.7316e-11 cm3/s, return to the reactant 1.4200e-11 cm3/s
 From\To,W1,P1
 W1,4.471858e1,4.471842e1
 P1,3.115891e-12,3.115891e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 3.64e-6
+W\P,P1
+W1,4.567736e-8
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 750 K, p = 2280 Torr: chemical eigenvalues [1/s]: 7.4633e1; lowest relaxation eigenvalue 9.0590e8 1/s (separation 8.239e-8); relaxational projections 2.1779e-8; loss balance deviation 1.21e-5; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 1.7316e-11 cm3/s, return to the reactant 1.2115e-11 cm3/s
 From\To,W1,P1
 W1,7.463311e1,7.463401e1
 P1,5.200350e-12,5.200350e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.21e-5
+W\P,P1
+W1,2.177898e-8
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 750 K, p = 7600 Torr: chemical eigenvalues [1/s]: 1.1702e2; lowest relaxation eigenvalue 3.0150e9 1/s (separation 3.881e-8); relaxational projections 8.0819e-9; loss balance deviation 1.37e-5; detailed balance deviation 0.00e0; precision floor 1.006e-2 1/s
 # reactant P1: capture 1.7316e-11 cm3/s, return to the reactant 9.1620e-12 cm3/s
 From\To,W1,P1
 W1,1.170186e2,1.170170e2
 P1,8.153517e-12,8.153517e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.37e-5
+W\P,P1
+W1,8.081860e-9
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1000 K, p = 76 Torr: chemical eigenvalues [1/s]: 3.2038e3; lowest relaxation eigenvalue 2.4031e7 1/s (separation 1.333e-4); relaxational projections 6.7042e-5; loss balance deviation 1.89e-9; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 4.1451e-11 cm3/s, return to the reactant 4.0936e-11 cm3/s
 From\To,W1,P1
 W1,3.203757e3,3.203757e3
 P1,5.146033e-13,5.146033e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.89e-9
+W\P,P1
+W1,6.704157e-5
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1000 K, p = 228 Torr: chemical eigenvalues [1/s]: 7.1687e3; lowest relaxation eigenvalue 7.1385e7 1/s (separation 1.004e-4); relaxational projections 4.7505e-5; loss balance deviation 8.27e-9; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 4.1451e-11 cm3/s, return to the reactant 4.0299e-11 cm3/s
 From\To,W1,P1
 W1,7.168725e3,7.168725e3
 P1,1.151499e-12,1.151499e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 8.27e-9
+W\P,P1
+W1,4.750547e-5
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1000 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.6149e4; lowest relaxation eigenvalue 2.3520e8 1/s (separation 6.866e-5); relaxational projections 2.9727e-5; loss balance deviation 7.83e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 4.1451e-11 cm3/s, return to the reactant 3.8857e-11 cm3/s
 From\To,W1,P1
 W1,1.614851e4,1.614851e4
 P1,2.593950e-12,2.593950e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 7.83e-10
+W\P,P1
+W1,2.972745e-5
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1000 K, p = 2280 Torr: chemical eigenvalues [1/s]: 3.1415e4; lowest relaxation eigenvalue 6.9783e8 1/s (separation 4.502e-5); relaxational projections 1.7503e-5; loss balance deviation 6.48e-10; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 4.1451e-11 cm3/s, return to the reactant 3.6405e-11 cm3/s
 From\To,W1,P1
 W1,3.141517e4,3.141517e4
 P1,5.046310e-12,5.046310e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.48e-10
+W\P,P1
+W1,1.750309e-5
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1000 K, p = 7600 Torr: chemical eigenvalues [1/s]: 5.9159e4; lowest relaxation eigenvalue 2.2980e9 1/s (separation 2.574e-5); relaxational projections 8.5355e-6; loss balance deviation 3.19e-8; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 4.1451e-11 cm3/s, return to the reactant 3.1948e-11 cm3/s
 From\To,W1,P1
 W1,5.915918e4,5.915918e4
 P1,9.502997e-12,9.502997e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 3.19e-8
+W\P,P1
+W1,8.535460e-6
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1250 K, p = 76 Torr: chemical eigenvalues [1/s]: 6.5566e4; lowest relaxation eigenvalue 2.3286e7 1/s (separation 2.816e-3); relaxational projections 2.0988e-3; loss balance deviation 1.70e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 7.3984e-11 cm3/s, return to the reactant 7.3710e-11 cm3/s
 From\To,W1,P1
 W1,6.556616e4,6.556616e4
 P1,2.741848e-13,2.741848e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.69e-10
+W\P,P1
+W1,2.098756e-3
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1250 K, p = 228 Torr: chemical eigenvalues [1/s]: 1.5855e5; lowest relaxation eigenvalue 6.8205e7 1/s (separation 2.325e-3); relaxational projections 1.6327e-3; loss balance deviation 7.30e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 7.3984e-11 cm3/s, return to the reactant 7.3321e-11 cm3/s
 From\To,W1,P1
 W1,1.585512e5,1.585512e5
 P1,6.633397e-13,6.633397e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 7.29e-10
+W\P,P1
+W1,1.632692e-3
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1250 K, p = 760 Torr: chemical eigenvalues [1/s]: 3.9501e5; lowest relaxation eigenvalue 2.2072e8 1/s (separation 1.790e-3); relaxational projections 1.1568e-3; loss balance deviation 6.91e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 7.3984e-11 cm3/s, return to the reactant 7.2331e-11 cm3/s
 From\To,W1,P1
 W1,3.950124e5,3.950124e5
 P1,1.653424e-12,1.653424e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.90e-10
+W\P,P1
+W1,1.156842e-3
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1250 K, p = 2280 Torr: chemical eigenvalues [1/s]: 8.5555e5; lowest relaxation eigenvalue 6.4278e8 1/s (separation 1.331e-3); relaxational projections 7.8102e-4; loss balance deviation 4.88e-10; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 7.3984e-11 cm3/s, return to the reactant 7.0402e-11 cm3/s
 From\To,W1,P1
 W1,8.555460e5,8.555460e5
 P1,3.582450e-12,3.582450e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 4.87e-10
+W\P,P1
+W1,7.810151e-4
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1250 K, p = 7600 Torr: chemical eigenvalues [1/s]: 1.8435e6; lowest relaxation eigenvalue 2.0695e9 1/s (separation 8.908e-4); relaxational projections 4.5589e-4; loss balance deviation 2.47e-10; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 7.3984e-11 cm3/s, return to the reactant 6.6263e-11 cm3/s
 From\To,W1,P1
 W1,1.843495e6,1.843495e6
 P1,7.721827e-12,7.721827e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 2.47e-10
+W\P,P1
+W1,4.558924e-4
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1500 K, p = 76 Torr: chemical eigenvalues [1/s]: 3.8513e5; lowest relaxation eigenvalue 2.6225e7 1/s (separation 1.469e-2); relaxational projections 1.6612e-2; loss balance deviation 2.61e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.1285e-10 cm3/s, return to the reactant 1.1271e-10 cm3/s
 From\To,W1,P1
 W1,3.851335e5,3.851335e5
 P1,1.407571e-13,1.407571e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 2.55e-11
+W\P,P1
+W1,1.661214e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1500 K, p = 228 Torr: chemical eigenvalues [1/s]: 9.7986e5; lowest relaxation eigenvalue 7.5850e7 1/s (separation 1.292e-2); relaxational projections 1.3814e-2; loss balance deviation 1.88e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.1285e-10 cm3/s, return to the reactant 1.1249e-10 cm3/s
 From\To,W1,P1
 W1,9.798618e5,9.798618e5
 P1,3.591353e-13,3.591353e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.85e-10
+W\P,P1
+W1,1.381376e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1500 K, p = 760 Torr: chemical eigenvalues [1/s]: 2.6116e6; lowest relaxation eigenvalue 2.4129e8 1/s (separation 1.082e-2); relaxational projections 1.0702e-2; loss balance deviation 9.22e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.1285e-10 cm3/s, return to the reactant 1.1189e-10 cm3/s
 From\To,W1,P1
 W1,2.611578e6,2.611578e6
 P1,9.602058e-13,9.602058e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 9.12e-11
+W\P,P1
+W1,1.070219e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1500 K, p = 2280 Torr: chemical eigenvalues [1/s]: 6.0903e6; lowest relaxation eigenvalue 6.8941e8 1/s (separation 8.834e-3); relaxational projections 7.9783e-3; loss balance deviation 1.49e-11; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 1.1285e-10 cm3/s, return to the reactant 1.1060e-10 cm3/s
 From\To,W1,P1
 W1,6.090334e6,6.090334e6
 P1,2.245415e-12,2.245415e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.47e-11
+W\P,P1
+W1,7.978289e-3
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1500 K, p = 7600 Torr: chemical eigenvalues [1/s]: 1.4448e7; lowest relaxation eigenvalue 2.1646e9 1/s (separation 6.675e-3); relaxational projections 5.3114e-3; loss balance deviation 1.64e-10; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 1.1285e-10 cm3/s, return to the reactant 1.0751e-10 cm3/s
 From\To,W1,P1
 W1,1.444801e7,1.444801e7
 P1,5.341083e-12,5.341083e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.63e-10
+W\P,P1
+W1,5.311428e-3
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1750 K, p = 76 Torr: chemical eigenvalues [1/s]: 1.1896e6; lowest relaxation eigenvalue 3.1654e7 1/s (separation 3.758e-2); relaxational projections 6.0316e-2; loss balance deviation 1.97e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.5646e-10 cm3/s, return to the reactant 1.5638e-10 cm3/s
 From\To,W1,P1
 W1,1.189582e6,1.189582e6
 P1,7.440132e-14,7.440132e-14
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.89e-11
+W\P,P1
+W1,6.031624e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1750 K, p = 228 Torr: chemical eigenvalues [1/s]: 3.1249e6; lowest relaxation eigenvalue 9.0861e7 1/s (separation 3.439e-2); relaxational projections 5.2570e-2; loss balance deviation 8.60e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.5646e-10 cm3/s, return to the reactant 1.5626e-10 cm3/s
 From\To,W1,P1
 W1,3.124878e6,3.124878e6
 P1,1.970538e-13,1.970538e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 8.18e-11
+W\P,P1
+W1,5.257012e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1750 K, p = 760 Torr: chemical eigenvalues [1/s]: 8.6959e6; lowest relaxation eigenvalue 2.8590e8 1/s (separation 3.042e-2); relaxational projections 4.3410e-2; loss balance deviation 2.43e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 1.5646e-10 cm3/s, return to the reactant 1.5590e-10 cm3/s
 From\To,W1,P1
 W1,8.695934e6,8.695934e6
 P1,5.536647e-13,5.536647e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 2.34e-11
+W\P,P1
+W1,4.340961e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1750 K, p = 2280 Torr: chemical eigenvalues [1/s]: 2.1283e7; lowest relaxation eigenvalue 8.0628e8 1/s (separation 2.640e-2); relaxational projections 3.4767e-2; loss balance deviation 9.42e-11; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 1.5646e-10 cm3/s, return to the reactant 1.5509e-10 cm3/s
 From\To,W1,P1
 W1,2.128328e7,2.128328e7
 P1,1.367336e-12,1.367336e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 9.10e-11
+W\P,P1
+W1,3.476740e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 1750 K, p = 7600 Torr: chemical eigenvalues [1/s]: 5.3863e7; lowest relaxation eigenvalue 2.4852e9 1/s (separation 2.167e-2); relaxational projections 2.5496e-2; loss balance deviation 3.36e-11; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 1.5646e-10 cm3/s, return to the reactant 1.5297e-10 cm3/s
 From\To,W1,P1
 W1,5.386296e7,5.386296e7
 P1,3.493642e-12,3.493642e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 3.27e-11
+W\P,P1
+W1,2.549598e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 2000 K, p = 76 Torr: chemical eigenvalues [1/s]: 2.5906e6; lowest relaxation eigenvalue 3.8795e7 1/s (separation 6.678e-2); relaxational projections 1.3908e-1; loss balance deviation 1.63e-10; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 2.0368e-10 cm3/s, return to the reactant 2.0364e-10 cm3/s
 From\To,W1,P1
 W1,2.590600e6,2.590600e6
 P1,4.129107e-14,4.129107e-14
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.43e-10
+W\P,P1
+W1,1.390762e-1
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 2000 K, p = 228 Torr: chemical eigenvalues [1/s]: 6.9443e6; lowest relaxation eigenvalue 1.1097e8 1/s (separation 6.258e-2); relaxational projections 1.2527e-1; loss balance deviation 7.37e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 2.0368e-10 cm3/s, return to the reactant 2.0357e-10 cm3/s
 From\To,W1,P1
 W1,6.944333e6,6.944333e6
 P1,1.124588e-13,1.124588e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.42e-11
+W\P,P1
+W1,1.252745e-1
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 2000 K, p = 760 Torr: chemical eigenvalues [1/s]: 1.9864e7; lowest relaxation eigenvalue 3.4726e8 1/s (separation 5.720e-2); relaxational projections 1.0820e-1; loss balance deviation 6.95e-11; detailed balance deviation 0.00e0; precision floor 1.004e-2 1/s
 # reactant P1: capture 2.0368e-10 cm3/s, return to the reactant 2.0335e-10 cm3/s
 From\To,W1,P1
 W1,1.986395e7,1.986395e7
 P1,3.279610e-13,3.279610e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.18e-11
+W\P,P1
+W1,1.082042e-1
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 2000 K, p = 2280 Torr: chemical eigenvalues [1/s]: 5.0154e7; lowest relaxation eigenvalue 9.7244e8 1/s (separation 5.158e-2); relaxational projections 9.1200e-2; loss balance deviation 7.90e-12; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 2.0368e-10 cm3/s, return to the reactant 2.0283e-10 cm3/s
 From\To,W1,P1
 W1,5.015420e7,5.015420e7
 P1,8.438526e-13,8.438526e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 6.99e-12
+W\P,P1
+W1,9.120031e-2
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 2000 K, p = 7600 Torr: chemical eigenvalues [1/s]: 1.3242e8; lowest relaxation eigenvalue 2.9649e9 1/s (separation 4.466e-2); relaxational projections 7.1700e-2; loss balance deviation 1.34e-11; detailed balance deviation 0.00e0; precision floor 1.005e-2 1/s
 # reactant P1: capture 2.0368e-10 cm3/s, return to the reactant 2.0140e-10 cm3/s
 From\To,W1,P1
 W1,1.324152e8,1.324152e8
 P1,2.275713e-12,2.275713e-12
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.24e-11
+W\P,P1
+W1,7.169953e-2

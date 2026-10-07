@@ -174,6 +174,23 @@ def mesmer_qtot(path):
     return out
 
 
+def marxus_partition_functions(path):
+    """{T: {species: Q}} of the section PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS of a MarXus report (Q from the
+    cell densities, counted from the ground state of each species)."""
+    text = open(path).read().split("PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS")[1].split("_" * 20)[0]
+    out = {}
+    for part in re.split(r"Temperature = ", text)[1:]:
+        out[float(part.split()[0])] = {
+            m.group(1): float(m.group(2))
+            for m in re.finditer(r"^\s+(\S+)\s+(?:well|barrier|bimolecular)\s+\S+\s+(\S+)$", part, re.M)
+        }
+    return out
+
+
+# MESMER species and the deck species with the same model (the transition states are the deck's tight barriers).
+MARXUS_SPECIES = {"Int1": "Int1", "Int2": "Int2", "TS1": "B_R2", "TS2": "B_R4", "TS3": "B_R3"}
+
+
 def exact_reference(canonical_rows):
     """Exact partition functions against MESMER's qtot, and exact TST (no tunneling) against both codes."""
     from make_deck import CM1_PER_KJMOL, molecules
@@ -183,6 +200,14 @@ def exact_reference(canonical_rows):
         exact = exact_partition_function(mols[species], t)
         rows.append({"quantity": f"q({species})", "T_K": t, "exact": exact, "mesmer": q, "marxus": math.nan,
                      "mesmer_vs_exact_percent": 100 * (q / exact - 1), "marxus_vs_exact_percent": math.nan})
+    # MarXus Q at the temperatures of its decks (298 K, 250 K): the cell partition functions of the same model.
+    for deck in ("acetyl_o2", "acetyl_o2_250K"):
+        for t, q_mx in sorted(marxus_partition_functions(os.path.join(OUT, f"{deck}_cse.out")).items()):
+            for species, name in MARXUS_SPECIES.items():
+                exact = exact_partition_function(mols[species], t)
+                rows.append({"quantity": f"q({species})", "T_K": t, "exact": exact, "mesmer": math.nan,
+                             "marxus": q_mx[name], "mesmer_vs_exact_percent": math.nan,
+                             "marxus_vs_exact_percent": 100 * (q_mx[name] / exact - 1)})
     t = 298.0
     for name, ts, well in (("Int2 -> lactone + OH (k_inf)", "TS3", "Int2"), ("Int1 -> ketene + HO2 (k_inf)", "TS2", "Int1")):
         de = (mols[ts]["zpe_kjmol"] - mols[well]["zpe_kjmol"]) * CM1_PER_KJMOL

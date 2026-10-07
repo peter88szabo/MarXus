@@ -44,11 +44,14 @@ The master-equation, tunneling, ILT and numerical code cites the source of each 
 | Validation against MESMER (acetyl + O₂, two wells, ILT association, Eckart) | done: partition functions within 0.001%, rate coefficients −2.1 … +1.4% of MESMER's double-double run (`validation/acetyl_o2_mesmer/`) |
 | Low-energy reservoir validity: warning below 3 k_BT between the reservoir top and the lowest threshold | implemented, tested (`reports/low_energy_reservoir_state.md`) |
 | Higher precision (double-double, arbitrary-precision reference) | planned (`reports/higher_precision_decision.md`) |
+| Excited electronic levels: partition functions and thermochemistry (`electronic_contributions`), and state counts ρ(E), W(E) of the master equation (all `ElectronicLevels` lines of the deck) | implemented, tested, validated against MESS (`validation/c2h4_ho2_hindered_rotors/`, variant with test levels: the change of every rate coefficient equal in both codes; `reports/electronic_levels_partition_functions.md`) |
 | Hindered and free internal rotors (1D), MESS `Rotor Hindered` / `Rotor Free` syntax: quantum levels in a σ-periodic Fourier basis, Kilpatrick–Pitzer reduced moment (default) or bond-axis option (`RotorReducedMoment`, `--rotor-reduced-moment`) | implemented, tested, validated against MESS (`validation/c2h4_ho2_hindered_rotors/`, 7 rotors): rotor levels equal to every printed digit; with the MESS Eckart model, k∞ within 0.07–0.39% and the net reaction within +0.10 … +0.54% at all 30 conditions (`reports/hindered_rotors.md`, `reports/hindered_rotors_validation_mess.md`) |
 | Dissociative photoionization: PEPICO breakdown curves by statistical, collision-free modelling (Sztáray, Bodi, Baer, J. Mass Spectrom. 45, 1233 (2010)), `src/photoion` | implemented, tested: thermal and ion energy distributions, fast and RRKM channels with kinetic shift, parallel channels, sequential fast dissociations with statistical product energy partitioning; PST and simplified SACM not available yet (`reports/photoion_statistical_modelling.md`) |
+| Equilibrium constants: from the thermochemistry (K_p, K_c from ΔG°) and from the deck species (partition functions on the cells; real equilibrium constants as MESS) | implemented, tested; the two routes agree up to the 1 cm⁻¹ cell counting; against MESS (`validation/c2h4_ho2_hindered_rotors/`) K(W2/P1) is 0.9963–0.9995 of MESS, a difference fully explained by that counting, and the effect of electronic levels is identical (`reports/equilibrium_constants.md`) |
+| CSE: rows of the bimolecular products (G13 eqs. 28, 21, 22) and the isomer–bimolecular equilibrium coefficients κ (eq. 34) | implemented, tested, validated against MESS: Case 2 product rows within −0.3 … +0.9% (P7 → G4 −1.4%), κ of the rotor deck within 0.006 (`reports/cse_kappa_and_product_rates.md`) |
 | CSE species merging at poor time-scale separation (Georgievskii et al. 2013, Sec. IV; well partition as MESS) | implemented, tested (`reports/cse_species_merging.md`). Chemical eigenvectors by the relaxational projection 1 − F_ne ≤ `ChemicalEigenvalueMax`, as MESS's direct method (default), or by the eigenvalue ratio (`ChemicalSubspaceCriterion EigenvalueRatio`, `--chemical-subspace-criterion`); in `validation/c2h4_ho2_hindered_rotors/` both codes merge at the same 15 of 30 conditions |
 
-The source contains 299 library unit tests (`cargo test`).
+The source contains 318 library unit tests (`cargo test`).
 
 ---
 
@@ -58,7 +61,8 @@ The source contains 299 library unit tests (`cargo test`).
 - Molecules built from vibrational frequencies (with scaling), rotational constants, or Cartesian geometries; the moments of inertia are computed from the geometry with isotopic atomic masses (most abundant isotopes, AME2020: Wang et al., Chin. Phys. C 45, 030003 (2021)).
 - Partition functions and thermodynamic functions **U, H, F, G, S, Cv, Cp** in the rigid-rotor–harmonic-oscillator approximation.
 - **Quasi-RRHO entropy** with free-rotor interpolation for low-frequency modes (Grimme, Chem. Eur. J. 18, 9955 (2012)).
-- Equilibrium constants: used inside the master equation (k∞,assoc/k∞,diss for detailed balance); a general thermochemistry routine is not available yet (see To Do).
+- **Equilibrium constants** $`K_p = e^{-\Delta G^\circ/RT}`$ and $`K_c = K_p (p^\circ/k_BT)^{\Delta n}`$ of any reaction from the standard Gibbs energies (`thermal::equilibrium::equilibrium_constant_from_thermochemistry`).
+- **For deck species:** the partition functions from the master-equation cell densities and the real equilibrium constants of the wells and bimolecular species (report section "PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS").
 
 ### State counting and microcanonical rate theory
 - **Sum and density of states** by direct (Beyer–Swinehart) counting, with classical 1D, 2D and 3D rotors (Forst); rovibrational and bimolecular (convolved) states.
@@ -541,9 +545,7 @@ cargo test -j 4 -- --test-threads=4
 ## To Do (not implemented yet)
 - Higher precision for the master equation: double-double assembly and solvers with an arbitrary-precision reference path (planned, `reports/higher_precision_decision.md`).
 - Treatment of the stepladder model in the eigenvalue analysis when its step spans several grains (independent sub-equations).
-- Excited electronic states in the partition functions and state counts.
 - Photoionization: statistical channels of fragment ions (formation time within the flight time), isomerization (Sztáray et al. 2010, eqs. 12–22), time-of-flight peak shapes, PST and simplified SACM rate models, fitting of appearance energies.
-- A general equilibrium-constant routine (thermochemistry).
 - Microcanonical Variational TST (μVTST).
 - Canonical Variational TST (CVTST).
 - Submerged barrier with a pre-reaction vdW complex: **μ-canonical, J-resolved 2-TST treatment**.

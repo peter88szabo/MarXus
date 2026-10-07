@@ -3,7 +3,7 @@
 ====================================================================================================
  RUN SETTINGS
  ------------
- Deck:               validation/c2h4_ho2_hindered_rotors/input/c2h4_ho2.inp
+ Deck:               /home/peter/Dropbox/Research_Leuven/MarXus/validation/c2h4_ho2_hindered_rotors/input/c2h4_ho2.inp
  Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
                      (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
  Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
@@ -65,6 +65,96 @@ Barriers (H - ZeroEnergy of the barrier in the deck):
         B4      11.32       W2       P2   rigid transition state, Eckart tunneling
 
 ====================================================================================================
+ PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS
+ ---------------------------------------------
+
+From the cell densities of states of the master equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO partition function.
+
+Temperature = 300 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   4.33352e+06
+        B3      barrier      -0.1300   1.29970e+06
+        B4      barrier      -2.0600   1.08451e+06
+        P1  bimolecular     -13.3800   8.71845e+31
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  2.60392e-24
+P1     3.84036e+23  1.00000e+00
+
+Temperature = 500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   9.08615e+07
+        B3      barrier      -0.1300   2.64846e+07
+        B4      barrier      -2.0600   1.46086e+07
+        P1  bimolecular     -13.3800   1.23547e+33
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  7.90831e-25
+P1     1.26449e+24  1.00000e+00
+
+Temperature = 700 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.14615e+09
+        B3      barrier      -0.1300   3.41706e+08
+        B4      barrier      -2.0600   1.46721e+08
+        P1  bimolecular     -13.3800   1.03432e+34
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  6.04503e-25
+P1     1.65425e+24  1.00000e+00
+
+Temperature = 1000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   3.01690e+10
+        B3      barrier      -0.1300   9.11977e+09
+        B4      barrier      -2.0600   3.17740e+09
+        P1  bimolecular     -13.3800   1.60684e+35
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  6.15683e-25
+P1     1.62421e+24  1.00000e+00
+
+Temperature = 1500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   2.78271e+12
+        B3      barrier      -0.1300   8.29560e+11
+        B4      barrier      -2.0600   2.45288e+11
+        P1  bimolecular     -13.3800   7.60199e+36
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  8.07952e-25
+P1     1.23770e+24  1.00000e+00
+
+Temperature = 2000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.17269e+14
+        B3      barrier      -0.1300   3.39324e+13
+        B4      barrier      -2.0600   9.32025e+12
+        P1  bimolecular     -13.3800   1.95758e+38
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  1.08480e-24
+P1     9.21832e+23  1.00000e+00
+
+====================================================================================================
 Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
 Numbers with six significant digits; *** marks a value that is not available.
 ====================================================================================================
@@ -74,8 +164,10 @@ PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (
 ____________________________________________________________________________________________________
 
 Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
-J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
-the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-34. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant and product rows in cm^3/s (a product row from the capture rate coefficient of its reverse association,
+eqs. 28, 21, 22). Diagonal: total loss of a well; for a bimolecular species its net reaction (capture - return).
+Below each table: kappa (eq. 34), 1 for a well in equilibrium with the bimolecular species, 0 otherwise.
 Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
 coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
 
@@ -91,6 +183,11 @@ From\To             W2           P1           P2
 W2         8.73031e+01  9.70146e-01  8.63330e+01
 P1         2.52105e-24  3.19939e-23  2.94728e-23
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 3.82967e-10):
+
+W\P             P1           P2
+W2     1.47667e-07  5.31754e-06
+
 Temperature = 300 K    Pressure = 75.00616827041698 torr
 
   chemical eigenvalues (1/s):          1.82982e+02
@@ -100,6 +197,11 @@ Temperature = 300 K    Pressure = 75.00616827041698 torr
 From\To             W2           P1           P2
 W2         1.82982e+02  4.68514e+00  1.78297e+02
 P1         1.21750e-23  3.27817e-23  2.06066e-23
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.61786e-09):
+
+W\P             P1           P2
+W2     4.06747e-08  6.08260e-07
 
 Temperature = 300 K    Pressure = 750.0616827041697 torr
 
@@ -111,6 +213,11 @@ From\To             W2           P1           P2
 W2         2.54071e+02  1.04813e+01  2.43590e+02
 P1         2.72373e-23  3.46172e-23  7.37994e-24
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 7.97245e-07):
+
+W\P             P1           P2
+W2     3.41744e-09  2.70366e-08
+
 Temperature = 300 K    Pressure = 7500.616827041697 torr
 
   chemical eigenvalues (1/s):          2.76308e+02
@@ -120,6 +227,11 @@ Temperature = 300 K    Pressure = 7500.616827041697 torr
 From\To             W2           P1           P2
 W2         2.76308e+02  1.33173e+01  2.62991e+02
 P1         3.46069e-23  3.58488e-23  1.24183e-24
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 4.71363e-07):
+
+W\P             P1           P2
+W2     8.74522e-11  4.98464e-10
 
 Temperature = 300 K    Pressure = 75006.16827041698 torr
 
@@ -131,6 +243,11 @@ From\To             W2           P1           P2
 W2         2.79711e+02  1.38460e+01  2.65866e+02
 P1         3.59808e-23  3.61195e-23  1.38763e-25
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.44129e-06):
+
+W\P             P1           P2
+W2     1.09988e-12  5.71146e-12
+
 Temperature = 500 K    Pressure = 7.500616827041697 torr
 
   chemical eigenvalues (1/s):          8.96220e+04
@@ -140,6 +257,11 @@ Temperature = 500 K    Pressure = 7.500616827041697 torr
 From\To             W2           P1           P2
 W2         8.96220e+04  2.37390e+03  8.72481e+04
 P1         1.83918e-21  3.12190e-19  3.10351e-19
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 4.45111e-12):
+
+W\P             P1           P2
+W2     1.22432e-03  1.79122e-02
 
 Temperature = 500 K    Pressure = 75.00616827041698 torr
 
@@ -151,6 +273,11 @@ From\To             W2           P1           P2
 W2         3.88813e+05  2.60839e+04  3.62729e+05
 P1         2.04608e-20  3.15537e-19  2.95077e-19
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.94357e-11):
+
+W\P             P1           P2
+W2     8.36424e-04  6.06004e-03
+
 Temperature = 500 K    Pressure = 750.0616827041697 torr
 
   chemical eigenvalues (1/s):          1.13052e+06
@@ -160,6 +287,11 @@ Temperature = 500 K    Pressure = 750.0616827041697 torr
 From\To             W2           P1           P2
 W2         1.13052e+06  1.43867e+05  9.86657e+05
 P1         1.13485e-19  3.35583e-19  2.22098e-19
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.56411e-10):
+
+W\P             P1           P2
+W2     2.71239e-04  1.06052e-03
 
 Temperature = 500 K    Pressure = 7500.616827041697 torr
 
@@ -171,6 +303,11 @@ From\To             W2           P1           P2
 W2         2.04457e+06  3.69303e+05  1.67526e+06
 P1         2.91670e-19  3.85682e-19  9.40114e-20
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.38944e-10):
+
+W\P             P1           P2
+W2     3.01512e-05  7.50329e-05
+
 Temperature = 500 K    Pressure = 75006.16827041698 torr
 
   chemical eigenvalues (1/s):          2.50214e+06
@@ -180,6 +317,11 @@ Temperature = 500 K    Pressure = 75006.16827041698 torr
 From\To             W2           P1           P2
 W2         2.50214e+06  5.14881e+05  1.98726e+06
 P1         4.06687e-19  4.25089e-19  1.84014e-20
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.23084e-11):
+
+W\P             P1           P2
+W2     9.92842e-07  1.91368e-06
 
 Temperature = 700 K    Pressure = 7.500616827041697 torr
 
@@ -191,6 +333,11 @@ Temperature = 700 K    Pressure = 7.500616827041697 torr
 From\To             P1           P2
 P1         2.26375e-17  2.26375e-17
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.59315e-11):
+
+W\P             P1           P2
+W2     6.51276e-02  9.34872e-01
+
 Temperature = 700 K    Pressure = 75.00616827041698 torr
 
   chemical eigenvalues (1/s):          5.06335e+06
@@ -200,6 +347,11 @@ Temperature = 700 K    Pressure = 75.00616827041698 torr
 From\To             W2           P1           P2
 W2         5.06335e+06  5.29348e+05  4.53400e+06
 P1         2.75265e-19  2.27111e-17  2.24358e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 6.20837e-13):
+
+W\P             P1           P2
+W2     2.73551e-02  1.11674e-01
 
 Temperature = 700 K    Pressure = 750.0616827041697 torr
 
@@ -211,6 +363,11 @@ From\To             W2           P1           P2
 W2         2.26808e+07  4.37063e+06  1.83101e+07
 P1         2.48483e-18  2.33477e-17  2.08629e-17
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 6.18372e-12):
+
+W\P             P1           P2
+W2     1.66540e-02  4.20372e-02
+
 Temperature = 700 K    Pressure = 7500.616827041697 torr
 
   chemical eigenvalues (1/s):          7.02717e+07
@@ -220,6 +377,11 @@ Temperature = 700 K    Pressure = 7500.616827041697 torr
 From\To             W2           P1           P2
 W2         7.02717e+07  1.98078e+07  5.04639e+07
 P1         1.18019e-17  2.66526e-17  1.48507e-17
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.95737e-12):
+
+W\P             P1           P2
+W2     5.04079e-03  8.46224e-03
 
 Temperature = 700 K    Pressure = 75006.16827041698 torr
 
@@ -231,6 +393,11 @@ From\To             W2           P1           P2
 W2         1.34015e+08  4.59910e+07  8.80238e+07
 P1         2.77453e-17  3.34425e-17  5.69719e-18
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.01341e-12):
+
+W\P             P1           P2
+W2     5.14213e-04  6.44382e-04
+
 Temperature = 1000 K    Pressure = 7.500616827041697 torr
 
   chemical eigenvalues (1/s):          
@@ -240,6 +407,11 @@ Temperature = 1000 K    Pressure = 7.500616827041697 torr
 
 From\To             P1           P2
 P1         7.24418e-16  7.24418e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 5.21805e-12):
+
+W\P             P1           P2
+W2     2.20726e-01  7.79274e-01
 
 Temperature = 1000 K    Pressure = 75.00616827041698 torr
 
@@ -251,6 +423,11 @@ Temperature = 1000 K    Pressure = 75.00616827041698 torr
 From\To             P1           P2
 P1         7.24661e-16  7.24661e-16
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.03406e-12):
+
+W\P             P1           P2
+W2     2.56693e-01  7.43307e-01
+
 Temperature = 1000 K    Pressure = 750.0616827041697 torr
 
   chemical eigenvalues (1/s):          
@@ -260,6 +437,11 @@ Temperature = 1000 K    Pressure = 750.0616827041697 torr
 
 From\To             P1           P2
 P1         7.25861e-16  7.25861e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.24256e-12):
+
+W\P             P1           P2
+W2     3.16738e-01  6.83262e-01
 
 Temperature = 1000 K    Pressure = 7500.616827041697 torr
 
@@ -271,6 +453,11 @@ Temperature = 1000 K    Pressure = 7500.616827041697 torr
 From\To             P1           P2
 P1         7.29811e-16  7.29811e-16
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.70335e-14):
+
+W\P             P1           P2
+W2     3.90820e-01  6.09180e-01
+
 Temperature = 1000 K    Pressure = 75006.16827041698 torr
 
   chemical eigenvalues (1/s):          2.06076e+09
@@ -280,6 +467,11 @@ Temperature = 1000 K    Pressure = 75006.16827041698 torr
 From\To             W2           P1           P2
 W2         2.06076e+09  9.38982e+08  1.12178e+09
 P1         5.46375e-16  9.86953e-16  4.40577e-16
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.41029e-13):
+
+W\P             P1           P2
+W2     2.91652e-02  2.51612e-02
 
 Temperature = 1500 K    Pressure = 7.500616827041697 torr
 
@@ -291,6 +483,11 @@ Temperature = 1500 K    Pressure = 7.500616827041697 torr
 From\To             P1           P2
 P1         1.45270e-14  1.45270e-14
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.06581e-13):
+
+W\P             P1           P2
+W2     4.97225e-01  5.02775e-01
+
 Temperature = 1500 K    Pressure = 75.00616827041698 torr
 
   chemical eigenvalues (1/s):          
@@ -300,6 +497,11 @@ Temperature = 1500 K    Pressure = 75.00616827041698 torr
 
 From\To             P1           P2
 P1         1.45274e-14  1.45274e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 5.55112e-15):
+
+W\P             P1           P2
+W2     5.04379e-01  4.95621e-01
 
 Temperature = 1500 K    Pressure = 750.0616827041697 torr
 
@@ -311,6 +513,11 @@ Temperature = 1500 K    Pressure = 750.0616827041697 torr
 From\To             P1           P2
 P1         1.45294e-14  1.45294e-14
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.33005e-13):
+
+W\P             P1           P2
+W2     5.18717e-01  4.81283e-01
+
 Temperature = 1500 K    Pressure = 7500.616827041697 torr
 
   chemical eigenvalues (1/s):          
@@ -320,6 +527,11 @@ Temperature = 1500 K    Pressure = 7500.616827041697 torr
 
 From\To             P1           P2
 P1         1.45386e-14  1.45386e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 4.10783e-14):
+
+W\P             P1           P2
+W2     5.42289e-01  4.57711e-01
 
 Temperature = 1500 K    Pressure = 75006.16827041698 torr
 
@@ -331,6 +543,11 @@ Temperature = 1500 K    Pressure = 75006.16827041698 torr
 From\To             P1           P2
 P1         1.45684e-14  1.45684e-14
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.04281e-14):
+
+W\P             P1           P2
+W2     5.74331e-01  4.25669e-01
+
 Temperature = 2000 K    Pressure = 7.500616827041697 torr
 
   chemical eigenvalues (1/s):          
@@ -340,6 +557,11 @@ Temperature = 2000 K    Pressure = 7.500616827041697 torr
 
 From\To             P1           P2
 P1         7.98720e-14  7.98720e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 9.32587e-14):
+
+W\P             P1           P2
+W2     6.28851e-01  3.71149e-01
 
 Temperature = 2000 K    Pressure = 75.00616827041698 torr
 
@@ -351,6 +573,11 @@ Temperature = 2000 K    Pressure = 75.00616827041698 torr
 From\To             P1           P2
 P1         7.98722e-14  7.98722e-14
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 3.47500e-14):
+
+W\P             P1           P2
+W2     6.29889e-01  3.70111e-01
+
 Temperature = 2000 K    Pressure = 750.0616827041697 torr
 
   chemical eigenvalues (1/s):          
@@ -360,6 +587,11 @@ Temperature = 2000 K    Pressure = 750.0616827041697 torr
 
 From\To             P1           P2
 P1         7.98735e-14  7.98735e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.01030e-14):
+
+W\P             P1           P2
+W2     6.32370e-01  3.67630e-01
 
 Temperature = 2000 K    Pressure = 7500.616827041697 torr
 
@@ -371,6 +603,11 @@ Temperature = 2000 K    Pressure = 7500.616827041697 torr
 From\To             P1           P2
 P1         7.98811e-14  7.98811e-14
 
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 1.55431e-14):
+
+W\P             P1           P2
+W2     6.37699e-01  3.62301e-01
+
 Temperature = 2000 K    Pressure = 75006.16827041698 torr
 
   chemical eigenvalues (1/s):          
@@ -380,6 +617,11 @@ Temperature = 2000 K    Pressure = 75006.16827041698 torr
 
 From\To             P1           P2
 P1         7.99147e-14  7.99147e-14
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.88658e-15):
+
+W\P             P1           P2
+W2     6.47847e-01  3.52153e-01
 
 --- Tables by temperature (rows: pressure in torr) ---
 
@@ -942,6 +1184,62 @@ Long-time yields, total (% of the eventual net reaction of P1), by temperature:
   750.0616827041697  1.00000e+02
   7500.616827041697  1.00000e+02
   75006.16827041698  1.00000e+02
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by temperature:
+
+   Temperature = 300 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   1.47667e-07   5.31754e-06
+  75.00616827041698   4.06747e-08   6.08260e-07
+  750.0616827041697   3.41744e-09   2.70366e-08
+  7500.616827041697   8.74522e-11   4.98464e-10
+  75006.16827041698   1.09988e-12   5.71146e-12
+
+   Temperature = 500 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   1.22432e-03   1.79122e-02
+  75.00616827041698   8.36424e-04   6.06004e-03
+  750.0616827041697   2.71239e-04   1.06052e-03
+  7500.616827041697   3.01512e-05   7.50329e-05
+  75006.16827041698   9.92842e-07   1.91368e-06
+
+   Temperature = 700 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   6.51276e-02   9.34872e-01
+  75.00616827041698   2.73551e-02   1.11674e-01
+  750.0616827041697   1.66540e-02   4.20372e-02
+  7500.616827041697   5.04079e-03   8.46224e-03
+  75006.16827041698   5.14213e-04   6.44382e-04
+
+   Temperature = 1000 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   2.20726e-01   7.79274e-01
+  75.00616827041698   2.56693e-01   7.43307e-01
+  750.0616827041697   3.16738e-01   6.83262e-01
+  7500.616827041697   3.90820e-01   6.09180e-01
+  75006.16827041698   2.91652e-02   2.51612e-02
+
+   Temperature = 1500 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   4.97225e-01   5.02775e-01
+  75.00616827041698   5.04379e-01   4.95621e-01
+  750.0616827041697   5.18717e-01   4.81283e-01
+  7500.616827041697   5.42289e-01   4.57711e-01
+  75006.16827041698   5.74331e-01   4.25669e-01
+
+   Temperature = 2000 K
+
+            P(torr)  kappa(W2/P1)  kappa(W2/P2)
+  7.500616827041697   6.28851e-01   3.71149e-01
+  75.00616827041698   6.29889e-01   3.70111e-01
+  750.0616827041697   6.32370e-01   3.67630e-01
+  7500.616827041697   6.37699e-01   3.62301e-01
+  75006.16827041698   6.47847e-01   3.52153e-01
 
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
 
@@ -1521,6 +1819,58 @@ Long-time yields, total (% of the eventual net reaction of P1), by pressure:
   1500  1.00000e+02
   2000  1.00000e+02
 
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by pressure:
+
+   Pressure = 7.500616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   1.47667e-07   5.31754e-06
+   500   1.22432e-03   1.79122e-02
+   700   6.51276e-02   9.34872e-01
+  1000   2.20726e-01   7.79274e-01
+  1500   4.97225e-01   5.02775e-01
+  2000   6.28851e-01   3.71149e-01
+
+   Pressure = 75.00616827041698 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   4.06747e-08   6.08260e-07
+   500   8.36424e-04   6.06004e-03
+   700   2.73551e-02   1.11674e-01
+  1000   2.56693e-01   7.43307e-01
+  1500   5.04379e-01   4.95621e-01
+  2000   6.29889e-01   3.70111e-01
+
+   Pressure = 750.0616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   3.41744e-09   2.70366e-08
+   500   2.71239e-04   1.06052e-03
+   700   1.66540e-02   4.20372e-02
+  1000   3.16738e-01   6.83262e-01
+  1500   5.18717e-01   4.81283e-01
+  2000   6.32370e-01   3.67630e-01
+
+   Pressure = 7500.616827041697 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   8.74522e-11   4.98464e-10
+   500   3.01512e-05   7.50329e-05
+   700   5.04079e-03   8.46224e-03
+  1000   3.90820e-01   6.09180e-01
+  1500   5.42289e-01   4.57711e-01
+  2000   6.37699e-01   3.62301e-01
+
+   Pressure = 75006.16827041698 torr
+
+  T(K)  kappa(W2/P1)  kappa(W2/P2)
+   300   1.09988e-12   5.71146e-12
+   500   9.92842e-07   1.91368e-06
+   700   5.14213e-04   6.44382e-04
+  1000   2.91652e-02   2.51612e-02
+  1500   5.74331e-01   4.25669e-01
+  2000   6.47847e-01   3.52153e-01
+
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
 
    Pressure = 7.500616827041697 torr
@@ -1729,6 +2079,26 @@ P\T                          300          500          700         1000         
 750.0616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
 7500.616827041697    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
 75006.16827041698    1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02  1.00000e+02
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), temperature-pressure tables:
+
+kappa(W2/P1)
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    1.47667e-07  1.22432e-03  6.51276e-02  2.20726e-01  4.97225e-01  6.28851e-01
+75.00616827041698    4.06747e-08  8.36424e-04  2.73551e-02  2.56693e-01  5.04379e-01  6.29889e-01
+750.0616827041697    3.41744e-09  2.71239e-04  1.66540e-02  3.16738e-01  5.18717e-01  6.32370e-01
+7500.616827041697    8.74522e-11  3.01512e-05  5.04079e-03  3.90820e-01  5.42289e-01  6.37699e-01
+75006.16827041698    1.09988e-12  9.92842e-07  5.14213e-04  2.91652e-02  5.74331e-01  6.47847e-01
+
+kappa(W2/P2)
+
+P\T                          300          500          700         1000         1500         2000
+7.500616827041697    5.31754e-06  1.79122e-02  9.34872e-01  7.79274e-01  5.02775e-01  3.71149e-01
+75.00616827041698    6.08260e-07  6.06004e-03  1.11674e-01  7.43307e-01  4.95621e-01  3.70111e-01
+750.0616827041697    2.70366e-08  1.06052e-03  4.20372e-02  6.83262e-01  4.81283e-01  3.67630e-01
+7500.616827041697    4.98464e-10  7.50329e-05  8.46224e-03  6.09180e-01  4.57711e-01  3.62301e-01
+75006.16827041698    5.71146e-12  1.91368e-06  6.44382e-04  2.51612e-02  4.25669e-01  3.52153e-01
 
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
 

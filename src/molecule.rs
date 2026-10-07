@@ -187,6 +187,9 @@ pub struct MoleculeStruct {
     pub symnum: f64,          // rotational symm num
     pub chiral: f64,          // number of enantiomers
     pub multi: f64,           // degeneracy factor, usually spin multiplicity
+    /// Electronic levels (energy above the ground level in cm-1, degeneracy); empty: the ground level only, with
+    /// degeneracy `multi`.
+    pub electronic_levels: Vec<(f64, f64)>,
     pub mass: f64,            // total mass
     pub freq: Vec<f64>,       // harmonic frequencies
     pub brot: Vec<f64>,       // rotational constants
@@ -238,6 +241,7 @@ impl Default for MoleculeStruct {
             symnum: 0.0,
             chiral: 0.0,
             multi: 0.0,
+            electronic_levels: Vec::new(),
             mass: 0.0,
             freq: Vec::new(),
             brot: Vec::new(),
@@ -265,6 +269,7 @@ pub struct MoleculeBuilder {
     pub ene: Option<f64>,
     pub dh0: Option<f64>,
     pub multi: f64,
+    pub electronic_levels: Vec<(f64, f64)>,
     pub chiral: f64,
     pub symnum: f64,
     pub freqscale: f64,
@@ -286,6 +291,7 @@ impl MoleculeBuilder {
             ene: None,   // None means the energy is not provided yet
             dh0: None,   // None means the enthalpy is not provided yet
             multi: 1.0,  // Default multiplicity
+            electronic_levels: Vec::new(),
             chiral: 1.0, // Default multiplicity
             symnum: 1.0, // Default symmetry number
             mass: None,
@@ -340,6 +346,12 @@ impl MoleculeBuilder {
 
     pub fn multi(mut self, multi: f64) -> Self {
         self.multi = multi;
+        self
+    }
+
+    /// Electronic levels (energy above the ground level in cm-1, degeneracy), the ground level included.
+    pub fn electronic_levels(mut self, levels: Vec<(f64, f64)>) -> Self {
+        self.electronic_levels = levels;
         self
     }
 
@@ -401,6 +413,7 @@ impl MoleculeBuilder {
             dh0,
             symnum: self.symnum,
             multi: self.multi,
+            electronic_levels: self.electronic_levels,
             chiral: self.chiral,
             freq: self.freq,
             brot: brot_final,

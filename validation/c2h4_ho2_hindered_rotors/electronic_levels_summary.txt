@@ -1,0 +1,96 @@
+   300     nan  k_inf W2->P1  MarXus/MESS  +0.189%   change from base: MESS   -8.333%  MarXus   -8.333%
+   300     nan  k_inf W2->P2  MarXus/MESS  +0.132%   change from base: MESS   -8.333%  MarXus   -8.333%
+   300     nan  k_inf P1->W2  MarXus/MESS  -0.389%   change from base: MESS   +0.000%  MarXus   +0.000%
+   500     nan  k_inf W2->P1  MarXus/MESS  +0.139%   change from base: MESS  -19.174%  MarXus  -19.173%
+   500     nan  k_inf W2->P2  MarXus/MESS  +0.122%   change from base: MESS  -19.173%  MarXus  -19.173%
+   500     nan  k_inf P1->W2  MarXus/MESS  -0.271%   change from base: MESS   +0.000%  MarXus   +0.000%
+   700     nan  k_inf W2->P1  MarXus/MESS  +0.110%   change from base: MESS  -26.353%  MarXus  -26.353%
+   700     nan  k_inf W2->P2  MarXus/MESS  +0.114%   change from base: MESS  -26.354%  MarXus  -26.353%
+   700     nan  k_inf P1->W2  MarXus/MESS  -0.197%   change from base: MESS   +0.000%  MarXus   -0.000%
+  1000     nan  k_inf W2->P1  MarXus/MESS  +0.089%   change from base: MESS  -32.753%  MarXus  -32.753%
+  1000     nan  k_inf W2->P2  MarXus/MESS  +0.111%   change from base: MESS  -32.753%  MarXus  -32.753%
+  1000     nan  k_inf P1->W2  MarXus/MESS  -0.125%   change from base: MESS   -0.004%  MarXus   -0.004%
+  1500     nan  k_inf W2->P1  MarXus/MESS  +0.074%   change from base: MESS  -38.235%  MarXus  -38.235%
+  1500     nan  k_inf W2->P2  MarXus/MESS  +0.114%   change from base: MESS  -38.235%  MarXus  -38.235%
+  1500     nan  k_inf P1->W2  MarXus/MESS  -0.056%   change from base: MESS   -0.118%  MarXus   -0.118%
+  2000     nan  k_inf W2->P1  MarXus/MESS  +0.066%   change from base: MESS  -41.103%  MarXus  -41.103%
+  2000     nan  k_inf W2->P2  MarXus/MESS  +0.118%   change from base: MESS  -41.103%  MarXus  -41.103%
+  2000     nan  k_inf P1->W2  MarXus/MESS  -0.017%   change from base: MESS   -0.633%  MarXus   -0.633%
+   300    0.01  net P1->P2    MarXus/MESS  +0.141%   change from base: MESS   +0.190%  MarXus   +0.190%
+   300    0.01  W2->P1        MarXus/MESS  +0.506%   change from base: MESS  +23.355%  MarXus  +23.387%
+   300    0.01  W2->P2        MarXus/MESS  +0.389%   change from base: MESS   +5.688%  MarXus   +5.725%
+   300    0.01  P1->W2        MarXus/MESS  -0.042%   change from base: MESS  +34.577%  MarXus  +34.604%
+   300    0.10  net P1->P2    MarXus/MESS  +0.142%   change from base: MESS   +0.795%  MarXus   +0.795%
+   300    0.10  W2->P1        MarXus/MESS  +0.710%   change from base: MESS  +10.525%  MarXus  +10.530%
+   300    0.10  W2->P2        MarXus/MESS  +0.649%   change from base: MESS   -1.161%  MarXus   -1.150%
+   300    0.10  P1->W2        MarXus/MESS  +0.133%   change from base: MESS  +20.575%  MarXus  +20.577%
+   300    1.00  net P1->P2    MarXus/MESS  +0.142%   change from base: MESS   +0.890%  MarXus   +0.890%
+   300    1.00  W2->P1        MarXus/MESS  +0.728%   change from base: MESS   -1.679%  MarXus   -1.682%
+   300    1.00  W2->P2        MarXus/MESS  +0.700%   change from base: MESS   -6.192%  MarXus   -6.190%
+   300    1.00  P1->W2        MarXus/MESS  +0.148%   change from base: MESS   +7.258%  MarXus   +7.255%
+   300   10.00  net P1->P2    MarXus/MESS  +0.140%   change from base: MESS   +0.257%  MarXus   +0.256%
+   300   10.00  W2->P1        MarXus/MESS  +0.721%   change from base: MESS   -7.085%  MarXus   -7.086%
+   300   10.00  W2->P2        MarXus/MESS  +0.705%   change from base: MESS   -7.988%  MarXus   -7.988%
+   300   10.00  P1->W2        MarXus/MESS  +0.141%   change from base: MESS   +1.361%  MarXus   +1.360%
+   300  100.00  net P1->P2    MarXus/MESS  +0.139%   change from base: MESS   +0.033%  MarXus   +0.033%
+   300  100.00  W2->P1        MarXus/MESS  +0.720%   change from base: MESS   -8.186%  MarXus   -8.186%
+   300  100.00  W2->P2        MarXus/MESS  +0.705%   change from base: MESS   -8.295%  MarXus   -8.295%
+   300  100.00  P1->W2        MarXus/MESS  +0.139%   change from base: MESS   +0.160%  MarXus   +0.160%
+   500    0.01  net P1->P2    MarXus/MESS  +0.105%   change from base: MESS   +0.064%  MarXus   +0.064%
+   500    0.01  W2->P1        MarXus/MESS  -0.045%   change from base: MESS  +24.067%  MarXus  +24.300%
+   500    0.01  W2->P2        MarXus/MESS  -0.470%   change from base: MESS   +3.878%  MarXus   +4.084%
+   500    0.01  P1->W2        MarXus/MESS  -0.134%   change from base: MESS  +53.443%  MarXus  +53.660%
+   500    0.10  net P1->P2    MarXus/MESS  +0.111%   change from base: MESS   +0.513%  MarXus   +0.515%
+   500    0.10  W2->P1        MarXus/MESS  +0.466%   change from base: MESS  +13.649%  MarXus  +13.764%
+   500    0.10  W2->P2        MarXus/MESS  +0.177%   change from base: MESS   -1.642%  MarXus   -1.525%
+   500    0.10  P1->W2        MarXus/MESS  +0.166%   change from base: MESS  +40.675%  MarXus  +40.781%
+   500    1.00  net P1->P2    MarXus/MESS  +0.132%   change from base: MESS   +2.112%  MarXus   +2.117%
+   500    1.00  W2->P1        MarXus/MESS  +0.669%   change from base: MESS   +0.695%  MarXus   +0.718%
+   500    1.00  W2->P2        MarXus/MESS  +0.502%   change from base: MESS   -8.541%  MarXus   -8.505%
+   500    1.00  P1->W2        MarXus/MESS  +0.277%   change from base: MESS  +24.615%  MarXus  +24.634%
+   500   10.00  net P1->P2    MarXus/MESS  +0.136%   change from base: MESS   +2.540%  MarXus   +2.538%
+   500   10.00  W2->P1        MarXus/MESS  +0.618%   change from base: MESS  -10.889%  MarXus  -10.903%
+   500   10.00  W2->P2        MarXus/MESS  +0.544%   change from base: MESS  -14.968%  MarXus  -14.970%
+   500   10.00  P1->W2        MarXus/MESS  +0.208%   change from base: MESS  +10.254%  MarXus  +10.236%
+   500  100.00  net P1->P2    MarXus/MESS  +0.114%   change from base: MESS   +0.825%  MarXus   +0.822%
+   500  100.00  W2->P1        MarXus/MESS  +0.540%   change from base: MESS  -17.329%  MarXus  -17.336%
+   500  100.00  W2->P2        MarXus/MESS  +0.517%   change from base: MESS  -18.312%  MarXus  -18.315%
+   500  100.00  P1->W2        MarXus/MESS  +0.128%   change from base: MESS   +2.283%  MarXus   +2.273%
+   700    0.01  net P1->P2    MarXus/MESS  +0.103%   change from base: MESS   +0.015%  MarXus   +0.015%
+   700    0.10  net P1->P2    MarXus/MESS  +0.113%   change from base: MESS   +0.176%  MarXus   +0.179%
+   700    0.10  W2->P1        MarXus/MESS  +3.095%   change from base: MESS  +12.924%  MarXus  +12.883%
+   700    0.10  W2->P2        MarXus/MESS  +2.588%   change from base: MESS   -2.250%  MarXus   -2.269%
+   700    0.10  P1->W2        MarXus/MESS  +3.183%   change from base: MESS  +53.689%  MarXus  +53.658%
+   700    1.00  net P1->P2    MarXus/MESS  +0.165%   change from base: MESS   +1.342%  MarXus   +1.359%
+   700    1.00  W2->P1        MarXus/MESS  +1.849%   change from base: MESS   +2.678%  MarXus   +2.589%
+   700    1.00  W2->P2        MarXus/MESS  +1.535%   change from base: MESS   -7.925%  MarXus   -7.986%
+   700    1.00  P1->W2        MarXus/MESS  +1.657%   change from base: MESS  +40.172%  MarXus  +40.043%
+   700   10.00  net P1->P2    MarXus/MESS  +0.234%   change from base: MESS   +4.294%  MarXus   +4.306%
+   700   10.00  W2->P1        MarXus/MESS  +1.061%   change from base: MESS   -8.568%  MarXus   -8.646%
+   700   10.00  W2->P2        MarXus/MESS  +0.891%   change from base: MESS  -14.936%  MarXus  -14.992%
+   700   10.00  P1->W2        MarXus/MESS  +0.772%   change from base: MESS  +24.506%  MarXus  +24.395%
+   700  100.00  net P1->P2    MarXus/MESS  +0.183%   change from base: MESS   +3.721%  MarXus   +3.707%
+   700  100.00  W2->P1        MarXus/MESS  +0.612%   change from base: MESS  -19.282%  MarXus  -19.326%
+   700  100.00  W2->P2        MarXus/MESS  +0.546%   change from base: MESS  -21.930%  MarXus  -21.960%
+   700  100.00  P1->W2        MarXus/MESS  +0.305%   change from base: MESS   +9.649%  MarXus   +9.588%
+  1000    0.01  net P1->P2    MarXus/MESS  +0.115%   change from base: MESS   -0.002%  MarXus   -0.001%
+  1000    0.10  net P1->P2    MarXus/MESS  +0.115%   change from base: MESS   +0.012%  MarXus   +0.012%
+  1000    1.00  net P1->P2    MarXus/MESS  +0.117%   change from base: MESS   +0.063%  MarXus   +0.064%
+  1000   10.00  net P1->P2    MarXus/MESS  +0.581%   change from base: MESS   +8.972%  MarXus   +9.473%
+  1000   10.00  W2->P1        MarXus/MESS  +4.257%   change from base: MESS     +nan%  MarXus     +nan%
+  1000   10.00  W2->P2        MarXus/MESS  +3.877%   change from base: MESS     +nan%  MarXus     +nan%
+  1000   10.00  P1->W2        MarXus/MESS  +5.587%   change from base: MESS     +nan%  MarXus     +nan%
+  1000  100.00  net P1->P2    MarXus/MESS  +0.544%   change from base: MESS   +7.719%  MarXus   +7.725%
+  1000  100.00  W2->P1        MarXus/MESS  +1.477%   change from base: MESS  -16.389%  MarXus  -16.551%
+  1000  100.00  W2->P2        MarXus/MESS  +1.316%   change from base: MESS  -20.880%  MarXus  -21.014%
+  1000  100.00  P1->W2        MarXus/MESS  +1.441%   change from base: MESS  +26.312%  MarXus  +25.999%
+  1500    0.01  net P1->P2    MarXus/MESS  +0.137%   change from base: MESS   -0.118%  MarXus   -0.118%
+  1500    0.10  net P1->P2    MarXus/MESS  +0.138%   change from base: MESS   -0.118%  MarXus   -0.117%
+  1500    1.00  net P1->P2    MarXus/MESS  +0.142%   change from base: MESS   -0.113%  MarXus   -0.111%
+  1500   10.00  net P1->P2    MarXus/MESS  +0.145%   change from base: MESS   -0.092%  MarXus   -0.090%
+  1500  100.00  net P1->P2    MarXus/MESS  +0.142%   change from base: MESS   -0.041%  MarXus   -0.041%
+  2000    0.01  net P1->P2    MarXus/MESS  +0.153%   change from base: MESS   -0.633%  MarXus   -0.633%
+  2000    0.10  net P1->P2    MarXus/MESS  +0.153%   change from base: MESS   -0.633%  MarXus   -0.633%
+  2000    1.00  net P1->P2    MarXus/MESS  +0.155%   change from base: MESS   -0.632%  MarXus   -0.632%
+  2000   10.00  net P1->P2    MarXus/MESS  +0.160%   change from base: MESS   -0.630%  MarXus   -0.628%
+  2000  100.00  net P1->P2    MarXus/MESS  +0.163%   change from base: MESS   -0.615%  MarXus   -0.613%

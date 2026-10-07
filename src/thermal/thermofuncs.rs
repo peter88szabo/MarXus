@@ -18,6 +18,41 @@ const GRIMME_BAV_SI: f64 = 1.0e-44;
 // Damping exponent in Grimme qRRHO
 const GRIMME_ALPHA: f64 = 4.0;
 
+/// Electronic contributions per mole (Hartree, Hartree/K), from levels (energy above the ground level in cm-1,
+/// degeneracy), with x_j = eps_j / (k_B T):
+///   q = sum_j g_j e^(-x_j),  U = H = RT <x>,  F = G = -RT ln q,  S = (U - F)/T,  Cv = Cp = R (<x^2> - <x>^2),
+/// where <f> = sum_j g_j f(x_j) e^(-x_j) / q (canonical averages over the levels).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ElectronicContributions {
+    pub partition_function: f64,
+    pub internal_energy: f64,
+    pub free_energy: f64,
+    pub entropy: f64,
+    pub heat_capacity: f64,
+}
+
+pub fn electronic_contributions(levels: &[(f64, f64)], temp: f64) -> ElectronicContributions {
+    let rt = RGAS_AU * temp;
+    let (mut q, mut sum_x, mut sum_x2) = (0.0, 0.0, 0.0);
+    for &(eps, g) in levels {
+        let x = CM1_TO_K * eps / temp;
+        let w = g * (-x).exp();
+        q += w;
+        sum_x += w * x;
+        sum_x2 += w * x * x;
+    }
+    let (mean, mean_sq) = (sum_x / q, sum_x2 / q);
+    let internal_energy = rt * mean;
+    let free_energy = -rt * q.ln();
+    ElectronicContributions {
+        partition_function: q,
+        internal_energy,
+        free_energy,
+        entropy: (internal_energy - free_energy) / temp,
+        heat_capacity: RGAS_AU * (mean_sq - mean * mean),
+    }
+}
+
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 #[allow(unused_variables)]
@@ -64,25 +99,22 @@ impl MoleculeStruct {
     }
 
     // -----------------------------------------------------------------------------------------
-    // Electronic: PF = multiplicity, F = -RT ln PF, U=H=0, S=(U-F)/T
+    // Electronic: from the electronic levels (`electronic_contributions`); without levels the ground level alone
+    // with degeneracy `multi` (q = multi, U = H = Cv = 0).
     fn all_electronic(&mut self, temp: f64) {
-        let RT = RGAS_AU * temp;
+        let ground = [(0.0, if self.multi > 0.0 { self.multi } else { 1.0 })];
+        let levels: &[(f64, f64)] = if self.electronic_levels.is_empty() { &ground } else { &self.electronic_levels };
+        let e = electronic_contributions(levels, temp);
 
-        let pf = if self.multi > 0.0 { self.multi } else { 1.0 };
-        let F = -RT * pf.ln();
-        let U = 0.0;
-        let H = 0.0;
-        let S = (U - F) / temp;
+        self.thermo.pfelec = e.partition_function;
+        self.thermo.felec = e.free_energy;
+        self.thermo.uelec = e.internal_energy;
+        self.thermo.helec = e.internal_energy;
+        self.thermo.selec = e.entropy;
+        self.thermo.gelec = e.free_energy;
 
-        self.thermo.pfelec = pf;
-        self.thermo.felec = F;
-        self.thermo.uelec = U;
-        self.thermo.helec = H;
-        self.thermo.selec = S;
-        self.thermo.gelec = F;
-
-        self.thermo.cvelec = 0.0;
-        self.thermo.cpelec = 0.0;
+        self.thermo.cvelec = e.heat_capacity;
+        self.thermo.cpelec = e.heat_capacity;
     }
 
     // -----------------------------------------------------------------------------------------
@@ -466,6 +498,60 @@ mod tests {
         assert!(water.thermo.pftot.is_finite() && water.thermo.pftot > 0.0);
         assert!(water.thermo.stot.is_finite());
         assert!(water.thermo.gtot.is_finite());
+    }
+
+    #[test]
+    fn one_electronic_level_gives_the_degeneracy_factor() {
+        // q = g0, F = -RT ln g0, U = H = Cv = 0, S = R ln g0: the former multiplicity model.
+        let t = 298.15;
+        let e = electronic_contributions(&[(0.0, 3.0)], t);
+        assert_eq!(e.partition_function, 3.0);
+        assert!((e.free_energy + RGAS_AU * t * 3.0_f64.ln()).abs() < 1e-18);
+        assert_eq!((e.internal_energy, e.heat_capacity), (0.0, 0.0));
+        assert!((e.entropy - RGAS_AU * 3.0_f64.ln()).abs() < 1e-18);
+    }
+
+    #[test]
+    fn two_electronic_levels_follow_the_level_sums() {
+        // OH X 2Pi: 2Pi_3/2 (g = 2) and 2Pi_1/2 at 139.7 cm-1 (g = 2), at 300 K; x = CM1_TO_K eps / T
+        let (t, eps) = (300.0, 139.7);
+        let x = CM1_TO_K * eps / t;
+        let q = 2.0 + 2.0 * (-x).exp();
+        let mean = 2.0 * x * (-x).exp() / q;
+        let mean_sq = 2.0 * x * x * (-x).exp() / q;
+        let rt = RGAS_AU * t;
+        let e = electronic_contributions(&[(0.0, 2.0), (eps, 2.0)], t);
+        assert!((e.partition_function - q).abs() < 1e-14);
+        assert!((e.internal_energy - rt * mean).abs() < 1e-18);
+        assert!((e.free_energy + rt * q.ln()).abs() < 1e-18);
+        assert!((e.entropy - (rt * mean + rt * q.ln()) / t).abs() < 1e-18);
+        assert!((e.heat_capacity - RGAS_AU * (mean_sq - mean * mean)).abs() < 1e-18);
+        // limits: q -> sum g at high T, q -> g0 and U, Cv -> 0 at low T
+        let hot = electronic_contributions(&[(0.0, 2.0), (eps, 2.0)], 1.0e7);
+        assert!((hot.partition_function - 4.0).abs() < 1e-4);
+        let cold = electronic_contributions(&[(0.0, 2.0), (eps, 2.0)], 2.0);
+        assert!((cold.partition_function - 2.0).abs() < 1e-20 && cold.internal_energy.abs() < 1e-25 && cold.heat_capacity.abs() < 1e-25);
+    }
+
+    #[test]
+    fn molecules_with_excited_electronic_levels_sum_them_into_the_thermochemistry() {
+        let levels = vec![(0.0, 2.0), (139.7, 2.0)];
+        let mut oh = MoleculeBuilder::new("OH".to_string(), MolType::mol)
+            .freq(vec![3737.8])
+            .brot(vec![18.91])
+            .mass(17.0027)
+            .ene(0.0)
+            .multi(2.0)
+            .electronic_levels(levels.clone())
+            .build();
+        oh.eval_all_therm_func(300.0, 101_325.0, 0.0);
+        let e = electronic_contributions(&levels, 300.0);
+        assert_eq!((oh.thermo.pfelec, oh.thermo.uelec, oh.thermo.selec, oh.thermo.cvelec), (e.partition_function, e.internal_energy, e.entropy, e.heat_capacity));
+        assert_eq!((oh.thermo.helec, oh.thermo.felec, oh.thermo.gelec, oh.thermo.cpelec), (e.internal_energy, e.free_energy, e.free_energy, e.heat_capacity));
+        // without levels: the multiplicity alone
+        let mut plain = MoleculeBuilder::new("OH".to_string(), MolType::mol).freq(vec![3737.8]).brot(vec![18.91]).mass(17.0027).ene(0.0).multi(2.0).build();
+        plain.eval_all_therm_func(300.0, 101_325.0, 0.0);
+        assert_eq!(plain.thermo.pfelec, 2.0);
     }
 
     #[test]

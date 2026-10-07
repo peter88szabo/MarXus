@@ -16,6 +16,7 @@ use std::io::Write;
 
 use crate::constants::CM1_TO_KCAL;
 
+use super::chemical_activation_from_mess_input::{deck_equilibrium_constant, DeckSpeciesKind, DeckSpeciesPartition};
 use super::chemical_activation_driver::{
     ConditionResult, PhenomenologicalConditionResult, ThermalConditionResult,
     WellFateConditionResult,
@@ -31,6 +32,98 @@ use super::report_tables::{
     sci, write_labelled_table, write_tables_by_pressure, write_tables_by_temperature,
     write_temperature_pressure_tables, Quantity, QuantityGroup,
 };
+
+// ------------------------------------------------------------------------------------------------------
+// Partition functions and equilibrium constants
+// ------------------------------------------------------------------------------------------------------
+
+/// The wells and bimolecular species: the species of the equilibrium constants (not the barriers).
+fn equilibrium_species(species: &[DeckSpeciesPartition]) -> Vec<&DeckSpeciesPartition> {
+    species.iter().filter(|s| s.kind != DeckSpeciesKind::Barrier).collect()
+}
+
+/// For each temperature, the partition functions of the deck species (Q from the cell densities, counted from the ground
+/// state of the species; a bimolecular species per cm3 with the relative translation) and the real equilibrium constants
+/// K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) of the wells and bimolecular species, rows X and columns Y, in cm3 for
+/// a well X and a bimolecular species Y (the layout of the "Real equilibrium constants" of MESS).
+pub fn write_partition_functions<W: Write>(
+    out: &mut W,
+    species: &[DeckSpeciesPartition],
+    temperatures: &[f64],
+) -> std::io::Result<()> {
+    let pairs = equilibrium_species(species);
+    let names: Vec<String> = pairs.iter().map(|s| s.name.clone()).collect();
+    for &t in temperatures {
+        writeln!(out, "Temperature = {t} K
+")?;
+        writeln!(
+            out,
+            "Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative \
+             translation; E0: ground energy in kcal/mol on the energy scale of the deck):"
+        )?;
+        writeln!(out, "{:>10} {:>12} {:>12} {:>13}", "Name", "Kind", "E0", "Q")?;
+        for s in species {
+            let kind = match s.kind {
+                DeckSpeciesKind::Well => "well",
+                DeckSpeciesKind::Barrier => "barrier",
+                DeckSpeciesKind::Bimolecular => "bimolecular",
+            };
+            writeln!(
+                out,
+                "{:>10} {:>12} {:>12.4} {:>13}",
+                s.name,
+                kind,
+                s.ground_energy_cm1 * CM1_TO_KCAL,
+                sci(s.partition_function(t))
+            )?;
+        }
+        writeln!(
+            out,
+            "\nReal equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):"
+        )?;
+        let rows: Vec<(String, Vec<Option<f64>>)> = pairs
+            .iter()
+            .map(|x| (x.name.clone(), pairs.iter().map(|y| Some(deck_equilibrium_constant(x, y, t))).collect()))
+            .collect();
+        write_labelled_table(out, "Q/Q", &names, &rows)?;
+    }
+    Ok(())
+}
+
+/// The numbers of `write_partition_functions` as groups for the tables: Q of every species and K(X/Y) of every ordered
+/// pair of wells and bimolecular species; they depend on T only and are repeated at every pressure.
+pub fn partition_function_groups(
+    species: &[DeckSpeciesPartition],
+    temperatures: &[f64],
+    pressures: &[f64],
+) -> Vec<QuantityGroup> {
+    let over_conditions =
+        |f: &dyn Fn(f64) -> f64| -> Vec<Vec<Option<f64>>> { temperatures.iter().map(|&t| vec![Some(f(t)); pressures.len()]).collect() };
+    let q = species
+        .iter()
+        .map(|s| Quantity { name: format!("Q({})", s.name), values: over_conditions(&|t| s.partition_function(t)) })
+        .collect();
+    let pairs = equilibrium_species(species);
+    let mut k = Vec::new();
+    for x in &pairs {
+        for y in pairs.iter().filter(|y| y.name != x.name) {
+            k.push(Quantity {
+                name: format!("K({}/{})", x.name, y.name),
+                values: over_conditions(&|t| deck_equilibrium_constant(x, y, t)),
+            });
+        }
+    }
+    vec![
+        QuantityGroup {
+            title: "Partition functions Q (from the ground state; bimolecular species per cm^3)".into(),
+            quantities: q,
+        },
+        QuantityGroup {
+            title: "Real equilibrium constants K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) (bimolecular units cm^3)".into(),
+            quantities: k,
+        },
+    ]
+}
 
 // ------------------------------------------------------------------------------------------------------
 // Energetics
@@ -1054,6 +1147,79 @@ pub fn cse_groups(
         ));
     }
 
+    // The product rows (G13 eqs. 28, 21, 22), one group per product.
+    for product in &first.rates.products {
+        let p_name = product.name.clone();
+        let own = bimolecular.iter().position(|b| *b == p_name);
+        let pick = |p_name: String, f: Box<dyn Fn(&PhenomenologicalConditionResult, &ReactantRates) -> Option<f64>>| {
+            move |r: &PhenomenologicalConditionResult, _: f64| r.rates.products.iter().find(|x| x.name == p_name).and_then(|x| f(r, x))
+        };
+        let mut quantities: Vec<Quantity> = wells
+            .iter()
+            .map(|well| {
+                let name = well.clone();
+                quantity(
+                    format!("{p_name}->{well}"),
+                    temperatures,
+                    pressures,
+                    &index,
+                    pick(p_name.clone(), Box::new(move |r, x: &ReactantRates| Some(x.to_well_cm3_s[at(r, &name)?]))),
+                )
+            })
+            .collect();
+        for (nu, target) in bimolecular.iter().enumerate().filter(|&(nu, _)| Some(nu) != own) {
+            quantities.push(quantity(
+                format!("{p_name}->{target}"),
+                temperatures,
+                pressures,
+                &index,
+                pick(p_name.clone(), Box::new(move |_, x: &ReactantRates| Some(x.to_bimolecular_cm3_s[nu]))),
+            ));
+        }
+        if let Some(own) = own {
+            let parts: [(&str, fn(&ReactantRates, usize) -> f64); 3] = [
+                ("capture", |x, _| x.capture_cm3_s),
+                ("return", |x, own| x.to_bimolecular_cm3_s[own]),
+                ("net", |x, own| x.capture_cm3_s - x.to_bimolecular_cm3_s[own]),
+            ];
+            for (label, f) in parts {
+                quantities.push(quantity(
+                    format!("{p_name} {label}"),
+                    temperatures,
+                    pressures,
+                    &index,
+                    pick(p_name.clone(), Box::new(move |_, x: &ReactantRates| Some(f(x, own)))),
+                ));
+            }
+        }
+        groups.push(QuantityGroup {
+            title: format!(
+                "Rate coefficients from {p_name} (G13 eqs. 28, 21; capture of the reverse association, return and net reaction) (cm^3/s)"
+            ),
+            quantities,
+        });
+    }
+
+    // kappa (G13 eq. 34) of every well and bimolecular channel.
+    let mut kappa = Vec::new();
+    for (w, well) in first.rates.network_wells.iter().enumerate() {
+        for (nu, target) in bimolecular.iter().enumerate() {
+            kappa.push(quantity(
+                format!("kappa({well}/{target})"),
+                temperatures,
+                pressures,
+                &index,
+                move |r: &PhenomenologicalConditionResult, _| r.rates.kappa.get(w).and_then(|row| row.get(nu)).copied(),
+            ));
+        }
+    }
+    if !kappa.is_empty() {
+        groups.push(QuantityGroup {
+            title: "Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species)".into(),
+            quantities: kappa,
+        });
+    }
+
     groups.push(QuantityGroup {
         title: "Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells \
                 are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance)"
@@ -1154,12 +1320,31 @@ pub fn write_cse_species_tables<W: Write>(
             );
             rows.push((reactant.name.clone(), row));
         }
+        // The product rows: to the species (G13 eq. 28), to the other bimolecular channels (eq. 21); the diagonal is the
+        // net reaction, capture - return.
+        for product in &x.products {
+            let own = x.bimolecular.iter().position(|b| *b == product.name);
+            let mut row: Vec<Option<f64>> = product.to_well_cm3_s.iter().map(|&k| Some(k)).collect();
+            row.extend(product.to_bimolecular_cm3_s.iter().enumerate().map(|(nu, &k)| {
+                Some(if Some(nu) == own { product.capture_cm3_s - k } else { k })
+            }));
+            rows.push((product.name.clone(), row));
+        }
         for warning in &x.warnings {
             writeln!(out, "  warning: {warning}")?;
         }
         writeln!(out)?;
         let columns: Vec<String> = x.wells.iter().chain(&x.bimolecular).cloned().collect();
         write_labelled_table(out, "From\\To", &columns, &rows)?;
+        writeln!(
+            out,
+            "  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in \
+             equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation {}):\n",
+            sci(x.kappa_sum_rule_max_deviation)
+        )?;
+        let kappa_rows: Vec<(String, Vec<Option<f64>>)> =
+            x.network_wells.iter().zip(&x.kappa).map(|(w, row)| (w.clone(), row.iter().map(|&k| Some(k)).collect())).collect();
+        write_labelled_table(out, "W\\P", &x.bimolecular, &kappa_rows)?;
     }
     Ok(())
 }
@@ -1721,6 +1906,7 @@ mod tests {
             MODEL,
             EigenSolver::FullDecomposition,
             Some(("R", &capture)),
+            &[],
             &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
         )
         .unwrap();
@@ -1789,6 +1975,7 @@ mod tests {
             MODEL,
             EigenSolver::FullDecomposition,
             Some(("R", &capture)),
+            &[],
             &CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() },
         )
         .unwrap();
@@ -1804,7 +1991,7 @@ mod tests {
         let options = ChemicalActivationOptions { collision_model: MODEL, steady_state: SteadyState::Final };
         let op = assemble_operator(&network, &last.conditions, &options).unwrap();
         last.rates =
-            phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), EigenSolver::FullDecomposition, &merging)
+            phenomenological_rate_coefficients(&network, &op, Some(("R", k_capture)), &[], EigenSolver::FullDecomposition, &merging)
                 .unwrap();
         assert_eq!(last.rates.wells, ["A+B"]);
 
@@ -1987,5 +2174,77 @@ mod tests {
                 "{view}"
             );
         }
+    }
+
+    #[test]
+    fn the_partition_function_section_lists_q_and_the_real_equilibrium_constants() {
+        use crate::masterequation::chemical_activation_from_mess_input::{
+            chemical_activation_model_from_mess, deck_equilibrium_constant, MessNetworkSettings,
+        };
+        use crate::masterequation::mess_input::parse_mess_input;
+        let deck = parse_mess_input(include_str!("../../examples/c2h3_chemical_activation.inp")).unwrap();
+        let model = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default()).unwrap();
+        let species = &model.species_partition_functions;
+        let find = |name: &str| species.iter().find(|s| s.name == name).unwrap();
+        let mut out = Vec::new();
+        write_partition_functions(&mut out, species, &[1000.0]).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains("Temperature = 1000 K"), "{text}");
+        assert!(text.contains(&sci(find("W1").partition_function(1000.0))), "{text}");
+        assert!(text.contains(&sci(find("B1").partition_function(1000.0))), "{text}");
+        assert!(text.contains(&sci(find("P1").partition_function(1000.0))), "{text}");
+        assert!(text.contains("Q/Q"), "{text}");
+        assert!(text.contains(&sci(deck_equilibrium_constant(find("W1"), find("P1"), 1000.0))), "{text}");
+        // the same numbers for the tables: Q of every species and K of every ordered pair of wells and bimolecular species,
+        // the same at every pressure
+        let groups = partition_function_groups(species, &[500.0, 1000.0], &[1.0, 10.0]);
+        assert_eq!(groups.len(), 2);
+        assert_eq!(names(&groups[0]), vec!["Q(W1)", "Q(B1)", "Q(P1)"]);
+        assert_eq!(names(&groups[1]), vec!["K(W1/P1)", "K(P1/W1)"]);
+        let k = &groups[1].quantities[0].values;
+        assert_eq!(k[1][0], Some(deck_equilibrium_constant(find("W1"), find("P1"), 1000.0)));
+        assert_eq!(k[1][0], k[1][1]);
+    }
+
+
+    #[test]
+    fn the_cse_output_gives_the_product_rows_and_kappa() {
+        use crate::masterequation::chemically_significant_eigenvalues::CseMerging;
+        let network = network();
+        let (capture_r, capture_p) = (|_t: f64| 2.0e-11, |_t: f64| 1.0e-12);
+        let results = run_phenomenological_rates(
+            &network,
+            &TEMPERATURES,
+            &PRESSURES,
+            MODEL,
+            EigenSolver::FullDecomposition,
+            Some(("R", &capture_r)),
+            &[("P", &capture_p)],
+            &CseMerging::default(),
+        )
+        .unwrap();
+        let rates = last_rates(&results);
+        let bimolecular = &rates.bimolecular;
+        let groups = cse_groups(&TEMPERATURES, &PRESSURES, &results);
+        // The product row: to the species, to the other bimolecular channels, capture, return and net reaction.
+        let mut expected: Vec<String> = rates.wells.iter().map(|w| format!("P->{w}")).collect();
+        expected.extend(bimolecular.iter().filter(|b| *b != "P").map(|b| format!("P->{b}")));
+        expected.extend(["P capture", "P return", "P net"].map(String::from));
+        assert_eq!(names(group(&groups, "Rate coefficients from P")), expected);
+        let product = &rates.products[0];
+        let p_to_a = &group(&groups, "Rate coefficients from P").quantities[0].values;
+        assert_eq!(p_to_a[TEMPERATURES.len() - 1][PRESSURES.len() - 1], Some(product.to_well_cm3_s[0]));
+        // kappa of every well and bimolecular channel
+        let expected: Vec<String> =
+            rates.network_wells.iter().flat_map(|w| bimolecular.iter().map(move |b| format!("kappa({w}/{b})"))).collect();
+        assert_eq!(names(group(&groups, "Isomer-to-bimolecular equilibrium coefficients")), expected);
+        // The species tables: a P row (diagonal: the net reaction, capture - return) and the kappa matrix.
+        let mut out = Vec::new();
+        write_cse_species_tables(&mut out, &results).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        let p = bimolecular.iter().position(|b| b == "P").unwrap();
+        assert!(text.contains(&sci(product.capture_cm3_s - product.to_bimolecular_cm3_s[p])), "{text}");
+        assert!(text.contains("kappa (Georgievskii et al. 2013, eq. 34;"), "{text}");
+        assert!(text.contains(&sci(rates.kappa[1][p])), "{text}");
     }
 }

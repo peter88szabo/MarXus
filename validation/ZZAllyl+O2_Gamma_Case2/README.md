@@ -121,6 +121,8 @@ P5, the escape and P1 agree to the precision of the printed digits. P7 is formed
 | `cse_comparison.csv`, `plots/cse_vs_mess.png` | every species-to-species rate coefficient: MESS vs the MarXus CSE method (Section 4.5) |
 | `compare_with_mess.py` | all comparisons; writes the CSV tables and `plots/` |
 | `capture_comparison.csv`, `high_pressure_comparison.csv`, `net_yields_comparison.csv`, `apparent_rates_comparison.csv`, `kappa_comparison.csv` | the compared numbers |
+| `product_rows_comparison.csv`, `product_capture_comparison.csv` | the rows of P1, P5, P7 and their capture rate coefficients, MESS vs MarXus CSE (Section 4.5a) |
+| `isomer_bimolecular_kappa_comparison.csv`, `equilibrium_constants_comparison.csv` | κ (G13 eq. 34) and the real equilibrium constants, MESS log vs MarXus (Section 4.5a) |
 | `plots/pes.png` | the network |
 | `plots/iepox_oh_yield.png` | **IEPOX + OH (P5)**: long-time share of the net reaction, its deviation, and the apparent k(R → P5), MESS vs MarXus |
 | `plots/p5_share.png` | **SteadyStateOlzmann vs MESS**: long-time IEPOX + OH share, and the deviation of the IEPOX + OH and escape shares (exact Eckart; restored figure of 2026-10-05) |
@@ -328,6 +330,25 @@ Two further observations:
 
 With the same tunneling model, TST level and collision integral (Neufeld) as MESS, every rate coefficient of the reactant row agrees within −0.67 … +1.13% (`../../reports/collision_integral_neufeld.md`).
 
+### 4.5a Product rows, captures, κ and equilibrium constants (2026-10-07)
+
+**What is new.** The CSE output gives the rows of the bimolecular products P1, P5 and P7 (G13 eqs. 28, 21, 22). 1/Q_P comes from the capture rate coefficient of the reverse association (eq. 23). Each species table ends with κ (eq. 34). Every report has a section with the partition functions and the real equilibrium constants. Details: `../../reports/cse_kappa_and_product_rates.md`, `../../reports/equilibrium_constants.md`.
+
+**Run:** `run_marxus.sh` (`case2_tstlevel_E_mess_eckart_cse.*`). **Comparison:** `compare_with_mess.py`, Section 6a.
+
+| quantity (21 conditions; MESS Eckart model) | MarXus/MESS − 1 | file |
+|---|---|---|
+| P1 row (to G2, G3, G4, R, P5, P7, escape, net) | −0.22 … +0.32% | `product_rows_comparison.csv` |
+| P5 row (IEPOX + OH; OH ²Π levels in Q_P5) | −0.28 … +0.38% | same |
+| P7 row | −1.42 … +0.85% (P7 → G4 −1.4%) | same |
+| capture R → G2 / P1 → G4 / P5 → G4 / P7 → G6 | +0.44 … +0.53% / +0.13 … +0.17% / +0.78 … +0.84% / +0.67 … +0.82% | `product_capture_comparison.csv` |
+| κ of every well and bimolecular species | MESS prints 0 everywhere (\|κ\| < 0.05); MarXus ≤ 0.0034 | `isomer_bimolecular_kappa_comparison.csv` |
+| real equilibrium constants, 392 pairs (MESS: 3 digits) | −1.09 … +1.05% | `equilibrium_constants_comparison.csv` |
+
+- **Entries left out of the row ranges:** P → G6 and P7 → escape(G4) are at the rounding level in both codes; MESS prints some of them negative.
+- **The capture deviations** contain the factor e^{Δ/2kT} = 1.0022–1.0027 of the 1 cm⁻¹ cell counting (`../../reports/equilibrium_constants.md`, Section 4.3).
+- **The equilibrium constants** carry the same counting effect (up to about 0.7% for species with several classical-rotor sets) and MESS's 3-digit rounding (up to 0.5%).
+
 ### 4.6 The four methods against MESS and against each other (MESS Eckart model)
 
 Figures of `../four_methods_figures.py` (all numbers in `four_methods_figures.csv`; quantities per method in `../../reports/four_methods_figures.md`).
@@ -405,5 +426,9 @@ CSE's well rate coefficients against MESS:
 3. **Atomic masses (2026-10-05): isotopic** (AME2020), Section 3.1a.
 
 ## 7. History
+
+- **2026-10-07.**
+  - Product rows, their captures, κ and the real equilibrium constants added (Section 4.5a); `run_marxus.sh` re-run.
+  - All earlier comparison CSVs are byte-identical to before the re-run.
 
 - **2026-10-06.** Re-run with the Neufeld collision integral (the new default); all numbers of this README are from that run (`../../reports/collision_integral_neufeld.md`).

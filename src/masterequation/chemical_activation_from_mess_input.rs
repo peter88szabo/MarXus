@@ -145,8 +145,14 @@ pub struct MessChemicalActivationModel {
     /// High-pressure rate coefficient of the Reactant forming the wells (None without a bimolecular
     /// Reactant).
     pub entrance_high_pressure_rate: Option<EntranceHighPressureRate>,
+    /// High-pressure association rate coefficient of every bimolecular species that is not Dummy and has channels, by
+    /// name (the Reactant's included): the capture rate coefficients of the CSE product rows.
+    pub bimolecular_high_pressure_rates: Vec<(String, EntranceHighPressureRate)>,
     /// Internal rotors of the deck species as used in the state counts: wells, barriers, then fragments.
     pub internal_rotors: Vec<InternalRotorSummary>,
+    /// Partition functions of the wells (deck order), the tight barriers (deck order) and the bimolecular species
+    /// (not Dummy; by name), from the cell densities.
+    pub species_partition_functions: Vec<DeckSpeciesPartition>,
 }
 
 /// An internal rotor of a deck species: B, levels and the range of its potential.
@@ -204,6 +210,60 @@ impl EntranceHighPressureRate {
             * partition_function(&self.density_a)
             * partition_function(&self.density_b))
     }
+}
+
+/// Kind of a deck species with a partition function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeckSpeciesKind {
+    Well,
+    /// A tight transition state (RRHO core; not phase-space theory, not an inverse Laplace transform).
+    Barrier,
+    /// Two fragments with their relative translation.
+    Bimolecular,
+}
+
+/// Partition function of a deck species from the cell densities of states that also give k(E) (cells of
+/// `cell_width_cm1`, counted from the species' ground state up to the top of the grid).
+#[derive(Debug, Clone)]
+pub struct DeckSpeciesPartition {
+    pub name: String,
+    pub kind: DeckSpeciesKind,
+    /// Ground energy on the deck scale (cm-1): ZeroEnergy of a well or barrier, GroundEnergy of a bimolecular species.
+    pub ground_energy_cm1: f64,
+    cell_width_cm1: f64,
+    /// Densities of states (per cm-1) on the cells from the ground state: the species, or fragments A and B.
+    densities: Vec<Vec<f64>>,
+    /// Reduced mass of the fragments (amu) of a bimolecular species.
+    reduced_mass_amu: Option<f64>,
+}
+
+impl DeckSpeciesPartition {
+    /// Q(T) = sum rho(E) exp(-E/kT) dE from the ground state; for a bimolecular species
+    /// Q_A Q_B C'(mu)(kT)^(3/2), with the relative translation per cm3 (`translational_partition_constant`).
+    pub fn partition_function(&self, temperature_kelvin: f64) -> f64 {
+        let kt = KB_CM * temperature_kelvin;
+        let d = self.cell_width_cm1;
+        let internal: f64 = self
+            .densities
+            .iter()
+            .map(|rho| rho.iter().enumerate().map(|(i, r)| r * (-(i as f64 * d) / kt).exp()).sum::<f64>() * d)
+            .product();
+        match self.reduced_mass_amu {
+            Some(mu) => internal * translational_partition_constant(mu) * kt.powf(1.5),
+            None => internal,
+        }
+    }
+
+    /// ln Q - E_ground/kT: the Boltzmann weight on the deck scale.
+    fn log_weight(&self, temperature_kelvin: f64) -> f64 {
+        self.partition_function(temperature_kelvin).ln() - self.ground_energy_cm1 / (KB_CM * temperature_kelvin)
+    }
+}
+
+/// K_(X/Y)(T) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)): [X]/[Y] in equilibrium, in cm3 for a well X and a bimolecular
+/// species Y (the "Real equilibrium constants" of MESS).
+pub fn deck_equilibrium_constant(x: &DeckSpeciesPartition, y: &DeckSpeciesPartition, temperature_kelvin: f64) -> f64 {
+    (x.log_weight(temperature_kelvin) - y.log_weight(temperature_kelvin)).exp()
 }
 
 /// Build the chemical-activation network of an input deck.
@@ -332,6 +392,20 @@ pub fn chemical_activation_model_from_mess(
             rho_grains: averages[skip..].to_vec(),
         });
     }
+    // Partition functions of the wells from their cells (barriers and bimolecular species are added below).
+    let mut species_partition_functions: Vec<DeckSpeciesPartition> = deck
+        .well_order
+        .iter()
+        .zip(&grids)
+        .map(|(name, well)| DeckSpeciesPartition {
+            name: name.clone(),
+            kind: DeckSpeciesKind::Well,
+            ground_energy_cm1: deck.wells[name].zero_energy_cm1,
+            cell_width_cm1: cell,
+            densities: vec![well.rho_cells.clone()],
+            reduced_mass_amu: None,
+        })
+        .collect();
 
     // Grain rate coefficients of well w from the cell numbers of states W (cells from `first_cell`):
     // k_g = <W>_g / (h <rho>_g), the sum of cell fluxes over the sum of cell states of the grain.
@@ -360,8 +434,8 @@ pub fn chemical_activation_model_from_mess(
     };
 
     let reactant = global.reactant_name.as_deref();
-    // (first cell, W on the cells) of every channel from a well to the Reactant.
-    let mut entrance_states: Vec<(isize, Vec<f64>)> = Vec::new();
+    // (first cell, W on the cells) of every channel from a well to each bimolecular species (not Dummy).
+    let mut bimolecular_states: HashMap<String, Vec<(isize, Vec<f64>)>> = HashMap::new();
     let mut channels: Vec<Vec<Channel>> = vec![Vec::new(); grids.len()];
     for barrier in &deck.barriers {
         let name = &barrier.name;
@@ -413,6 +487,7 @@ pub fn chemical_activation_model_from_mess(
                     pst_core,
                     vibrational_frequencies_cm1: barrier.rrho.vibrational_frequencies_cm1.clone(),
                     electronic_degeneracy: barrier.rrho.electronic_degeneracy_ground,
+                    excited_electronic_levels: excited_levels(&barrier.rrho),
                 };
                 let w_cells = transition_state_sum_of_states(n, cell, &ts).map_err(|e| format!("Barrier '{name}': {e}"))?;
                 return Ok((threshold, threshold, w_cells));
@@ -532,8 +607,8 @@ pub fn chemical_activation_model_from_mess(
                         }
                     }
                 };
-                if reactant == Some(other.as_str()) {
-                    entrance_states.push((first_cell, w_cells.clone()));
+                if bimolecular.is_some() {
+                    bimolecular_states.entry(other.clone()).or_default().push((first_cell, w_cells.clone()));
                 }
                 channels[w].push(Channel {
                     name: name.clone(),
@@ -584,21 +659,26 @@ pub fn chemical_activation_model_from_mess(
         None => Vec::new(),
     };
 
-    // High-pressure rate coefficient of the bimolecular Reactant: the sum of W over its entrance channels
-    // and the fragment densities on the cells from the asymptote to the top.
-    let entrance_high_pressure_rate = match reactant.and_then(|r| deck.bimolecular.get(r)) {
-        Some(pair) if !entrance_states.is_empty() => {
-            let first_cell = entrance_states.iter().map(|(c, _)| *c).min().unwrap_or(0);
-            let mut w_cells = vec![0.0; (last_cell - first_cell + 1).max(0) as usize];
-            for (c, w) in &entrance_states {
-                for (i, x) in w.iter().enumerate() {
-                    w_cells[(c - first_cell) as usize + i] += x;
-                }
+    // High-pressure association rate coefficient of every bimolecular species with channels (by name): the sum of W over
+    // its channels and the fragment densities on the cells from the asymptote to the top.
+    let mut bimolecular_high_pressure_rates: Vec<(String, EntranceHighPressureRate)> = Vec::new();
+    let mut with_channels: Vec<&String> = bimolecular_states.keys().collect();
+    with_channels.sort();
+    for name in with_channels {
+        let (pair, states) = (&deck.bimolecular[name], &bimolecular_states[name]);
+        let first_cell = states.iter().map(|(c, _)| *c).min().unwrap_or(0);
+        let mut w_cells = vec![0.0; (last_cell - first_cell + 1).max(0) as usize];
+        for (c, w) in states {
+            for (i, x) in w.iter().enumerate() {
+                w_cells[(c - first_cell) as usize + i] += x;
             }
-            let asymptote_cell = grid.cell_of_energy(pair.ground_energy_cm1);
-            let n = cells_from(asymptote_cell, "The Reactant asymptote")?;
-            let (mass_a, mass_b) = (species_mass_amu(&pair.fragment_a)?, species_mass_amu(&pair.fragment_b)?);
-            Some(EntranceHighPressureRate {
+        }
+        let asymptote_cell = grid.cell_of_energy(pair.ground_energy_cm1);
+        let n = cells_from(asymptote_cell, &format!("The asymptote of '{name}'"))?;
+        let (mass_a, mass_b) = (species_mass_amu(&pair.fragment_a)?, species_mass_amu(&pair.fragment_b)?);
+        bimolecular_high_pressure_rates.push((
+            name.clone(),
+            EntranceHighPressureRate {
                 cell_width_cm1: cell,
                 w_cells,
                 first_cell,
@@ -606,10 +686,48 @@ pub fn chemical_activation_model_from_mess(
                 density_a: rrho_density_of_states(n, cell, &species_model(&pair.fragment_a)?)?,
                 density_b: rrho_density_of_states(n, cell, &species_model(&pair.fragment_b)?)?,
                 reduced_mass_amu: mass_a * mass_b / (mass_a + mass_b),
-            })
+            },
+        ));
+    }
+    // The bimolecular Reactant's.
+    let entrance_high_pressure_rate =
+        reactant.and_then(|r| bimolecular_high_pressure_rates.iter().find(|(name, _)| name == r)).map(|(_, rate)| rate.clone());
+
+    // Partition functions of the tight barriers and the bimolecular species (not Dummy), from their cells (the wells
+    // follow their grids above).
+    for barrier in &deck.barriers {
+        if barrier.inverse_laplace_transform.is_some() || !matches!(barrier.core, MessBarrierCore::TightRrho) {
+            continue;
         }
-        _ => None,
-    };
+        let zero = barrier.rrho.zero_energy_cm1;
+        let n = cells_from(grid.cell_of_energy(zero), &format!("Barrier '{}'", barrier.name))?;
+        species_partition_functions.push(DeckSpeciesPartition {
+            name: barrier.name.clone(),
+            kind: DeckSpeciesKind::Barrier,
+            ground_energy_cm1: zero,
+            cell_width_cm1: cell,
+            densities: vec![rrho_density_of_states(n, cell, &species_model(&barrier.rrho)?)?],
+            reduced_mass_amu: None,
+        });
+    }
+    let mut bimolecular_names: Vec<&String> = deck.bimolecular.keys().collect();
+    bimolecular_names.sort();
+    for name in bimolecular_names {
+        let pair = &deck.bimolecular[name];
+        let n = cells_from(grid.cell_of_energy(pair.ground_energy_cm1), &format!("Bimolecular '{name}'"))?;
+        let (mass_a, mass_b) = (species_mass_amu(&pair.fragment_a)?, species_mass_amu(&pair.fragment_b)?);
+        species_partition_functions.push(DeckSpeciesPartition {
+            name: name.clone(),
+            kind: DeckSpeciesKind::Bimolecular,
+            ground_energy_cm1: pair.ground_energy_cm1,
+            cell_width_cm1: cell,
+            densities: vec![
+                rrho_density_of_states(n, cell, &species_model(&pair.fragment_a)?)?,
+                rrho_density_of_states(n, cell, &species_model(&pair.fragment_b)?)?,
+            ],
+            reduced_mass_amu: Some(mass_a * mass_b / (mass_a + mass_b)),
+        });
+    }
 
     let mut fragments: Vec<_> = deck.bimolecular.iter().collect();
     fragments.sort_by(|a, b| a.0.cmp(b.0));
@@ -636,8 +754,10 @@ pub fn chemical_activation_model_from_mess(
     }
 
     Ok(MessChemicalActivationModel {
+        species_partition_functions,
         internal_rotors,
         entrance_high_pressure_rate,
+        bimolecular_high_pressure_rates,
         network,
         temperatures_kelvin: global.temperatures_kelvin.clone(),
         pressures_torr: global.pressures_torr.clone(),
@@ -713,7 +833,13 @@ fn species_model(species: &MessSpeciesRrho, rotors: &RotorContext) -> Result<Spe
         chirality_number: 1.0,
         electronic_degeneracy: species.electronic_degeneracy_ground,
         internal_rotors,
+        excited_electronic_levels: excited_levels(species),
     })
+}
+
+/// The electronic levels of a deck species above its ground level (energy in cm-1, degeneracy).
+fn excited_levels(species: &MessSpeciesRrho) -> Vec<(f64, f64)> {
+    species.electronic_levels.iter().copied().filter(|&(e, _)| e > 0.0).collect()
 }
 
 #[cfg(test)]
@@ -1050,6 +1176,19 @@ End
         assert_eq!(summary.levels.ground_energy_cm1, rotor.ground_energy_cm1);
         assert_eq!(summary.levels.levels_above_ground_cm1[..10], rotor.levels_above_ground_cm1[..10]);
         assert_eq!((summary.potential_minimum_cm1, summary.potential_maximum_cm1), potential.extrema());
+    }
+
+    #[test]
+    fn the_excited_electronic_levels_of_the_deck_reach_the_species_model() {
+        let deck = DECK.replace(
+            "        ZeroEnergy[kcal/mol] -30\n        ElectronicLevels[1/cm] 1\n          0 2\n",
+            "        ZeroEnergy[kcal/mol] -30\n        ElectronicLevels[1/cm] 2\n          0 2\n          139.7 2\n",
+        );
+        assert_ne!(deck, DECK);
+        let parsed = parse_mess_input(&deck).unwrap();
+        let model = species_model(&parsed.wells["W1"], &RotorContext::default()).unwrap();
+        assert_eq!((model.electronic_degeneracy, model.excited_electronic_levels.clone()), (2.0, vec![(139.7, 2.0)]));
+        assert!(build(&deck, &MessNetworkSettings::default()).is_ok());
     }
 
     #[test]
@@ -1410,5 +1549,169 @@ Potential[kcal/mol] 2\n        0. 1.\n      End\n";
                 assert!((r.result.mass_balance - 1.0).abs() < 1e-8);
             }
         }
+    }
+
+    /// A + B <=> AB given by rotational constants and masses (m_AB = m_A + m_B), with excited electronic levels in AB and
+    /// B: the deck species of the agreement test of the two equilibrium-constant routes (reports/equilibrium_constants.md).
+    const ASSOCIATION_DECK: &str = "
+TemperatureList[K]                  500.
+PressureList[atm]                   1.0
+EnergyStepOverTemperature           0.1
+ModelEnergyLimit[kcal/mol]          150
+Model
+  EnergyRelaxation
+    Exponential
+      Factor[1/cm]                  200
+      Power                         .85
+      ExponentCutoff                15
+    End
+  CollisionFrequency
+    LennardJones
+      Epsilons[1/cm]                6.95   292.0
+      Sigmas[angstrom]              2.55   4.36
+      Masses[amu]                   4.0    62.0
+    End
+  Well AB
+    Species
+      RRHO
+        RotationalConstants[1/cm]   3
+          0.5 0.2 0.15
+        Mass[amu]                   62.0
+        Core RigidRotor
+          SymmetryFactor            1
+        End
+        Frequencies[1/cm]           2
+          800.0 1200.0
+        ZeroEnergy[1/cm]            -8000
+        ElectronicLevels[1/cm]      2
+          0    2
+          300  2
+      End
+    End
+  Barrier TS AB P
+    RRHO
+      RotationalConstants[1/cm]     3
+        0.45 0.18 0.14
+      Mass[amu]                     62.0
+      Core RigidRotor
+        SymmetryFactor              1
+      End
+      Frequencies[1/cm]             1
+        700.0
+      ZeroEnergy[1/cm]              500
+      ElectronicLevels[1/cm]        1
+        0  2
+    End
+  Bimolecular P
+    Fragment A
+      RRHO
+        RotationalConstants[1/cm]   3
+          2.0 1.0 0.5
+        Mass[amu]                   30.0
+        Core RigidRotor
+          SymmetryFactor            1
+        End
+        Frequencies[1/cm]           1
+          1000.0
+        ZeroEnergy[1/cm]            0
+        ElectronicLevels[1/cm]      1
+          0  2
+      End
+    Fragment B
+      RRHO
+        RotationalConstants[1/cm]   1
+          1.5
+        Mass[amu]                   32.0
+        Core RigidRotor
+          SymmetryFactor            1
+        End
+        Frequencies[1/cm]           1
+          1500.0
+        ZeroEnergy[1/cm]            0
+        ElectronicLevels[1/cm]      2
+          0     3
+          1000  2
+      End
+    GroundEnergy[1/cm]              0
+  End
+End
+";
+
+    #[test]
+    fn the_deck_partition_functions_give_the_equilibrium_constant_of_the_thermochemistry() {
+        // Both routes describe A + B <=> AB with harmonic vibrations, classical rigid rotors, the same masses and
+        // electronic levels; they differ only by the 1 cm-1 cell counting of the deck densities.
+        use crate::molecule::{MolType, MoleculeBuilder};
+        use crate::thermal::equilibrium::equilibrium_constant_from_thermochemistry;
+        let deck = parse_mess_input(ASSOCIATION_DECK).unwrap();
+        let m = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default()).unwrap();
+        let species = |name: &str| m.species_partition_functions.iter().find(|s| s.name == name).unwrap();
+        let molecule = |name: &str, freq: Vec<f64>, brot: Vec<f64>, mass: f64, levels: Vec<(f64, f64)>, dh0: f64| {
+            MoleculeBuilder::new(name.to_string(), MolType::mol)
+                .freq(freq)
+                .brot(brot)
+                .mass(mass)
+                .multi(levels[0].1)
+                .electronic_levels(levels)
+                .dh0(dh0)
+                .build()
+        };
+        assert_eq!(species("AB").kind, DeckSpeciesKind::Well);
+        assert_eq!(species("TS").kind, DeckSpeciesKind::Barrier);
+        assert_eq!(species("P").kind, DeckSpeciesKind::Bimolecular);
+        for t in [500.0, 1500.0] {
+            let mut a = molecule("A", vec![1000.0], vec![2.0, 1.0, 0.5], 30.0, vec![(0.0, 2.0)], 0.0);
+            let mut b = molecule("B", vec![1500.0], vec![1.5], 32.0, vec![(0.0, 3.0), (1000.0, 2.0)], 0.0);
+            let mut ab = molecule("AB", vec![800.0, 1200.0], vec![0.5, 0.2, 0.15], 62.0, vec![(0.0, 2.0), (300.0, 2.0)], -8000.0);
+            let thermo =
+                equilibrium_constant_from_thermochemistry(&mut [(1.0, &mut a), (1.0, &mut b)], &mut [(1.0, &mut ab)], t, 1.0e5, 0.0)
+                    .unwrap();
+            // The cells hold the states in ((i-1) dE, i dE] at E = i dE (`microcanonical_builder`): the classical-rotor
+            // states lie half a cell low in the Boltzmann factor, so every species with classical rotors has Q low by
+            // exp(-dE/2kT), and Q_AB/(Q_A Q_B) keeps one factor exp(+dE/2kT) (0.14% at 500 K with 1 cm-1 cells).
+            let half_cell = (0.5 / (KB_CM * t)).exp();
+            let k = deck_equilibrium_constant(species("AB"), species("P"), t);
+            assert!(
+                (k / (thermo.k_c * half_cell) - 1.0).abs() < 1e-4,
+                "T = {t}: deck {k:e} vs thermochemistry {:e} cm3 x exp(dE/2kT)",
+                thermo.k_c
+            );
+            // and the reverse ratio
+            assert!((deck_equilibrium_constant(species("P"), species("AB"), t) * k - 1.0).abs() < 1e-12);
+            // the transition state: Q from the cells = q_el q_rot q_vib of the thermochemistry, x exp(-dE/2kT)
+            let mut ts = molecule("TS", vec![700.0], vec![0.45, 0.18, 0.14], 62.0, vec![(0.0, 2.0)], 500.0);
+            ts.eval_all_therm_func(t, 1.0e5, 0.0);
+            let q_ts = ts.thermo.pfelec * ts.thermo.pfrot * ts.thermo.pfvib;
+            assert!((species("TS").partition_function(t) * half_cell / q_ts - 1.0).abs() < 1e-4, "T = {t}");
+            assert_eq!(species("TS").ground_energy_cm1, 500.0);
+        }
+    }
+
+
+    #[test]
+    fn every_bimolecular_species_has_its_high_pressure_association_rate() {
+        // Product P of the association deck (no Reactant), formed from AB through the tight TS:
+        //   k_inf(A + B -> AB) = (kT/h) Q_TS exp(-(E_TS - E_P)/kT) / Q_P   (Q_P per cm3 with the relative translation),
+        // on the cells: sum_E W(E) exp(-E/kT) dE = Q_TS dE/(1 - exp(-dE/kT)) = Q_TS kT (1 + dE/2kT + ...).
+        let deck = parse_mess_input(ASSOCIATION_DECK).unwrap();
+        let m = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default()).unwrap();
+        assert!(m.entrance_high_pressure_rate.is_none());
+        let names: Vec<&str> = m.bimolecular_high_pressure_rates.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names, vec!["P"]);
+        let species = |name: &str| m.species_partition_functions.iter().find(|s| s.name == name).unwrap();
+        for t in [500.0, 1500.0] {
+            let kt = KB_CM * t;
+            let tst = kt / H_PLANCK_CM * species("TS").partition_function(t) * (-(500.0 - 0.0) / kt).exp()
+                / species("P").partition_function(t);
+            let cells = 1.0 / kt / (1.0 - (-1.0 / kt).exp());
+            let k = m.bimolecular_high_pressure_rates[0].1.rate_cm3_s(t);
+            assert!((k / (tst * cells) - 1.0).abs() < 1e-9, "T = {t}: {k:e} vs {:e}", tst * cells);
+        }
+        // With a Reactant, its entry is the entrance rate.
+        let deck = parse_mess_input(include_str!("../../examples/c2h3_chemical_activation.inp")).unwrap();
+        let m = chemical_activation_model_from_mess(&deck, &MessNetworkSettings::default()).unwrap();
+        let (name, rate) = &m.bimolecular_high_pressure_rates[0];
+        assert_eq!(name, "P1");
+        assert_eq!(rate.rate_cm3_s(1000.0), m.entrance_high_pressure_rate.as_ref().unwrap().rate_cm3_s(1000.0));
     }
 }

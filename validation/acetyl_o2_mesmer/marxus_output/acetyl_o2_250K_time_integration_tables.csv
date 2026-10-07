@@ -1,3 +1,11 @@
+# species: Partition functions Q (from the ground state; bimolecular species per cm^3)
+T[K],P[Torr],Q(Int1),Q(Int2),Q(B_R2),Q(B_R3),Q(B_R4),Q(R)
+250,37.48,4.685772e5,2.606778e5,2.546974e5,5.652925e5,1.003844e6,4.886999e32
+
+# species: Real equilibrium constants K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) (bimolecular units cm^3)
+T[K],P[Torr],K(Int1/Int2),K(Int1/R),K(Int2/Int1),K(Int2/R),K(R/Int1),K(R/Int2)
+250,37.48,6.773959e2,1.343188e2,1.476242e-3,1.982870e-1,7.444976e-3,5.043196e0
+
 # time integration: Yields at the last output time (% of the formed adducts)
 T[K],P[Torr],Int1->R,Int1->P_ketene_HO_2,Int2->P_lactone_OH
 250,37.48,4.930823e1,5.847039e-4,6.619188e0

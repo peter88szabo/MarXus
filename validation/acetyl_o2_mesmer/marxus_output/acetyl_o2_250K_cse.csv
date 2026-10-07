@@ -7,8 +7,10 @@
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 
 # T = 250 K, p = 37.48 Torr: chemical eigenvalues [1/s]: -8.2593e-8, 5.6302e-7; lowest relaxation eigenvalue 2.7235e7 1/s (separation 2.067e-14); relaxational projections 1.1102e-16, 7.7716e-16; loss balance deviation 1.01e0; detailed balance deviation 1.61e-15; precision floor 1.553e-5 1/s
 # reactant R: capture 6.5696e-12 cm3/s, return to the reactant 3.2394e-12 cm3/s
@@ -18,3 +20,7 @@ From\To,Int1,Int2,R,P_ketene_HO_2,P_lactone_OH
 Int1,-8.238616e-8,4.450896e-10,2.159623e-14,5.822694e-21,4.625768e-13
 Int2,2.993861e-7,5.628167e-7,9.993685e-15,2.696180e-21,6.283897e-7
 R,2.893360e-12,1.990517e-15,3.330243e-12,3.841267e-17,4.348536e-13
+# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the bimolecular species; sum rule deviation 1.01e0
+W\P,R,P_ketene_HO_2,P_lactone_OH
+Int1,1.768338e-22,4.391823e-28,-2.953214e-21
+Int2,1.445326e-21,1.616714e-27,1.977772e-15

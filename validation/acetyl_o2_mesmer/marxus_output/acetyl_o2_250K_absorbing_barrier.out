@@ -57,6 +57,29 @@ Barriers (H - ZeroEnergy of the barrier in the deck):
       B_R4       2.77     Int1 P_ketene_HO_2   rigid transition state
 
 ====================================================================================================
+ PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS
+ ---------------------------------------------
+
+From the cell densities of states of the master equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO partition function.
+
+Temperature = 250 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+      Int1         well     -33.3413   4.68577e+05
+      Int2         well     -30.3944   2.60678e+05
+      B_R2      barrier      -5.1386   2.54697e+05
+      B_R3      barrier      -8.4895   5.65292e+05
+      B_R4      barrier       2.7701   1.00384e+06
+         R  bimolecular       0.0000   4.88700e+32
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q            Int1         Int2            R
+Int1    1.00000e+00  6.77396e+02  1.34319e+02
+Int2    1.47624e-03  1.00000e+00  1.98287e-01
+R       7.44498e-03  5.04320e+00  1.00000e+00
+
+====================================================================================================
 Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
 Numbers with six significant digits; *** marks a value that is not available.
 ====================================================================================================

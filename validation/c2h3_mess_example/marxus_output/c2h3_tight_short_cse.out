@@ -7,7 +7,7 @@
  Method:             CHEMICALLY SIGNIFICANT EIGENVALUES (CSE): phenomenological rate coefficients
                      (Miller, Klippenstein, JPCA 110, 10528 (2006); Georgievskii et al., JPCA 117, 12146 (2013), eqs. 21-30)
  Solvers:            all eigenpairs of the symmetrized J: FullDecompositionLapack; well-to-well matrix inverted by Gauss-Jordan elimination
-                     species merging (Georgievskii et al. 2013, Sec. IV; criteria as MESS): ChemicalEigenvalueMax 0.2 (deck), WellProjectionThreshold 0.2 (default)
+                     species merging (Georgievskii et al. 2013, Sec. IV; partition as MESS): ChemicalEigenvalueMax 0.2 (deck), WellProjectionThreshold 0.2 (default); chemical eigenvectors: relaxational projection 1 - F_ne <= ChemicalEigenvalueMax (MESS direct method) (default)
  Parallel:           4 cores (--ncore); the 1 conditions (T, p) in batches of 1 at a time (rayon)
                      BLAS threads per LAPACK call: 4
  Temperatures (K):   1000
@@ -48,6 +48,25 @@ Barriers (H - ZeroEnergy of the barrier in the deck):
         B1       4.42       W1       P1   rigid transition state, Eckart tunneling
 
 ====================================================================================================
+ PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS
+ ---------------------------------------------
+
+From the cell densities of states of the master equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO partition function.
+
+Temperature = 1000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W1         well     -34.4400   1.18489e+05
+        B1      barrier       4.4200   4.26676e+05
+        P1  bimolecular       0.0000   2.48207e+28
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W1           P1
+W1     1.00000e+00  1.60539e-16
+P1     6.22902e+15  1.00000e+00
+
+====================================================================================================
 Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
 Numbers with six significant digits; *** marks a value that is not available.
 ====================================================================================================
@@ -57,8 +76,10 @@ PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (
 ____________________________________________________________________________________________________
 
 Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,
-J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
-the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).
+J. Phys. Chem. A 117, 12146 (2013), eqs. 21-34. All eigenpairs by FullDecompositionLapack. Rows: from, columns: to; wells in 1/s,
+the reactant and product rows in cm^3/s (a product row from the capture rate coefficient of its reverse association,
+eqs. 28, 21, 22). Diagonal: total loss of a well; for a bimolecular species its net reaction (capture - return).
+Below each table: kappa (eq. 34), 1 for a well in equilibrium with the bimolecular species, 0 otherwise.
 Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate
 coefficients), and the long-time yields, direct + through the wells, which equal the final steady state.
 
@@ -73,6 +94,11 @@ Temperature = 1000 K    Pressure = 760 torr
 From\To             W1           P1
 W1         1.61335e+04  1.61335e+04
 P1         2.59155e-12  2.59155e-12
+
+  Isomer-to-bimolecular equilibrium coefficients kappa (Georgievskii et al. 2013, eq. 34; close to 1 for a well in equilibrium with the bimolecular species, close to 0 otherwise; sum rule deviation 2.93423e-11):
+
+W\P             P1
+W1     2.97570e-05
 
 --- Tables by temperature (rows: pressure in torr) ---
 
@@ -122,6 +148,13 @@ Long-time yields, through the wells (thermal) (% of the eventual net reaction of
 Long-time yields, total (% of the eventual net reaction of P1), by temperature:
 
    Temperature = 1000 K
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by temperature:
+
+   Temperature = 1000 K
+
+  P(torr)  kappa(W1/P1)
+      760   2.97570e-05
 
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by temperature:
 
@@ -178,6 +211,13 @@ Long-time yields, through the wells (thermal) (% of the eventual net reaction of
 Long-time yields, total (% of the eventual net reaction of P1), by pressure:
 
    Pressure = 760 torr
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), by pressure:
+
+   Pressure = 760 torr
+
+  T(K)  kappa(W1/P1)
+  1000   2.97570e-05
 
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), by pressure:
 
@@ -243,6 +283,13 @@ Long-time yields, direct (chemically activated) (% of the eventual net reaction 
 Long-time yields, through the wells (thermal) (% of the eventual net reaction of P1), temperature-pressure tables:
 
 Long-time yields, total (% of the eventual net reaction of P1), temperature-pressure tables:
+
+Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species), temperature-pressure tables:
+
+kappa(W1/P1)
+
+P\T           1000
+760    2.97570e-05
 
 Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance), temperature-pressure tables:
 

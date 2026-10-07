@@ -392,7 +392,8 @@ pub struct PhenomenologicalConditionResult {
 
 /// Phenomenological rate coefficients from the chemically significant eigenvalues at every (T, p)
 /// (`chemically_significant_eigenvalues.rs`; operator without absorbing barrier). `reactant`: name of the
-/// bimolecular reactant channel and its capture rate coefficient k^(c)(T) in cm3 s-1.
+/// bimolecular reactant channel and its capture rate coefficient k^(c)(T) in cm3 s-1; `products`: the same for the
+/// bimolecular products whose rows are wanted (k^(c) of the reverse association).
 pub fn run_phenomenological_rates(
     network: &ChemicalActivationNetwork,
     temperatures_kelvin: &[f64],
@@ -400,6 +401,7 @@ pub fn run_phenomenological_rates(
     collision_model: CollisionModel,
     solver: EigenSolver,
     reactant: Option<(&str, &dyn Fn(f64) -> f64)>,
+    products: &[(&str, &dyn Fn(f64) -> f64)],
     merging: &CseMerging,
 ) -> Result<Vec<PhenomenologicalConditionResult>, String> {
     network.validate()?;
@@ -411,7 +413,9 @@ pub fn run_phenomenological_rates(
             let context = |e: String| format!("T = {temperature_kelvin} K, p = {pressure_torr} Torr: {e}");
             let op = assemble_operator(network, &conditions, &options).map_err(context)?;
             let reactant_now = reactant.map(|(name, capture)| (name, capture(temperature_kelvin)));
-            let rates = phenomenological_rate_coefficients(network, &op, reactant_now, solver, merging).map_err(context)?;
+            let products_now: Vec<(&str, f64)> = products.iter().map(|(name, capture)| (*name, capture(temperature_kelvin))).collect();
+            let rates =
+                phenomenological_rate_coefficients(network, &op, reactant_now, &products_now, solver, merging).map_err(context)?;
             results.push(PhenomenologicalConditionResult { conditions, rates });
         }
     }
@@ -423,8 +427,10 @@ const PHENOMENOLOGICAL_TABLE_EXPLANATION: &str = "\
 # Phenomenological rate coefficients from the chemically significant eigenvalues (CSE): Miller, Klippenstein,
 #   J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein, J. Phys. Chem. A
 #   117, 12146 (2013), eqs. 21-30 (bimolecular reactant as a thermal source, bimolecular products and escape
-#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant row in cm3 s-1.
-#   Diagonal: total loss of a well; for the reactant the net reaction, capture minus return to the reactant.
+#   sinks as infinite sinks). Rows: from; columns: to. Wells in s-1, the reactant and product rows in cm3 s-1
+#   (a product row from the capture rate coefficient of its reverse association, eqs. 28, 21, 22).
+#   Diagonal: total loss of a well; for a bimolecular species the net reaction, capture minus return to it.
+#   Each block ends with kappa (eq. 34) of every well and bimolecular channel.
 ";
 
 /// MESS-style species tables of the phenomenological rate coefficients, one block per condition.
@@ -457,6 +463,14 @@ pub fn write_phenomenological_tables<W: Write>(results: &[PhenomenologicalCondit
                 reactant.name, reactant.capture_cm3_s, reactant.to_bimolecular_cm3_s[r_index]
             )?;
         }
+        for product in &x.products {
+            let own = x.bimolecular.iter().position(|b| *b == product.name).unwrap();
+            writeln!(
+                out,
+                "# product {}: capture (reverse association) {:.4e} cm3/s, return {:.4e} cm3/s",
+                product.name, product.capture_cm3_s, product.to_bimolecular_cm3_s[own]
+            )?;
+        }
         for warning in &x.warnings {
             writeln!(out, "# warning: {warning}")?;
         }
@@ -470,15 +484,30 @@ pub fn write_phenomenological_tables<W: Write>(results: &[PhenomenologicalCondit
             row.extend(x.well_to_bimolecular_s_inv[i].iter().map(|k| format!("{k:.6e}")));
             writeln!(out, "{}", row.join(","))?;
         }
-        if let Some(reactant) = &x.reactant {
-            let r_index = x.bimolecular.iter().position(|b| *b == reactant.name).unwrap();
-            let mut row = vec![label(&reactant.name)];
-            row.extend(reactant.to_well_cm3_s.iter().map(|k| format!("{k:.6e}")));
-            for (nu, k) in reactant.to_bimolecular_cm3_s.iter().enumerate() {
-                let value = if nu == r_index { reactant.capture_cm3_s - k } else { *k };
+        // The rows of the reactant and of the products (cm3 s-1); diagonal: the net reaction, capture - return.
+        for source in x.reactant.iter().chain(&x.products) {
+            let own = x.bimolecular.iter().position(|b| *b == source.name).unwrap();
+            let mut row = vec![label(&source.name)];
+            row.extend(source.to_well_cm3_s.iter().map(|k| format!("{k:.6e}")));
+            for (nu, k) in source.to_bimolecular_cm3_s.iter().enumerate() {
+                let value = if nu == own { source.capture_cm3_s - k } else { *k };
                 row.push(format!("{value:.6e}"));
             }
             writeln!(out, "{}", row.join(","))?;
+        }
+        writeln!(
+            out,
+            "# kappa (G13 eq. 34): isomer-to-bimolecular equilibrium coefficients, 1 for a well in equilibrium with the \
+             bimolecular species; sum rule deviation {:.2e}",
+            x.kappa_sum_rule_max_deviation
+        )?;
+        let mut header = vec!["W\\P".to_string()];
+        header.extend(x.bimolecular.iter().map(|b| label(b)));
+        writeln!(out, "{}", header.join(","))?;
+        for (well, row) in x.network_wells.iter().zip(&x.kappa) {
+            let mut line = vec![label(well)];
+            line.extend(row.iter().map(|k| format!("{k:.6e}")));
+            writeln!(out, "{}", line.join(","))?;
         }
     }
     Ok(())
@@ -661,6 +690,7 @@ mod tests {
             CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 },
             EigenSolver::FullDecomposition,
             Some(("R", &capture)),
+            &[],
             &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
         )
         .unwrap();
@@ -673,6 +703,38 @@ mod tests {
         assert!(headers[0].starts_with("From\\To,A,B,"), "{}", headers[0]);
         assert!(text.lines().any(|l| l.starts_with("R,")), "{text}");
         assert!(text.contains("Georgievskii") && text.contains("chemical eigenvalues"), "{text}");
+    }
+
+    #[test]
+    fn the_cse_route_writes_the_product_rows_and_kappa() {
+        // With a capture rate coefficient for the product P, its row follows the reactant row (cm3 s-1; diagonal: the
+        // net reaction, capture - return); each block ends with the kappa matrix (G13 eq. 34), wells by bimolecular
+        // channels.
+        let network = network_with_entrance();
+        let (capture_r, capture_p) = (|_t: f64| 2.0e-11, |_t: f64| 1.0e-12);
+        let results = run_phenomenological_rates(
+            &network,
+            &[300.0],
+            &[760.0],
+            CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 },
+            EigenSolver::FullDecomposition,
+            Some(("R", &capture_r)),
+            &[("P", &capture_p)],
+            &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
+        )
+        .unwrap();
+        let mut out = Vec::new();
+        write_phenomenological_tables(&results, &mut out).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        let x = &results[0].rates;
+        let product = &x.products[0];
+        let p = x.bimolecular.iter().position(|b| b == "P").unwrap();
+        let row = text.lines().find(|l| l.starts_with("P,")).expect("a P row");
+        assert!(row.contains(&format!(",{:.6e}", product.capture_cm3_s - product.to_bimolecular_cm3_s[p])), "{row}");
+        assert!(text.contains("# kappa (G13 eq. 34)"), "{text}");
+        let kappa_header = format!("W\\P,{}", x.bimolecular.join(","));
+        assert!(text.lines().any(|l| l == kappa_header), "{text}");
+        assert!(text.lines().any(|l| l == format!("A,{}", x.kappa[0].iter().map(|k| format!("{k:.6e}")).collect::<Vec<_>>().join(","))), "{text}");
     }
 
     #[test]
@@ -792,7 +854,7 @@ mod tests {
         let model = CollisionModel::ExponentialDown { cutoff_in_mean_down: 10.0 };
         let capture = |_t: f64| 2.0e-11;
         let no_merging = CseMerging { chemical_eigenvalue_max: 0.999, ..CseMerging::default() };
-        let separate = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &no_merging)
+        let separate = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &[], &no_merging)
             .unwrap()
             .remove(0)
             .rates;
@@ -816,7 +878,7 @@ mod tests {
         let one = CseMerging { chemical_eigenvalue_max: (l1 * l2).sqrt() / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
         let none = CseMerging { chemical_eigenvalue_max: 0.5 * l1 / l3, criterion: ChemicalSubspaceCriterion::EigenvalueRatio, ..CseMerging::default() };
         for (merging, species, bimolecular_group) in [(one, vec!["A+B"], vec![]), (none, vec![], vec!["A", "B"])] {
-            let cse = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &merging)
+            let cse = run_phenomenological_rates(&network, &[300.0], &[760.0], model, EigenSolver::FullDecomposition, Some(("R", &capture)), &[], &merging)
                 .unwrap()
                 .remove(0)
                 .rates;
@@ -857,6 +919,7 @@ mod tests {
                 model,
                 EigenSolver::FullDecomposition,
                 Some(("R", &capture)),
+                &[],
                 &crate::masterequation::chemically_significant_eigenvalues::CseMerging::default(),
             )
             .unwrap();

@@ -1,3 +1,11 @@
+# species: Partition functions Q (from the ground state; bimolecular species per cm^3)
+T[K],P[Torr],Q(W1),Q(B1),Q(P1)
+1000,760,1.184893e5,4.266763e5,2.482074e28
+
+# species: Real equilibrium constants K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) (bimolecular units cm^3)
+T[K],P[Torr],K(W1/P1),K(P1/W1)
+1000,760,1.605388e-16,6.229024e15
+
 # CSE: Rate coefficients from W1 (1/s)
 T[K],P[Torr],W1->P1,W1 loss
 1000,760,1.613347e4,1.613347e4
@@ -29,6 +37,10 @@ T[K],P[Torr],
 # CSE: Long-time yields, total (% of the eventual net reaction of P1)
 T[K],P[Torr],
 1000,760,
+
+# CSE: Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species)
+T[K],P[Torr],kappa(W1/P1)
+1000,760,2.975699e-5
 
 # CSE: Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance)
 T[K],P[Torr],species,separation,loss balance,detailed bal.

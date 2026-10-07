@@ -42,6 +42,19 @@ k_{R\to i} = \frac{\sqrt{Q_i}}{Q_R}\sum_{\lambda\le n_w} M_{i\lambda}\,p^{(R)}_\
 
 **Reactant normalization** (eq. 23): $`1/Q_R = k_\infty / \sum_E k_{\to R}(E)\,f^0(E)`$, with $`k_\infty`$ the capture rate coefficient. No partition function of the reactants is needed.
 
+**Product rows.** Eqs. 28, 21 and 22 hold for every bimolecular species, not only the reactant.
+- For a product P, $`1/Q_P = k^{(c)}_P / \sum_E k_{\to P}(E)\,f^0(E)`$ (eq. 23), with $`k^{(c)}_P`$ the high-pressure rate coefficient of the reverse association P → wells.
+- This gives k(P → W), k(P → P′) and the return k(P → P).
+
+**Isomer–bimolecular equilibrium coefficients** (eqs. 33–34), per well $`w`$ and bimolecular channel $`\nu`$:
+
+```math
+\frac{n_w^{(\nu)}}{n_A n_B} = \kappa_{w\nu}\,\frac{Q_w}{Q_\nu}, \qquad \kappa_{w\nu} = \frac{1}{\sqrt{Q_w}}\sum_{\lambda > n}\frac{M_{w\lambda}\,p^{(\nu)}_\lambda}{\Lambda_\lambda} .
+```
+
+- κ is close to 1 when the well is in equilibrium with ν, and close to 0 otherwise.
+- Because the collisions conserve $`f^0`$, $`(1/\sqrt{Q_w})\sum_{\text{all }\lambda}M_{w\lambda}\sum_\nu p^{(\nu)}_\lambda/\Lambda_\lambda = 1`$ over all loss channels. Its deviation is reported as a check.
+
 **Species merging** (G13 Sec. IV), when $`n < n_w`$. Wells that equilibrate on the time scale of energy relaxation "should be united and treated as one". The wells are partitioned into $`n`$ groups $`g`$, the merged species, with
 
 ```math
@@ -86,7 +99,10 @@ Eqs. 27, 28 and 30 above hold for the groups with $`\lambda \le n`$; eq. 21 runs
 
 ## 5. Output
 
-**Species-to-species tables,** one per (T, p): `From\To`. Rows are the species (1/s) and the reactant (cm³/s). The diagonal holds the total loss of a species, and for the reactant capture − return. Each table comes with its eigenvalues, separation, capture/return/net and warnings.
+**Species-to-species tables,** one per (T, p): `From\To`.
+- **Rows:** the species (1/s), the reactant and every bimolecular product that is not Dummy (cm³/s).
+- **Diagonal:** the total loss of a species; for a bimolecular species, capture − return (as MESS).
+- **With each table:** its eigenvalues, separation, capture/return/net and warnings, then the κ matrix (wells × bimolecular channels) with the sum-rule deviation.
 
 **Merged species** are named by their wells joined with "+" (e.g. `G2+G4`). Their wells get no separate rate coefficients, because they cannot be distinguished at that condition. MESS writes the rates of a group under the name of its deepest well (`Group::group_index`) and `***` for the others; the "+" names appear only in its log.
 
@@ -96,6 +112,8 @@ Eqs. 27, 28 and 30 above hold for the groups with $`\lambda \le n`$; eq. 21 runs
 - **Capture, return and net reaction of R**;
 - **Thermal fate of each well** (%);
 - **Long-time yields:** direct, through the wells, total (% of the eventual net reaction).
+- **Rate coefficients from every product** P: P → species, P → other channels, capture, return, net (cm³/s).
+- **κ** of every well and bimolecular channel.
 
 All of these come in three views: by temperature, by pressure, and temperature–pressure. When the species differ between conditions, every species of every condition is a row, empty where it does not exist. The diagnostics table gives the number of species per condition.
 
@@ -123,6 +141,12 @@ All of these come in three views: by temperature, by pressure, and temperature�
 - **MESS's negative R → escape entry is reproduced** (−0.67 … +0.12%).
 - **Identities:** capture balance within 4·10⁻⁷, loss balance within 1.3·10⁻⁷ (`reports/method_comparison.md`).
 
+**Product rows, captures and κ** (`reports/cse_kappa_and_product_rates.md`):
+- **Case 2,** MESS Eckart model, 21 conditions:
+  - the rows of P1, P5 and P7 agree with MESS within −0.3 … +0.4% (P1, P5) and ±0.9% (P7; P7 → G4 −1.4%) for the entries above the rounding level;
+  - the capture rate coefficients agree with MESS's high-pressure rows within +0.13 … +0.84%.
+- **C₂H₄ + HO₂ hindered-rotor deck,** at the 16 conditions where MESS prints κ ≥ 0.05: MarXus agrees within 0.006, and κ(W2,P1) + κ(W2,P2) = 1 in both codes.
+
 **H + C₂H₂ ⇌ C₂H₃, one well** (`validation/c2h3_mess_example/`, §4.4; 40 conditions, 300–2000 K):
 - **CSE's k(W1 → P1) equals SteadyStateOlzmann's k_uni** in all printed digits wherever λ₁ is resolved (750–2000 K).
 - **Up to 1000 K** the association k(P1 → W1) (eq. 28) equals k_uni·K within 0.02%.
@@ -142,7 +166,8 @@ All of these come in three views: by temperature, by pressure, and temperature�
 ## 8. Code
 
 - `src/masterequation/chemically_significant_eigenvalues.rs` (`phenomenological_rate_coefficients`, `reactant_yields`, `CseMerging`, `chemical_eigenvalue_count`, `partition_wells`), `chemical_activation_driver.rs` (`run_phenomenological_rates`), `numeric/lapack_interface.rs`, `numeric/dense_inverse.rs`, `report_sections.rs` (`cse_groups`, `write_cse_species_tables`).
-- Reports: `reports/chemically_significant_eigenvalues_method.md`, `reports/cse_species_merging.md`.
+- `chemical_activation_from_mess_input.rs`: `bimolecular_high_pressure_rates`, the capture rate coefficients of all bimolecular species.
+- Reports: `reports/chemically_significant_eigenvalues_method.md`, `reports/cse_species_merging.md`, `reports/cse_kappa_and_product_rates.md`.
 
 ## 9. References
 

@@ -148,20 +148,53 @@ At 1000 K and 1 bar:
 - λ₁ is 1.355·10⁸ s⁻¹ in MESS and 1.505·10⁸ s⁻¹ in MarXus (+11%);
 - λ₂ is 4.76·10⁸ s⁻¹ in MESS and 9.27·10⁸ s⁻¹ in MarXus.
 
-**Grain width is excluded.** A MarXus run at 1000 K alone, with MESS's grain of 139 cm⁻¹ (0.2 kT at 1000 K instead of 0.2 kT at 300 K), gives the same ratios (0.197, 0.163, 0.119, 0.066).
+**Grain width is excluded.** A MarXus run at 1000 K alone, with MESS's grain of 139 cm⁻¹, gives the same ratios.
 
-**A candidate, not tested here: the bottom of the well.** There the exponential-down kernel cannot be normalized.
-- MarXus lumps these grains into one thermalized reservoir state (MESMER manual, Sec. 14.2.1; `reports/low_energy_reservoir_state.md`): 15 grains (630 cm⁻¹) at 700 K and 28 grains (1176 cm⁻¹) at 1000 K, in a well 4790 cm⁻¹ deep.
-- A thermalized reservoir has no slow relaxation inside it, which raises λ₂.
-- MESS treats the well bottom differently.
+**λ₁** (thermal decay; for MESS, its W2 loss rate) agrees within −0.7 … +2.7% at all conditions where W2 is kept. **λ₂** differs for two reasons in the MESS model, found in its log and source:
 
-**Effect on the results.** The difference grows with T and falls with p. It is the likely source of the deviations of the individual CSE rate coefficients at poor separation (Section 4), whereas the net reaction agrees within +0.10 … +0.22%. It concerns the collision treatment, not the rotors.
+1. **`WellCutoff 10`.** MESS starts the grid of a well at D − 10 kT when that lies above the ground (`mess.cc` around line 6296). It removes 2665 cm⁻¹ of the bottom of W2 at 300 K and 1288 cm⁻¹ at 500 K (effective depth 1840 and 463 cm⁻¹ in the log), and nothing at 700 and 1000 K. MarXus ignores `WellCutoff` and keeps the whole well. λ₂ of MarXus is 43–58 times MESS's at 300 K and 8–19% larger at 500 K. λ₁ and the rate coefficients agree within 0.7% at both temperatures.
+2. **Kernel at the bottom of the full well (700, 1000 K).**
+   - MESS's default kernel (no `KernelFlags`) divides each down/up pair by one number per upper grain and sets the diagonal to minus the row sum. It keeps detailed balance and every grain, but not an exactly constant collision rate, and it cannot fail (no "cannot satisfy" message in the log).
+   - MarXus normalizes exactly (Robertson, CCK 43, eq. 4.16) and lumps the grains where this fails into the reservoir state: 15 grains at 700 K, 28 at 1000 K.
+   - λ₂ of MarXus is 4–19% larger at 700 K, 14% at 1000 K and 100 bar, and about twice at 1000 K and 1 bar.
+
+These differences give the deviations of up to +3% of the individual CSE rate coefficients at 700 K and 0.1–1 bar. The net reaction is not affected. Separating the kernel construction from the reservoir lumping would need MESS's default kernel as a comparison option in MarXus; it is not implemented. Details: `reports/hindered_rotors_validation_mess.md` Section 7.
+
+## 5a. Variant with excited electronic levels
+
+**Deck.** `input/c2h4_ho2_electronic_levels.inp` has test levels (not physical values) in W2 (500 cm⁻¹, g = 2) and HO₂ (7029 cm⁻¹, g = 2). Runs `run_electronic_levels.sh`, comparison `compare_electronic_levels.py` → `electronic_levels_comparison.csv`, `electronic_levels_summary.txt`. MESS Eckart model throughout.
+
+**Changes caused by the levels**, in both codes:
+- k∞ of W2: −8.333% (300 K), −32.753% (1000 K), −41.103% (2000 K), identical in MESS and MarXus.
+- HO₂ capture at 2000 K: −0.633% in both.
+- CSE coefficients: the same changes within a few hundredths of a percent, for example W2 → P1 at 300 K and 0.01 bar +23.36% (MESS) against +23.39% (MarXus).
+
+**Merging** is decided the same at every condition. **MarXus against MESS** on the variant agrees as on the base deck: k∞ within 0.02–0.39%, net P1 → P2 within +0.10 … +0.58%.
+
+## 5b. Equilibrium constants, partition functions and κ (2026-10-07)
+
+**Script and data.** `compare_equilibrium_and_kappa.py` reads the MESS logs and the MarXus reports and CSE tables (`marxus_output/mess_eckart_cse.*`, `electronic_levels_cse.out`). Details: `../../reports/equilibrium_constants.md` (Section 5), `../../reports/cse_kappa_and_product_rates.md` (Section 5).
+
+**K(W2/P1) = [W2]/([C₂H₄][HO₂])** (`equilibrium_constants_comparison.csv`):
+- MarXus/MESS = 0.99625 (300 K), 0.99712 (500 K), 0.99847 (1000 K), 0.99948 (2000 K), the same in the electronic-level variant;
+- the change of K by the test levels is identical in both codes: +9.0905% at 300 K, +68.715% (MESS) against +68.714% (MarXus) at 2000 K.
+
+**Partition functions** (`partition_functions_comparison.csv`; MESS divided by the centre-of-mass translation of each species):
+- MarXus/MESS for P1 = HO₂ + C₂H₄ is 0.99518 (300 K) … 0.99792 (2000 K). Two properties of the 1 cm⁻¹ cell counting reproduce it to 3·10⁻⁵ at every temperature:
+  - the classical-rotor continuum is counted half a cell high, e^{−Δ/2kT} per fragment;
+  - the frequencies are rounded to the cells.
+- W2 (three hindered rotors) is 0.99148 (300 K) … 0.99740 (2000 K); its rotor levels are placed at ⌈ε/Δ⌉.
+
+**κ (G13 eq. 34)** (`isomer_bimolecular_kappa_comparison.csv`):
+- at the 16 conditions where MESS prints κ ≥ 0.05, MarXus agrees within 0.006, e.g. κ(W2, P2) = 0.935298 (MESS) against 0.935055 at 700 K and 0.01 bar;
+- κ(W2,P1) + κ(W2,P2) = 1 in both codes where W2 is in the bimolecular group;
+- at the other 14 conditions both codes are below 0.05.
 
 ## 6. Conclusion
 
 - **Rotor levels.** The hindered-rotor treatment of MarXus (Fourier basis of period 2π/σ, potential interpolated through the deck points, Kilpatrick–Pitzer reduced moment, levels convolved with the other degrees of freedom) reproduces the MESS levels of all seven rotors to every printed digit.
 - **Rate coefficients.** With the same tunneling model, the high-pressure rate coefficients agree within 0.07–0.39%, and the net P1 → P2 rate coefficient within +0.10 … +0.22% (+0.54% at 1000 K and 100 bar).
-- **Individual CSE coefficients** of the shallow well deviate by up to 3% at poor eigenvalue separation. λ₂ is about twice MESS's at 1000 K; the likely origin is the treatment of the well bottom (Section 5.2), not the rotors.
+- **Individual CSE coefficients** of the shallow well deviate by up to 3% at poor eigenvalue separation. λ₁ agrees within 2.7%. λ₂ differs because MESS cuts the well bottom (`WellCutoff`, 300 and 500 K) and uses a pair-normalized default kernel (700, 1000 K), where MarXus keeps the whole well with an exactly normalized kernel and the reservoir state (Section 5.2). This is not related to the rotors.
 - **Merging.** MESS's direct method merges by the relaxational projection 1 − F_ne. MarXus does the same by default since 2026-10-07 (Section 5.1), and both codes merge the well at the same 15 conditions. There the net P1 → P2 agrees within +0.10 … +0.16%.
 
 ## 7. Files and how to run
@@ -171,7 +204,9 @@ At 1000 K and 1 bar:
 | `input/c2h4_ho2.inp` | the deck (MESS format; read unchanged by both codes) |
 | `run_mess.sh` | MESS run; output in `reference_mess/` (`.out` rate tables, `.log` rotor data and eigenvalues) |
 | `run_marxus.sh` | MarXus, four methods × two tunneling models; output in `marxus_output/<variant>_<method>.{out,csv,_tables.csv,err}` |
+| `input/c2h4_ho2_electronic_levels.inp`, `run_electronic_levels.sh`, `compare_electronic_levels.py` | variant with excited electronic levels (Section 5a); MESS output in `reference_mess_electronic_levels/` |
 | `compare_with_mess.py` | comparison; writes `rotor_comparison.csv`, `high_pressure_comparison.csv`, `rate_comparison.csv`, `plots/*.png`, and prints the summary in `comparison_summary.txt` |
+| `compare_equilibrium_and_kappa.py` | equilibrium constants, partition functions and κ against the MESS logs (Section 5b); writes `equilibrium_constants_comparison.csv`, `partition_functions_comparison.csv`, `isomer_bimolecular_kappa_comparison.csv` |
 
 ```
 bash run_mess.sh

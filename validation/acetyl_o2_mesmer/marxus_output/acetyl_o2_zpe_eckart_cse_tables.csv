@@ -1,3 +1,11 @@
+# species: Partition functions Q (from the ground state; bimolecular species per cm^3)
+T[K],P[Torr],Q(Int1),Q(Int2),Q(B_R2),Q(B_R4),Q(B_R3),Q(R)
+298,200.72,9.361720e5,5.014767e5,4.617099e5,2.067217e6,1.203928e6,1.198562e33
+
+# species: Real equilibrium constants K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) (bimolecular units cm^3)
+T[K],P[Torr],K(Int1/Int2),K(Int1/R),K(Int2/Int1),K(Int2/R),K(R/Int1),K(R/Int2)
+298,200.72,2.705936e2,2.209893e-3,3.695579e-3,8.166832e-6,4.525107e2,1.224465e5
+
 # CSE: Rate coefficients from Int1 (1/s)
 T[K],P[Torr],Int1->Int2,Int1->R,Int1->P_ketene_HO2,Int1->P_lactone_OH,Int1 loss
 298,200.72,1.265046e-6,1.472962e-9,3.579241e-15,2.121846e-8,9.854347e-7
@@ -45,6 +53,10 @@ T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
 # CSE: Long-time yields, total (% of the eventual net reaction of R)
 T[K],P[Torr],R->P_ketene_HO2,R->P_lactone_OH
 298,200.72,2.412033e-3,9.999759e1
+
+# CSE: Isomer-to-bimolecular equilibrium coefficients kappa (G13 eq. 34; 1: in equilibrium with the bimolecular species)
+T[K],P[Torr],kappa(Int1/R),kappa(Int1/P_ketene_HO2),kappa(Int1/P_lactone_OH),kappa(Int2/R),kappa(Int2/P_ketene_HO2),kappa(Int2/P_lactone_OH)
+298,200.72,2.954473e-18,3.670830e-23,-8.150366e-17,6.830960e-18,8.170209e-23,8.775116e-13
 
 # CSE: Diagnostics of the CSE solution (species: number of kinetic species, fewer than the wells where wells are merged; separation Lambda_N/Lambda_N+1; loss balance; detailed balance)
 T[K],P[Torr],species,separation,loss balance,detailed bal.

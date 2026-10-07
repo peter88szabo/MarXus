@@ -87,6 +87,7 @@ mod tests {
             chirality_number: 1.0,
             electronic_degeneracy: 2.0,
             internal_rotors: Vec::new(),
+            excited_electronic_levels: Vec::new(),
         }
     }
 

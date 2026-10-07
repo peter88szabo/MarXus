@@ -5,6 +5,7 @@
 //!   levels of one-dimensional internal rotors (`rrkm::internal_rotor`).
 //! - W‡(E) of a transition state: rovibrational sum of states of a tight transition state, or the
 //!   cumulative states of a phase-space-theory core combined with harmonic conserved modes.
+//! - Excited electronic levels are convolved with the counts: rho(E) = sum_j g_j rho_0(E - eps_j).
 //! - Symmetry number, chirality and electronic degeneracy multiply the state counts, so that
 //!   k(E) = W‡(E - E0)/(h rho(E)) carries the ratio of these factors (Forst, Theory of Unimolecular
 //!   Reactions (1973), Sec. 4.5). With rho per cm-1 and W dimensionless, h is taken in cm-1 s.
@@ -31,8 +32,11 @@ pub struct SpeciesMicroModel {
     pub symmetry_number: f64,
     /// Chirality number (enantiomer count), typically 1 or 2.
     pub chirality_number: f64,
-    /// Electronic degeneracy factor (dimensionless).
+    /// Electronic degeneracy factor of the ground level (dimensionless).
     pub electronic_degeneracy: f64,
+    /// Excited electronic levels (energy above the ground level in cm-1, degeneracy): the counts become
+    /// rho(E) = g_0 rho_0(E) + sum_j g_j rho_0(E - eps_j), the same for W.
+    pub excited_electronic_levels: Vec<(f64, f64)>,
     /// One-dimensional hindered or free internal rotors, whose quantum levels are stick-convolved
     /// with the rovibrational counts (`rrkm::internal_rotor`).
     pub internal_rotors: Vec<HinderedRotor>,
@@ -110,6 +114,8 @@ pub enum TransitionStateModel {
         pst_core: PhaseSpaceTheoryModel,
         vibrational_frequencies_cm1: Vec<f64>,
         electronic_degeneracy: f64,
+        /// Excited electronic levels (energy above the ground level in cm-1, degeneracy).
+        excited_electronic_levels: Vec<(f64, f64)>,
     },
 }
 
@@ -176,6 +182,7 @@ pub(crate) fn rrho_density_of_states(
         *x *= factor;
     }
     let rho = model.convolve_internal_rotors(rho, d_e)?;
+    let rho = convolve_electronic_levels(rho, model.electronic_degeneracy, &model.excited_electronic_levels, d_e);
 
     // Ensure non-negative and finite.
     for (i, x) in rho.iter().enumerate() {
@@ -202,6 +209,7 @@ pub(crate) fn transition_state_sum_of_states(
             pst_core,
             vibrational_frequencies_cm1,
             electronic_degeneracy,
+            excited_electronic_levels,
         } => {
             let d_e = grain_width_cm1;
             let n_ebin = grains.saturating_sub(1);
@@ -231,7 +239,7 @@ pub(crate) fn transition_state_sum_of_states(
                 .collect();
             convolve_vibrational_sum_states_in_place(&mut w, &freq_bins);
 
-            Ok(w)
+            Ok(convolve_electronic_levels(w, *electronic_degeneracy, excited_electronic_levels, d_e))
         }
     }
 }
@@ -270,6 +278,7 @@ pub(crate) fn rrho_sum_of_states(
         *x *= factor;
     }
     let w = model.convolve_internal_rotors(w, d_e)?;
+    let w = convolve_electronic_levels(w, model.electronic_degeneracy, &model.excited_electronic_levels, d_e);
 
     for (i, x) in w.iter().enumerate() {
         if !x.is_finite() || *x < 0.0 {
@@ -281,6 +290,24 @@ pub(crate) fn rrho_sum_of_states(
     }
 
     Ok(w)
+}
+
+/// Counts that already carry the ground-level degeneracy g_0, combined with excited electronic levels:
+/// c(E) + sum_j (g_j/g_0) c(E - eps_j), each level shifting by ceil(eps_j/cell) cells (as the rotor levels,
+/// `rrkm::internal_rotor::convolve_rotor_levels`).
+fn convolve_electronic_levels(counts: Vec<f64>, ground_degeneracy: f64, excited: &[(f64, f64)], cell_cm1: f64) -> Vec<f64> {
+    if excited.is_empty() {
+        return counts;
+    }
+    let mut out = counts.clone();
+    for &(eps, g) in excited {
+        let shift = (eps / cell_cm1 - 1e-9).ceil().max(0.0) as usize;
+        let weight = g / ground_degeneracy;
+        for i in shift..counts.len() {
+            out[i] += weight * counts[i - shift];
+        }
+    }
+    out
 }
 
 fn convolve_vibrational_sum_states_in_place(sum_states: &mut [f64], mode_bins: &[usize]) {
@@ -313,6 +340,7 @@ mod tests {
             chirality_number: 1.0,
             electronic_degeneracy: 2.0,
             internal_rotors,
+            excited_electronic_levels: Vec::new(),
         }
     }
 
@@ -340,5 +368,58 @@ mod tests {
         let err = rrho_density_of_states(3000, 1.0, &species(vec![rotor.clone()])).unwrap_err();
         assert!(err.contains("X") && err.contains("2999"), "{err}");
         assert!(rrho_sum_of_states(3000, 1.0, &species(vec![rotor])).is_err());
+    }
+
+    #[test]
+    fn excited_electronic_levels_are_convolved_into_the_counts() {
+        // rho(E) = sum_j g_j rho_0(E - eps_j) (each level a shift by whole cells), the same for W; then
+        // sum_E rho e^(-E/kT) = q_el q_0 with q_el = sum_j g_j e^(-eps_j/kT).
+        let ground = species(vec![]);
+        let mut excited = species(vec![]);
+        excited.excited_electronic_levels = vec![(140.0, 2.0), (1000.0, 4.0)];
+        let (grains, cell, g0) = (20_000, 1.0, 2.0);
+        for count in [rrho_density_of_states, rrho_sum_of_states] {
+            let base = count(grains, cell, &ground).unwrap();
+            let with = count(grains, cell, &excited).unwrap();
+            for i in [0, 139, 140, 141, 999, 1000, 5000, 19_999] {
+                let shifted = |s: usize| if i >= s { base[i - s] } else { 0.0 };
+                let expected = base[i] + 2.0 / g0 * shifted(140) + 4.0 / g0 * shifted(1000);
+                assert!((with[i] - expected).abs() <= 1e-12 * expected.abs(), "cell {i}: {} vs {expected}", with[i]);
+            }
+        }
+        let kt = crate::constants::KB_CM * 300.0;
+        let z = |r: &[f64]| r.iter().enumerate().map(|(i, x)| x * (-(i as f64) / kt).exp()).sum::<f64>();
+        let q_el = 2.0 + 2.0 * (-140.0 / kt).exp() + 4.0 * (-1000.0 / kt).exp();
+        let (rho0, rho) = (rrho_density_of_states(grains, cell, &ground).unwrap(), rrho_density_of_states(grains, cell, &excited).unwrap());
+        assert!((z(&rho) / z(&rho0) - q_el / g0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn excited_electronic_levels_of_a_phase_space_theory_transition_state_are_convolved() {
+        use crate::barrierless::phasespace::phase_space_theory::PhaseSpaceTheoryModel;
+        use crate::barrierless::phasespace::types::{CaptureFragment, CaptureFragmentRotorModel, PhaseSpaceTheoryInput, PstTstLevel};
+        let pst = || {
+            PhaseSpaceTheoryModel::new(PhaseSpaceTheoryInput {
+                fragment_a: CaptureFragment { mass_amu: Some(1.0), rotor: CaptureFragmentRotorModel::Atom },
+                fragment_b: CaptureFragment { mass_amu: Some(32.0), rotor: CaptureFragmentRotorModel::LinearRigidRotor { rotational_constant_cm1: 1.44 } },
+                symmetry_operations: 1.0,
+                potential_prefactor_au: 37.0,
+                potential_power_exponent: 6.0,
+                tst_level: PstTstLevel::E,
+            })
+            .unwrap()
+        };
+        let ts = |excited: Vec<(f64, f64)>| TransitionStateModel::PhaseSpaceTheoryRRHO {
+            pst_core: pst(),
+            vibrational_frequencies_cm1: vec![1580.0],
+            electronic_degeneracy: 6.0,
+            excited_electronic_levels: excited,
+        };
+        let base = transition_state_sum_of_states(3000, 1.0, &ts(vec![])).unwrap();
+        let with = transition_state_sum_of_states(3000, 1.0, &ts(vec![(250.0, 3.0)])).unwrap();
+        for i in [0, 249, 250, 1000, 2999] {
+            let expected = base[i] + if i >= 250 { 3.0 / 6.0 * base[i - 250] } else { 0.0 };
+            assert!((with[i] - expected).abs() <= 1e-12 * expected.abs(), "cell {i}");
+        }
     }
 }

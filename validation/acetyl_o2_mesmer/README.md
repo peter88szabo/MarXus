@@ -119,6 +119,22 @@ For the channels without tunneling, the exact canonical rate constant is k = (k_
 
 **Partition functions (MESMER's qtot, 200 and 300 K):** equal to the closed forms within 0.001% for Int1, Int2, TS1, TS2 and TS3, e.g. Int1 at 200 K: 218488 against 218487.4. The XML data and their reading are therefore the same in both codes.
 
+**MarXus partition functions (2026-10-07), at the temperatures of the decks** (rows q(…) at 298 and 250 K in `exact_reference.csv`; MarXus Q from the report section PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS):
+
+| species (deck name) | MarXus/exact − 1, 298 K | 250 K | e^{−Δ/2kT} × frequency rounding, 298 K |
+|---|---|---|---|
+| Int1 | −0.1488% | −0.2066% | −0.1489% |
+| Int2 | −0.2043% | −0.2510% | −0.2044% |
+| TS1 (B_R2) | −0.3414% | −0.3796% | −0.3415% |
+| TS2 (B_R4) | −0.3056% | −0.3330% | −0.3054% |
+| TS3 (B_R3) | +0.0027% | −0.0644% | +0.0024% |
+
+The differences come from the 1 cm⁻¹ cell counting, and these two properties reproduce them to 3·10⁻⁶:
+- the classical-rotor continuum is counted half a cell high, e^{−Δ/2kT} = 0.99759 at 298 K;
+- the scaled frequencies are rounded to the cells (e.g. TS3 +0.244%, TS2 with its 58 cm⁻¹ mode −0.065%).
+
+Details: `../../reports/equilibrium_constants.md` (Sections 4.3 and 5.4).
+
 **Canonical rate constants at 298 K:**
 
 | channel | exact | MESMER (100 cm⁻¹ grains) | MarXus (1 cm⁻¹ cells) |
@@ -145,6 +161,8 @@ For the channels without tunneling, the exact canonical rate constant is k = (k_
 - **HO₂ mass.** The XML gives HO₂ a mass of 42 amu instead of 33; it is not used (HO₂ is a sink).
 
 ## 6. History
+
+- **2026-10-07.** MarXus partition functions added to `exact_reference.csv` (Section 4); all runs repeated with the new report sections; `comparison_table.csv` is byte-identical.
 
 - **2026-10-06.** Directory created.
   - New deck keywords for the decks: `RotationalConstants[1/cm]` and `Mass[amu]` in place of a geometry, and `Dummy` bimolecular species (as in MESS). A barrier given by an ILT needs no geometry or frequencies.

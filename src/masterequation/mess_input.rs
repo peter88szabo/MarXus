@@ -83,6 +83,9 @@ pub struct MessSpeciesRrho {
     pub vibrational_frequencies_cm1: Vec<f64>,
     pub zero_energy_cm1: f64,
     pub electronic_degeneracy_ground: f64,
+    /// All electronic levels (energy above the lowest level in cm-1, degeneracy), from `ElectronicLevels[unit] N`; the
+    /// first is (0, electronic_degeneracy_ground). Without the block: [(0, 1)].
+    pub electronic_levels: Vec<(f64, f64)>,
     /// Mass of an `Atom` fragment (amu); None for RRHO species (mass from the geometry).
     pub atom_mass_amu: Option<f64>,
     /// Rotational constants (cm-1) given in place of a geometry (`RotationalConstants[1/cm] N`, N = 3, or 1 for a
@@ -436,6 +439,38 @@ fn parse_zero_energy_cm1(block: &[String]) -> Result<f64, String> {
     Err("Missing ZeroEnergy[...]".into())
 }
 
+/// `ElectronicLevels[unit] N` followed by N lines "energy degeneracy" (unit 1/cm by default, also kcal/mol, kJ/mol):
+/// the levels sorted by energy; the lowest must lie at 0 (the zero of the species). Without the block: [(0, 1)].
+fn parse_electronic_levels(block: &[String], name: &str) -> Result<Vec<(f64, f64)>, String> {
+    let Some(idx) = block.iter().position(|l| l.starts_with("ElectronicLevels")) else {
+        return Ok(vec![(0.0, 1.0)]);
+    };
+    let line = &block[idx];
+    let context = |what: &str| format!("Species '{name}', ElectronicLevels: {what}");
+    let unit = unit_tag(line).unwrap_or("1/cm");
+    let n = parse_usize(line.split_whitespace().last().ok_or_else(|| context("malformed line"))?)?;
+    if n == 0 {
+        return Ok(vec![(0.0, 1.0)]);
+    }
+    let mut levels = Vec::with_capacity(n);
+    for k in 0..n {
+        let entry = block.get(idx + 1 + k).ok_or_else(|| context(&format!("{n} levels expected, {k} found")))?;
+        let fields: Vec<&str> = entry.split_whitespace().collect();
+        let (Some(e), Some(g)) = (fields.first().and_then(|v| parse_f64(v).ok()), fields.get(1).and_then(|v| parse_f64(v).ok())) else {
+            return Err(context(&format!("{n} levels expected; line '{entry}' is not 'energy degeneracy'")));
+        };
+        if !(g > 0.0) {
+            return Err(context(&format!("degeneracy {g} must be positive")));
+        }
+        levels.push((energy_to_cm1(e, unit)?, g));
+    }
+    levels.sort_by(|a, b| a.0.total_cmp(&b.0));
+    if levels[0].0 != 0.0 {
+        return Err(context(&format!("the lowest level lies at {} 1/cm; it must lie at 0, the zero of the species", levels[0].0)));
+    }
+    Ok(levels)
+}
+
 fn parse_electronic_degeneracy_ground(block: &[String]) -> Result<f64, String> {
     for (idx, line) in block.iter().enumerate() {
         if line.starts_with("ElectronicLevels") {
@@ -480,6 +515,7 @@ fn parse_fragment(block: &[String], name: &str) -> Result<MessSpeciesRrho, Strin
         vibrational_frequencies_cm1: Vec::new(),
         zero_energy_cm1: 0.0,
         electronic_degeneracy_ground: parse_electronic_degeneracy_ground(block)?,
+        electronic_levels: parse_electronic_levels(block, name)?,
         atom_mass_amu: Some(mass),
         rotational_constants_cm1: None,
         mass_amu: None,
@@ -531,6 +567,7 @@ fn parse_rrho_species_impl(
     };
     let zero_energy_cm1 = parse_zero_energy_cm1(block)?;
     let electronic_degeneracy_ground = parse_electronic_degeneracy_ground(block)?;
+    let electronic_levels = parse_electronic_levels(block, name)?;
     let atoms = (!symbols.is_empty()).then_some(symbols.len());
     let internal_rotors = rotor_blocks
         .iter()
@@ -547,6 +584,7 @@ fn parse_rrho_species_impl(
         vibrational_frequencies_cm1: vib,
         zero_energy_cm1,
         electronic_degeneracy_ground,
+        electronic_levels,
         rotational_constants_cm1,
         mass_amu,
         internal_rotors,
@@ -1925,6 +1963,23 @@ ZeroEnergy[kcal/mol] 30\n  End\n";
         let twice = format!("{deck}Species Br\n  Atom\n    Mass[amu] 79\n  End\n");
         assert!(parse_species_blocks(&twice).unwrap_err().contains("Br"));
         assert!(parse_species_blocks("Species X\nPhotoionization\nEnd\n").unwrap_err().contains("X"));
+    }
+
+    #[test]
+    fn every_electronic_level_is_read() {
+        let deck = |levels: &str| rotor_deck(&format!("{ETHANE_CORE}\n        ElectronicLevels[1/cm] {levels}"));
+        let w1 = &parse_mess_input(&deck("3\n          0 2\n          139.7 2\n          1000 4")).unwrap().wells["W1"];
+        assert_eq!(w1.electronic_levels, vec![(0.0, 2.0), (139.7, 2.0), (1000.0, 4.0)]);
+        assert_eq!(w1.electronic_degeneracy_ground, 2.0);
+        // the lowest level is the zero of the species; a missing level line is an error
+        assert!(parse_mess_input(&deck("2\n          50 2\n          139.7 2")).unwrap_err().contains("ElectronicLevels"));
+        assert!(parse_mess_input(&deck("2\n          0 2")).unwrap_err().contains("ElectronicLevels"));
+        // an Atom fragment, O(3P): 3P2, 3P1, 3P0
+        let o = parse_species_blocks("Species O\n  Atom\n    Mass[amu] 15.995\n    ElectronicLevels[1/cm] 3\n      0 5\n      158.3 3\n      227 1\n  End\n").unwrap();
+        assert_eq!(o[0].electronic_levels, vec![(0.0, 5.0), (158.3, 3.0), (227.0, 1.0)]);
+        // without the block: one level with degeneracy 1
+        let plain = &parse_mess_input(&rotor_deck(ETHANE_CORE)).unwrap().wells["W1"];
+        assert_eq!(plain.electronic_levels, vec![(0.0, 1.0)]);
     }
 
     #[test]

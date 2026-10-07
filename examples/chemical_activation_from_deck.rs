@@ -120,9 +120,9 @@ use MarXus::masterequation::direct_time_integration::{
 use MarXus::masterequation::mess_input::parse_mess_input_file;
 use MarXus::masterequation::parallel_conditions::ConditionPool;
 use MarXus::masterequation::report_sections::{
-    cse_groups, steady_state_groups, thermal_groups, time_integration_groups, well_fate_groups,
-    write_cse_species_tables, write_energetics, write_groups, write_network_summary,
-    write_time_evolution_tables,
+    cse_groups, partition_function_groups, steady_state_groups, thermal_groups, time_integration_groups,
+    well_fate_groups, write_cse_species_tables, write_energetics, write_groups, write_network_summary,
+    write_partition_functions, write_time_evolution_tables,
 };
 use MarXus::masterequation::report_tables::{write_groups_csv, Quantity, QuantityGroup};
 use MarXus::numeric::lapack_interface::set_blas_threads;
@@ -613,6 +613,16 @@ fn main() -> Result<(), String> {
     write_energetics(&mut report, &deck).map_err(io)?;
     writeln!(
         report,
+        "{rule}\n PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS\n {}\n\nFrom the cell densities of states of the master \
+         equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO \
+         partition function.\n",
+        "-".repeat(45)
+    )
+    .map_err(io)?;
+    write_partition_functions(&mut report, &model.species_partition_functions, &temperatures).map_err(io)?;
+    tables.extend(prefixed("species", &partition_function_groups(&model.species_partition_functions, &temperatures, &pressures)));
+    writeln!(
+        report,
         "{rule}\nUnits: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.\n\
          Numbers with six significant digits; *** marks a value that is not available.\n{rule}\n"
     )
@@ -1054,9 +1064,23 @@ fn main() -> Result<(), String> {
             .reactant_name
             .as_deref()
             .filter(|_| model.entrance_high_pressure_rate.is_some());
+        // The bimolecular products with channels (not Dummy): their rows from the capture rate coefficient of the reverse
+        // association (G13 eqs. 28, 21, 22).
+        let products: Vec<(&str, &_)> = model
+            .bimolecular_high_pressure_rates
+            .iter()
+            .filter(|(name, _)| deck.global.reactant_name.as_deref() != Some(name.as_str()))
+            .map(|(name, rate)| (name.as_str(), rate))
+            .collect();
         let mut all = Vec::new();
         let mut unavailable = Vec::new();
         let per_condition = pool.map_conditions(&temperatures, &pressures, |t, p| {
+            let captures: Vec<Box<dyn Fn(f64) -> f64>> = products
+                .iter()
+                .map(|&(_, rate)| Box::new(move |t: f64| rate.rate_cm3_s(t)) as Box<dyn Fn(f64) -> f64>)
+                .collect();
+            let product_captures: Vec<(&str, &dyn Fn(f64) -> f64)> =
+                products.iter().zip(&captures).map(|(&(name, _), capture)| (name, capture.as_ref())).collect();
             run_phenomenological_rates(
                 network,
                 &[t],
@@ -1064,6 +1088,7 @@ fn main() -> Result<(), String> {
                 model.collision_model,
                 solver,
                 reactant_name.map(|r| (r, &capture as &dyn Fn(f64) -> f64)),
+                &product_captures,
                 &merging,
             )
         });
@@ -1092,8 +1117,10 @@ fn main() -> Result<(), String> {
             "PHENOMENOLOGICAL RATE COEFFICIENTS FROM THE CHEMICALLY SIGNIFICANT EIGENVALUES (CSE)",
             &format!(
                 "Miller, Klippenstein, J. Phys. Chem. A 110, 10528 (2006); formulation of Georgievskii, Miller, Burke, Klippenstein,\n\
-                 J. Phys. Chem. A 117, 12146 (2013), eqs. 21-30. All eigenpairs by {solver:?}. Rows: from, columns: to; wells in 1/s,\n\
-                 the reactant row in cm^3/s. Diagonal: total loss of a well; for the reactant its net reaction (capture - return).\n\
+                 J. Phys. Chem. A 117, 12146 (2013), eqs. 21-34. All eigenpairs by {solver:?}. Rows: from, columns: to; wells in 1/s,\n\
+                 the reactant and product rows in cm^3/s (a product row from the capture rate coefficient of its reverse association,\n\
+                 eqs. 28, 21, 22). Diagonal: total loss of a well; for a bimolecular species its net reaction (capture - return).\n\
+                 Below each table: kappa (eq. 34), 1 for a well in equilibrium with the bimolecular species, 0 otherwise.\n\
                  Yields: the prompt branching of the reactant, the thermal fate of each well (absorbing chain of the well rate\n\
                  coefficients), and the long-time yields, direct + through the wells, which equal the final steady state."
             ),

@@ -16,6 +16,10 @@ and writes
   apparent_rates_comparison.csv   apparent bimolecular rate coefficients k(R -> X)
   kappa_comparison.csv            tunneling factors kappa(T): MESS log vs MarXus (exact Eckart)
   cse_comparison.csv              every species-to-species rate coefficient: MESS vs the MarXus CSE method
+  product_rows_comparison.csv     the rows of the products P1, P5, P7 (G13 eqs. 28, 21, 22): MESS vs MarXus CSE
+  product_capture_comparison.csv  capture rate coefficients of R, P1, P5, P7 (MarXus) vs the MESS high-pressure rows
+  isomer_bimolecular_kappa_comparison.csv   kappa (G13 eq. 34) of every well and bimolecular species: MESS log vs MarXus
+  equilibrium_constants_comparison.csv      real equilibrium constants (MESS log, 3 digits) vs MarXus
   cse_vs_final_steady_state.csv   diagnostic: long-time shares from the MarXus CSE rate tables vs the MarXus
                                   final steady state (both MESS Eckart model); equal in exact arithmetic
   plots/cse_vs_final_steady_state.png   the same diagnostic: relative deviations of every condition
@@ -141,7 +145,8 @@ def mess_long_time_shares(table):
 
 
 def read_cse(path):
-    """MarXus CSE species tables: {(T, p_torr): {from: {to: value}}} (escape(G4) renamed ESC)."""
+    """MarXus CSE species tables: {(T, p_torr): {from: {to: value}}} (escape(G4) renamed ESC); the rows of the
+    reactant and of the products included. A comment line ends a table (the kappa block follows it)."""
     out, key, header = {}, None, None
     for line in open(path):
         line = line.rstrip("\n")
@@ -150,12 +155,87 @@ def read_cse(path):
             key, header = (float(m.group(1)), float(m.group(2))), None
             out[key] = {}
             continue
+        if line.startswith("#"):
+            header = None
+            continue
         if line.startswith("From\\To"):
             header = [("ESC" if h == "escape(G4)" else h) for h in line.split(",")[1:]]
             continue
         if header and line and not line.startswith("#"):
             fields = line.split(",")
             out[key][fields[0]] = dict(zip(header, map(float, fields[1:])))
+    return out
+
+
+def read_cse_kappa_and_captures(path):
+    """MarXus CSE output: {(T, p_torr): {well: {channel: kappa}}} (G13 eq. 34; escape(G4) renamed ESC) and
+    {(T, p_torr): {species: capture (cm3/s)}} of the reactant and the products."""
+    kappa, captures, key, header = {}, {}, None, None
+    for line in open(path):
+        line = line.rstrip("\n")
+        m = re.match(r"# T = (\S+) K, p = (\S+) Torr", line)
+        if m:
+            key, header = (float(m.group(1)), float(m.group(2))), None
+            kappa[key], captures[key] = {}, {}
+            continue
+        m = re.match(r"# (?:reactant|product) (\S+): capture(?: \(reverse association\))? (\S+) cm3/s", line)
+        if m:
+            captures[key][m.group(1)] = float(m.group(2))
+            continue
+        if line.startswith("W\\P,"):
+            header = [("ESC" if h == "escape(G4)" else h) for h in line.split(",")[1:]]
+            continue
+        if line.startswith("#") or not line.strip():
+            header = None
+            continue
+        if header:
+            fields = line.split(",")
+            kappa[key][fields[0]] = dict(zip(header, map(float, fields[1:])))
+    return kappa, captures
+
+
+def read_mess_kappa_and_equilibrium(path, temperatures, pressures):
+    """MESS log: kappa matrices {(T, p_torr): {well: {species: kappa}}} (|kappa| < 0.05 printed as 0), in the order of
+    the conditions (T outer, p inner), and the "Real equilibrium constants" {T: {row: {column: K}}} (bimolecular units
+    cm3), one per temperature in the order of the temperatures."""
+    lines = open(path).read().split("\n")
+    kappas, equilibria = [], []
+    for i, line in enumerate(lines):
+        if "kappa matrix" in line:
+            header = lines[i + 1].split()[1:]
+            rows, k = {}, i + 2
+            while lines[k].split() and lines[k].split()[0] in WELLS:
+                fields = lines[k].split()
+                rows[fields[0]] = dict(zip(header, map(float, fields[1:])))
+                k += 1
+            kappas.append(rows)
+        if "Real equilibrium constants" in line:
+            header = lines[i + 1].split()[1:]
+            rows, k = {}, i + 2
+            while lines[k].split() and lines[k].split()[0] in WELLS + ENDS:
+                fields = lines[k].split()
+                rows[fields[0]] = dict(zip(header, map(float, fields[1:])))
+                k += 1
+            equilibria.append(rows)
+    conditions = [(t, p) for t in temperatures for p in pressures]
+    return dict(zip(conditions, kappas)), dict(zip(temperatures, equilibria))
+
+
+def read_marxus_equilibrium(path):
+    """MarXus report: real equilibrium constants {T: {row: {column: K}}} of the section PARTITION FUNCTIONS AND
+    EQUILIBRIUM CONSTANTS."""
+    text = open(path).read().split("PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS")[1].split("_" * 20)[0]
+    out = {}
+    for part in re.split(r"Temperature = ", text)[1:]:
+        t = float(part.split()[0])
+        lines = part.split("Real equilibrium constants")[1].split("\n")[1:]
+        header = lines[0].split()[1:]
+        out[t] = {}
+        for line in lines[1:]:
+            if not line.strip():
+                break
+            fields = line.split()
+            out[t][fields[0]] = dict(zip(header, map(float, fields[1:])))
     return out
 
 
@@ -324,6 +404,48 @@ for (t, p), table in sorted(cse.items()):
             cse_rows.append({"T_K": t, "p_torr": p, "from": a, "to": b, "mess": m, "marxus_cse": x,
                              "dev_percent": 100 * (x / m - 1) if m != 0 else np.nan})
 write_csv("cse_comparison.csv", cse_rows)
+
+# 6a. Product rows (G13 eqs. 28, 21, 22 for P1, P5, P7), their capture rate coefficients against the MESS
+#     high-pressure rows, kappa (eq. 34) against the MESS log, and the real equilibrium constants.
+product_rows = []
+for (t, p), table in sorted(cse.items()):
+    for a in ["P1", "P5", "P7"]:
+        for b in WELLS + ENDS:
+            if b not in table.get(a, {}) or b not in mess_p[(t, p)].get(a, {}):
+                continue
+            m, x = mess_p[(t, p)][a][b], table[a][b]
+            product_rows.append({"T_K": t, "p_torr": p, "from": a, "to": b, "mess": m, "marxus_cse": x,
+                                 "dev_percent": 100 * (x / m - 1) if m != 0 else np.nan})
+write_csv("product_rows_comparison.csv", product_rows)
+kappa_matrix_mx, captures_mx = read_cse_kappa_and_captures(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_cse.csv"))
+first_well = {"R": "G2", "P1": "G4", "P5": "G4", "P7": "G6"}
+product_captures = []
+for t in temperatures:
+    key = next(k for k in sorted(captures_mx) if k[0] == t)
+    for x, w in first_well.items():
+        m, c = mess_high[t][x][w], captures_mx[key][x]
+        product_captures.append({"T_K": t, "species": x, "well": w, "mess_k_inf": m, "marxus_capture": c,
+                                 "dev_percent": 100 * (c / m - 1)})
+write_csv("product_capture_comparison.csv", product_captures)
+kappa_matrix_mess, equilibrium_mess = read_mess_kappa_and_equilibrium(os.path.join(HERE, STEM + ".log"), temperatures, pressures)
+kappa_rows_6a = []
+for key in sorted(kappa_matrix_mx):
+    for w in WELLS:
+        for x in ["R", "P1", "P5", "P7"]:
+            kappa_rows_6a.append({"T_K": key[0], "p_torr": key[1], "well": w, "species": x,
+                               "mess": kappa_matrix_mess[key][w][x], "marxus_cse": kappa_matrix_mx[key][w][x]})
+write_csv("isomer_bimolecular_kappa_comparison.csv", kappa_rows_6a)
+equilibrium_mx = read_marxus_equilibrium(os.path.join(HERE, "marxus_output", "case2_tstlevel_E_mess_eckart_cse.out"))
+equilibrium_rows = []
+for t in temperatures:
+    for a in WELLS + ["R", "P1", "P5", "P7"]:
+        for b in WELLS + ["R", "P1", "P5", "P7"]:
+            if a == b:
+                continue
+            m, x = equilibrium_mess[t][a][b], equilibrium_mx[t][a][b]
+            equilibrium_rows.append({"T_K": t, "row": a, "column": b, "mess_3_digits": m, "marxus": x,
+                                     "dev_percent": 100 * (x / m - 1)})
+write_csv("equilibrium_constants_comparison.csv", equilibrium_rows)
 
 # 7. Diagnostic: the same long-time shares from two different MarXus methods (both with the MESS Eckart model).
 #    Final steady state: Y_x = k_x^T J^-1 F. CSE: R forms the wells (k_R->i) and the direct products (k_R->x),

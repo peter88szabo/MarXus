@@ -1,3 +1,11 @@
+# species: Partition functions Q (from the ground state; bimolecular species per cm^3)
+T[K],P[Torr],Q(Int1),Q(Int2),Q(B_R2),Q(B_R4),Q(B_R3),Q(R)
+298,200.72,9.361720e5,5.014767e5,4.617099e5,2.067217e6,1.203928e6,1.198562e33
+
+# species: Real equilibrium constants K(X/Y) = Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)) (bimolecular units cm^3)
+T[K],P[Torr],K(Int1/Int2),K(Int1/R),K(Int2/Int1),K(Int2/R),K(R/Int1),K(R/Int2)
+298,200.72,2.705936e2,2.209893e-3,3.695579e-3,8.166832e-6,4.525107e2,1.224465e5
+
 # thermal rate coefficients: Thermal rate coefficients (1/s)
 T[K],P[Torr],k_uni,lambda_1,Int1->R,Int1->Int2,Int1->P_ketene_HO2,Int2->Int1,Int2->P_lactone_OH
 298,200.72,1.280656e-6,1.198133e-6,1.473546e-9,1.886601e-6,3.580855e-15,6.090075e-7,1.279183e-6

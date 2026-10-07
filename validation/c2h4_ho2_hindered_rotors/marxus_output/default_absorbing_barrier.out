@@ -65,6 +65,96 @@ Barriers (H - ZeroEnergy of the barrier in the deck):
         B4      11.32       W2       P2   rigid transition state, Eckart tunneling
 
 ====================================================================================================
+ PARTITION FUNCTIONS AND EQUILIBRIUM CONSTANTS
+ ---------------------------------------------
+
+From the cell densities of states of the master equation (the counting of k(E)); tight barriers included, phase-space-theory and ILT barriers have no RRHO partition function.
+
+Temperature = 300 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   4.33352e+06
+        B3      barrier      -0.1300   1.29970e+06
+        B4      barrier      -2.0600   1.08451e+06
+        P1  bimolecular     -13.3800   8.71845e+31
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  2.60392e-24
+P1     3.84036e+23  1.00000e+00
+
+Temperature = 500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   9.08615e+07
+        B3      barrier      -0.1300   2.64846e+07
+        B4      barrier      -2.0600   1.46086e+07
+        P1  bimolecular     -13.3800   1.23547e+33
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  7.90831e-25
+P1     1.26449e+24  1.00000e+00
+
+Temperature = 700 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.14615e+09
+        B3      barrier      -0.1300   3.41706e+08
+        B4      barrier      -2.0600   1.46721e+08
+        P1  bimolecular     -13.3800   1.03432e+34
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  6.04503e-25
+P1     1.65425e+24  1.00000e+00
+
+Temperature = 1000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   3.01690e+10
+        B3      barrier      -0.1300   9.11977e+09
+        B4      barrier      -2.0600   3.17740e+09
+        P1  bimolecular     -13.3800   1.60684e+35
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  6.15683e-25
+P1     1.62421e+24  1.00000e+00
+
+Temperature = 1500 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   2.78271e+12
+        B3      barrier      -0.1300   8.29560e+11
+        B4      barrier      -2.0600   2.45288e+11
+        P1  bimolecular     -13.3800   7.60199e+36
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  8.07952e-25
+P1     1.23770e+24  1.00000e+00
+
+Temperature = 2000 K
+
+Partition functions (Q from the ground state of the species; bimolecular species per cm^3, with the relative translation; E0: ground energy in kcal/mol on the energy scale of the deck):
+      Name         Kind           E0             Q
+        W2         well     -15.7400   1.17269e+14
+        B3      barrier      -0.1300   3.39324e+13
+        B4      barrier      -2.0600   9.32025e+12
+        P1  bimolecular     -13.3800   1.95758e+38
+
+Real equilibrium constants Q_X exp(-E_X/kT) / (Q_Y exp(-E_Y/kT)), rows X, columns Y (bimolecular units cm^3):
+Q/Q             W2           P1
+W2     1.00000e+00  1.08480e-24
+P1     9.21832e+23  1.00000e+00
+
+====================================================================================================
 Units: unimolecular rate coefficients 1/s; bimolecular rate coefficients cm^3/s; yields in %.
 Numbers with six significant digits; *** marks a value that is not available.
 ====================================================================================================
