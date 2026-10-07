@@ -32,6 +32,7 @@ use crate::numeric::integrators::rosenbrock::{
     integrate, IntegrationStatistics, RosenbrockOptions, StiffSystem,
 };
 use crate::numeric::integrators::rosenbrock_methods::RosenbrockMethod;
+use super::source_profiles::TimeProfile;
 
 /// How the population starts.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -99,9 +100,17 @@ pub fn log_spaced_times(t_min: f64, t_max: f64, per_decade: usize) -> Vec<f64> {
         .collect()
 }
 
+/// A time-dependent source term R(t) F of the system: F on the states and the part formed directly in the exits
+/// (below an absorbing barrier), with the amplitude profile (impulses are applied as events, not here).
+pub(crate) struct SourceTerm {
+    pub(crate) on_states: Vec<f64>,
+    pub(crate) into_exits: Vec<f64>,
+    pub(crate) profile: TimeProfile,
+}
+
 /// The master equation with the accumulated exit yields, as a stiff system for the Rosenbrock integrator.
-struct MasterEquationSystem<'a> {
-    op: &'a ChemicalActivationOperator,
+pub(crate) struct MasterEquationSystem<'a> {
+    pub(crate) op: &'a ChemicalActivationOperator,
     /// S = D^-1 J D as a band matrix, ln D and D.
     band: SymmetricBandMatrix,
     half_log_d: Vec<f64>,
@@ -111,6 +120,8 @@ struct MasterEquationSystem<'a> {
     /// Formation R F on the states, and directly into the exits (formation below an absorbing barrier).
     formation: Vec<f64>,
     exit_formation: Vec<f64>,
+    /// Further, time-dependent formation terms sum_a R_a(t) F_a.
+    pub(crate) sources: Vec<SourceTerm>,
     /// Cholesky factors of s I + S for the last shifts s (at most `FACTOR_CACHE`), and the one in use.
     factors: Vec<(f64, BandedCholeskyFactor)>,
     current: usize,
@@ -121,12 +132,110 @@ struct MasterEquationSystem<'a> {
 /// Number of factorizations kept for reuse (the steps are powers of two, so step sizes repeat).
 const FACTOR_CACHE: usize = 4;
 
+impl<'a> MasterEquationSystem<'a> {
+    /// The system of operator `op` with exits `exit_rates`, without formation; `sources` are added by the caller.
+    pub(crate) fn new(op: &'a ChemicalActivationOperator, exit_rates: Vec<Vec<(usize, f64)>>) -> Result<Self, String> {
+        let symmetrized = symmetrize(op);
+        if symmetrized.max_relative_asymmetry > SYMMETRY_TOLERANCE {
+            return Err(format!(
+                "Time integration: the operator is not symmetrizable (relative asymmetry {:e}); the isomerization \
+                 rates violate detailed balance.",
+                symmetrized.max_relative_asymmetry
+            ));
+        }
+        let (n, m) = (op.dimension(), exit_rates.len());
+        Ok(Self {
+            op,
+            band: symmetrized.band_matrix(),
+            half_log_d: symmetrized.half_log_d.clone(),
+            d: symmetrized.d.clone(),
+            exit_rates,
+            formation: vec![0.0; n],
+            exit_formation: vec![0.0; m],
+            sources: Vec::new(),
+            factors: Vec::new(),
+            current: 0,
+            computed: 0,
+        })
+    }
+
+    /// Exit rates (state, k) of the system.
+    pub(crate) fn exit_rates(&self) -> &[Vec<(usize, f64)>] {
+        &self.exit_rates
+    }
+
+    /// Cholesky factorizations computed so far.
+    pub(crate) fn factorizations_computed(&self) -> usize {
+        self.computed
+    }
+}
+
+/// The exits of the network with operator `op`: product channels `W->X`, bimolecular sinks `escape(W)` and, when
+/// `absorbing`, the stabilization `stab(W)` into the absorbed grains of every well; names and rates (state, k).
+pub(crate) fn exit_definitions(
+    network: &ChemicalActivationNetwork,
+    op: &ChemicalActivationOperator,
+    absorbing: bool,
+) -> (Vec<String>, Vec<Vec<(usize, f64)>>) {
+    let mut exits = Vec::new();
+    let mut exit_rates: Vec<Vec<(usize, f64)>> = Vec::new();
+    for (w, well) in network.wells.iter().enumerate() {
+        for channel in &well.channels {
+            if let ChannelDestination::Products { name } = &channel.destination {
+                exits.push(format!("{}->{name}", well.name));
+                // Rate of every state of the well into the channel (a low-energy reservoir: the Boltzmann
+                // average over its grains).
+                exit_rates.push(
+                    op.states
+                        .iter()
+                        .enumerate()
+                        .filter(|&(_, &(sw, _))| sw == w)
+                        .map(|(s, _)| (s, op.state_rate(s, &channel.rate_constant_s_inv)))
+                        .filter(|&(_, k)| k > 0.0)
+                        .collect(),
+                );
+            }
+        }
+    }
+    for (w, well) in network.wells.iter().enumerate() {
+        if well.bimolecular_sink_s_inv > 0.0 {
+            exits.push(format!("escape({})", well.name));
+            exit_rates.push(
+                op.states
+                    .iter()
+                    .enumerate()
+                    .filter(|&(_, &(sw, _))| sw == w)
+                    .map(|(s, _)| (s, well.bimolecular_sink_s_inv))
+                    .collect(),
+            );
+        }
+    }
+    if absorbing {
+        for (w, well) in network.wells.iter().enumerate() {
+            exits.push(format!("stab({})", well.name));
+            exit_rates.push(
+                op.stabilization
+                    .iter()
+                    .enumerate()
+                    .flat_map(|(s, targets)| {
+                        targets
+                            .iter()
+                            .filter(|&&(target, _)| target == w)
+                            .map(move |&(_, k)| (s, k))
+                    })
+                    .collect(),
+            );
+        }
+    }
+    (exits, exit_rates)
+}
+
 impl StiffSystem for MasterEquationSystem<'_> {
     fn dimension(&self) -> usize {
         self.op.dimension() + self.exit_rates.len()
     }
 
-    fn rhs(&self, _t: f64, y: &[f64], dydt: &mut [f64]) {
+    fn rhs(&self, t: f64, y: &[f64], dydt: &mut [f64]) {
         let n = self.op.dimension();
         let jn = self.op.apply(&y[..n]);
         for s in 0..n {
@@ -135,6 +244,17 @@ impl StiffSystem for MasterEquationSystem<'_> {
         for (x, rates) in self.exit_rates.iter().enumerate() {
             dydt[n + x] =
                 self.exit_formation[x] + rates.iter().map(|&(s, k)| k * y[s]).sum::<f64>();
+        }
+        for source in &self.sources {
+            let r = source.profile.rate(t);
+            if r != 0.0 {
+                for (d, f) in dydt[..n].iter_mut().zip(&source.on_states) {
+                    *d += r * f;
+                }
+                for (d, f) in dydt[n..].iter_mut().zip(&source.into_exits) {
+                    *d += r * f;
+                }
+            }
         }
     }
 
@@ -214,60 +334,14 @@ pub fn integrate_master_equation(
     let projected = project_source(&op, source)?;
 
     // Exits: product channels, bimolecular sinks, stabilization into the absorbed grains of each well.
-    let mut exits = Vec::new();
-    let mut exit_rates: Vec<Vec<(usize, f64)>> = Vec::new();
-    let mut exit_formation = Vec::new();
-    for (w, well) in network.wells.iter().enumerate() {
-        for channel in &well.channels {
-            if let ChannelDestination::Products { name } = &channel.destination {
-                exits.push(format!("{}->{name}", well.name));
-                // Rate of every state of the well into the channel (a low-energy reservoir: the Boltzmann
-                // average over its grains).
-                exit_rates.push(
-                    op.states
-                        .iter()
-                        .enumerate()
-                        .filter(|&(_, &(sw, _))| sw == w)
-                        .map(|(s, _)| (s, op.state_rate(s, &channel.rate_constant_s_inv)))
-                        .filter(|&(_, k)| k > 0.0)
-                        .collect(),
-                );
-                exit_formation.push(0.0);
-            }
-        }
-    }
-    for (w, well) in network.wells.iter().enumerate() {
-        if well.bimolecular_sink_s_inv > 0.0 {
-            exits.push(format!("escape({})", well.name));
-            exit_rates.push(
-                op.states
-                    .iter()
-                    .enumerate()
-                    .filter(|&(_, &(sw, _))| sw == w)
-                    .map(|(s, _)| (s, well.bimolecular_sink_s_inv))
-                    .collect(),
-            );
-            exit_formation.push(0.0);
-        }
-    }
     let absorbing = op.stabilization.iter().any(|targets| !targets.is_empty())
         || projected.absorbed_per_well.iter().any(|&a| a > 0.0);
+    let (exits, exit_rates) = exit_definitions(network, &op, absorbing);
+    let mut exit_formation = vec![0.0; exits.len()];
     if absorbing {
-        for (w, well) in network.wells.iter().enumerate() {
-            exits.push(format!("stab({})", well.name));
-            exit_rates.push(
-                op.stabilization
-                    .iter()
-                    .enumerate()
-                    .flat_map(|(s, targets)| {
-                        targets
-                            .iter()
-                            .filter(|&&(target, _)| target == w)
-                            .map(move |&(_, k)| (s, k))
-                    })
-                    .collect(),
-            );
-            exit_formation.push(projected.absorbed_per_well[w]);
+        let first_stab = exits.len() - network.wells.len();
+        for (w, &a) in projected.absorbed_per_well.iter().enumerate() {
+            exit_formation[first_stab + w] = a;
         }
     }
 
@@ -293,6 +367,7 @@ pub fn integrate_master_equation(
         exit_rates,
         formation,
         exit_formation,
+        sources: Vec::new(),
         factors: Vec::new(),
         current: 0,
         computed: 0,

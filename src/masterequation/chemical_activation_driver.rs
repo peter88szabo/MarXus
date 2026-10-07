@@ -36,7 +36,7 @@ use std::io::Write;
 use crate::constants::KB_CM;
 
 use super::chemical_activation_eigen::{thermal_rate_coefficients, EigenSolver, ThermalRateCoefficients};
-use super::chemically_significant_eigenvalues::{phenomenological_rate_coefficients, CseMerging, PhenomenologicalRates};
+use super::chemically_significant_eigenvalues::{phenomenological_rate_coefficients_with_sources, CseMerging, PhenomenologicalRates};
 use super::chemical_activation_network::{
     ChannelDestination, ChemicalActivationNetwork, ChemicalActivationOptions, CollisionModel, Conditions, SteadyState,
 };
@@ -404,6 +404,34 @@ pub fn run_phenomenological_rates(
     products: &[(&str, &dyn Fn(f64) -> f64)],
     merging: &CseMerging,
 ) -> Result<Vec<PhenomenologicalConditionResult>, String> {
+    run_phenomenological_rates_with_sources(
+        network,
+        temperatures_kelvin,
+        pressures_torr,
+        collision_model,
+        solver,
+        reactant,
+        products,
+        &|_, _| Ok(Vec::new()),
+        merging,
+    )
+}
+
+/// `run_phenomenological_rates` with prepared distributions projected onto the species and prompt products at every
+/// condition (`SourceProjection`): `sources(T, p)` gives their names and distributions on the grains of every well
+/// (normalized here).
+#[allow(clippy::too_many_arguments)]
+pub fn run_phenomenological_rates_with_sources(
+    network: &ChemicalActivationNetwork,
+    temperatures_kelvin: &[f64],
+    pressures_torr: &[f64],
+    collision_model: CollisionModel,
+    solver: EigenSolver,
+    reactant: Option<(&str, &dyn Fn(f64) -> f64)>,
+    products: &[(&str, &dyn Fn(f64) -> f64)],
+    sources: &dyn Fn(f64, f64) -> Result<Vec<(String, Vec<Vec<f64>>)>, String>,
+    merging: &CseMerging,
+) -> Result<Vec<PhenomenologicalConditionResult>, String> {
     network.validate()?;
     let options = ChemicalActivationOptions { collision_model, steady_state: SteadyState::Final };
     let mut results = Vec::with_capacity(temperatures_kelvin.len() * pressures_torr.len());
@@ -414,8 +442,15 @@ pub fn run_phenomenological_rates(
             let op = assemble_operator(network, &conditions, &options).map_err(context)?;
             let reactant_now = reactant.map(|(name, capture)| (name, capture(temperature_kelvin)));
             let products_now: Vec<(&str, f64)> = products.iter().map(|(name, capture)| (*name, capture(temperature_kelvin))).collect();
-            let rates =
-                phenomenological_rate_coefficients(network, &op, reactant_now, &products_now, solver, merging).map_err(context)?;
+            let sources_now = sources(temperature_kelvin, pressure_torr)
+                .map_err(context)?
+                .into_iter()
+                .map(|(name, grains)| Ok((name, project_source(&op, &grains)?.on_states)))
+                .collect::<Result<Vec<_>, String>>()
+                .map_err(context)?;
+            let named: Vec<(&str, Vec<f64>)> = sources_now.iter().map(|(n, v)| (n.as_str(), v.clone())).collect();
+            let rates = phenomenological_rate_coefficients_with_sources(network, &op, reactant_now, &products_now, &named, solver, merging)
+                .map_err(context)?;
             results.push(PhenomenologicalConditionResult { conditions, rates });
         }
     }

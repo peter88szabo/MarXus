@@ -203,6 +203,19 @@ pub fn partition_wells(pop_chem: &[Vec<f64>], q: &[f64], chem_size: usize, well_
     WellPartition { groups, bimolecular_group: rest, projection_error }
 }
 
+/// A prepared distribution F (a pulse) on the CSE description (G13 eqs. 13, 14, 24, 37-41): per unit of F, the populations
+/// of the species after the internal-energy relaxation and the yields formed promptly, during the relaxation, in every
+/// bimolecular channel and escape sink. The species then follow the phenomenological rate coefficients, so the long-time
+/// yield of a channel x is prompt_x + sum_g n_g (fate of g in x), which equals k_x^T J^-1 F (exact with all eigenpairs).
+#[derive(Debug, Clone)]
+pub struct SourceProjection {
+    pub name: String,
+    /// n_g after relaxation, per unit of F, for every species (`PhenomenologicalRates::wells` order).
+    pub species_populations: Vec<f64>,
+    /// Prompt yields per unit of F (`PhenomenologicalRates::bimolecular` order).
+    pub prompt_bimolecular: Vec<f64>,
+}
+
 /// Rate coefficients from a bimolecular species, the reactant or a product (cm3 s-1).
 #[derive(Debug, Clone)]
 pub struct ReactantRates {
@@ -248,6 +261,8 @@ pub struct PhenomenologicalRates {
     pub reactant: Option<ReactantRates>,
     /// The rows of the bimolecular products given with a capture rate coefficient, in the order given.
     pub products: Vec<ReactantRates>,
+    /// Projections of the prepared distributions given to `phenomenological_rate_coefficients_with_sources`.
+    pub source_projections: Vec<SourceProjection>,
     /// The wells of the network, in its order: the rows of `kappa`.
     pub network_wells: Vec<String>,
     /// [w][nu] = kappa_(w,nu) of every well (not merged) and bimolecular channel (G13 eqs. 33-34): close to 1 if the well
@@ -279,6 +294,20 @@ pub fn phenomenological_rate_coefficients(
     op: &ChemicalActivationOperator,
     reactant: Option<(&str, f64)>,
     products: &[(&str, f64)],
+    solver: EigenSolver,
+    merging: &CseMerging,
+) -> Result<PhenomenologicalRates, String> {
+    phenomenological_rate_coefficients_with_sources(network, op, reactant, products, &[], solver, merging)
+}
+
+/// `phenomenological_rate_coefficients`, and the projection of prepared distributions (`sources`: name and F on the
+/// states of `op`, e.g. from `project_source`) onto the species and the prompt products (`SourceProjection`).
+pub fn phenomenological_rate_coefficients_with_sources(
+    network: &ChemicalActivationNetwork,
+    op: &ChemicalActivationOperator,
+    reactant: Option<(&str, f64)>,
+    products: &[(&str, f64)],
+    sources: &[(&str, Vec<f64>)],
     solver: EigenSolver,
     merging: &CseMerging,
 ) -> Result<PhenomenologicalRates, String> {
@@ -532,6 +561,31 @@ pub fn phenomenological_rate_coefficients(
         .map(|&(name, capture)| source_rates(name, capture, "bimolecular product"))
         .collect::<Result<Vec<_>, _>>()?;
 
+    // Prepared distributions (pulses) on the CSE description: the amplitudes c_l = <f^l|F> = sum_k u_lk F_k/d_k
+    // (eqs. 12-13, in logarithms since d spans many orders of magnitude), the species populations after the relaxation
+    // n_g = sqrt(Q_g) sum_(l chem) M_(g,l) c_l (eqs. 24, 37) and the prompt yields sum_(l relax) p_l^(nu) c_l/Lambda_l
+    // (eqs. 38, 41).
+    let half_log_d = &symmetrized.half_log_d;
+    let mut source_projections = Vec::new();
+    for (name, on_states) in sources {
+        if on_states.len() != n_states {
+            return Err(format!("CSE analysis: the source '{name}' has {} states, the operator {n_states}.", on_states.len()));
+        }
+        let c: Vec<f64> = vectors
+            .iter()
+            .map(|u| {
+                (0..n_states)
+                    .filter(|&k| on_states[k] != 0.0 && u[k] != 0.0)
+                    .map(|k| u[k].signum() * on_states[k].signum() * (u[k].abs().ln() + on_states[k].abs().ln() - half_log_d[k]).exp())
+                    .sum()
+            })
+            .collect();
+        let species_populations = (0..n).map(|g| q[g].sqrt() * (0..n).map(|l| m[g][l] * c[l]).sum::<f64>()).collect();
+        let prompt_bimolecular =
+            (0..bimolecular.len()).map(|nu| (n..values.len()).map(|l| p[nu][l] * c[l] / values[l]).sum()).collect();
+        source_projections.push(SourceProjection { name: name.to_string(), species_populations, prompt_bimolecular });
+    }
+
     Ok(PhenomenologicalRates {
         wells: species_names,
         well_groups: groups.iter().map(|g| g.iter().map(|&w| well_names[w].clone()).collect()).collect(),
@@ -546,6 +600,7 @@ pub fn phenomenological_rate_coefficients(
         well_to_bimolecular_s_inv: well_to_bimolecular,
         reactant,
         products,
+        source_projections,
         network_wells: well_names,
         kappa,
         kappa_sum_rule_max_deviation,
@@ -1009,6 +1064,88 @@ pub(crate) mod tests {
         assert_eq!(rates.bimolecular_group, vec!["A", "B"]);
         for row in &rates.kappa {
             assert!((row.iter().sum::<f64>() - 1.0).abs() < 1e-8, "{:?}", rates.kappa);
+        }
+    }
+
+
+    // ---- Projection of a prepared distribution (G13 eqs. 13, 14, 24, 37-41) ----
+
+    #[test]
+    fn the_projection_of_the_reactant_shape_gives_the_reactant_rows_per_capture() {
+        // F = k_(->R) f0 / sum k_(->R) f0 has amplitudes c = p^(R)/sum k f0, so the species populations are k_(R->i)/k_c
+        // (eq. 28) and the prompt yields k_(R->mu)/k_c (eq. 21).
+        use crate::masterequation::chemical_activation_sources::thermal_entrance_source;
+        use crate::masterequation::chemical_activation_steady_state::project_source;
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let kt = KB_CM * conditions().temperature_kelvin;
+        let f = thermal_entrance_source(&network, &[(0, 0)], kt).unwrap();
+        let on_states = project_source(&op, &f).unwrap().on_states;
+        let k_c = 3.0e-11;
+        let rates = phenomenological_rate_coefficients_with_sources(
+            &network,
+            &op,
+            Some(("R", k_c)),
+            &[],
+            &[("thermal R", on_states)],
+            EigenSolver::FullDecomposition,
+            &CseMerging::default(),
+        )
+        .unwrap();
+        let reactant = rates.reactant.as_ref().unwrap();
+        let projection = &rates.source_projections[0];
+        assert_eq!(projection.name, "thermal R");
+        for i in 0..rates.wells.len() {
+            assert!((projection.species_populations[i] / (reactant.to_well_cm3_s[i] / k_c) - 1.0).abs() < 1e-9, "{i}");
+        }
+        let r = rates.bimolecular.iter().position(|b| b == "R").unwrap();
+        for mu in (0..rates.bimolecular.len()).filter(|&mu| mu != r) {
+            let expected = reactant.to_bimolecular_cm3_s[mu] / k_c;
+            assert!((projection.prompt_bimolecular[mu] - expected).abs() <= 1e-9 * expected.abs() + 1e-300, "{mu}");
+        }
+    }
+
+    #[test]
+    fn projected_species_and_prompt_yields_reproduce_the_steady_state_yields_of_a_hot_source() {
+        // The pulse identity Y_x = k_x^T J^-1 F (exact with all eigenpairs): the prompt yields plus the species
+        // populations times their thermal fates (absorbing chain of the rate coefficients).
+        use crate::masterequation::chemical_activation_driver::{run_chemical_activation, ChemicalActivationRun, SourceSpecification};
+        use crate::masterequation::chemical_activation_steady_state::{project_source, LinearSolver};
+        use crate::masterequation::prepared_distributions::{gaussian, EnergyReference, Representation};
+        let network = reactant_and_product_network();
+        let op = assemble_operator(&network, &conditions(), &final_options()).unwrap();
+        let hot = gaussian(&network, 0, 3300.0, 150.0, Representation::Density, EnergyReference::AboveWellGround).unwrap();
+        let on_states = project_source(&op, &hot.mass).unwrap().on_states;
+        let rates = phenomenological_rate_coefficients_with_sources(
+            &network,
+            &op,
+            Some(("R", 3.0e-11)),
+            &[],
+            &[("hot", on_states)],
+            EigenSolver::FullDecomposition,
+            &CseMerging::default(),
+        )
+        .unwrap();
+        let projection = &rates.source_projections[0];
+        let fates = reactant_yields(&rates).unwrap().unwrap().well_fates;
+        let run = ChemicalActivationRun {
+            temperatures_kelvin: vec![conditions().temperature_kelvin],
+            pressures_torr: vec![conditions().pressure_torr],
+            options: final_options(),
+            solver: LinearSolver::BandedCholesky,
+            source: SourceSpecification::Fixed(hot.mass.clone()),
+            tolerance: 1e-8,
+        };
+        let steady = run_chemical_activation(&network, &run).unwrap().remove(0).result;
+        for (x, name) in rates.bimolecular.iter().enumerate() {
+            let expected: f64 = if let Some(well) = name.strip_prefix("escape(").and_then(|n| n.strip_suffix(')')) {
+                steady.wells.iter().find(|w| w.name == well).unwrap().bimolecular_sink_yield
+            } else {
+                steady.channels.iter().filter(|c| matches!(&c.destination, ChannelDestination::Products { name: n } if n == name)).map(|c| c.flux).sum()
+            };
+            let cse = projection.prompt_bimolecular[x]
+                + (0..rates.wells.len()).map(|i| projection.species_populations[i] * fates[i][x]).sum::<f64>();
+            assert!((cse - expected).abs() < 1e-7 * expected.max(1e-3), "{name}: CSE {cse:e} vs steady state {expected:e}");
         }
     }
 }

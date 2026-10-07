@@ -223,6 +223,9 @@ pub struct MessDeck {
     pub well_order: Vec<String>,
     /// `Dummy` bimolecular species (as in MESS): products without molecular data, in deck order.
     pub dummy_bimolecular: Vec<String>,
+    /// The `Preparation ... End` block (a MarXus extension: initial population, sources, bath history), comments
+    /// stripped; interpreted by `preparation_input::parse_preparation`.
+    pub preparation_block: Option<Vec<String>>,
 }
 
 
@@ -259,7 +262,7 @@ fn parse_key_value_whitespace(line: &str) -> Option<(&str, &str)> {
     Some((k, v))
 }
 
-fn energy_to_cm1(value: f64, unit_tag: &str) -> Result<f64, String> {
+pub(crate) fn energy_to_cm1(value: f64, unit_tag: &str) -> Result<f64, String> {
     let u = unit_tag.trim().to_lowercase();
     if u.contains("kcal") {
         Ok(value / CM1_TO_KCAL)
@@ -1128,6 +1131,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
     let mut well_order: Vec<String> = Vec::new();
     let mut dummy_bimolecular: Vec<String> = Vec::new();
     let mut marxus_header_read = false;
+    let mut preparation_block: Option<Vec<String>> = None;
 
     let mut i = 0usize;
     while i < lines.len() {
@@ -1145,6 +1149,17 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
             let (block, next) = collect_block(&lines, i);
             global.solution = parse_marxus_header(&block)?;
             marxus_header_read = true;
+            i = next;
+            continue;
+        }
+
+        // Preparation block: initial population, sources and bath history (`preparation_input.rs`).
+        if first_token(line) == Some("Preparation") {
+            if preparation_block.is_some() {
+                return Err("Input deck: the Preparation block is given twice.".into());
+            }
+            let (block, next) = super::preparation_input::collect_preparation_block(&lines, i)?;
+            preparation_block = Some(block);
             i = next;
             continue;
         }
@@ -1167,9 +1182,11 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
                     let x = parse_f64(v)?;
                     if !(x > 0.0 && x < 1.0) {
                         return Err(format!(
-                            "ChemicalEigenvalueMax {x}: MarXus implements only MESS's absolute threshold, 0 < value < 1 \
-                             (chemical eigenvalues <= value x the lowest relaxation eigenvalue); MESS's modes with a \
-                             value > 1 (relaxational projection) or < 0 (eigenvalue ratio) are not implemented."
+                            "ChemicalEigenvalueMax {x}: MarXus accepts 0 < value < 1, read as the relaxational projection \
+                             1 - F_ne <= value (MESS direct method; the default), or with `ChemicalSubspaceCriterion \
+                             EigenvalueRatio` in the MarXus block as Lambda <= value x Lambda_(N+1). MESS reads a value > 1 \
+                             as Lambda_(N+1)/Lambda >= value: give EigenvalueRatio with 1/value. Values below 0 are not \
+                             implemented."
                         ));
                     }
                     global.chemical_eigenvalue_max = Some(x);
@@ -1354,6 +1371,7 @@ pub fn parse_mess_input(input: &str) -> Result<MessDeck, String> {
         well_escape_rate_s_inv,
         well_order,
         dummy_bimolecular,
+        preparation_block,
     })
 }
 

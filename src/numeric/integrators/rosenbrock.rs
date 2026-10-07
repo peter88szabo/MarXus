@@ -116,6 +116,9 @@ pub fn integrate<S: StiffSystem>(
     let tableau = options.method.tableau();
     let roundoff = f64::EPSILON;
     check_tolerances(options, n, roundoff)?;
+    // MarXus extension: the round-off of time values relative to the time scale of the interval (KPP compares
+    // with the absolute machine epsilon, which assumes times of order one; master-equation times reach 1e-12 s).
+    let time_roundoff = roundoff * t_start.abs().max(t_end.abs()).max(f64::MIN_POSITIVE);
     let atol = |k: usize| {
         options.absolute_tolerance[if options.absolute_tolerance.len() == 1 {
             0
@@ -158,7 +161,7 @@ pub fn integrate<S: StiffSystem>(
         }
     };
     let mut h = h_start.max(h_min).min(h_max);
-    if h <= 10.0 * roundoff {
+    if h <= 10.0 * time_roundoff {
         h = DELTA_MIN;
     }
     h = grid(h);
@@ -173,8 +176,8 @@ pub fn integrate<S: StiffSystem>(
     let mut y_new = vec![0.0; n];
     let mut y_stage = vec![0.0; n];
 
-    while (direction > 0.0 && (t - t_end) + roundoff <= 0.0)
-        || (direction < 0.0 && (t_end - t) + roundoff <= 0.0)
+    while (direction > 0.0 && (t - t_end) + time_roundoff <= 0.0)
+        || (direction < 0.0 && (t_end - t) + time_roundoff <= 0.0)
     {
         if stats.steps > options.max_steps {
             return Err(format!(
@@ -182,7 +185,7 @@ pub fn integrate<S: StiffSystem>(
                 options.max_steps
             ));
         }
-        if t + 0.1 * h * direction == t || h <= roundoff {
+        if t + 0.1 * h * direction == t || h <= time_roundoff {
             return Err(format!(
                 "Rosenbrock: step size too small (t = {t:e}, h = {h:e})."
             ));

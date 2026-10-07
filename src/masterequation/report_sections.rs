@@ -27,6 +27,8 @@ use super::chemical_activation_network::{
 use super::chemical_activation_observables::ChemicalActivationResult;
 use super::chemically_significant_eigenvalues::{reactant_yields, ReactantRates, ReactantYields};
 use super::direct_time_integration::{TimeEvolution, TimePoint};
+use super::prepared_distributions::GrainDistribution;
+use super::prepared_time_integration::{Preparation, ProjectionNote, TransientPoint, TransientResult};
 use super::mess_input::{MessBarrier, MessBarrierCore, MessDeck, TunnelingSpecification};
 use super::report_tables::{
     sci, write_labelled_table, write_tables_by_pressure, write_tables_by_temperature,
@@ -1353,6 +1355,128 @@ pub fn write_cse_species_tables<W: Write>(
 // Direct time integration
 // ------------------------------------------------------------------------------------------------------
 
+/// The CSE projection of every prepared distribution, per condition (G13 eqs. 13, 24, 37-41; `SourceProjection`): the
+/// populations of the species after the internal-energy relaxation and the prompt yields of the bimolecular channels and
+/// escape sinks, per unit of the distribution; the species then follow the phenomenological rate coefficients.
+pub fn write_cse_source_projections<W: Write>(out: &mut W, results: &[PhenomenologicalConditionResult]) -> std::io::Result<()> {
+    for r in results {
+        let x = &r.rates;
+        if x.source_projections.is_empty() {
+            continue;
+        }
+        writeln!(out, "Temperature = {} K    Pressure = {} torr\n", r.conditions.temperature_kelvin, r.conditions.pressure_torr)?;
+        let mut columns: Vec<String> = x.wells.iter().map(|w| format!("n({w})")).collect();
+        columns.extend(x.bimolecular.iter().map(|b| format!("prompt {b}")));
+        columns.push("sum".into());
+        let rows: Vec<(String, Vec<Option<f64>>)> = x
+            .source_projections
+            .iter()
+            .map(|sp| {
+                let mut values: Vec<Option<f64>> = sp.species_populations.iter().chain(&sp.prompt_bimolecular).map(|&v| Some(v)).collect();
+                values.push(Some(sp.species_populations.iter().chain(&sp.prompt_bimolecular).sum()));
+                (sp.name.clone(), values)
+            })
+            .collect();
+        write_labelled_table(out, "source", &columns, &rows)?;
+    }
+    Ok(())
+}
+
+/// The prepared experiment (design note N, reports/nonthermal_sources_design.md): for the initial population and every
+/// source channel its distribution (well fractions, mean energy above the bottom of every well, probability lost
+/// outside the grid) and its profile (total amount), the bath segments, and what the projection onto the states of
+/// every bath segment did (fraction in a low-energy reservoir, where the shape becomes the reservoir's Boltzmann shape;
+/// fraction below an absorbing barrier; mean energy before and after).
+pub fn write_preparation_summary<W: Write>(
+    out: &mut W,
+    network: &ChemicalActivationNetwork,
+    preparation: &Preparation,
+    notes: &[ProjectionNote],
+) -> std::io::Result<()> {
+    let wells: Vec<String> = network.wells.iter().map(|w| w.name.clone()).collect();
+    let describe = |out: &mut W, what: &str, amount: String, d: &GrainDistribution| -> std::io::Result<()> {
+        writeln!(out, "  {what}: {amount}; {}", d.description)?;
+        let fractions = d.well_fractions();
+        let means = d.mean_energy_above_bottom_cm1(network);
+        for (w, name) in wells.iter().enumerate() {
+            if fractions[w] > 0.0 {
+                writeln!(out, "    {name}: fraction {}, mean energy above the well bottom {:.1} cm-1", sci(fractions[w]), means[w])?;
+            }
+        }
+        if d.lost_fraction > 0.0 {
+            writeln!(out, "    probability outside the grid (removed before normalization): {}", sci(d.lost_fraction))?;
+        }
+        Ok(())
+    };
+    if let Some(initial) = &preparation.initial {
+        describe(out, "initial population", format!("amount {}", sci(initial.amount)), &initial.distribution)?;
+    }
+    for c in &preparation.channels {
+        let total = c.profile.total_amount().map_or_else(String::new, |a| format!(", total amount {}", sci(a)));
+        describe(out, &format!("source '{}'", c.name), format!("{}{total}", c.profile), &c.distribution)?;
+    }
+    writeln!(out, "  bath:")?;
+    for b in &preparation.bath {
+        writeln!(out, "    from {} s: T = {} K, p = {} Torr", sci(b.start_s), b.conditions.temperature_kelvin, b.conditions.pressure_torr)?;
+    }
+    writeln!(out, "  projection onto the states (per bath segment; only parts in a low-energy reservoir or below an absorbing barrier):")?;
+    for n in notes {
+        for (w, name) in wells.iter().enumerate() {
+            let (r, a) = (n.reservoir_fraction[w], n.absorbed_fraction[w]);
+            if r > 0.0 || a > 0.0 {
+                writeln!(
+                    out,
+                    "    {} (segment {}), {name}: {} in the low-energy reservoir, {} below the absorbing barrier; mean energy {:.1} -> {:.1} cm-1{}",
+                    n.what,
+                    n.segment + 1,
+                    sci(r),
+                    sci(a),
+                    n.mean_energy_before_cm1[w],
+                    n.mean_energy_after_cm1[w],
+                    if r > 0.01 { "  [the shape inside the reservoir is replaced by its Boltzmann shape at the bath temperature]" } else { "" }
+                )?;
+            }
+        }
+    }
+    writeln!(out)
+}
+
+/// The transient observables of a prepared experiment (N Sec. observables), one table per quantity group with the
+/// output times as rows: well populations C_w; cumulative yields Y_x; fluxes q_x (1/s); injected amounts per channel;
+/// mean energy above the bottom (cm-1) and fraction above the lowest threshold of every well; the loss hazard
+/// k_inst = sum q_x / N (1/s); the balance deviation (sum n + sum Y - injected)/injected.
+pub fn write_transient_tables<W: Write>(
+    out: &mut W,
+    network: &ChemicalActivationNetwork,
+    label: &str,
+    result: &TransientResult,
+) -> std::io::Result<()> {
+    writeln!(out, "{label}\n")?;
+    let wells: Vec<String> = network.wells.iter().map(|w| w.name.clone()).collect();
+    let rows = |pick: &dyn Fn(&TransientPoint) -> Vec<f64>| -> Vec<(String, Vec<Option<f64>>)> {
+        result.points.iter().map(|p| (sci(p.time_s), pick(p).into_iter().map(Some).collect())).collect()
+    };
+    let groups: Vec<(&str, Vec<String>, Box<dyn Fn(&TransientPoint) -> Vec<f64>>)> = vec![
+        ("Populations C_w and cumulative yields Y_x", wells.iter().cloned().chain(result.exits.iter().cloned()).collect(), Box::new(|p: &TransientPoint| p.well_populations.iter().chain(&p.exit_yields).copied().collect())),
+        ("Instantaneous fluxes q_x (1/s)", result.exits.clone(), Box::new(|p: &TransientPoint| p.exit_fluxes.clone())),
+        ("Injected amounts", result.channels.clone(), Box::new(|p: &TransientPoint| p.injected.clone())),
+        (
+            "Mean energy above the well bottom (cm-1) and fraction above the lowest threshold",
+            wells.iter().map(|w| format!("<E>({w})")).chain(wells.iter().map(|w| format!("tail({w})"))).collect(),
+            Box::new(|p: &TransientPoint| p.mean_energy_above_bottom_cm1.iter().chain(&p.tail_fraction).copied().collect()),
+        ),
+        ("Loss hazard k_inst (1/s) and balance deviation", vec!["k_inst".into(), "balance".into()], Box::new(|p: &TransientPoint| vec![p.loss_hazard_s_inv, p.balance_deviation])),
+    ];
+    for (title, columns, pick) in &groups {
+        if columns.is_empty() {
+            continue;
+        }
+        writeln!(out, "  {title}:")?;
+        write_labelled_table(out, "t[s]", columns, &rows(pick.as_ref()))?;
+    }
+    Ok(())
+}
+
 /// The time evolution of every condition: a table with the output times as rows and the population of
 /// every well and the yield of every exit (both in % of the formed adducts) as columns, with the work of
 /// the integrator above it.
@@ -2246,5 +2370,116 @@ mod tests {
         assert!(text.contains(&sci(product.capture_cm3_s - product.to_bimolecular_cm3_s[p])), "{text}");
         assert!(text.contains("kappa (Georgievskii et al. 2013, eq. 34;"), "{text}");
         assert!(text.contains(&sci(rates.kappa[1][p])), "{text}");
+    }
+
+    #[test]
+    fn the_preparation_summary_states_profiles_in_words_and_lists_only_projections_that_change_something() {
+        use crate::masterequation::prepared_distributions::{gaussian, thermal, EnergyReference, Representation};
+        use crate::masterequation::prepared_time_integration::{BathSegment, InitialPopulation, Preparation, ProjectionNote, SourceChannel};
+        use crate::masterequation::source_profiles::TimeProfile;
+        let network = network();
+        let cold = thermal(&network, 0, 300.0).unwrap();
+        let hot = gaussian(&network, 0, 3400.0, 100.0, Representation::Density, EnergyReference::AboveWellGround).unwrap();
+        let bath = |start_s: f64, temperature_kelvin: f64| BathSegment { start_s, conditions: Conditions { temperature_kelvin, pressure_torr: 760.0 } };
+        let preparation = Preparation {
+            initial: Some(InitialPopulation { amount: 1.0, distribution: cold }),
+            channels: vec![
+                SourceChannel { name: "flash".into(), distribution: hot.clone(), profile: TimeProfile::Impulse { time_s: 1e-9, amount: 0.5 } },
+                SourceChannel { name: "feed".into(), distribution: hot, profile: TimeProfile::Feed { start_s: 0.0, end_s: None, rate: 2.0 } },
+            ],
+            bath: vec![bath(0.0, 300.0), bath(1e-6, 1000.0)],
+        };
+        let note = |what: &str, r: f64| ProjectionNote {
+            what: what.into(),
+            segment: 0,
+            reservoir_fraction: vec![r, 0.0],
+            absorbed_fraction: vec![0.0, 0.0],
+            mean_energy_before_cm1: vec![300.0, f64::NAN],
+            mean_energy_after_cm1: vec![320.0, f64::NAN],
+        };
+        let mut out = Vec::new();
+        write_preparation_summary(&mut out, &network, &preparation, &[note("initial", 0.25), note("flash", 0.0)]).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(
+            text.contains("source 'flash': impulse at 1e-9 s, amount 0.5, total amount 5.00000e-01; Gaussian centred at 3400.0 cm-1 above the well ground"),
+            "{text}"
+        );
+        assert!(text.contains("source 'feed': constant feed 2 1/s from 0 s, open-ended; Gaussian"), "{text}");
+        assert!(text.contains("from 1.00000e-06 s: T = 1000 K, p = 760 Torr"), "{text}");
+        assert!(text.contains("initial (segment 1), A: 2.50000e-01 in the low-energy reservoir"), "{text}");
+        assert!(!text.contains("flash (segment"), "{text}");
+    }
+
+    #[test]
+    fn transient_tables_have_one_table_per_quantity_group_and_skip_empty_groups() {
+        use crate::masterequation::prepared_time_integration::{TransientPoint, TransientResult};
+        let network = network();
+        let point = |time_s: f64| TransientPoint {
+            time_s,
+            well_populations: vec![0.75, 0.25],
+            exit_yields: vec![0.5],
+            exit_fluxes: vec![3.0],
+            injected: vec![],
+            mean_energy_above_bottom_cm1: vec![500.0, 250.0],
+            tail_fraction: vec![1e-3, 0.0],
+            loss_hazard_s_inv: 3.0,
+            balance_deviation: 1e-15,
+        };
+        let result = TransientResult {
+            exits: vec!["B->P".into()],
+            channels: vec![],
+            points: vec![point(1e-9), point(1e-8)],
+            segments: vec![],
+            projections: vec![],
+            statistics: Default::default(),
+            factorizations_computed: 0,
+        };
+        let mut out = Vec::new();
+        write_transient_tables(&mut out, &network, "run", &result).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        for title in [
+            "Populations C_w and cumulative yields Y_x:",
+            "Instantaneous fluxes q_x (1/s):",
+            "Mean energy above the well bottom (cm-1) and fraction above the lowest threshold:",
+            "Loss hazard k_inst (1/s) and balance deviation:",
+        ] {
+            assert!(text.contains(title), "{title}\n{text}");
+        }
+        assert!(!text.contains("Injected amounts"), "{text}");
+        assert!(text.contains("<E>(A)") && text.contains("tail(B)") && text.contains("B->P"), "{text}");
+        assert_eq!(text.matches("1.00000e-08").count(), 4, "one row per table\n{text}");
+    }
+
+    #[test]
+    fn cse_source_projection_rows_add_up_to_their_sum_column() {
+        use crate::masterequation::chemical_activation_driver::run_phenomenological_rates_with_sources;
+        use crate::masterequation::chemically_significant_eigenvalues::CseMerging;
+        let network = network();
+        let sources = |_: f64, _: f64| -> Result<Vec<(String, Vec<Vec<f64>>)>, String> {
+            let mut mass: Vec<Vec<f64>> = network.wells.iter().map(|w| vec![0.0; w.grain_count()]).collect();
+            mass[0][340] = 1.0;
+            Ok(vec![("hot".into(), mass)])
+        };
+        let results = run_phenomenological_rates_with_sources(
+            &network,
+            &[300.0],
+            &[760.0],
+            MODEL,
+            EigenSolver::FullDecomposition,
+            None,
+            &[],
+            &sources,
+            &CseMerging::default(),
+        )
+        .unwrap();
+        let mut out = Vec::new();
+        write_cse_source_projections(&mut out, &results).unwrap();
+        let text = String::from_utf8(out).unwrap();
+        assert!(text.contains("Temperature = 300 K    Pressure = 760 torr"), "{text}");
+        assert!(text.contains("n(A)") && text.contains("prompt R") && text.contains("sum"), "{text}");
+        let row = text.lines().find(|l| l.trim_start().starts_with("hot")).unwrap();
+        let values: Vec<f64> = row.split_whitespace().skip(1).map(|v| v.parse().unwrap()).collect();
+        let (parts, sum) = values.split_at(values.len() - 1);
+        assert!((parts.iter().sum::<f64>() - sum[0]).abs() <= 1e-5 * sum[0].abs(), "{row}");
     }
 }

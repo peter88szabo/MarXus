@@ -6,6 +6,7 @@ pub mod jacobi_diag;
 pub mod krylov;
 pub mod lanczos_gamma;
 pub mod lapack_interface;
+pub mod special_functions;
 pub mod ldlt_solvers;
 pub mod linear_algebra;
 pub mod symmetric_eigen;

@@ -97,7 +97,7 @@ use std::io::Write;
 
 use MarXus::constants::KB_CM;
 use MarXus::masterequation::chemical_activation_driver::{
-    run_chemical_activation, run_phenomenological_rates, run_thermal_rate_coefficients,
+    run_chemical_activation, run_phenomenological_rates_with_sources, run_thermal_rate_coefficients,
     run_thermal_well_fates, write_phenomenological_tables, write_results_table,
     write_thermal_table, ChemicalActivationRun, SourceSpecification, ThermalConditionResult,
 };
@@ -118,11 +118,14 @@ use MarXus::masterequation::direct_time_integration::{
     integrate_master_equation, log_spaced_times, InitialState, TimeIntegrationSettings,
 };
 use MarXus::masterequation::mess_input::parse_mess_input_file;
+use MarXus::masterequation::preparation_input::{parse_preparation_in, preparation_from_deck, PreparationSpec};
+use MarXus::masterequation::prepared_time_integration::{integrate_preparation, steady_source_shape, Preparation, TransientResult};
 use MarXus::masterequation::parallel_conditions::ConditionPool;
 use MarXus::masterequation::report_sections::{
     cse_groups, partition_function_groups, steady_state_groups, thermal_groups, time_integration_groups,
-    well_fate_groups, write_cse_species_tables, write_energetics, write_groups, write_network_summary,
-    write_partition_functions, write_time_evolution_tables,
+    well_fate_groups, write_cse_source_projections, write_cse_species_tables, write_energetics, write_groups,
+    write_network_summary, write_partition_functions, write_preparation_summary, write_time_evolution_tables,
+    write_transient_tables,
 };
 use MarXus::masterequation::report_tables::{write_groups_csv, Quantity, QuantityGroup};
 use MarXus::numeric::lapack_interface::set_blas_threads;
@@ -298,9 +301,18 @@ fn main() -> Result<(), String> {
         "default"
     };
     let model = chemical_activation_model_from_mess(&deck, &settings)?;
-    if model.entrance_channels.is_empty() {
-        return Err(format!("{path}: no barrier connects the Reactant of the deck to a well."));
+    // A Preparation block (initial population, sources, bath history) replaces the thermal entrance source.
+    let preparation_spec: Option<PreparationSpec> = match &deck.preparation_block {
+        Some(block) => Some(parse_preparation_in(block, std::path::Path::new(&path).parent())?),
+        None => None,
+    };
+    if model.entrance_channels.is_empty() && preparation_spec.is_none() {
+        return Err(format!("{path}: no barrier connects the Reactant of the deck to a well, and no Preparation block is given."));
     }
+    let prepared_at = |t: f64, p: f64| -> Result<Preparation, String> {
+        let spec = preparation_spec.as_ref().ok_or("no Preparation block")?;
+        preparation_from_deck(spec, &deck, &model, &Conditions { temperature_kelvin: t, pressure_torr: p })
+    };
 
     let network = &model.network;
     let temperatures = model.temperatures_kelvin.clone();
@@ -331,7 +343,10 @@ fn main() -> Result<(), String> {
             format!("CSE: chemically significant eigenvalues (MK06; G13), all eigenpairs by {eigen_solver:?}")
         }
         Solution::TimeIntegration(plan) => {
-            format!("TimeIntegration: direct time integration, {:?}, {:?}", plan.integrator, plan.initial_state)
+            match &preparation_spec {
+                Some(_) => format!("TimeIntegration: direct time integration, {:?}, Preparation block", plan.integrator),
+                None => format!("TimeIntegration: direct time integration, {:?}, {:?}", plan.integrator, plan.initial_state),
+            }
         }
     };
     let io = |e: std::io::Error| e.to_string();
@@ -427,9 +442,10 @@ fn main() -> Result<(), String> {
                 "DIRECT TIME INTEGRATION of the grained populations, dN/dt = R F - J N, and of the yields of every exit".to_string(),
                 format!(
                     "initial state: {}",
-                    match plan.initial_state {
-                        InitialState::Pulse => "pulse N(0) = F (the normalized chemical-activation source)",
-                        InitialState::ContinuousFormation => "continuous formation R F, R = 1 s-1, from N(0) = 0",
+                    match (&preparation_spec, plan.initial_state) {
+                        (Some(_), _) => "initial population and sources of the Preparation block (Source, below)",
+                        (None, InitialState::Pulse) => "pulse N(0) = F (the normalized chemical-activation source)",
+                        (None, InitialState::ContinuousFormation) => "continuous formation R F, R = 1 s-1, from N(0) = 0",
                     }
                 ),
                 format!(
@@ -491,10 +507,16 @@ fn main() -> Result<(), String> {
         &mut report,
         "Parallel:",
         &[
-            format!(
-                "{} cores ({cores_source}); the {condition_count} conditions (T, p) in batches of {concurrent} at a time (rayon)",
-                pool.threads()
-            ),
+            match (&resolved.solution, preparation_spec.as_ref().and_then(|p| p.bath.as_ref())) {
+                (Solution::TimeIntegration(_), Some(_)) => format!(
+                    "{} cores ({cores_source}); one integration over the bath history of the Preparation block",
+                    pool.threads()
+                ),
+                _ => format!(
+                    "{} cores ({cores_source}); the {condition_count} conditions (T, p) in batches of {concurrent} at a time (rayon)",
+                    pool.threads()
+                ),
+            },
             format!("BLAS threads per LAPACK call: {blas_threads}"),
         ],
     )
@@ -596,15 +618,25 @@ fn main() -> Result<(), String> {
         }
         field(&mut report, "Rotors:", &rotor_lines).map_err(io)?;
     }
-    field(
-        &mut report,
-        "Source:",
-        &[
+    let source_lines: Vec<String> = match &preparation_spec {
+        None => vec![
             format!("thermal reactant {} through {}", reactant.as_deref().unwrap_or("?"), entrances.join(", ")),
             "F(E) ~ rho(E) k(E) exp(-E/kT) of the entrance channels (Pfeifle, Olzmann, IJCK 46, 231 (2014), eqs. 7, 9)".into(),
         ],
-    )
-    .map_err(io)?;
+        Some(spec) => {
+            let mut lines = vec!["prepared experiment (Preparation block of the deck; reports/nonthermal_sources_design.md)".to_string()];
+            if spec.initial.is_some() {
+                lines.push("initial population given".into());
+            }
+            lines.extend(spec.sources.iter().map(|s| format!("source '{}': {}", s.name, s.profile)));
+            lines.push(match &spec.bath {
+                Some(b) => format!("bath history of {} segments (time integration); the deck's conditions for the other methods", b.len()),
+                None => "bath: every condition of the deck".into(),
+            });
+            lines
+        }
+    };
+    field(&mut report, "Source:", &source_lines).map_err(io)?;
     for note in &resolved.unused_settings {
         field(&mut report, "Note:", &[note.clone()]).map_err(io)?;
     }
@@ -671,15 +703,25 @@ fn main() -> Result<(), String> {
         let mut results = Vec::new();
         let mut unavailable = Vec::new();
         let per_condition = pool.map_conditions(&temperatures, &pressures, |t, p| {
+            // With a Preparation block: its single steady-state source shape at this condition.
+            let source = match &preparation_spec {
+                Some(_) => SourceSpecification::Fixed(steady_source_shape(&prepared_at(t, p)?)?.0.mass),
+                None => run.source.clone(),
+            };
             run_chemical_activation(
                 network,
                 &ChemicalActivationRun {
                     temperatures_kelvin: vec![t],
                     pressures_torr: vec![p],
+                    source,
                     ..run.clone()
                 },
             )
         });
+        if preparation_spec.is_some() {
+            let how = steady_source_shape(&prepared_at(temperatures[0], pressures[0])?)?.1;
+            writeln!(machine, "# source of the steady state: the prepared shape of {how}").map_err(io)?;
+        }
         for outcome in per_condition {
             match outcome {
                 Ok(mut r) => results.append(&mut r),
@@ -951,8 +993,86 @@ fn main() -> Result<(), String> {
         tables.extend(prefixed("thermal fates", &groups));
     }
 
+    // ---- Direct time integration of a prepared experiment (Preparation block).
+    if let (Some(plan), Some(spec)) = (time_integration.as_ref(), preparation_spec.as_ref()) {
+        let integration = TimeIntegrationSettings {
+            method: plan.integrator,
+            relative_tolerance: plan.relative_tolerance,
+            absolute_tolerance: plan.absolute_tolerance,
+            times_s: log_spaced_times(plan.time_range_s.0, plan.time_range_s.1, plan.times_per_decade),
+        };
+        // With a bath history: one run; otherwise one run per condition of the deck.
+        let runs: Vec<(String, Result<(Preparation, TransientResult), String>)> = if spec.bath.is_some() {
+            let run = prepared_at(temperatures[0], pressures[0]).and_then(|prep| {
+                let r = integrate_preparation(network, model.collision_model, SteadyState::Final, &prep, &integration)?;
+                Ok((prep, r))
+            });
+            vec![("bath history of the Preparation block".to_string(), run)]
+        } else {
+            let mut keys = Vec::new();
+            for &t in &temperatures {
+                for &p in &pressures {
+                    keys.push(format!("T = {t} K, p = {p} Torr"));
+                }
+            }
+            let outcomes = pool.map_conditions(&temperatures, &pressures, |t, p| {
+                let prep = prepared_at(t, p)?;
+                let r = integrate_preparation(network, model.collision_model, SteadyState::Final, &prep, &integration)?;
+                Ok((prep, r))
+            });
+            keys.into_iter().zip(outcomes).collect()
+        };
+        section(
+            &mut report,
+            "PREPARED EXPERIMENT: DIRECT TIME INTEGRATION",
+            "dn/dt = -J[T_b(t), p(t)] n + sum_a R_a(t) F_a with n(0) = N_0 F_0, and dY_x/dt = k_x^T n: the initial population and\n\
+             the source channels of the Preparation block, with impulses as exact jumps and the bath segments as events\n\
+             (reports/nonthermal_sources_design.md). Populations and yields in the units of the given amounts.",
+        )
+        .map_err(io)?;
+        for (label, outcome) in &runs {
+            match outcome {
+                Ok((prep, result)) => {
+                    writeln!(report, "--- {label} ---\n").map_err(io)?;
+                    write_preparation_summary(&mut report, network, prep, &result.projections).map_err(io)?;
+                    write_transient_tables(&mut report, network, label, result).map_err(io)?;
+                    writeln!(machine, "\n# prepared time integration: {label}").map_err(io)?;
+                    let mut header = vec!["t[s]".to_string()];
+                    header.extend(network.wells.iter().map(|w| format!("N({})", w.name)));
+                    header.extend(result.exits.iter().map(|x| format!("Y({x})")));
+                    header.extend(result.exits.iter().map(|x| format!("q({x})")));
+                    header.extend(result.channels.iter().map(|c| format!("injected({c})")));
+                    header.extend(network.wells.iter().map(|w| format!("E({})", w.name)));
+                    header.extend(network.wells.iter().map(|w| format!("tail({})", w.name)));
+                    header.extend(["k_inst".to_string(), "balance".to_string()]);
+                    writeln!(machine, "{}", header.join(",")).map_err(io)?;
+                    for point in &result.points {
+                        let mut row = vec![format!("{:.6e}", point.time_s)];
+                        row.extend(
+                            point
+                                .well_populations
+                                .iter()
+                                .chain(&point.exit_yields)
+                                .chain(&point.exit_fluxes)
+                                .chain(&point.injected)
+                                .chain(&point.mean_energy_above_bottom_cm1)
+                                .chain(&point.tail_fraction)
+                                .chain([point.loss_hazard_s_inv, point.balance_deviation].iter())
+                                .map(|v| format!("{v:.6e}")),
+                        );
+                        writeln!(machine, "{}", row.join(",")).map_err(io)?;
+                    }
+                }
+                Err(e) => {
+                    writeln!(report, "{label}: not available: {e}").map_err(io)?;
+                    writeln!(machine, "# {label}: not available: {e}").map_err(io)?;
+                }
+            }
+        }
+    }
+
     // ---- Direct time integration.
-    if let Some(plan) = time_integration {
+    if let Some(plan) = time_integration.filter(|_| preparation_spec.is_none()) {
         let times = log_spaced_times(
             plan.time_range_s.0,
             plan.time_range_s.1,
@@ -1081,7 +1201,19 @@ fn main() -> Result<(), String> {
                 .collect();
             let product_captures: Vec<(&str, &dyn Fn(f64) -> f64)> =
                 products.iter().zip(&captures).map(|(&(name, _), capture)| (name, capture.as_ref())).collect();
-            run_phenomenological_rates(
+            let sources = |t: f64, p: f64| -> Result<Vec<(String, Vec<Vec<f64>>)>, String> {
+                if preparation_spec.is_none() {
+                    return Ok(Vec::new());
+                }
+                let prep = prepared_at(t, p)?;
+                let mut out = Vec::new();
+                if let Some(initial) = &prep.initial {
+                    out.push(("initial population".to_string(), initial.distribution.mass.clone()));
+                }
+                out.extend(prep.channels.iter().map(|c| (c.name.clone(), c.distribution.mass.clone())));
+                Ok(out)
+            };
+            run_phenomenological_rates_with_sources(
                 network,
                 &[t],
                 &[p],
@@ -1089,6 +1221,7 @@ fn main() -> Result<(), String> {
                 solver,
                 reactant_name.map(|r| (r, &capture as &dyn Fn(f64) -> f64)),
                 &product_captures,
+                &sources,
                 &merging,
             )
         });
@@ -1131,6 +1264,15 @@ fn main() -> Result<(), String> {
         }
         writeln!(report, "--- Species-to-species tables ---\n").map_err(io)?;
         write_cse_species_tables(&mut report, &all).map_err(io)?;
+        if preparation_spec.is_some() {
+            writeln!(
+                report,
+                "--- Prepared distributions on the CSE description (Georgievskii et al. 2013, eqs. 13, 24, 37-41): populations of the\n\
+                 species after the internal-energy relaxation and prompt yields, per unit of each distribution ---\n"
+            )
+            .map_err(io)?;
+            write_cse_source_projections(&mut report, &all).map_err(io)?;
+        }
         let groups = cse_groups(&temperatures, &pressures, &all);
         write_groups(&mut report, &temperatures, &pressures, &groups).map_err(io)?;
         tables.extend(prefixed("CSE", &groups));
